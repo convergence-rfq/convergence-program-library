@@ -9,13 +9,21 @@ describe('rfq', () => {
 
   const program = anchor.workspace.Rfq as Program<Rfq>;
 
-  it('Is initialized!', async () => {
+  it('Initialize RFQ with tokens!', async () => {
     // Add your test here.
     const tx = await program.rpc.initialize({});
     console.log("Your transaction signature", tx);
 
-    
+
+  });
+
+
+  it('Initialize RFQ One!', async () => {
+    // Add your test here.
+    const tx = await program.rpc.initialize({});
+    console.log("Your transaction signature", tx);
 
 
   });
+
 });

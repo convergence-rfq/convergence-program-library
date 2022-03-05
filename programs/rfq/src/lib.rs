@@ -16,16 +16,12 @@ pub mod rfq {
     /// ctx Accounts context
     pub fn initialize(
         ctx: Context<Initialize>,
-        token_A: u64,
-        token_B: u64,
         fee_denominator: u64,
         fee_numerator: u64,
     ) -> ProgramResult {
         let protocol = &mut ctx.accounts.protocol;
         protocol.access_manager_count = 0;
         protocol.authority = ctx.accounts.authority.key();
-        protocol.token_A = token_A;
-        protocol.token_B = token_B;
         protocol.fee_denominator = fee_denominator;
         protocol.fee_numerator = fee_numerator;
         Ok(())
@@ -129,13 +125,12 @@ pub struct RFQState {
 
 #[account]
 pub struct OrderBook {
+    
 }
 
 /// global state for RFQ system
 #[account]
 pub struct State {
-    pub token_A: u64,
-    pub token_B: u64,
     pub access_manager_count: u64,
     pub authority: Pubkey,
     pub fee_denominator: u64,
