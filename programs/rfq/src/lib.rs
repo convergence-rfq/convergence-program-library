@@ -21,6 +21,7 @@ pub mod rfq {
     ) -> ProgramResult {
         let protocol = &mut ctx.accounts.protocol;
         protocol.access_manager_count = 0;
+        protocol.rfq_count = 0;
         protocol.authority = ctx.accounts.authority.key();
         protocol.fee_denominator = fee_denominator;
         protocol.fee_numerator = fee_numerator;
@@ -71,7 +72,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = authority,
-        seeds = [b"convergence"],
+        seeds = [b"rfq"],
         space = 8 + 32 + 8 + 8 + 8 + 8,
         bump
     )]
@@ -131,6 +132,7 @@ pub struct OrderBook {
 /// global state for RFQ system
 #[account]
 pub struct State {
+    pub rfq_count: u64, //track how many rfqs there are :)
     pub access_manager_count: u64,
     pub authority: Pubkey,
     pub fee_denominator: u64,
