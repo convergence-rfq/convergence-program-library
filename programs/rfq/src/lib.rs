@@ -72,7 +72,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = authority,
-        seeds = [b"rfq"],
+        seeds = [b"convergence_rfq"],
         space = 8 + 32 + 8 + 8 + 8 + 8,
         bump
     )]
@@ -132,7 +132,7 @@ pub struct OrderBook {
 /// global state for RFQ system
 #[account]
 pub struct State {
-    pub rfq_count: u64, //track how many rfqs there are :)
+    pub rfq_count: u64, // ? for our indexooors
     pub access_manager_count: u64,
     pub authority: Pubkey,
     pub fee_denominator: u64,
