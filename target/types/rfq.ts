@@ -1,5 +1,5 @@
 export type Rfq = {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "name": "rfq",
   "instructions": [
     {
@@ -41,23 +41,13 @@ export type Rfq = {
           "isSigner": true
         },
         {
-          "name": "token",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "quoteToken",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "rfqState",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "globalState",
-          "isMut": false,
+          "name": "orderBookState",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -118,11 +108,21 @@ export type Rfq = {
         },
         {
           "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "orderBookState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "orderBook",
+          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -139,108 +139,8 @@ export type Rfq = {
       ]
     },
     {
-      "name": "placeMarketOrder",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "cancelLimitOrder",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "cancelMarketOrder",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "cancelAllOrders",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "settle",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
+      "accounts": [],
       "args": []
     }
   ],
@@ -263,6 +163,10 @@ export type Rfq = {
             "type": "i64"
           },
           {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
             "name": "strike",
             "type": "u64"
           },
@@ -275,25 +179,38 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "bestOffer",
+            "name": "bestBid",
             "type": "u64"
           },
           {
-            "name": "bestBid",
+            "name": "bestOffer",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "orderBook",
+      "name": "orderBookState",
       "type": {
         "kind": "struct",
-        "fields": []
+        "fields": [
+          {
+            "name": "bids",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "asks",
+            "type": {
+              "vec": "u64"
+            }
+          }
+        ]
       }
     },
     {
-      "name": "state",
+      "name": "globalState",
       "type": {
         "kind": "struct",
         "fields": [
@@ -324,7 +241,7 @@ export type Rfq = {
 };
 
 export const IDL: Rfq = {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "name": "rfq",
   "instructions": [
     {
@@ -366,23 +283,13 @@ export const IDL: Rfq = {
           "isSigner": true
         },
         {
-          "name": "token",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "quoteToken",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "rfqState",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "globalState",
-          "isMut": false,
+          "name": "orderBookState",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -443,11 +350,21 @@ export const IDL: Rfq = {
         },
         {
           "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "orderBookState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "orderBook",
+          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -464,108 +381,8 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "placeMarketOrder",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "cancelLimitOrder",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "cancelMarketOrder",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "cancelAllOrders",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "settle",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
+      "accounts": [],
       "args": []
     }
   ],
@@ -588,6 +405,10 @@ export const IDL: Rfq = {
             "type": "i64"
           },
           {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
             "name": "strike",
             "type": "u64"
           },
@@ -600,25 +421,38 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "bestOffer",
+            "name": "bestBid",
             "type": "u64"
           },
           {
-            "name": "bestBid",
+            "name": "bestOffer",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "orderBook",
+      "name": "orderBookState",
       "type": {
         "kind": "struct",
-        "fields": []
+        "fields": [
+          {
+            "name": "bids",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "asks",
+            "type": {
+              "vec": "u64"
+            }
+          }
+        ]
       }
     },
     {
-      "name": "state",
+      "name": "globalState",
       "type": {
         "kind": "struct",
         "fields": [

@@ -32,8 +32,8 @@ pub mod rfq {
     /// when limit order is placed, it gets transferred to an Escrow-style PDA, and when that order is matched, the PDA transfers tokens
     /// limit order book is 3 vectors: bids, asks, market
 
-    pub fn initialize_RFQ(
-        ctx: Context<InitializeRFQ>,
+    pub fn initialize_rfq(
+        ctx: Context<InitializeRfq>,
         action: bool, //buy or sell
         instrument: u8, // Token, Future, Option, may not be needed
         rfq_expiry: i64, // when this RFQ timer expires
@@ -62,6 +62,7 @@ pub mod rfq {
         price: u64,
     ) -> ProgramResult {
         let rfq_state = &mut ctx.accounts.rfq_state;
+        
         let order_book_state = &mut ctx.accounts.order_book_state;
         let mut bids = order_book_state.bids.clone();
         let mut asks = order_book_state.asks.clone();
@@ -73,18 +74,24 @@ pub mod rfq {
             asks.push(price);
             asks.sort();
         }
-
+        
         order_book_state.bids = bids;
         order_book_state.asks = asks;
 
         Ok(())
     }
 
-    pub fn place_market_order(ctx: Context<PlaceLimitOrder>) -> ProgramResult { Ok(()) }
-    pub fn cancel_limit_order(ctx: Context<PlaceLimitOrder>) -> ProgramResult { Ok(()) }
-    pub fn cancel_market_order(ctx: Context<PlaceLimitOrder>) -> ProgramResult { Ok(()) }
-    pub fn cancel_all_orders(ctx: Context<PlaceLimitOrder>) -> ProgramResult { Ok(()) }
-    pub fn settle(ctx: Context<PlaceLimitOrder>) -> ProgramResult { Ok(()) }
+    pub fn cancel_limit_order(
+        ctx: Context<CancelLimitOrder>,
+    ) -> ProgramResult {
+        Ok(())
+    }
+
+}
+
+#[derive(Accounts)]
+pub struct CancelLimitOrder {
+
 }
 
 /// TBD: global state variables
@@ -103,13 +110,12 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-pub struct InitializeRFQ<'info> {
+pub struct InitializeRfq<'info> {
     pub authority: Signer<'info>,
     
     // tokens
     //pub asset_token: Account<'info, TokenAccount>,
     //pub quote_token: Account<'info, TokenAccount>,
-
     #[account(
         init,
         payer = authority,
@@ -117,7 +123,7 @@ pub struct InitializeRFQ<'info> {
         space = 1024,
         bump
     )]
-    pub rfq_state: Account<'info, RFQState>,
+    pub rfq_state: Account<'info, RfqState>,
     #[account(
         init,
         payer = authority,
@@ -126,15 +132,7 @@ pub struct InitializeRFQ<'info> {
         bump
     )]
     pub order_book_state : Account<'info, OrderBookState>,
-    #[account(
-        init,
-        payer = authority,
-        seeds = [b"convergence_rfq"],
-        space = 8 + 32 + 8 + 8 + 8 + 8,
-        bump
-    )]
-    pub global_state: Account<'info, GlobalState>,
-    //
+    
     // programs
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -147,28 +145,32 @@ pub struct InitializeRFQ<'info> {
 pub struct PlaceLimitOrder<'info> {
     pub authority: Signer<'info>,
     #[account(
-        init,
+        init_if_needed,
         payer = authority,
         seeds = [b"rfq_state"],
         space = 1024,
         bump
     )]
-    pub rfq_state: Account<'info, RFQState>,
+    pub rfq_state: Account<'info, RfqState>,
     #[account(
-        init,
-        payer = authority,
+        //init_if_needed,
+        //payer = authority,
+        mut,
         seeds = [b"order_book_state"],
-        space = 1024,
+        //space = 1024,
         bump
     )]
     pub order_book_state: Account<'info, OrderBookState>,
+
+
     
     pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
-/// holds state of an RFQ, TODO: add internal order book logic
+/// holds state of a given RFQ
 #[account]
-pub struct RFQState { 
+pub struct RfqState { 
     pub action: bool,
     pub instrument: u8,
     pub rfq_expiry: i64,
@@ -180,14 +182,15 @@ pub struct RFQState {
     pub best_offer: u64,
 }
 
+// holds state of an order book tied to an RFQ
 #[account]
 pub struct OrderBookState { 
     pub bids: Vec<u64>,
     pub asks: Vec<u64>,
-    // rfq_state: RFQState,
+    // rfq_state: RfqState,
 }
 
-/// global state for RFQ system
+/// global state for the entire RFQ system
 #[account]
 pub struct GlobalState {
     pub rfq_count: u64, // ? for our indexooors
@@ -196,5 +199,6 @@ pub struct GlobalState {
     pub fee_denominator: u64,
     pub fee_numerator: u64,
 }
+
 
 
