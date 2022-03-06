@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "name": "rfq",
   "instructions": [
     {
@@ -41,23 +41,13 @@
           "isSigner": true
         },
         {
-          "name": "token",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "quoteToken",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "rfqState",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "globalState",
-          "isMut": false,
+          "name": "orderBookState",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -118,11 +108,21 @@
         },
         {
           "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "orderBookState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "orderBook",
+          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -139,114 +139,14 @@
       ]
     },
     {
-      "name": "placeMarketOrder",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "cancelLimitOrder",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "cancelMarketOrder",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "cancelAllOrders",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "settle",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "rfqState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "orderBook",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
+      "accounts": [],
       "args": []
     }
   ],
   "accounts": [
     {
-      "name": "RFQState",
+      "name": "RfqState",
       "type": {
         "kind": "struct",
         "fields": [
@@ -263,6 +163,10 @@
             "type": "i64"
           },
           {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
             "name": "strike",
             "type": "u64"
           },
@@ -275,25 +179,38 @@
             "type": "u8"
           },
           {
-            "name": "bestOffer",
+            "name": "bestBid",
             "type": "u64"
           },
           {
-            "name": "bestBid",
+            "name": "bestOffer",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "OrderBook",
+      "name": "OrderBookState",
       "type": {
         "kind": "struct",
-        "fields": []
+        "fields": [
+          {
+            "name": "bids",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "asks",
+            "type": {
+              "vec": "u64"
+            }
+          }
+        ]
       }
     },
     {
-      "name": "State",
+      "name": "GlobalState",
       "type": {
         "kind": "struct",
         "fields": [
