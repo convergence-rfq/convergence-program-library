@@ -63,7 +63,12 @@ pub mod rfq {
     ) -> ProgramResult {
         let rfq_state = &mut ctx.accounts.rfq_state;
         
+        // need to tie order book state with wallet signers for each pledged bid -> escrow?
+
         let order_book_state = &mut ctx.accounts.order_book_state;
+        
+        let mut bid_signers = order_book_state.bid_signers.clone();
+        let mut ask_signers = order_book_state.ask_signers.clone();
         let mut bids = order_book_state.bids.clone();
         let mut asks = order_book_state.asks.clone();
 
@@ -161,12 +166,32 @@ pub struct PlaceLimitOrder<'info> {
         bump
     )]
     pub order_book_state: Account<'info, OrderBookState>,
+    /*
+    #[account(
+        init_if_needed,
+        payer = authority,
+        associated_token::mint = asset_mint,
+        associated_token::authority = authority
+    )]
+    pub asset_token: Account<'info, TokenAccount>, // this PDA will be an authority for escrow with token pledged by wallet
+    #[account(
+        init_if_needed,
+        payer = authority,
+        associated_token::mint = quote_mint,
+        associated_token::authority = authority
+    )]
+    pub quote_token: Account<'info, TokenAccount>, // this PDA will be an authority for escrow with token pledged by wallet
 
+    pub asset_mint: Account<'info, Mint>,
+    pub quote_mint: Account<'info, Mint>,
+    */
 
-    
     pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
 }
+
 
 /// holds state of a given RFQ
 #[account]
@@ -187,6 +212,8 @@ pub struct RfqState {
 pub struct OrderBookState { 
     pub bids: Vec<u64>,
     pub asks: Vec<u64>,
+    pub bid_signers: Vec<u64>,
+    pub ask_signers: Vec<u64>,
     // rfq_state: RfqState,
 }
 

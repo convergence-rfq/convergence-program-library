@@ -4,6 +4,7 @@ import { Rfq } from '../target/types/rfq';
 import * as assert from 'assert';
 import * as spl from "@solana/spl-token";
 import * as idl from '../target/idl/rfq.json';
+import { Token } from "@solana/spl-token";
 
 import {
   Connection,
@@ -16,6 +17,8 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
+
+
 describe('rfq', () => {
 
   // Configure the client to use the local cluster.
@@ -23,6 +26,7 @@ describe('rfq', () => {
   const provider = anchor.getProvider();
   const program = anchor.workspace.Rfq as Program<Rfq>;
   requestAirdrop(provider.connection, provider.wallet.publicKey, 100);
+
   
   it('Initializes', async () => {
     const feeDenominator = 1_000;
@@ -57,31 +61,32 @@ describe('rfq', () => {
     const state2 = await placeLimitOrder(provider, true, price2);
     assert.equal(state2.bids[0].toString(), price2.toString());
     assert.equal(state2.bids[1].toString(), price.toString());
+
+    //const tokenAccount = getNewToken(program, provider.wallet);
+    
   });
 
-  it('cancels limit orders', async() => {
-
-  });
 
   
 });
 
 
-export async function cancelLimitOrder(
-  provider: Provider,
-  action: boolean,
-  price: anchor.BN,
-): Promise<any> {
+export async function getNewTokenAndMint(program, payer): Promise<any> {
+  const assetMintAuthority = anchor.web3.Keypair.generate();
+  requestAirdrop(program.connection, assetMintAuthority.publicKey, 100);
 
-  const program = await getProgram(provider);
-  console.log("program", program.programId);
-  const [rfqPDA, _rfqBump] = await getPda(provider, 'rfq_state');
-  const [orderBookPDA, _orderBookBump] = await getPda(provider, 'order_book_state');
+  const assetMint = await Token.createMint(program.provider.connection,
+    assetMintAuthority,
+    assetMintAuthority.publicKey,
+    assetMintAuthority.publicKey,
+    0,
+    spl.TOKEN_PROGRAM_ID);
 
-
-
+  const authorityAssetToken = await assetMint.createAssociatedTokenAccount(
+      payer.publicKey,
+  );
+  return {authorityAssetToken, assetMint}
 }
-
 
 export async function placeLimitOrder(
   provider: Provider,
@@ -93,6 +98,12 @@ export async function placeLimitOrder(
   console.log("program", program.programId);
   const [rfqPDA, _rfqBump] = await getPda(provider, 'rfq_state');
   const [orderBookPDA, _orderBookBump] = await getPda(provider, 'order_book_state');
+  const [assetTokenPDA, _assetTokenBump] = await getPda(provider, 'asset_token');
+  const [quoteTokenPDA, _quoteTokenBump] = await getPda(provider, 'quote_token');
+
+  requestAirdrop(program.connection, provider.wallet.publicKey, 100);
+  //const { _assetToken, assetMint } = await getNewTokenAndMint(program, provider.wallet);
+  //const { _quoteToken, quoteMint } = await getNewTokenAndMint(program, provider.wallet);
 
   const tx = await program.rpc.placeLimitOrder(
     action,
@@ -102,7 +113,13 @@ export async function placeLimitOrder(
       authority: provider.wallet.publicKey,
       rfqState: rfqPDA,
       orderBookState: orderBookPDA,
+      //assetToken: assetTokenPDA,
+      //quoteToken: quoteTokenPDA,
+      //assetMint: assetMint,
+      //quoteMint: quoteMint,
       systemProgram: anchor.web3.SystemProgram.programId,
+      tokenProgram: spl.TOKEN_PROGRAM_ID,
+      associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
     },
   });

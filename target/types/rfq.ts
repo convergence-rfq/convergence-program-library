@@ -122,6 +122,16 @@ export type Rfq = {
           "isSigner": false
         },
         {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "rent",
           "isMut": false,
           "isSigner": false
@@ -202,6 +212,18 @@ export type Rfq = {
           },
           {
             "name": "asks",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "bidSigners",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "askSigners",
             "type": {
               "vec": "u64"
             }
@@ -364,6 +386,16 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "rent",
           "isMut": false,
           "isSigner": false
@@ -444,6 +476,18 @@ export const IDL: Rfq = {
           },
           {
             "name": "asks",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "bidSigners",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "askSigners",
             "type": {
               "vec": "u64"
             }
