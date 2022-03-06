@@ -32,7 +32,9 @@ describe('rfq', () => {
   });
 
   it('Initializes new RFQ', async () => {
-
+    const action = true;
+    const instrument = 1;
+    const rfqExpiry = 1000;
   })
 
   it('Places new limit orders', async () => {
