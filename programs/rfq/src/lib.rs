@@ -102,19 +102,34 @@ pub mod rfq {
         Ok(())
     }
 
+    const ESCROW_SEED: &[u8] = b"escrow_seed";
     /// escrow PDA transfers token back to wallet 
     /// removes corresponding limit price from bids or asks
     pub fn cancel_limit_order(
         ctx: Context<CancelLimitOrder>,
+        action: bool,
+        price: u64,
+        amount: u64,
     ) -> ProgramResult {
+        let (_pda, bump) = Pubkey::find_program_address(&[ESCROW_SEED], ctx.program_id);
+        //let signer_seeds = &[&ESCROW_SEED[..], &[bump]];
+
+        anchor_spl::token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from: ctx.accounts.escrow_token.to_account_info(),
+                    to: ctx.accounts.asset_token.to_account_info(),
+                    authority: ctx.accounts.escrow_token.to_account_info(),
+                },
+                &[&[&ESCROW_SEED, &[bump]]],
+            ),
+            amount,
+        )?;
+        
         Ok(())
     }
     //pub fn place_market_order()
-
-}
-
-#[derive(Accounts)]
-pub struct CancelLimitOrder {
 
 }
 
@@ -201,6 +216,39 @@ pub struct PlaceLimitOrder<'info> {
     pub escrow_token: Account<'info, TokenAccount>, // this PDA will be an authority for escrow with token pledged by wallet
     pub asset_mint: Account<'info, Mint>,
 
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+
+#[derive(Accounts)]
+pub struct CancelLimitOrder<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(
+        //init_if_needed,
+        mut,
+        seeds = [b"order_book_state"],
+        //space = 1024,
+        bump
+    )]
+    pub order_book_state: Account<'info, OrderBookState>,
+
+    #[account(mut)]
+    pub asset_token: Account<'info, TokenAccount>,
+    
+    #[account(
+        init_if_needed,
+        payer = authority,
+        seeds = [b"escrow_token"],
+        bump,
+        token::mint = asset_mint,
+        token::authority = escrow_token,
+    )]
+    pub escrow_token: Account<'info, TokenAccount>, // this PDA will be an authority for escrow with token pledged by wallet
+    pub asset_mint: Account<'info, Mint>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
