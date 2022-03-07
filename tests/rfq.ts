@@ -5,7 +5,6 @@ import * as assert from 'assert';
 import * as spl from "@solana/spl-token";
 import * as idl from '../target/idl/rfq.json';
 import { Token } from "@solana/spl-token";
-
 import {
   Connection,
   Keypair,
@@ -19,7 +18,8 @@ import {
 
 let assetMint : spl.Token;
 let quoteMint : spl.Token;
-const mintAuthority = anchor.web3.Keypair.generate();
+let mintAuthority : any;
+let authorityAssetToken : any;
 
 // Configure the client to use the local cluster.
 anchor.setProvider(anchor.Provider.env());
@@ -28,17 +28,33 @@ const program = anchor.workspace.Rfq as Program<Rfq>;
 
 describe('rfq', () => {
   before(async () => {
-    
+    mintAuthority = anchor.web3.Keypair.generate();
+    await requestAirdrop(provider, mintAuthority.publicKey, 10_000_000_000);
+      
+    const walletBalance = await provider.connection.getBalance(provider.wallet.publicKey);
+    console.log('main wallet balance: ', walletBalance);
+    const mintAuthorityBalance = await provider.connection.getBalance(mintAuthority.publicKey);
+    console.log('mint wallet balance: ', mintAuthorityBalance);
+
+    assetMint = await spl.Token.createMint(program.provider.connection,
+      mintAuthority,
+      mintAuthority.publicKey,
+      mintAuthority.publicKey,
+      0,
+      spl.TOKEN_PROGRAM_ID);
+
+    authorityAssetToken = await assetMint.createAssociatedTokenAccount(
+      provider.wallet.publicKey,
+    );
+
+    await assetMint.mintTo(authorityAssetToken, mintAuthority.publicKey, [], 10_000_000_000);
   });
 
   it('Initializes', async () => {
     const feeDenominator = 1_000;
     const feeNumerator = 3;
     const { tx, state } = await initializeProtocol(provider, feeDenominator, feeNumerator);
-    console.log(state.rfqCount);
     assert.ok(state.rfqCount.eq(new anchor.BN(0)));
-    console.log("Your transaction signature");
-    console.log('asssetMint: ', assetMint);
   });
 
   it('Initializes new RFQ', async () => {
@@ -59,17 +75,36 @@ describe('rfq', () => {
     const price = new anchor.BN(1000);
     const price2 = new anchor.BN(200);
     const amount = new anchor.BN(10);
-
-    console.log('assetMint: ', assetMint);
-    console.log('quoteMint: ', quoteMint);
-
-    const state = await placeLimitOrder(provider, true, price, amount, assetMint, quoteMint);
+    //const { _assetToken, assetMint } = await getNewTokenAndMint(program, provider.wallet);
+    
+    const balanceBeforeCancel = await getBalance(provider.wallet, assetMint.publicKey);
+    const state = await placeLimitOrder(provider, true, price, amount, assetMint, authorityAssetToken);
     
     assert.equal(state.bids[0].toString(), price.toString());
-    //const state2 = await placeLimitOrder(provider, true, price2);
-    //assert.equal(state2.bids[0].toString(), price2.toString());
-    //assert.equal(state2.bids[1].toString(), price.toString());
+    const state2 = await placeLimitOrder(provider, true, price2, amount, assetMint, authorityAssetToken);
+    assert.equal(state2.bids[0].toString(), price2.toString());
+    assert.equal(state2.bids[1].toString(), price.toString());
+    
+    const balanceAfterCancel = await getBalance(provider.wallet, assetMint.publicKey);
+    console.log('balance before cancel: ', balanceBeforeCancel);
+    console.log('balance after cancel: ', balanceAfterCancel);
+    assert.equal(balanceAfterCancel, 9_999_999_980)
+  });
 
+  it('cancels limit order', async () => {
+    const action = true; // buy
+    const price = new anchor.BN(1000);
+    const price2 = new anchor.BN(200);
+    const amount = new anchor.BN(10);
+    
+    const balanceBeforeCancel = await getBalance(provider.wallet, assetMint.publicKey);
+    const state = await cancelLimitOrder(provider, true, price2, amount, assetMint, authorityAssetToken);
+    const state2 = await cancelLimitOrder(provider, true, price2, amount, assetMint, authorityAssetToken);
+    
+    const balanceAfterCancel = await getBalance(provider.wallet, assetMint.publicKey);
+    console.log('balance before cancel: ', balanceBeforeCancel);
+    console.log('balance after cancel: ', balanceAfterCancel);
+    assert.equal(balanceAfterCancel, 10_000_000_000)
   });
 
 
@@ -96,13 +131,59 @@ export async function getNewTokenAndMint(program, payer): Promise<any> {
 }
 */
 
+
+export async function cancelLimitOrder(
+  provider: Provider,
+  action: boolean,
+  price: anchor.BN,
+  amount: anchor.BN,
+  assetMint,
+  authorityAssetToken
+): Promise<any> {
+
+  const program = await getProgram(provider);
+  const [rfqPDA, _rfqBump] = await getPda(provider, 'rfq_state');
+  const [orderBookPDA, _orderBookBump] = await getPda(provider, 'order_book_state');
+
+  const escrow_seed = Buffer.from(anchor.utils.bytes.utf8.encode("escrow_token"));
+  const [escrowTokenPDA, _escrowTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [escrow_seed],
+      program.programId);
+
+  console.log('assetToken: ', authorityAssetToken);
+
+  const tx = await program.rpc.cancelLimitOrder(
+    action,
+    price,
+    amount,
+  {
+    accounts: {
+      authority: provider.wallet.publicKey,
+      rfqState: rfqPDA,
+      orderBookState: orderBookPDA,
+      assetToken: authorityAssetToken,
+      escrowToken: escrowTokenPDA,
+      assetMint: assetMint.publicKey,
+      
+      systemProgram: anchor.web3.SystemProgram.programId,
+      tokenProgram: spl.TOKEN_PROGRAM_ID,
+      associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    },
+  });
+
+  const state = await program.account.orderBookState.fetch(orderBookPDA);
+  return state;
+}
+
+
 export async function placeLimitOrder(
   provider: Provider,
   action: boolean,
   price: anchor.BN,
   amount: anchor.BN,
   assetMint,
-  quoteMint,
+  authorityAssetToken
 ): Promise<any> {
 
   const program = await getProgram(provider);
@@ -110,28 +191,6 @@ export async function placeLimitOrder(
   const [rfqPDA, _rfqBump] = await getPda(provider, 'rfq_state');
   const [orderBookPDA, _orderBookBump] = await getPda(provider, 'order_book_state');
   //const [escrowTokenPDA, _escrowTokenBump] = await getPda(provider, 'escrow_token');
-
-  //const { _assetToken, assetMint } = await getNewTokenAndMint(program, provider.wallet);
-  
-  await requestAirdrop(provider, mintAuthority.publicKey, 10_000_000_000);
-    
-  const walletBalance = await provider.connection.getBalance(provider.wallet.publicKey);
-  console.log('main wallet balance: ', walletBalance);
-  const mintAuthorityBalance = await provider.connection.getBalance(mintAuthority.publicKey);
-  console.log('mint wallet balance: ', mintAuthorityBalance);
-
-  assetMint = await spl.Token.createMint(program.provider.connection,
-    mintAuthority,
-    mintAuthority.publicKey,
-    mintAuthority.publicKey,
-    0,
-    spl.TOKEN_PROGRAM_ID);
-
-  const authorityAssetToken = await assetMint.createAssociatedTokenAccount(
-    provider.wallet.publicKey,
-  );
-
-  await assetMint.mintTo(authorityAssetToken, mintAuthority.publicKey, [], 10_000_000);
 
   const escrow_seed = Buffer.from(anchor.utils.bytes.utf8.encode("escrow_token"));
   const [escrowTokenPDA, _escrowTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -252,9 +311,10 @@ export async function requestAirdrop(
   );
 }
 
-export async function getBalance(payer, mint) {
+const getBalance = async (payer, mint) => {
   try {
     const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(payer.publicKey, { mint, });
+  
     return parsedAccount.value[0].account.data.parsed.info.tokenAmount.uiAmount;
   } catch (error) {
     console.log("No mints found for wallet");
