@@ -103,7 +103,7 @@ export type Rfq = {
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -114,6 +114,21 @@ export type Rfq = {
         {
           "name": "orderBookState",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -144,6 +159,10 @@ export type Rfq = {
         },
         {
           "name": "price",
+          "type": "u64"
+        },
+        {
+          "name": "amount",
           "type": "u64"
         }
       ]
@@ -367,7 +386,7 @@ export const IDL: Rfq = {
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -378,6 +397,21 @@ export const IDL: Rfq = {
         {
           "name": "orderBookState",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -408,6 +442,10 @@ export const IDL: Rfq = {
         },
         {
           "name": "price",
+          "type": "u64"
+        },
+        {
+          "name": "amount",
           "type": "u64"
         }
       ]

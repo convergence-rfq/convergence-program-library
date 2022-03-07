@@ -56,11 +56,15 @@ pub mod rfq {
         Ok(())
     }
 
+    /// 1. authorityAssetToken gets transfers ownership of token into escrow PDA
+    /// 2. limit price gets recorded in either asks or bids vector
     pub fn place_limit_order(
         ctx: Context<PlaceLimitOrder>,
         action: bool,
         price: u64,
+        amount: u64,
     ) -> ProgramResult {
+        
         let rfq_state = &mut ctx.accounts.rfq_state;
         
         // need to tie order book state with wallet signers for each pledged bid -> escrow?
@@ -82,15 +86,30 @@ pub mod rfq {
         
         order_book_state.bids = bids;
         order_book_state.asks = asks;
+        
+        anchor_spl::token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from: ctx.accounts.asset_token.to_account_info(),
+                    to: ctx.accounts.escrow_token.to_account_info(),
+                    authority: ctx.accounts.authority.to_account_info(),
+                },
+            ),
+            amount,
+        )?;
 
         Ok(())
     }
 
+    /// escrow PDA transfers token back to wallet 
+    /// removes corresponding limit price from bids or asks
     pub fn cancel_limit_order(
         ctx: Context<CancelLimitOrder>,
     ) -> ProgramResult {
         Ok(())
     }
+    //pub fn place_market_order()
 
 }
 
@@ -148,7 +167,9 @@ pub struct InitializeRfq<'info> {
 
 #[derive(Accounts)]
 pub struct PlaceLimitOrder<'info> {
+    #[account(mut)]
     pub authority: Signer<'info>,
+    
     #[account(
         init_if_needed,
         payer = authority,
@@ -159,32 +180,27 @@ pub struct PlaceLimitOrder<'info> {
     pub rfq_state: Account<'info, RfqState>,
     #[account(
         //init_if_needed,
-        //payer = authority,
         mut,
         seeds = [b"order_book_state"],
         //space = 1024,
         bump
     )]
     pub order_book_state: Account<'info, OrderBookState>,
-    /*
+    
+    #[account(mut)]
+    pub asset_token: Account<'info, TokenAccount>,
+    
     #[account(
         init_if_needed,
         payer = authority,
-        associated_token::mint = asset_mint,
-        associated_token::authority = authority
+        seeds = [b"escrow_token"],
+        bump,
+        token::mint = asset_mint,
+        token::authority = escrow_token,
     )]
-    pub asset_token: Account<'info, TokenAccount>, // this PDA will be an authority for escrow with token pledged by wallet
-    #[account(
-        init_if_needed,
-        payer = authority,
-        associated_token::mint = quote_mint,
-        associated_token::authority = authority
-    )]
-    pub quote_token: Account<'info, TokenAccount>, // this PDA will be an authority for escrow with token pledged by wallet
-
+    pub escrow_token: Account<'info, TokenAccount>, // this PDA will be an authority for escrow with token pledged by wallet
     pub asset_mint: Account<'info, Mint>,
-    pub quote_mint: Account<'info, Mint>,
-    */
+
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
