@@ -33,7 +33,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "initializeRfq",
+      "name": "request",
       "accounts": [
         {
           "name": "authority",
@@ -108,7 +108,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "respondRfq",
+      "name": "respond",
       "accounts": [
         {
           "name": "authority",
@@ -266,7 +266,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "counter",
+      "name": "settle",
       "accounts": [
         {
           "name": "authority",
@@ -329,10 +329,19 @@ export type Rfq = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "assetSeed",
+          "type": "bytes"
+        },
+        {
+          "name": "quoteSeed",
+          "type": "bytes"
+        }
+      ]
     },
     {
-      "name": "settle",
+      "name": "approve",
       "accounts": [
         {
           "name": "authority",
@@ -467,6 +476,10 @@ export type Rfq = {
           {
             "name": "confirmed",
             "type": "bool"
+          },
+          {
+            "name": "takerAddress",
+            "type": "publicKey"
           }
         ]
       }
@@ -505,6 +518,16 @@ export type Rfq = {
       "code": 6000,
       "name": "InvalidQuoteType",
       "msg": "Invalid quote type"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidTakerAddress",
+      "msg": "Invalid taker address"
+    },
+    {
+      "code": 6002,
+      "name": "TradeNotConfirmed",
+      "msg": "Trade has not been confirmed by taker"
     }
   ]
 };
@@ -544,7 +567,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "initializeRfq",
+      "name": "request",
       "accounts": [
         {
           "name": "authority",
@@ -619,7 +642,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "respondRfq",
+      "name": "respond",
       "accounts": [
         {
           "name": "authority",
@@ -777,7 +800,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "counter",
+      "name": "settle",
       "accounts": [
         {
           "name": "authority",
@@ -840,10 +863,19 @@ export const IDL: Rfq = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "assetSeed",
+          "type": "bytes"
+        },
+        {
+          "name": "quoteSeed",
+          "type": "bytes"
+        }
+      ]
     },
     {
-      "name": "settle",
+      "name": "approve",
       "accounts": [
         {
           "name": "authority",
@@ -978,6 +1010,10 @@ export const IDL: Rfq = {
           {
             "name": "confirmed",
             "type": "bool"
+          },
+          {
+            "name": "takerAddress",
+            "type": "publicKey"
           }
         ]
       }
@@ -1016,6 +1052,16 @@ export const IDL: Rfq = {
       "code": 6000,
       "name": "InvalidQuoteType",
       "msg": "Invalid quote type"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidTakerAddress",
+      "msg": "Invalid taker address"
+    },
+    {
+      "code": 6002,
+      "name": "TradeNotConfirmed",
+      "msg": "Trade has not been confirmed by taker"
     }
   ]
 };

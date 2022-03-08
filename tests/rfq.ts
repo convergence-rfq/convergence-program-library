@@ -22,6 +22,12 @@ let quoteMint : spl.Token;
 let mintAuthority : any;
 let authorityAssetToken : any;
 let authorityQuoteToken : any;
+let makerAassetToken : any;
+let makerAquoteToken : any;
+let makerBassetToken : any;
+let makerBquoteToken : any;
+let marketMakerA : Keypair;
+let marketMakerB : Keypair;
 
 // Configure the client to use the local cluster.
 anchor.setProvider(anchor.Provider.env());
@@ -31,7 +37,12 @@ const program = anchor.workspace.Rfq as Program<Rfq>;
 describe('rfq', () => {
   before(async () => {
     mintAuthority = anchor.web3.Keypair.generate();
+    marketMakerA = anchor.web3.Keypair.generate();
+    marketMakerB = anchor.web3.Keypair.generate();
+
     await requestAirdrop(provider, mintAuthority.publicKey, 10_000_000_000);
+    await requestAirdrop(provider, marketMakerA.publicKey, 10_000_000_000);
+    await requestAirdrop(provider, marketMakerB.publicKey, 10_000_000_000);
       
     const walletBalance = await provider.connection.getBalance(provider.wallet.publicKey);
     console.log('main wallet balance: ', walletBalance);
@@ -58,9 +69,25 @@ describe('rfq', () => {
     authorityQuoteToken = await quoteMint.createAssociatedTokenAccount(
       provider.wallet.publicKey,
     );
+    makerAassetToken = await assetMint.createAssociatedTokenAccount(
+      marketMakerA.publicKey,
+    );
+    makerAquoteToken = await quoteMint.createAssociatedTokenAccount(
+      marketMakerA.publicKey,
+    );
+    makerBassetToken = await assetMint.createAssociatedTokenAccount(
+      marketMakerB.publicKey,
+    );
+    makerBquoteToken = await quoteMint.createAssociatedTokenAccount(
+      marketMakerB.publicKey,
+    );
 
     await assetMint.mintTo(authorityAssetToken, mintAuthority.publicKey, [], 10_000_000_000);
     await quoteMint.mintTo(authorityQuoteToken, mintAuthority.publicKey, [], 10_000_000_000);
+    await assetMint.mintTo(makerAassetToken, mintAuthority.publicKey, [], 10_000_000_000);
+    await quoteMint.mintTo(makerAquoteToken, mintAuthority.publicKey, [], 10_000_000_000);
+    await assetMint.mintTo(makerBassetToken, mintAuthority.publicKey, [], 10_000_000_000);
+    await quoteMint.mintTo(makerBquoteToken, mintAuthority.publicKey, [], 10_000_000_000);
   });
 
   it('Initializes', async () => {
@@ -79,7 +106,7 @@ describe('rfq', () => {
     const nOfLegs = 1;
     const amount = new anchor.BN(10_000);
 
-    const {tx, state} = await initializeRfq(provider, title, takerOrderType, instrument, expiry, ratio, nOfLegs, amount);
+    const {tx, state} = await request(provider, title, takerOrderType, instrument, expiry, ratio, nOfLegs, amount);
     assert.equal(state.expired, false);
     assert.equal(state.ratio, ratio);
     assert.equal(state.takerOrderType, takerOrderType);
@@ -89,36 +116,47 @@ describe('rfq', () => {
   });
 
   // TODO: change wallets
-  it('Responds to RFQ', async() => {
+  it('responds to RFQ', async() => {
     const title = "test rfq";
     const orderType = 1;
     const price = new anchor.BN(100);
     const price2 = new anchor.BN(110);
     const amount = new anchor.BN(10_000);
 
-    const state = await respondRfq(provider, title, orderType, price, amount);
+    const state = await respond(provider, marketMakerA, title, orderType, price, amount, makerAassetToken, makerAquoteToken);
     assert.equal(state.orderCount, 1);
     assert.equal(state.bestBid.toString(), price.toString());
     assert.equal(state.bestAsk.toString(), (new anchor.BN(0).toString()));
 
-    const state2 = await respondRfq(provider, title, orderType, price2, amount);
+    const state2 = await respond(provider, marketMakerB, title, orderType, price2, amount, makerBassetToken, makerBquoteToken);
     assert.equal(state2.orderCount, 2);
     assert.equal(state2.bestBid.toString(), price2.toString());
     assert.equal(state2.bestAsk.toString(), (new anchor.BN(0).toString()));
   })
 
-  it('Taker confirms RFQ price (pre-settlement)', async() => {
+  it('confirms -> taker confirms RFQ price (pre-settlement)', async() => {
     const title = "test rfq";
     const orderType = 2;
 
-    const state = await confirm(provider, title, orderType);
+    const state = await confirm(provider, title, orderType, authorityAssetToken, authorityQuoteToken);
 
     const assetMintBalance = await getBalance(provider.wallet, assetMint.publicKey);
     const quoteMintBalance = await getBalance(provider.wallet, quoteMint.publicKey);
+    
     console.log('asset mint balance: ', assetMintBalance);
     console.log('quote mint balance: ', quoteMintBalance);
+    
     assert.equal(assetMintBalance, 9999999910);
     assert.equal(state.orderCount, 2);
+    assert.equal(state.confirmed, true);
+  })
+
+  it('settles', async() => {
+    const title = "test rfq";
+
+    const state = await settle(provider, title, authorityAssetToken, authorityQuoteToken);
+    const state1 = await settle(provider, title, makerAassetToken, makerAquoteToken);
+    const state2 = await settle(provider, title, makerBassetToken, makerBquoteToken);
   })
 
   /*
@@ -147,16 +185,67 @@ describe('rfq', () => {
 });
 
 
-export async function confirm(
+
+export async function settle(
   provider: Provider,
   title: string,
-  orderType: number,
+  assetToken: spl.Token,
+  quoteToken: spl.Token,
 ): Promise<any> {
 
   const program = await getProgram(provider);
 
   const [rfqPDA, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("rfq_state"), provider.wallet.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("rfq_state"), Buffer.from(title.slice(0, 32))],
+    program.programId
+  );
+  const [escrowAssetTokenPDA, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from("escrow_asset"), provider.wallet.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    program.programId
+  );
+  const [escrowQuoteTokenPDA, _escrowQuoteTokenPDA] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from("escrow_quote"), provider.wallet.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    program.programId
+  );
+  
+  const tx = await program.rpc.settle(
+    title,
+  {
+    accounts: {
+      authority: provider.wallet.publicKey,
+      rfqState: rfqPDA,
+      assetToken: assetToken,
+      quoteToken: quoteToken,
+      escrowAssetToken: escrowAssetTokenPDA,
+      escrowQuoteToken: escrowQuoteTokenPDA,
+      assetMint: assetMint.publicKey,
+      quoteMint: quoteMint.publicKey,
+      
+      systemProgram: anchor.web3.SystemProgram.programId,
+      tokenProgram: spl.TOKEN_PROGRAM_ID,
+      associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    },
+  });
+
+  const state = await program.account.rfqState.fetch(rfqPDA);
+  return state;
+}
+
+
+
+export async function confirm(
+  provider: Provider,
+  title: string,
+  orderType: number,
+  assetToken: spl.Token,
+  quoteToken: spl.Token,
+): Promise<any> {
+
+  const program = await getProgram(provider);
+
+  const [rfqPDA, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from("rfq_state"), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   const [escrowAssetTokenPDA, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -175,8 +264,8 @@ export async function confirm(
     accounts: {
       authority: provider.wallet.publicKey,
       rfqState: rfqPDA,
-      assetToken: authorityAssetToken,
-      quoteToken: authorityQuoteToken,
+      assetToken: assetToken,
+      quoteToken: quoteToken,
       escrowAssetToken: escrowAssetTokenPDA,
       escrowQuoteToken: escrowQuoteTokenPDA,
       assetMint: assetMint.publicKey,
@@ -194,40 +283,44 @@ export async function confirm(
 }
 
 
-export async function respondRfq(
+export async function respond(
   provider: Provider,
+  maker: Keypair,
   title: string,
   orderType: number,
   price: anchor.BN,
   amount: anchor.BN,
+  assetToken: spl.Token,
+  quoteToken: spl.Token
 ): Promise<any> {
 
   const program = await getProgram(provider);
 
   const [rfqPDA, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("rfq_state"), provider.wallet.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    //[Buffer.from("rfq_state"), provider.wallet.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("rfq_state"), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   const [escrowAssetTokenPDA, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_asset"), provider.wallet.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("escrow_asset"), maker.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   const [escrowQuoteTokenPDA, _escrowQuoteTokenPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_quote"), provider.wallet.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("escrow_quote"), maker.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   
-  const tx = await program.rpc.respondRfq(
+  const tx = await program.rpc.respond(
     title,
     orderType,
     price,
     amount,
   {
     accounts: {
-      authority: provider.wallet.publicKey,
+      authority: maker.publicKey,
       rfqState: rfqPDA,
-      assetToken: authorityAssetToken,
-      quoteToken: authorityQuoteToken,
+      assetToken: assetToken,
+      quoteToken: quoteToken,
       escrowAssetToken: escrowAssetTokenPDA,
       escrowQuoteToken: escrowQuoteTokenPDA,
       assetMint: assetMint.publicKey,
@@ -238,6 +331,7 @@ export async function respondRfq(
       associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
     },
+    signers: [maker],
   });
 
   const state = await program.account.rfqState.fetch(rfqPDA);
@@ -245,7 +339,7 @@ export async function respondRfq(
 }
 
 
-export async function initializeRfq(
+export async function request(
   provider: Provider,
   title: string,
   takeOrderType: number,
@@ -261,11 +355,11 @@ export async function initializeRfq(
   
   const [orderBookPDA, _orderBookBump] = await getPda(provider, 'order_book_state');
   const [rfqPDA, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("rfq_state"), provider.wallet.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("rfq_state"), Buffer.from(title.slice(0, 32))],
     program.programId
   );
 
-  const tx = await program.rpc.initializeRfq(
+  const tx = await program.rpc.request(
     title,
     takeOrderType,
     instrument,
@@ -372,11 +466,4 @@ export async function getNewTokenAndMint(program, payer): Promise<any> {
 }
 */
 
-  // 1. initialize a new RFQ ecosystem with global state
-  // 2. taker creates a new RFQ request, global state gets updated with new RFQ
-  // 3. wallet A looks up global state, posts two-way order in this RFQ, posts both as collateral
-  // 4. wallet B does the same
-  // 5. wallet C does the same
-  // 6. wallet A wins the trade, swaps. wallet A and taker recoup their collateral.
-  // 7. wallets B & C recoup their collateral
-
+// initialize -> initialize_rfq -> request -> respond -> confirm -> approve
