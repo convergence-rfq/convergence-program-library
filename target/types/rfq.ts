@@ -41,12 +41,17 @@ export type Rfq = {
           "isSigner": true
         },
         {
-          "name": "rfqState",
-          "isMut": true,
+          "name": "assetMint",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "orderBookState",
+          "name": "quoteMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfqState",
           "isMut": true,
           "isSigner": false
         },
@@ -73,20 +78,20 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "action",
-          "type": "bool"
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "takerOrderType",
+          "type": "u8"
         },
         {
           "name": "instrument",
           "type": "u8"
         },
         {
-          "name": "rfqExpiry",
+          "name": "expiry",
           "type": "i64"
-        },
-        {
-          "name": "strike",
-          "type": "u64"
         },
         {
           "name": "ratio",
@@ -95,11 +100,15 @@ export type Rfq = {
         {
           "name": "nOfLegs",
           "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
     {
-      "name": "placeLimitOrder",
+      "name": "respondRfq",
       "accounts": [
         {
           "name": "authority",
@@ -112,22 +121,32 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "orderBookState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "assetToken",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowToken",
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
           "isMut": false,
           "isSigner": false
         },
@@ -154,8 +173,12 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "action",
-          "type": "bool"
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "orderType",
+          "type": "u8"
         },
         {
           "name": "price",
@@ -168,7 +191,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "cancelLimitOrder",
+      "name": "confirm",
       "accounts": [
         {
           "name": "authority",
@@ -176,7 +199,7 @@ export type Rfq = {
           "isSigner": true
         },
         {
-          "name": "orderBookState",
+          "name": "rfqState",
           "isMut": true,
           "isSigner": false
         },
@@ -186,12 +209,27 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "escrowToken",
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
           "isMut": false,
           "isSigner": false
         },
@@ -218,18 +256,146 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "action",
-          "type": "bool"
+          "name": "title",
+          "type": "string"
         },
         {
-          "name": "price",
-          "type": "u64"
-        },
-        {
-          "name": "amount",
-          "type": "u64"
+          "name": "orderType",
+          "type": "u8"
         }
       ]
+    },
+    {
+      "name": "counter",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -247,16 +413,12 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "rfqExpiry",
-            "type": "i64"
-          },
-          {
             "name": "expiry",
             "type": "i64"
           },
           {
-            "name": "strike",
-            "type": "u64"
+            "name": "expired",
+            "type": "bool"
           },
           {
             "name": "ratio",
@@ -267,44 +429,44 @@ export type Rfq = {
             "type": "u8"
           },
           {
+            "name": "assetMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          },
+          {
             "name": "bestBid",
             "type": "u64"
           },
           {
-            "name": "bestOffer",
+            "name": "bestAsk",
             "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "orderBookState",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bids",
-            "type": {
-              "vec": "u64"
-            }
           },
           {
-            "name": "asks",
-            "type": {
-              "vec": "u64"
-            }
+            "name": "bestBidAddress",
+            "type": "publicKey"
           },
           {
-            "name": "bidSigners",
-            "type": {
-              "vec": "u64"
-            }
+            "name": "bestAskAddress",
+            "type": "publicKey"
           },
           {
-            "name": "askSigners",
-            "type": {
-              "vec": "u64"
-            }
+            "name": "orderCount",
+            "type": "u16"
+          },
+          {
+            "name": "takerOrderType",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "confirmed",
+            "type": "bool"
           }
         ]
       }
@@ -336,6 +498,13 @@ export type Rfq = {
           }
         ]
       }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidQuoteType",
+      "msg": "Invalid quote type"
     }
   ]
 };
@@ -383,12 +552,17 @@ export const IDL: Rfq = {
           "isSigner": true
         },
         {
-          "name": "rfqState",
-          "isMut": true,
+          "name": "assetMint",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "orderBookState",
+          "name": "quoteMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfqState",
           "isMut": true,
           "isSigner": false
         },
@@ -415,20 +589,20 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "action",
-          "type": "bool"
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "takerOrderType",
+          "type": "u8"
         },
         {
           "name": "instrument",
           "type": "u8"
         },
         {
-          "name": "rfqExpiry",
+          "name": "expiry",
           "type": "i64"
-        },
-        {
-          "name": "strike",
-          "type": "u64"
         },
         {
           "name": "ratio",
@@ -437,11 +611,15 @@ export const IDL: Rfq = {
         {
           "name": "nOfLegs",
           "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
     {
-      "name": "placeLimitOrder",
+      "name": "respondRfq",
       "accounts": [
         {
           "name": "authority",
@@ -454,22 +632,32 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "orderBookState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "assetToken",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowToken",
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
           "isMut": false,
           "isSigner": false
         },
@@ -496,8 +684,12 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "action",
-          "type": "bool"
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "orderType",
+          "type": "u8"
         },
         {
           "name": "price",
@@ -510,7 +702,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "cancelLimitOrder",
+      "name": "confirm",
       "accounts": [
         {
           "name": "authority",
@@ -518,7 +710,7 @@ export const IDL: Rfq = {
           "isSigner": true
         },
         {
-          "name": "orderBookState",
+          "name": "rfqState",
           "isMut": true,
           "isSigner": false
         },
@@ -528,12 +720,27 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "escrowToken",
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
           "isMut": false,
           "isSigner": false
         },
@@ -560,18 +767,146 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "action",
-          "type": "bool"
+          "name": "title",
+          "type": "string"
         },
         {
-          "name": "price",
-          "type": "u64"
-        },
-        {
-          "name": "amount",
-          "type": "u64"
+          "name": "orderType",
+          "type": "u8"
         }
       ]
+    },
+    {
+      "name": "counter",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -589,16 +924,12 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "rfqExpiry",
-            "type": "i64"
-          },
-          {
             "name": "expiry",
             "type": "i64"
           },
           {
-            "name": "strike",
-            "type": "u64"
+            "name": "expired",
+            "type": "bool"
           },
           {
             "name": "ratio",
@@ -609,44 +940,44 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
+            "name": "assetMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          },
+          {
             "name": "bestBid",
             "type": "u64"
           },
           {
-            "name": "bestOffer",
+            "name": "bestAsk",
             "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "orderBookState",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bids",
-            "type": {
-              "vec": "u64"
-            }
           },
           {
-            "name": "asks",
-            "type": {
-              "vec": "u64"
-            }
+            "name": "bestBidAddress",
+            "type": "publicKey"
           },
           {
-            "name": "bidSigners",
-            "type": {
-              "vec": "u64"
-            }
+            "name": "bestAskAddress",
+            "type": "publicKey"
           },
           {
-            "name": "askSigners",
-            "type": {
-              "vec": "u64"
-            }
+            "name": "orderCount",
+            "type": "u16"
+          },
+          {
+            "name": "takerOrderType",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "confirmed",
+            "type": "bool"
           }
         ]
       }
@@ -678,6 +1009,13 @@ export const IDL: Rfq = {
           }
         ]
       }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidQuoteType",
+      "msg": "Invalid quote type"
     }
   ]
 };
