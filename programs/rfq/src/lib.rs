@@ -340,6 +340,7 @@ pub struct Request<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+
 #[derive(Accounts)]
 #[instruction(
     title: String,
