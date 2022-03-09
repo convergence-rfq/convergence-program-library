@@ -5,7 +5,6 @@ use anchor_spl::{
 };
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
-
 #[program]
 pub mod rfq {
     use super::*;
@@ -78,14 +77,13 @@ pub mod rfq {
         price: u64,
         amount: u64,
     ) -> ProgramResult {
-
-        let rfq_state = &mut ctx.accounts.rfq_state;
+        let mut rfq_state = &mut ctx.accounts.rfq_state;
         let mut best_bid = rfq_state.best_bid;
         let mut best_ask = rfq_state.best_bid;
-        let mut best_bid_address = rfq_state.best_bid_address;
-        let mut best_ask_address = rfq_state.best_bid_address;
+        let best_bid_address = rfq_state.best_bid_address;
+        let best_ask_address = rfq_state.best_bid_address;
         let authority = ctx.accounts.authority.key();
-        let mut order_count = rfq_state.order_count;
+        let order_count = rfq_state.order_count;
 
         if order_count == 0 {
             best_ask = 18446744073709551615;
@@ -96,11 +94,15 @@ pub mod rfq {
             if price > best_bid {
                 rfq_state.best_bid = price;
                 rfq_state.best_bid_address = authority;
+                rfq_state.winning_maker_asset_escrow = ctx.accounts.escrow_asset_token.to_account_info().key();
+                rfq_state.winning_maker_quote_escrow = ctx.accounts.escrow_quote_token.to_account_info().key();
             }
         } else if order_type == 2 {
             if price < best_ask {
                 rfq_state.best_ask = price;
                 rfq_state.best_ask_address = authority;
+                rfq_state.winning_maker_asset_escrow = ctx.accounts.escrow_asset_token.to_account_info().key();
+                rfq_state.winning_maker_quote_escrow = ctx.accounts.escrow_quote_token.to_account_info().key();
             }
         } else {
             return Err(ErrorCode::InvalidQuoteType.into());
@@ -131,6 +133,7 @@ pub mod rfq {
             asset_amount,
         )?;
 
+        //rfq_state.participants.push(authority);
         rfq_state.order_count = rfq_state.order_count + 1;
         Ok(())
     }
@@ -138,29 +141,44 @@ pub mod rfq {
     /// TODO: make sure to test respond and confirm RFQ as different wallets!
     /// taker confirms by picking a side (bid or ask) or by cancelling the transaction
     /// if within 20-30s, taker does nothing, transaction auto-cancels
+    ///
     pub fn confirm(
         ctx: Context<Confirm>,
         title: String,
-        order_type: u8,
     ) -> ProgramResult {
         // check if valid best_bid or best_offer exists
         let rfq_state = &mut ctx.accounts.rfq_state;
-        let mut best_bid = rfq_state.best_bid;
-        let mut best_ask = rfq_state.best_bid;
-        let mut best_bid_address = rfq_state.best_bid_address;
-        let mut best_ask_address = rfq_state.best_bid_address;
-        let mut order_count = rfq_state.order_count;
+        let best_bid = rfq_state.best_bid;
+        let best_ask = rfq_state.best_bid;
+        let best_bid_address = rfq_state.best_bid_address;
+        let best_ask_address = rfq_state.best_bid_address;
+        let order_count = rfq_state.order_count;
         let amount = rfq_state.amount;
         let authority = ctx.accounts.authority.key();
         let taker_address = rfq_state.taker_address;
+        let taker_order_type = rfq_state.taker_order_type;
 
         // make sure current authority matches original taker address from 'request' fn call
         if taker_address != authority {
             return Err(ErrorCode::InvalidTakerAddress.into());
         }
 
-        if order_type == 2 {
-            // price = quote/asset, e.g. $150 per share of AAPL, 
+        if taker_order_type == 1 {
+            rfq_state.winning_address = best_ask_address;
+            // taker wants to buy asset token, needs to post quote token as collateral 
+            anchor_spl::token::transfer(
+                CpiContext::new(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.quote_token.to_account_info(),
+                        to: ctx.accounts.escrow_quote_token.to_account_info(),
+                        authority: ctx.accounts.authority.to_account_info(),
+                    },
+                ),
+                amount,
+            )?;
+        } else if taker_order_type == 2 {
+            rfq_state.winning_address = best_bid_address;
             let asset_amount = amount / best_bid;
 
             anchor_spl::token::transfer(
@@ -174,81 +192,90 @@ pub mod rfq {
                 ),
                 asset_amount,
             )?;
-        } else if order_type == 1 {
-            anchor_spl::token::transfer(
-                CpiContext::new(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: ctx.accounts.quote_token.to_account_info(),
-                        to: ctx.accounts.escrow_quote_token.to_account_info(),
-                        authority: ctx.accounts.authority.to_account_info(),
-                    },
-                ),
-                amount,
-            )?;
         }
 
-        // updating order type in case original request was two-way
-        rfq_state.taker_order_type = order_type;
         rfq_state.confirmed = true;
         Ok(())
     }
 
+    /// 1. taker -> asset collateral
+    /// 2. maker -> asset and quote collateral
+    /// 3. maker2 -> asset and quote collateral
+    /// 4. taker's asset collateral goes to maker2
+    /// 5. maker2's quote collateral goes to taker
+    /// 6. maker2 recoups asset collateral
+    /// 7. maker recoups asset and quote collateral
     /// settle RFQ, swap tokens between winning MM and taker, and return all collateral
     pub fn settle(
         ctx: Context<Settle>,
-        asset_seed: Vec<u8>,
-        quote_seed: Vec<u8>,
+        title: String,
     ) -> ProgramResult {
+        
         let rfq_state = &mut ctx.accounts.rfq_state;
         let taker_address = rfq_state.taker_address;
-        let taker_address = rfq_state.taker_address;
+        let winning_address = &rfq_state.winning_address;
         let taker_order_type = rfq_state.taker_order_type;
         let amount = rfq_state.amount;
         let best_bid = rfq_state.best_bid;
+        let authority = &ctx.accounts.authority;
+
+        let asset_seed = &[b"quote_asset", winning_address.as_ref(), name_seed(&title)];
+        let quote_seed = &[b"quote_asset", winning_address.as_ref(), name_seed(&title)];
+        let (_escrow_asset_token, asset_bump) = Pubkey::find_program_address(asset_seed, ctx.program_id);
+        let (_escrow_quote_token, quote_bump) = Pubkey::find_program_address(quote_seed, ctx.program_id);
         
-        let (_asset_authority, asset_bump) = Pubkey::find_program_address(&[&asset_seed], ctx.program_id);
-        let (_quote_authority, quote_bump) = Pubkey::find_program_address(&[&quote_seed], ctx.program_id);
+        let asset_full_seed = &[b"quote_asset", 
+            name_seed(&title), 
+            &winning_address.key().to_bytes()[..],
+            //&winning_address.as_ref(),
+            &[asset_bump]
+        ];
+        
+        let quote_full_seed = &[b"quote_asset", 
+            name_seed(&title), 
+            &winning_address.key().to_bytes()[..],
+            //&winning_address.as_ref(),
+            &[quote_bump]
+        ];
+
 
         if rfq_state.confirmed == false {
             return Err(ErrorCode::TradeNotConfirmed.into());
         }
-
-        // send token from escrow to taker
-        if taker_order_type == 1 {
+        
+        // send winning maker's token to taker
+        if taker_order_type == 1 && (authority.key() == taker_address.key()) {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.quote_token.to_account_info(),
-                        to: ctx.accounts.escrow_quote_token.to_account_info(),
-                        authority: ctx.accounts.authority.to_account_info(),
+                        from: ctx.accounts.escrow_asset_token.to_account_info(),
+                        to: ctx.accounts.asset_token.to_account_info(),
+                        authority: ctx.accounts.escrow_asset_token.to_account_info(),
                     },
-                    &[&[&quote_seed, &[quote_bump]]],
+                    &[&quote_full_seed[..]],
                 ),
-                amount,
+                1,
             )?;
-        } else if taker_order_type == 2 {
+        } else if taker_order_type == 2 && (authority.key() == taker_address.key()) {
             let asset_amount = amount / best_bid;
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.quote_token.to_account_info(),
-                        to: ctx.accounts.escrow_quote_token.to_account_info(),
-                        authority: ctx.accounts.authority.to_account_info(),
+                        from: ctx.accounts.escrow_quote_token.to_account_info(),
+                        to: ctx.accounts.quote_token.to_account_info(),
+                        authority: ctx.accounts.escrow_quote_token.to_account_info(),
                     },
-                    &[&[&asset_seed, &[asset_bump]]],
+                    &[&asset_full_seed[..]],
                 ),
-                asset_amount,
+                1,
             )?;
         }
-
+        
         // send token from escrow to winning maker
         Ok(())
     }
-
-    // pub fn recall_collateral()
 
     // last look functionality
     pub fn approve(
@@ -259,12 +286,12 @@ pub mod rfq {
 
     // TODO: add ability for taker to counter with a better price
     // pub fn counter()
-
 }
 
 /// TBD: global state variables
 #[derive(Accounts)]
 pub struct Initialize<'info> {
+    #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
         init,
@@ -282,6 +309,7 @@ pub struct Initialize<'info> {
     title: String,
 )]
 pub struct Request<'info> {
+    #[account(mut)]
     pub authority: Signer<'info>,
 
     pub asset_mint: Account<'info, Mint>,
@@ -338,7 +366,8 @@ pub struct Respond<'info> {
     #[account(
         init_if_needed,
         payer = authority,
-        seeds = [b"escrow_asset", authority.to_account_info().key.as_ref(), name_seed(&title)],
+        seeds = [b"escrow_asset", &authority.key().to_bytes()[..], name_seed(&title)],
+        //&authority.key().to_bytes()[..]
         bump,
         token::mint = asset_mint,
         token::authority = escrow_asset_token,
@@ -347,7 +376,7 @@ pub struct Respond<'info> {
     #[account(
         init_if_needed,
         payer = authority,
-        seeds = [b"escrow_quote", authority.to_account_info().key.as_ref(), name_seed(&title)],
+        seeds = [b"escrow_quote", &authority.key().to_bytes()[..], name_seed(&title)],
         bump,
         token::mint = quote_mint,
         token::authority = escrow_quote_token,
@@ -388,7 +417,7 @@ pub struct Confirm<'info> {
     #[account(
         init_if_needed,
         payer = authority,
-        seeds = [b"escrow_asset", authority.to_account_info().key.as_ref(), name_seed(&title)],
+        seeds = [b"escrow_asset", &authority.key().to_bytes()[..], name_seed(&title)],
         bump,
         token::mint = asset_mint,
         token::authority = escrow_asset_token,
@@ -397,7 +426,7 @@ pub struct Confirm<'info> {
     #[account(
         init_if_needed,
         payer = authority,
-        seeds = [b"escrow_quote", authority.to_account_info().key.as_ref(), name_seed(&title)],
+        seeds = [b"escrow_quote", &authority.key().to_bytes()[..], name_seed(&title)],
         bump,
         token::mint = quote_mint,
         token::authority = escrow_quote_token,
@@ -416,8 +445,6 @@ pub struct Confirm<'info> {
 #[derive(Accounts)]
 #[instruction(
     title: String,
-    asset_seed: Vec<u8>,
-    quote_seed: Vec<u8>,
 )]
 pub struct Settle<'info> {
     #[account(mut)]
@@ -436,11 +463,12 @@ pub struct Settle<'info> {
     pub asset_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
-    
+
     #[account(
         init_if_needed,
         payer = authority,
-        seeds = [&asset_seed],
+        //seeds = [&asset_seed],
+        seeds = [b"escrow_asset", &rfq_state.winning_address.key().to_bytes()[..], name_seed(&title)],
         bump,
         token::mint = asset_mint,
         token::authority = escrow_asset_token,
@@ -449,12 +477,13 @@ pub struct Settle<'info> {
     #[account(
         init_if_needed,
         payer = authority,
-        seeds = [&quote_seed],
+        seeds = [b"escrow_quote", &rfq_state.winning_address.key().to_bytes()[..], name_seed(&title)],
         bump,
         token::mint = quote_mint,
         token::authority = escrow_quote_token,
     )]
     pub escrow_quote_token: Box<Account<'info, TokenAccount>>, // this PDA will be an authority for escrow with token pledged by wallet
+
     pub asset_mint: Box<Account<'info, Mint>>,
     pub quote_mint: Box<Account<'info, Mint>>,
 
@@ -480,11 +509,15 @@ pub struct RfqState {
     pub best_ask: u64,
     pub best_bid_address: Pubkey,
     pub best_ask_address: Pubkey,
+    pub winning_address: Pubkey,
     pub order_count: u16,
     pub taker_order_type: u8,
     pub amount: u64,
     pub confirmed: bool,
     pub taker_address: Pubkey,
+    pub winning_maker_asset_escrow: Pubkey,
+    pub winning_maker_quote_escrow: Pubkey,
+    //pub participants: Vec<Pubkey>,
 }
 
 /// global state for the entire RFQ system

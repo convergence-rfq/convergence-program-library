@@ -7,7 +7,7 @@ export type Rfq = {
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -37,7 +37,7 @@ export type Rfq = {
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -258,10 +258,6 @@ export type Rfq = {
         {
           "name": "title",
           "type": "string"
-        },
-        {
-          "name": "orderType",
-          "type": "u8"
         }
       ]
     },
@@ -331,12 +327,8 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "assetSeed",
-          "type": "bytes"
-        },
-        {
-          "name": "quoteSeed",
-          "type": "bytes"
+          "name": "title",
+          "type": "string"
         }
       ]
     },
@@ -462,6 +454,10 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
+            "name": "winningAddress",
+            "type": "publicKey"
+          },
+          {
             "name": "orderCount",
             "type": "u16"
           },
@@ -479,6 +475,14 @@ export type Rfq = {
           },
           {
             "name": "takerAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerAssetEscrow",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerQuoteEscrow",
             "type": "publicKey"
           }
         ]
@@ -541,7 +545,7 @@ export const IDL: Rfq = {
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -571,7 +575,7 @@ export const IDL: Rfq = {
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -792,10 +796,6 @@ export const IDL: Rfq = {
         {
           "name": "title",
           "type": "string"
-        },
-        {
-          "name": "orderType",
-          "type": "u8"
         }
       ]
     },
@@ -865,12 +865,8 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "assetSeed",
-          "type": "bytes"
-        },
-        {
-          "name": "quoteSeed",
-          "type": "bytes"
+          "name": "title",
+          "type": "string"
         }
       ]
     },
@@ -996,6 +992,10 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
+            "name": "winningAddress",
+            "type": "publicKey"
+          },
+          {
             "name": "orderCount",
             "type": "u16"
           },
@@ -1013,6 +1013,14 @@ export const IDL: Rfq = {
           },
           {
             "name": "takerAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerAssetEscrow",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerQuoteEscrow",
             "type": "publicKey"
           }
         ]

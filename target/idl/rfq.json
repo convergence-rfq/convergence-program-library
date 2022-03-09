@@ -7,7 +7,7 @@
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -37,7 +37,7 @@
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -258,10 +258,6 @@
         {
           "name": "title",
           "type": "string"
-        },
-        {
-          "name": "orderType",
-          "type": "u8"
         }
       ]
     },
@@ -331,12 +327,8 @@
       ],
       "args": [
         {
-          "name": "assetSeed",
-          "type": "bytes"
-        },
-        {
-          "name": "quoteSeed",
-          "type": "bytes"
+          "name": "title",
+          "type": "string"
         }
       ]
     },
@@ -462,6 +454,10 @@
             "type": "publicKey"
           },
           {
+            "name": "winningAddress",
+            "type": "publicKey"
+          },
+          {
             "name": "orderCount",
             "type": "u16"
           },
@@ -479,6 +475,14 @@
           },
           {
             "name": "takerAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerAssetEscrow",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerQuoteEscrow",
             "type": "publicKey"
           }
         ]
@@ -529,5 +533,8 @@
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+  }
 }
