@@ -7,7 +7,7 @@ export type Rfq = {
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -33,11 +33,11 @@ export type Rfq = {
       ]
     },
     {
-      "name": "initializeRfq",
+      "name": "request",
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -108,7 +108,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "respondRfq",
+      "name": "respond",
       "accounts": [
         {
           "name": "authority",
@@ -258,15 +258,11 @@ export type Rfq = {
         {
           "name": "title",
           "type": "string"
-        },
-        {
-          "name": "orderType",
-          "type": "u8"
         }
       ]
     },
     {
-      "name": "counter",
+      "name": "settle",
       "accounts": [
         {
           "name": "authority",
@@ -329,10 +325,15 @@ export type Rfq = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
+        }
+      ]
     },
     {
-      "name": "settle",
+      "name": "approve",
       "accounts": [
         {
           "name": "authority",
@@ -453,6 +454,10 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
+            "name": "winningAddress",
+            "type": "publicKey"
+          },
+          {
             "name": "orderCount",
             "type": "u16"
           },
@@ -467,6 +472,18 @@ export type Rfq = {
           {
             "name": "confirmed",
             "type": "bool"
+          },
+          {
+            "name": "takerAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerAssetEscrow",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerQuoteEscrow",
+            "type": "publicKey"
           }
         ]
       }
@@ -505,6 +522,16 @@ export type Rfq = {
       "code": 6000,
       "name": "InvalidQuoteType",
       "msg": "Invalid quote type"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidTakerAddress",
+      "msg": "Invalid taker address"
+    },
+    {
+      "code": 6002,
+      "name": "TradeNotConfirmed",
+      "msg": "Trade has not been confirmed by taker"
     }
   ]
 };
@@ -518,7 +545,7 @@ export const IDL: Rfq = {
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -544,11 +571,11 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "initializeRfq",
+      "name": "request",
       "accounts": [
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -619,7 +646,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "respondRfq",
+      "name": "respond",
       "accounts": [
         {
           "name": "authority",
@@ -769,15 +796,11 @@ export const IDL: Rfq = {
         {
           "name": "title",
           "type": "string"
-        },
-        {
-          "name": "orderType",
-          "type": "u8"
         }
       ]
     },
     {
-      "name": "counter",
+      "name": "settle",
       "accounts": [
         {
           "name": "authority",
@@ -840,10 +863,15 @@ export const IDL: Rfq = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
+        }
+      ]
     },
     {
-      "name": "settle",
+      "name": "approve",
       "accounts": [
         {
           "name": "authority",
@@ -964,6 +992,10 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
+            "name": "winningAddress",
+            "type": "publicKey"
+          },
+          {
             "name": "orderCount",
             "type": "u16"
           },
@@ -978,6 +1010,18 @@ export const IDL: Rfq = {
           {
             "name": "confirmed",
             "type": "bool"
+          },
+          {
+            "name": "takerAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerAssetEscrow",
+            "type": "publicKey"
+          },
+          {
+            "name": "winningMakerQuoteEscrow",
+            "type": "publicKey"
           }
         ]
       }
@@ -1016,6 +1060,16 @@ export const IDL: Rfq = {
       "code": 6000,
       "name": "InvalidQuoteType",
       "msg": "Invalid quote type"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidTakerAddress",
+      "msg": "Invalid taker address"
+    },
+    {
+      "code": 6002,
+      "name": "TradeNotConfirmed",
+      "msg": "Trade has not been confirmed by taker"
     }
   ]
 };
