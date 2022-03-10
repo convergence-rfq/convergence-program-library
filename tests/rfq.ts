@@ -29,8 +29,11 @@ let makerBquoteToken : any;
 let marketMakerA : Keypair;
 let marketMakerB : Keypair;
 let taker : Keypair;
+const TAKER_ORDER_AMOUNT = new anchor.BN(10);
+const MAKER_A_QUOTE_AMOUNT = new anchor.BN(11000);
+const MAKER_B_QUOTE_AMOUNT = new anchor.BN(10000);
+const MINT_AIRDROP = 100000;
 
-// Configure the client to use the local cluster.
 anchor.setProvider(anchor.Provider.env());
 const provider = anchor.getProvider();
 const program = anchor.workspace.Rfq as Program<Rfq>;
@@ -86,12 +89,12 @@ describe('rfq', () => {
       marketMakerB.publicKey,
     );
 
-    await assetMint.mintTo(authorityAssetToken, mintAuthority.publicKey, [], 10_000_000_000);
-    await quoteMint.mintTo(authorityQuoteToken, mintAuthority.publicKey, [], 10_000_000_000);
-    await assetMint.mintTo(makerAassetToken, mintAuthority.publicKey, [], 10_000_000_000);
-    await quoteMint.mintTo(makerAquoteToken, mintAuthority.publicKey, [], 10_000_000_000);
-    await assetMint.mintTo(makerBassetToken, mintAuthority.publicKey, [], 10_000_000_000);
-    await quoteMint.mintTo(makerBquoteToken, mintAuthority.publicKey, [], 10_000_000_000);
+    //await assetMint.mintTo(authorityAssetToken, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await quoteMint.mintTo(authorityQuoteToken, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await assetMint.mintTo(makerAassetToken, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await quoteMint.mintTo(makerAquoteToken, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await assetMint.mintTo(makerBassetToken, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await quoteMint.mintTo(makerBquoteToken, mintAuthority.publicKey, [], MINT_AIRDROP);
   });
 
   it('Initializes', async () => {
@@ -108,7 +111,7 @@ describe('rfq', () => {
     const expiry = new anchor.BN(10_000);
     const ratio = 1;
     const nOfLegs = 1;
-    const amount = new anchor.BN(10_000);
+    const amount = TAKER_ORDER_AMOUNT;
 
     const {tx, state} = await request(provider, taker, title, takerOrderType, instrument, expiry, ratio, nOfLegs, amount);
     assert.equal(state.expired, false);
@@ -121,36 +124,38 @@ describe('rfq', () => {
     const assetMintBalance = await getBalance(taker, assetMint.publicKey);
     const quoteMintBalance = await getBalance(taker, quoteMint.publicKey);
     
+    console.log('taker order type: ', state.takerOrderType);
+    console.log('taker amount: ', state.orderAmount.toString());
     console.log('taker asset balance(init): ', assetMintBalance);
     console.log('taker quote balance(init): ', quoteMintBalance);
   });
 
+  
   it('responds to RFQ', async() => {
     const title = "test rfq";
-    const orderType = 1;
-    const price = new anchor.BN(100);
-    const price2 = new anchor.BN(110);
-    const amount = new anchor.BN(10_000);
+    const amount = MAKER_A_QUOTE_AMOUNT;
+    const amount2 = MAKER_B_QUOTE_AMOUNT;
 
-    const state = await respond(provider, marketMakerA, title, orderType, price, amount, makerAassetToken, makerAquoteToken);
-    assert.equal(state.orderCount, 1);
-    assert.equal(state.bestBid.toString(), price.toString());
-    assert.equal(state.bestAsk.toString(), (new anchor.BN(0).toString()));
+    const state = await respond(provider, marketMakerA, title, amount, makerAassetToken, makerAquoteToken);
+    //assert.equal(state.bestAskAmount.toString(), amount.toString());
 
-    const state2 = await respond(provider, marketMakerB, title, orderType, price2, amount, makerBassetToken, makerBquoteToken);
-    assert.equal(state2.orderCount, 2);
-    assert.equal(state2.bestBid.toString(), price2.toString());
-    assert.equal(state2.bestAsk.toString(), (new anchor.BN(0).toString()));
+    const state2 = await respond(provider, marketMakerB, title, amount2, makerBassetToken, makerBquoteToken);
+    assert.equal(state.bestAskAmount.toString(), amount.toString());
+    assert.equal(state2.bestAskAmount.toString(), amount2.toString());
 
-    const mmAssetBalance = await getBalance(marketMakerB, assetMint.publicKey);
-    const mmQuoteBalance = await getBalance(marketMakerB, quoteMint.publicKey);
-    console.log('mm asset: ', mmAssetBalance);
-    console.log('mm quote: ', mmQuoteBalance);
+    const makerAassetBalance = await getBalance(marketMakerA, assetMint.publicKey);
+    const makerAquoteBalance = await getBalance(marketMakerA, quoteMint.publicKey);
+    console.log('maker A asset (response): ', makerAassetBalance);
+    console.log('maker A quote (response): ', makerAquoteBalance);
+
+    const makerBassetBalance = await getBalance(marketMakerB, assetMint.publicKey);
+    const makerBquoteBalance = await getBalance(marketMakerB, quoteMint.publicKey);
+    console.log('maker B asset (response): ', makerBassetBalance);
+    console.log('maker B quote (response): ', makerBquoteBalance);
   })
 
   it('confirms -> taker confirms RFQ price (pre-settlement)', async() => {
     const title = "test rfq";
-    const orderType = 2;
 
     const state = await confirm(provider, title, taker, authorityAssetToken, authorityQuoteToken);
 
@@ -160,49 +165,41 @@ describe('rfq', () => {
     console.log('taker asset balance(confirm): ', assetMintBalance);
     console.log('taker quote balance(confirm): ', quoteMintBalance);
     
-    assert.equal(assetMintBalance, 10000000000);
-    assert.equal(quoteMintBalance, 9999990000);
-    assert.equal(state.orderCount, 2);
+    assert.equal(assetMintBalance, 0);
+    assert.equal(quoteMintBalance, 100_000 - MAKER_B_QUOTE_AMOUNT.toNumber());
     assert.equal(state.confirmed, true);
   })
 
+  
   it('settles', async() => {
     const title = "test rfq";
     
     const state = await settle(provider, taker, title, authorityAssetToken, authorityQuoteToken);
-    //const state1 = await settle(provider, marketMakerA, title, makerAassetToken, makerAquoteToken);
-    //const state2 = await settle(provider, marketMakerB, title, makerBassetToken, makerBquoteToken);
+    const state1 = await settle(provider, marketMakerA, title, makerAassetToken, makerAquoteToken);
+    const state2 = await settle(provider, marketMakerB, title, makerBassetToken, makerBquoteToken);
 
     const takerAssetBalance = await getBalance(taker, assetMint.publicKey);
     const takerQuoteBalance = await getBalance(taker, quoteMint.publicKey);
+
+    const makerAassetBalance = await getBalance(marketMakerA, assetMint.publicKey);
+    const makerAquoteBalance = await getBalance(marketMakerA, quoteMint.publicKey);
+    const makerBassetBalance = await getBalance(marketMakerB, assetMint.publicKey);
+    const makerBquoteBalance = await getBalance(marketMakerB, quoteMint.publicKey);
     
+    assert.equal(makerAassetBalance, MINT_AIRDROP);
+    assert.equal(makerAquoteBalance, MINT_AIRDROP);
+    assert.equal(makerBassetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT.toNumber());
+    assert.equal(makerBquoteBalance, MINT_AIRDROP + MAKER_B_QUOTE_AMOUNT.toNumber());
+
     console.log('taker asset balance(settle): ', takerAssetBalance);
     console.log('taker quote balance(settle): ', takerQuoteBalance);
+    console.log('maker A asset balance(settle): ', makerAassetBalance);
+    console.log('maker A quote balance(settle): ', makerAquoteBalance);
+    console.log('maker B asset balance(settle): ', makerBassetBalance);
+    console.log('maker B quote balance(settle): ', makerBquoteBalance);
   })
-
-  /*
-  it('place limit orders', async () => {
-    const action = true; // buy
-    const price = new anchor.BN(1000);
-    const price2 = new anchor.BN(200);
-    const amount = new anchor.BN(10);
-    const title = "test rfq";
-    //const { _assetToken, assetMint } = await getNewTokenAndMint(program, provider.wallet);
-    //const balanceBeforeCancel = await getBalance(provider.wallet, assetMint.publicKey);
-    const state = await placeLimitOrder(provider, title, true, price, amount, assetMint, authorityAssetToken);
-    
-    assert.equal(state.bids[0].toString(), price.toString());
-    const state2 = await placeLimitOrder(provider, title, true, price2, amount, assetMint, authorityAssetToken);
-    assert.equal(state2.bids[0].toString(), price2.toString());
-    assert.equal(state2.bids[1].toString(), price.toString());
-    
-    const balanceAfterCancel = await getBalance(provider.wallet, assetMint.publicKey);
-    console.log('balance before cancel: ', balanceBeforeCancel);
-    console.log('balance after cancel: ', balanceAfterCancel);
-    assert.equal(balanceAfterCancel, 9_999_999_980)
-  });
-  */
   
+
 });
 
 
@@ -223,26 +220,31 @@ export async function settle(
   );
   
   const [escrowAssetTokenPDA, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_asset"), authority.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("escrow_asset"), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   const [escrowQuoteTokenPDA, _escrowQuoteTokenPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_quote"), authority.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("escrow_quote"), Buffer.from(title.slice(0, 32))],
     program.programId
   );
-  
+  const [orderPDA, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from("order_state"), authority.publicKey.toBytes()],
+    program.programId
+  );
   
   const tx = await program.rpc.settle(
     title,
   {
     accounts: {
       authority: authority.publicKey,
+      orderState: orderPDA,
       rfqState: rfqPDA,
       assetToken: assetToken,
       quoteToken: quoteToken,
       assetMint: assetMint.publicKey,
       quoteMint: quoteMint.publicKey,
-      
+      escrowAssetToken: escrowAssetTokenPDA,
+      escrowQuoteToken: escrowQuoteTokenPDA,
       systemProgram: anchor.web3.SystemProgram.programId,
       tokenProgram: spl.TOKEN_PROGRAM_ID,
       associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -270,11 +272,11 @@ export async function confirm(
     program.programId
   );
   const [escrowAssetTokenPDA, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_asset"), authority.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("escrow_asset"), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   const [escrowQuoteTokenPDA, _escrowQuoteTokenPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_quote"), authority.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("escrow_quote"), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   
@@ -305,10 +307,8 @@ export async function confirm(
 
 export async function respond(
   provider: Provider,
-  maker: Keypair,
+  authority: Keypair,
   title: string,
-  orderType: number,
-  price: anchor.BN,
   amount: anchor.BN,
   assetToken: spl.Token,
   quoteToken: spl.Token
@@ -322,22 +322,25 @@ export async function respond(
     program.programId
   );
   const [escrowAssetTokenPDA, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_asset"), maker.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("escrow_asset"), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   const [escrowQuoteTokenPDA, _escrowQuoteTokenPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_quote"), maker.publicKey.toBytes(), Buffer.from(title.slice(0, 32))],
+    [Buffer.from("escrow_quote"), Buffer.from(title.slice(0, 32))],
+    program.programId
+  );
+  const [orderPDA, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from("order_state"), authority.publicKey.toBytes()],
     program.programId
   );
   
   const tx = await program.rpc.respond(
     title,
-    orderType,
-    price,
     amount,
   {
     accounts: {
-      authority: maker.publicKey,
+      authority: authority.publicKey,
+      orderState: orderPDA,
       rfqState: rfqPDA,
       assetToken: assetToken,
       quoteToken: quoteToken,
@@ -351,7 +354,7 @@ export async function respond(
       associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
     },
-    signers: [maker],
+    signers: [authority],
   });
 
   const state = await program.account.rfqState.fetch(rfqPDA);
@@ -374,9 +377,13 @@ export async function request(
   const program = await getProgram(provider);
   console.log("program", program.programId);
   
-  const [orderBookPDA, _orderBookBump] = await getPda(provider, 'order_book_state');
+  //const [orderBookPDA, _orderBookBump] = await getPda(provider, 'order_book_state');
   const [rfqPDA, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from("rfq_state"), Buffer.from(title.slice(0, 32))],
+    program.programId
+  );
+  const [orderPDA, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from("order_state"), authority.publicKey.toBytes()],
     program.programId
   );
 
@@ -391,8 +398,7 @@ export async function request(
   {
     accounts: {
       authority: authority.publicKey,
-      assetMint: assetMint.publicKey,
-      quoteMint: quoteMint.publicKey,
+      orderState: orderPDA,
       rfqState: rfqPDA,
       
       systemProgram: anchor.web3.SystemProgram.programId,
@@ -469,43 +475,3 @@ const getBalance = async (payer, mint) => {
     console.log("No mints found for wallet");
   }
 }
-
-/*
-export async function getNewTokenAndMint(program, payer): Promise<any> {
-  const assetMintAuthority = anchor.web3.Keypair.generate();
-  await requestAirdrop(program.provider, assetMintAuthority.publicKey, 10_000_000_000);
-  await requestAirdrop(program.provider, payer.publicKey, 10_000_000_000);
-
-  const assetMint = await Token.createMint(program.provider.connection,
-    assetMintAuthority,
-    assetMintAuthority.publicKey,
-    assetMintAuthority.publicKey,
-    0,
-    spl.TOKEN_PROGRAM_ID);
-
-  const authorityAssetToken = await assetMint.createAssociatedTokenAccount(
-      payer.publicKey,
-  );
-  return {authorityAssetToken, assetMint}
-}
-*/
-
-
-/*
-1. reqest:   taker requests to buy 1 AAPL.
-2. respond:  maker 1 responds with price=110 USD, posts 1 AAPL collateral into common AAPL vault.
-3. respond:  maker 2 responds with price=100 USD, posts 1 AAPL collateral into common AAPL vault. maker 2 is recorded as winner.
-4. confirm:  taker confirms, posts 100 USD collateral into common USD vault.
-5. approve:  maker approves, trade is recorded as approved.
-5. settle:   taker gets 1 AAPL, maker 2 gets 100 USD. (the program knows taker's address, winner's address, taker amount, and winner's amount)
-6. return:   maker 1 gets 1 AAPL. (everyone else that was part of the program, gets their collateral back)
-  
-  how do we know which makers participated and who's the winner? 
-  1. record addresses in a vector, check those in settle/return funcs
-  2. have unique PDAs for each maker, each PDA's authority is maker. 
-      if winner, receive collateral and USD. ===> more elegant, secure?
-      requires settle function to know the address of the winner
-  
-
-
-*/
