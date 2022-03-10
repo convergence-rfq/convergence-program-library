@@ -41,16 +41,6 @@ export type Rfq = {
           "isSigner": true
         },
         {
-          "name": "assetMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "quoteMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "rfqState",
           "isMut": true,
           "isSigner": false
@@ -116,6 +106,11 @@ export type Rfq = {
           "isSigner": true
         },
         {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "rfqState",
           "isMut": true,
           "isSigner": false
@@ -175,14 +170,6 @@ export type Rfq = {
         {
           "name": "title",
           "type": "string"
-        },
-        {
-          "name": "orderType",
-          "type": "u8"
-        },
-        {
-          "name": "price",
-          "type": "u64"
         },
         {
           "name": "amount",
@@ -270,6 +257,11 @@ export type Rfq = {
           "isSigner": true
         },
         {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "rfqState",
           "isMut": true,
           "isSigner": false
@@ -296,12 +288,12 @@ export type Rfq = {
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -339,6 +331,11 @@ export type Rfq = {
           "name": "authority",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "rfqState",
@@ -438,11 +435,11 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "bestBid",
+            "name": "bestBidAmount",
             "type": "u64"
           },
           {
-            "name": "bestAsk",
+            "name": "bestAskAmount",
             "type": "u64"
           },
           {
@@ -454,11 +451,7 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "winningAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "orderCount",
+            "name": "responseCount",
             "type": "u16"
           },
           {
@@ -466,7 +459,15 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "amount",
+            "name": "assetAmount",
+            "type": "u64"
+          },
+          {
+            "name": "quoteAmount",
+            "type": "u64"
+          },
+          {
+            "name": "orderAmount",
             "type": "u64"
           },
           {
@@ -484,6 +485,12 @@ export type Rfq = {
           {
             "name": "winningMakerQuoteEscrow",
             "type": "publicKey"
+          },
+          {
+            "name": "participants",
+            "type": {
+              "vec": "publicKey"
+            }
           }
         ]
       }
@@ -511,6 +518,22 @@ export type Rfq = {
           },
           {
             "name": "feeNumerator",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "orderState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "ask",
+            "type": "u64"
+          },
+          {
+            "name": "bid",
             "type": "u64"
           }
         ]
@@ -579,16 +602,6 @@ export const IDL: Rfq = {
           "isSigner": true
         },
         {
-          "name": "assetMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "quoteMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "rfqState",
           "isMut": true,
           "isSigner": false
@@ -654,6 +667,11 @@ export const IDL: Rfq = {
           "isSigner": true
         },
         {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "rfqState",
           "isMut": true,
           "isSigner": false
@@ -713,14 +731,6 @@ export const IDL: Rfq = {
         {
           "name": "title",
           "type": "string"
-        },
-        {
-          "name": "orderType",
-          "type": "u8"
-        },
-        {
-          "name": "price",
-          "type": "u64"
         },
         {
           "name": "amount",
@@ -808,6 +818,11 @@ export const IDL: Rfq = {
           "isSigner": true
         },
         {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "rfqState",
           "isMut": true,
           "isSigner": false
@@ -834,12 +849,12 @@ export const IDL: Rfq = {
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -877,6 +892,11 @@ export const IDL: Rfq = {
           "name": "authority",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "rfqState",
@@ -976,11 +996,11 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "bestBid",
+            "name": "bestBidAmount",
             "type": "u64"
           },
           {
-            "name": "bestAsk",
+            "name": "bestAskAmount",
             "type": "u64"
           },
           {
@@ -992,11 +1012,7 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "winningAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "orderCount",
+            "name": "responseCount",
             "type": "u16"
           },
           {
@@ -1004,7 +1020,15 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "amount",
+            "name": "assetAmount",
+            "type": "u64"
+          },
+          {
+            "name": "quoteAmount",
+            "type": "u64"
+          },
+          {
+            "name": "orderAmount",
             "type": "u64"
           },
           {
@@ -1022,6 +1046,12 @@ export const IDL: Rfq = {
           {
             "name": "winningMakerQuoteEscrow",
             "type": "publicKey"
+          },
+          {
+            "name": "participants",
+            "type": {
+              "vec": "publicKey"
+            }
           }
         ]
       }
@@ -1049,6 +1079,22 @@ export const IDL: Rfq = {
           },
           {
             "name": "feeNumerator",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "orderState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "ask",
+            "type": "u64"
+          },
+          {
+            "name": "bid",
             "type": "u64"
           }
         ]
