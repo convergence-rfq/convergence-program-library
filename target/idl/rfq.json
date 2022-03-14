@@ -72,7 +72,7 @@
           "type": "string"
         },
         {
-          "name": "takerOrderType",
+          "name": "requestOrderType",
           "type": "u8"
         },
         {
@@ -84,15 +84,91 @@
           "type": "i64"
         },
         {
-          "name": "ratio",
-          "type": "u8"
-        },
-        {
-          "name": "nOfLegs",
-          "type": "u8"
-        },
-        {
           "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "respondTwoway",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "bidAmount",
+          "type": "u64"
+        },
+        {
+          "name": "askAmount",
           "type": "u64"
         }
       ]
@@ -245,6 +321,41 @@
         {
           "name": "title",
           "type": "string"
+        },
+        {
+          "name": "confirmOrderType",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "approve",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
         }
       ]
     },
@@ -323,77 +434,6 @@
           "type": "string"
         }
       ]
-    },
-    {
-      "name": "approve",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "orderState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "rfqState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "quoteToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowAssetToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowQuoteToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "quoteMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
@@ -402,10 +442,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "action",
-            "type": "bool"
-          },
           {
             "name": "instrument",
             "type": "u8"
@@ -417,14 +453,6 @@
           {
             "name": "expired",
             "type": "bool"
-          },
-          {
-            "name": "ratio",
-            "type": "u8"
-          },
-          {
-            "name": "nOfLegs",
-            "type": "u8"
           },
           {
             "name": "assetMint",
@@ -455,16 +483,12 @@
             "type": "u16"
           },
           {
-            "name": "takerOrderType",
+            "name": "requestOrderType",
             "type": "u8"
           },
           {
-            "name": "assetAmount",
-            "type": "u64"
-          },
-          {
-            "name": "quoteAmount",
-            "type": "u64"
+            "name": "confirmOrderType",
+            "type": "u8"
           },
           {
             "name": "orderAmount",
@@ -475,22 +499,20 @@
             "type": "bool"
           },
           {
+            "name": "approved",
+            "type": "bool"
+          },
+          {
             "name": "takerAddress",
             "type": "publicKey"
           },
           {
-            "name": "winningMakerAssetEscrow",
-            "type": "publicKey"
+            "name": "timeBegin",
+            "type": "i64"
           },
           {
-            "name": "winningMakerQuoteEscrow",
-            "type": "publicKey"
-          },
-          {
-            "name": "participants",
-            "type": {
-              "vec": "publicKey"
-            }
+            "name": "timeResponse",
+            "type": "i64"
           }
         ]
       }
@@ -540,6 +562,42 @@
       }
     }
   ],
+  "types": [
+    {
+      "name": "OrderType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "TwoWay"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MakerOrderType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Bid"
+          },
+          {
+            "name": "Ask"
+          },
+          {
+            "name": "TwoWay"
+          }
+        ]
+      }
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -555,6 +613,21 @@
       "code": 6002,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
+    },
+    {
+      "code": 6003,
+      "name": "TradeNotApproved",
+      "msg": "Trade has not been approved by maker"
+    },
+    {
+      "code": 6004,
+      "name": "ResponseTimeElapsed",
+      "msg": "Timed out on response to request"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidOrder",
+      "msg": "Invalid order logic"
     }
   ],
   "metadata": {
