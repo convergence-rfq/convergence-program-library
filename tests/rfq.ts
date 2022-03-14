@@ -17,6 +17,7 @@ import {
 } from "@solana/web3.js";
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 
+
 let assetMint : spl.Token;
 let quoteMint : spl.Token;
 let mintAuthority : any;
@@ -104,31 +105,59 @@ describe('rfq', () => {
     assert.ok(state.rfqCount.eq(new anchor.BN(0)));
   });
 
-  it('Initializes new RFQ', async () => {  
-    const title = "test rfq";
-    const takerOrderType = 1; // buy
+  it('Initializes RFQ for timeout', async () => {  
+    const title = "rfq with timeout";
+    const requestOrderType = 1; // buy
     const instrument = 1;
-    const expiry = new anchor.BN(10_000);
-    const ratio = 1;
-    const nOfLegs = 1;
+    const expiry = new anchor.BN(-1);
     const amount = TAKER_ORDER_AMOUNT;
 
-    const {tx, state} = await request(provider, taker, title, takerOrderType, instrument, expiry, ratio, nOfLegs, amount);
+    const {tx, state} = await request(provider, taker, title, requestOrderType, instrument, expiry, amount);
+  });
+
+  it('responds to RFQ and times out', async() => {
+    const title = "rfq with timeout";
+    const amount = MAKER_A_QUOTE_AMOUNT;
+
+    setTimeout(() => {
+      console.log('delay of 500ms');
+    }, 500);
+
+    try {
+      const state = await respond(provider, marketMakerA, title, amount, makerAassetToken, makerAquoteToken);
+      const timeBegin = state.timeBegin;
+      const timeResponse = state.timeResponse;
+      console.log('time delay: ', timeResponse - timeBegin);
+    } catch (err) {
+      console.log(err);
+    }
+
+
+    
+  })
+
+  it('Initializes new RFQ', async () => {  
+    const title = "test rfq";
+    const requestOrderType = 1; // buy
+    const instrument = 1;
+    const expiry = new anchor.BN(1000);
+    const amount = TAKER_ORDER_AMOUNT;
+
+    const {tx, state} = await request(provider, taker, title, requestOrderType, instrument, expiry, amount);
     assert.equal(state.expired, false);
-    assert.equal(state.ratio, ratio);
-    assert.equal(state.takerOrderType, takerOrderType);
+    assert.equal(state.requestOrderType, requestOrderType);
     assert.equal(state.instrument, instrument);
     assert.equal(state.expiry.toString(), expiry.toString());
-    assert.equal(state.nOfLegs, nOfLegs);
 
     const assetMintBalance = await getBalance(taker, assetMint.publicKey);
     const quoteMintBalance = await getBalance(taker, quoteMint.publicKey);
     
-    console.log('taker order type: ', state.takerOrderType);
+    console.log('taker order type: ', state.requestOrderType);
     console.log('taker amount: ', state.orderAmount.toString());
     console.log('taker asset balance(init): ', assetMintBalance);
     console.log('taker quote balance(init): ', quoteMintBalance);
   });
+
 
   
   it('responds to RFQ', async() => {
@@ -156,8 +185,9 @@ describe('rfq', () => {
 
   it('confirms -> taker confirms RFQ price (pre-settlement)', async() => {
     const title = "test rfq";
+    const confirmOrderType = 1;
 
-    const state = await confirm(provider, title, taker, authorityAssetToken, authorityQuoteToken);
+    const state = await confirm(provider, title, confirmOrderType, taker, authorityAssetToken, authorityQuoteToken);
 
     const assetMintBalance = await getBalance(taker, assetMint.publicKey);
     const quoteMintBalance = await getBalance(taker, quoteMint.publicKey);
@@ -168,6 +198,14 @@ describe('rfq', () => {
     assert.equal(assetMintBalance, 0);
     assert.equal(quoteMintBalance, 100_000 - MAKER_B_QUOTE_AMOUNT.toNumber());
     assert.equal(state.confirmed, true);
+  })
+
+  it('approves -> maker approves (last look)', async() => {
+    const title = "test rfq";
+
+    const state = await approve(provider, marketMakerB, title);
+    
+    assert.equal(state.approved, true);
   })
 
   
@@ -202,6 +240,39 @@ describe('rfq', () => {
 
 });
 
+export async function approve(
+  provider: Provider,
+  authority: any,
+  title: string,
+): Promise<any> {
+
+  const program = await getProgram(provider);
+
+  const [rfqPDA, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from("rfq_state"), Buffer.from(title.slice(0, 32))],
+    program.programId
+  );
+  
+  const [orderPDA, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from("order_state"), authority.publicKey.toBytes()],
+    program.programId
+  );
+  
+  const tx = await program.rpc.approve(
+    title,
+  {
+    accounts: {
+      authority: authority.publicKey,
+      orderState: orderPDA,
+      rfqState: rfqPDA,
+      systemProgram: anchor.web3.SystemProgram.programId,
+    },
+    signers: [authority],
+  });
+
+  const state = await program.account.rfqState.fetch(rfqPDA);
+  return state;
+}
 
 
 export async function settle(
@@ -260,6 +331,7 @@ export async function settle(
 export async function confirm(
   provider: Provider,
   title: String,
+  confirmOrderType: number,
   authority: Keypair,
   assetToken: spl.Token,
   quoteToken: spl.Token,
@@ -282,6 +354,7 @@ export async function confirm(
   
   const tx = await program.rpc.confirm(
     title,
+    confirmOrderType,
   {
     accounts: {
       authority: authority.publicKey,
@@ -366,11 +439,9 @@ export async function request(
   provider: Provider,
   authority: Keypair,
   title: string,
-  takeOrderType: number,
+  requestOrderType: number,
   instrument: number,
   expiry: anchor.BN,
-  ratio: number,
-  nOfLegs: number,
   amount: anchor.BN
 ): Promise<any> {
 
@@ -389,11 +460,9 @@ export async function request(
 
   const tx = await program.rpc.request(
     title,
-    takeOrderType,
+    requestOrderType,
     instrument,
     expiry,
-    ratio,
-    nOfLegs,
     amount,
   {
     accounts: {
