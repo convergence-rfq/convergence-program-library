@@ -46,6 +46,11 @@ export type Rfq = {
           "isSigner": false
         },
         {
+          "name": "protocol",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -85,90 +90,6 @@ export type Rfq = {
         },
         {
           "name": "amount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "respondTwoway",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "orderState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "rfqState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "quoteToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowAssetToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowQuoteToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "quoteMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "title",
-          "type": "string"
-        },
-        {
-          "name": "bidAmount",
-          "type": "u64"
-        },
-        {
-          "name": "askAmount",
           "type": "u64"
         }
       ]
@@ -248,7 +169,11 @@ export type Rfq = {
           "type": "string"
         },
         {
-          "name": "amount",
+          "name": "bid",
+          "type": "u64"
+        },
+        {
+          "name": "ask",
           "type": "u64"
         }
       ]
@@ -329,7 +254,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "approve",
+      "name": "lastLook",
       "accounts": [
         {
           "name": "authority",
@@ -360,7 +285,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "settle",
+      "name": "returnCollateral",
       "accounts": [
         {
           "name": "authority",
@@ -434,6 +359,87 @@ export type Rfq = {
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "settle",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocol",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -442,6 +448,10 @@ export type Rfq = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
           {
             "name": "instrument",
             "type": "u8"
@@ -518,7 +528,7 @@ export type Rfq = {
       }
     },
     {
-      "name": "globalState",
+      "name": "protocol",
       "type": {
         "kind": "struct",
         "fields": [
@@ -541,6 +551,16 @@ export type Rfq = {
           {
             "name": "feeNumerator",
             "type": "u64"
+          },
+          {
+            "name": "titles",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "treasuryWallet",
+            "type": "publicKey"
           }
         ]
       }
@@ -557,42 +577,10 @@ export type Rfq = {
           {
             "name": "bid",
             "type": "u64"
-          }
-        ]
-      }
-    }
-  ],
-  "types": [
-    {
-      "name": "OrderType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Buy"
           },
           {
-            "name": "Sell"
-          },
-          {
-            "name": "TwoWay"
-          }
-        ]
-      }
-    },
-    {
-      "name": "MakerOrderType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Bid"
-          },
-          {
-            "name": "Ask"
-          },
-          {
-            "name": "TwoWay"
+            "name": "collateralReturned",
+            "type": "bool"
           }
         ]
       }
@@ -617,7 +605,7 @@ export type Rfq = {
     {
       "code": 6003,
       "name": "TradeNotApproved",
-      "msg": "Trade has not been approved by maker"
+      "msg": "Trade has not been approved (last look) by maker"
     },
     {
       "code": 6004,
@@ -680,6 +668,11 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
+          "name": "protocol",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -719,90 +712,6 @@ export const IDL: Rfq = {
         },
         {
           "name": "amount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "respondTwoway",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "orderState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "rfqState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "quoteToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowAssetToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowQuoteToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "quoteMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "title",
-          "type": "string"
-        },
-        {
-          "name": "bidAmount",
-          "type": "u64"
-        },
-        {
-          "name": "askAmount",
           "type": "u64"
         }
       ]
@@ -882,7 +791,11 @@ export const IDL: Rfq = {
           "type": "string"
         },
         {
-          "name": "amount",
+          "name": "bid",
+          "type": "u64"
+        },
+        {
+          "name": "ask",
           "type": "u64"
         }
       ]
@@ -963,7 +876,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "approve",
+      "name": "lastLook",
       "accounts": [
         {
           "name": "authority",
@@ -994,7 +907,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "settle",
+      "name": "returnCollateral",
       "accounts": [
         {
           "name": "authority",
@@ -1068,6 +981,87 @@ export const IDL: Rfq = {
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "settle",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "orderState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rfqState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocol",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowAssetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowQuoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1076,6 +1070,10 @@ export const IDL: Rfq = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
           {
             "name": "instrument",
             "type": "u8"
@@ -1152,7 +1150,7 @@ export const IDL: Rfq = {
       }
     },
     {
-      "name": "globalState",
+      "name": "protocol",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1175,6 +1173,16 @@ export const IDL: Rfq = {
           {
             "name": "feeNumerator",
             "type": "u64"
+          },
+          {
+            "name": "titles",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "treasuryWallet",
+            "type": "publicKey"
           }
         ]
       }
@@ -1191,42 +1199,10 @@ export const IDL: Rfq = {
           {
             "name": "bid",
             "type": "u64"
-          }
-        ]
-      }
-    }
-  ],
-  "types": [
-    {
-      "name": "OrderType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Buy"
           },
           {
-            "name": "Sell"
-          },
-          {
-            "name": "TwoWay"
-          }
-        ]
-      }
-    },
-    {
-      "name": "MakerOrderType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Bid"
-          },
-          {
-            "name": "Ask"
-          },
-          {
-            "name": "TwoWay"
+            "name": "collateralReturned",
+            "type": "bool"
           }
         ]
       }
@@ -1251,7 +1227,7 @@ export const IDL: Rfq = {
     {
       "code": 6003,
       "name": "TradeNotApproved",
-      "msg": "Trade has not been approved by maker"
+      "msg": "Trade has not been approved (last look) by maker"
     },
     {
       "code": 6004,
