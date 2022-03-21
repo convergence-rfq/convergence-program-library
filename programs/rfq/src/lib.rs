@@ -13,28 +13,7 @@ use solana_program::sysvar::clock::Clock;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
-pub enum OrderType {
-    Buy,
-    Sell,
-    TwoWay
-}
-
-pub enum MakerOrderType {
-    Bid,
-    Ask,
-    TwoWay,
-}
-
 const U64_UPPER_LIMIT: u64 = 18446744073709551615;
-
-// in cross AAPL/USDC, I buy 1 share of AAPL
-// maker deposits 1 share of AAPL
-
-// in cross AAPL/USDC, I buy 100 USDC of AAPL
-// maker deposits 100 USDC
-
-// in AAPL/USDC, quote two-way in 1 AAPL
-// 105/95
 
 #[program]
 pub mod rfq {
@@ -42,7 +21,6 @@ pub mod rfq {
     /// Initializes protocol.
     /// fee_denominator Fee denominator
     /// fee_numerator Fee numerator
-    /// ctx Accounts context
     pub fn initialize(
         ctx: Context<Initialize>,
         fee_denominator: u64,
@@ -54,21 +32,21 @@ pub mod rfq {
         protocol.authority = ctx.accounts.authority.key();
         protocol.fee_denominator = fee_denominator;
         protocol.fee_numerator = fee_numerator;
+        protocol.titles = Vec::new();
+
         Ok(())
     }
     
-    /// naive version: send request, put up collateral on both sides
-    /// version #2: send request, put up collateral on side you want to trade in
-    /// version #3: anonymize to hide direction, have designated MMs who get special privileges
     pub fn request(
         ctx: Context<Request>,
         title: String,
         request_order_type: u8, // 1=buy, 2=sell, 3=two-way
-        instrument: u8, // Token, Future, Option, may not be needed
-        expiry: i64, // when RFQ timer ~expires, inert for nowxs
-        amount: u64, // denominator asset
+        instrument: u8, 
+        expiry: i64, 
+        amount: u64, 
     ) -> ProgramResult {
         let rfq_state = &mut ctx.accounts.rfq_state;
+        rfq_state.title = title.clone();
         rfq_state.instrument = instrument;
         rfq_state.expiry = expiry;
         rfq_state.expired = false;
@@ -76,92 +54,25 @@ pub mod rfq {
         rfq_state.request_order_type = request_order_type;
         rfq_state.order_amount = amount;
         rfq_state.taker_address = *ctx.accounts.authority.key;
-
+        rfq_state.best_ask_amount = U64_UPPER_LIMIT;
+        rfq_state.best_bid_amount = 0;
         rfq_state.time_begin = Clock::get().unwrap().unix_timestamp;
-
-        Ok(())
-    }
-
-    pub fn respond_twoway(
-        ctx: Context<Respond>,
-        title: String,
-        bid_amount: u64,
-        ask_amount: u64
-    ) -> ProgramResult {
-        let rfq_state: &mut Account<RfqState> = &mut ctx.accounts.rfq_state;
-        let request_order_type = rfq_state.request_order_type;
-        let order_amount = rfq_state.order_amount;
-        let time_begin = rfq_state.time_begin;
-        let expiry = rfq_state.expiry;
-        let order_state: &mut Account<OrderState> = &mut ctx.accounts.order_state;
-        let authority = ctx.accounts.authority.key();
-        let time_response = Clock::get().unwrap().unix_timestamp;
+        rfq_state.approved = false;
         
-        rfq_state.time_response = time_response;
-
-        require!((time_response - time_begin) < expiry, Err(ErrorCode::ResponseTimeElapsed.into()));
-        require!(request_order_type == 1 || request_order_type == 2, Err(ErrorCode::InvalidQuoteType.into()));
-
-        if rfq_state.response_count == 0 {
-            rfq_state.best_ask_amount = U64_UPPER_LIMIT;
-            rfq_state.best_bid_amount = 0;
-        }
-
-        // 1: buy, 2: sell, 3: two-way, in two-way the amount is assumed to be in quote_token
-        if request_order_type == 3 {
-            anchor_spl::token::transfer(
-                CpiContext::new(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: ctx.accounts.asset_token.to_account_info(),
-                        to: ctx.accounts.escrow_asset_token.to_account_info(),
-                        authority: ctx.accounts.authority.to_account_info(),
-                    },
-                ),
-                order_amount,
-            )?;
-
-            order_state.ask = ask_amount;
-            if ask_amount < rfq_state.best_ask_amount {
-                rfq_state.best_ask_amount = ask_amount;
-                rfq_state.best_ask_address = authority;
-            }
-
-            anchor_spl::token::transfer(
-                CpiContext::new(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: ctx.accounts.quote_token.to_account_info(),
-                        to: ctx.accounts.escrow_quote_token.to_account_info(),
-                        authority: ctx.accounts.authority.to_account_info(),
-                    },
-                ),
-                order_amount,
-            )?;
-
-            order_state.bid = bid_amount;
-            if bid_amount > rfq_state.best_bid_amount {
-                rfq_state.best_bid_amount = bid_amount;
-                rfq_state.best_bid_address = authority;
-            }
-        }
-
-        rfq_state.response_count = rfq_state.response_count + 1;
+        ctx.accounts.protocol.titles.push(title);
+        
         Ok(())
     }
 
-
-    /// return one or two-way quote from request, single response per wallet, allow multiple responses
-    /// what if two cpties tie for best price? give it to who priced earlier? what if both priced in same block, split the trade?
-    /// how do we mitigate 'fat finger' error? make some protections for makers?
-    /// margining system? 10% collateral upfront and slash if trade gets cancelled.
+    /// maker's response with one-way or two-way quotes
     pub fn respond(
         ctx: Context<Respond>,
         title: String,
-        amount: u64,
+        bid: u64,
+        ask: u64,
     ) -> ProgramResult {
         let rfq_state: &mut Account<RfqState> = &mut ctx.accounts.rfq_state;
-        let request_order_type = rfq_state.request_order_type;
+
         let order_amount = rfq_state.order_amount;
         let time_begin = rfq_state.time_begin;
         let expiry = rfq_state.expiry;
@@ -172,15 +83,9 @@ pub mod rfq {
         rfq_state.time_response = time_response;
 
         require!((time_response - time_begin) < expiry, Err(ErrorCode::ResponseTimeElapsed.into()));
-        require!(request_order_type == 1 || request_order_type == 2, Err(ErrorCode::InvalidQuoteType.into()));
+        require!(bid > 0 || ask > 0, Err(ErrorCode::InvalidQuoteType.into()));
 
-        if rfq_state.response_count == 0 {
-            rfq_state.best_ask_amount = U64_UPPER_LIMIT;
-            rfq_state.best_bid_amount = 0;
-        }
-
-        // 1: buy, 2: sell, 3: two-way, in two-way the amount is assumed to be in quote_token
-        if request_order_type == 1 {
+        if ask > 0 {
             anchor_spl::token::transfer(
                 CpiContext::new(
                     ctx.accounts.token_program.to_account_info(),
@@ -190,15 +95,16 @@ pub mod rfq {
                         authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
-                order_amount,
+                order_amount, // collateral is an asset token amount
             )?;
 
-            order_state.ask = amount;
-            if amount < rfq_state.best_ask_amount {
-                rfq_state.best_ask_amount = amount;
+            order_state.ask = ask;
+            if ask < rfq_state.best_ask_amount {
+                rfq_state.best_ask_amount = ask;
                 rfq_state.best_ask_address = authority;
             }
-        } else if request_order_type == 2 {
+        }
+        if bid > 0 {
             anchor_spl::token::transfer(
                 CpiContext::new(
                     ctx.accounts.token_program.to_account_info(),
@@ -208,23 +114,21 @@ pub mod rfq {
                         authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
-                order_amount,
+                bid, // collateral is a quote token amount
             )?;
             
-            order_state.bid = amount;
-            if amount > rfq_state.best_bid_amount {
-                rfq_state.best_bid_amount = amount;
+            order_state.bid = bid;
+            if bid > rfq_state.best_bid_amount {
+                rfq_state.best_bid_amount = bid;
                 rfq_state.best_bid_address = authority;
             }
-        } else if request_order_type == 3 {
-
-        }
+        } 
 
         rfq_state.response_count = rfq_state.response_count + 1;
         Ok(())
     }
 
-    // taker confirms order
+    // taker confirms order type
     pub fn confirm(
         ctx: Context<Confirm>,
         title: String,
@@ -282,9 +186,8 @@ pub mod rfq {
         Ok(())
     }
 
-    // TODO: last look functionality
-    pub fn approve(
-        ctx: Context<Approve>,
+    pub fn last_look(
+        ctx: Context<LastLook>,
         title: String,
     ) -> ProgramResult {
         let rfq_state: &mut Account<RfqState> = &mut ctx.accounts.rfq_state;
@@ -292,12 +195,12 @@ pub mod rfq {
         
         let mut is_winner = false;
 
-        if (rfq_state.confirm_order_type == 1) && (rfq_state.best_bid_amount == order_state.bid) {
-            is_winner = true;    
-        }
-        if (rfq_state.confirm_order_type == 2) && (rfq_state.best_ask_amount == order_state.ask) {
+        if (rfq_state.confirm_order_type == 1) && (rfq_state.best_ask_amount == order_state.ask) {
             is_winner = true;
-        } 
+        }
+        if (rfq_state.confirm_order_type == 2) && (rfq_state.best_bid_amount == order_state.bid) {
+            is_winner = true;
+        }
         
         if is_winner {
             rfq_state.approved = true;
@@ -306,146 +209,158 @@ pub mod rfq {
         Ok(())
     }
 
+    /// returns collateral of non-winning makers
+    pub fn return_collateral(
+        ctx: Context<ReturnCollateral>,
+        title: String,
+    ) -> ProgramResult {
+        let rfq_state: &mut Account<RfqState> = &mut ctx.accounts.rfq_state;
+        let order_state: &mut Account<OrderState> = &mut ctx.accounts.order_state;
+        
+        require!(rfq_state.confirmed == true, Err(ErrorCode::TradeNotConfirmed.into()));
+        require!(order_state.collateral_returned == false, Err(ErrorCode::TradeNotConfirmed.into()));
+
+        let asset_seed = &[b"escrow_asset", name_seed(&title)];
+        let (_escrow_asset_token, asset_bump) = Pubkey::find_program_address(asset_seed, ctx.program_id);
+        let asset_full_seed = &[b"escrow_asset", name_seed(&title), &[asset_bump]];
+        let quote_seed = &[b"escrow_quote", name_seed(&title)];
+        let (_escrow_quote_token, quote_bump) = Pubkey::find_program_address(quote_seed, ctx.program_id);
+        let quote_full_seed = &[b"escrow_quote", name_seed(&title), &[quote_bump]];
+
+        let (_rfq_pda, rfq_bump) = Pubkey::find_program_address(
+            &[b"rfq_state", name_seed(&title)],
+            ctx.program_id,
+        );
+        let rfq_full_seed = &[b"rfq_state", name_seed(&title), &[rfq_bump]];
+
+        if order_state.ask != 0 && (rfq_state.best_ask_amount != order_state.ask || rfq_state.confirm_order_type == 2) {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.escrow_asset_token.to_account_info(),
+                        to: ctx.accounts.asset_token.to_account_info(),
+                        authority: rfq_state.to_account_info(),
+                    },
+                    &[&asset_full_seed[..], &rfq_full_seed[..]],
+                ),
+                rfq_state.order_amount,
+            )?;
+        }
+
+        if order_state.bid != 0 && (rfq_state.best_ask_amount != order_state.ask || rfq_state.confirm_order_type == 1) {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.escrow_quote_token.to_account_info(),
+                        to: ctx.accounts.quote_token.to_account_info(),
+                        authority: rfq_state.to_account_info(),
+                    },
+                    &[&quote_full_seed[..], &rfq_full_seed[..]],
+                ),
+                order_state.bid,
+            )?;
+        }
+
+        order_state.collateral_returned = true;
+
+        Ok(())
+    }
+
+    // settles winning maker's and taker's fund transfers
     pub fn settle(
         ctx: Context<Settle>,
         title: String,
     ) -> ProgramResult {
         let rfq_state: &mut Account<RfqState> = &mut ctx.accounts.rfq_state;
-        let order_amount = rfq_state.order_amount;
-        let best_bid_amount = rfq_state.best_bid_amount;
-        let best_ask_amount = rfq_state.best_ask_amount;
+        let protocol: &mut Account<Protocol> = &mut ctx.accounts.protocol;
+
         let taker_address = rfq_state.taker_address;
         let order_state: &mut Account<OrderState> = &mut ctx.accounts.order_state;
         let authority_address = *ctx.accounts.authority.to_account_info().key;
-        let request_order_type = rfq_state.request_order_type;
         let confirm_order_type = rfq_state.confirm_order_type;
+
+        require!(rfq_state.confirmed == true, Err(ErrorCode::TradeNotConfirmed.into()));
+        require!(rfq_state.approved == true, Err(ErrorCode::TradeNotApproved.into()));
 
         let asset_seed = &[b"escrow_asset", name_seed(&title)];
         let quote_seed = &[b"escrow_quote", name_seed(&title)];
         let (_escrow_asset_token, asset_bump) = Pubkey::find_program_address(asset_seed, ctx.program_id);
         let (_escrow_quote_token, quote_bump) = Pubkey::find_program_address(quote_seed, ctx.program_id);
-        
         let asset_full_seed = &[b"escrow_asset", name_seed(&title), &[asset_bump]];
         let quote_full_seed = &[b"escrow_quote", name_seed(&title), &[quote_bump]];
 
-        require!(rfq_state.confirmed == true, Err(ErrorCode::TradeNotConfirmed.into()));
-        require!(rfq_state.approved == true, Err(ErrorCode::TradeNotApproved.into()));
-
-        let (rfq_pda, rfq_bump) = Pubkey::find_program_address(
+        let (_rfq_pda, rfq_bump) = Pubkey::find_program_address(
             &[b"rfq_state", name_seed(&title)],
             ctx.program_id,
         );
-
         let rfq_full_seed = &[b"rfq_state", name_seed(&title), &[rfq_bump]];
+
         let is_taker_address = authority_address == taker_address;
-        let is_winning_ask = rfq_state.best_ask_amount == order_state.ask;
-        let is_winning_bid = rfq_state.best_bid_amount == order_state.bid;
 
-        if is_taker_address  {
-            if confirm_order_type == 1 {
-                anchor_spl::token::transfer(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.escrow_asset_token.to_account_info(),
-                            to: ctx.accounts.asset_token.to_account_info(),
-                            authority: rfq_state.to_account_info(),
-                        },
-                        &[&asset_full_seed[..], &rfq_full_seed[..]],
-                    ),
-                    order_amount,
-                )?;
-            } else if confirm_order_type == 2 {
-                anchor_spl::token::transfer(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.escrow_quote_token.to_account_info(),
-                            to: ctx.accounts.quote_token.to_account_info(),
-                            authority: rfq_state.to_account_info(),
-                        },
-                        &[&quote_full_seed[..], &rfq_full_seed[..]],
-                    ),
-                    order_amount,
-                )?;
-            }
-        } 
-
-        // market makers that didn't win, get their collateral back
-        if !is_taker_address && !is_winning_ask {
-            // send winning maker's token to taker
-            if request_order_type == 1 {
-                anchor_spl::token::transfer(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.escrow_asset_token.to_account_info(),
-                            to: ctx.accounts.asset_token.to_account_info(),
-                            authority: rfq_state.to_account_info(),
-                        },
-                        &[&asset_full_seed[..], &rfq_full_seed[..]],
-                    ),
-                    order_amount,
-                )?;
-            }
-        } 
-        if !is_taker_address && !is_winning_bid {
-            if request_order_type == 2 {
-                anchor_spl::token::transfer(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.escrow_quote_token.to_account_info(),
-                            to: ctx.accounts.quote_token.to_account_info(),
-                            authority: rfq_state.to_account_info(),
-                        },
-                        &[&quote_full_seed[..], &rfq_full_seed[..]],
-                    ),
-                    order_amount,
-                )?;
-            }
+        if is_taker_address && confirm_order_type == 1 {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.escrow_asset_token.to_account_info(),
+                        to: ctx.accounts.asset_token.to_account_info(),
+                        authority: rfq_state.to_account_info(),
+                    },
+                    &[&asset_full_seed[..], &rfq_full_seed[..]],
+                ),
+                rfq_state.order_amount,
+            )?;
         }
 
-        if !is_taker_address && is_winning_ask {
-            // send winning maker's token to taker
-            if request_order_type == 1 {
-                anchor_spl::token::transfer(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.escrow_quote_token.to_account_info(),
-                            to: ctx.accounts.quote_token.to_account_info(),
-                            authority: rfq_state.to_account_info(),
-                        },
-                        &[&quote_full_seed[..], &rfq_full_seed[..]],
-                    ),
-                    best_ask_amount,
-                )?;
-            }
+        if is_taker_address && confirm_order_type == 2 {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.escrow_quote_token.to_account_info(),
+                        to: ctx.accounts.quote_token.to_account_info(),
+                        authority: rfq_state.to_account_info(),
+                    },
+                    &[&quote_full_seed[..], &rfq_full_seed[..]],
+                ),
+                rfq_state.best_bid_amount,
+            )?;
         }
         
-        if !is_taker_address && is_winning_bid {
-            if request_order_type == 2 {
-                anchor_spl::token::transfer(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.escrow_asset_token.to_account_info(),
-                            to: ctx.accounts.asset_token.to_account_info(),
-                            authority: rfq_state.to_account_info(),
-                        },
-                        &[&asset_full_seed[..], &rfq_full_seed[..]],
-                    ),
-                    best_bid_amount,
-                )?;
-            }
+        if confirm_order_type == 1 && (rfq_state.best_ask_amount == order_state.ask) {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.escrow_quote_token.to_account_info(),
+                        to: ctx.accounts.quote_token.to_account_info(),
+                        authority: rfq_state.to_account_info(),
+                    },
+                    &[&quote_full_seed[..], &rfq_full_seed[..]],
+                ),
+                order_state.ask,
+            )?;
+        }
+
+        if confirm_order_type == 2 && (rfq_state.best_bid_amount == order_state.bid) {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.escrow_asset_token.to_account_info(),
+                        to: ctx.accounts.asset_token.to_account_info(),
+                        authority: rfq_state.to_account_info(),
+                    },
+                    &[&asset_full_seed[..], &rfq_full_seed[..]],
+                ),
+                rfq_state.order_amount,
+            )?;
         }
 
         Ok(())
     }
-
-    // TODO: add ability for taker to counter with a better price
-    // pub fn counter()
 }
 
 #[derive(Accounts)]
@@ -456,10 +371,10 @@ pub struct Initialize<'info> {
         init,
         payer = authority,
         seeds = [b"convergence_rfq"],
-        space = 8 + 32 + 8 + 8 + 8 + 8,
+        space = 1024,
         bump
     )]
-    pub protocol: Account<'info, GlobalState>,
+    pub protocol: Account<'info, Protocol>,
     pub system_program: Program<'info, System>,
 }
 
@@ -478,8 +393,16 @@ pub struct Request<'info> {
         bump
     )]
     pub rfq_state: Box<Account<'info, RfqState>>,
+
+    #[account(
+        init_if_needed,
+        payer = authority,
+        seeds = [b"convergence_rfq"],
+        space = 1024,
+        bump
+    )]
+    pub protocol: Account<'info, Protocol>,
     
-    // programs
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -497,7 +420,7 @@ pub struct Respond<'info> {
         init_if_needed,
         payer = authority,
         seeds = [b"order_state", &authority.key().to_bytes()[..]],
-        space = 64 + 64,
+        space = 64 + 64 + 8,
         bump
     )]
     pub order_state: Box<Account<'info, OrderState>>,
@@ -596,14 +519,14 @@ pub struct Confirm<'info> {
 #[instruction(
     title: String,
 )]
-pub struct Approve<'info> {
+pub struct LastLook<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
         init_if_needed,
         payer = authority,
         seeds = [b"order_state", &authority.key().to_bytes()[..]],
-        space = 64 + 64,
+        space = 64 + 64 + 8,
         bump
     )]
     pub order_state: Box<Account<'info, OrderState>>,
@@ -622,14 +545,14 @@ pub struct Approve<'info> {
 #[instruction(
     title: String,
 )]
-pub struct Settle<'info> {
+pub struct ReturnCollateral<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
         init_if_needed,
         payer = authority,
         seeds = [b"order_state", &authority.key().to_bytes()[..]],
-        space = 64 + 64,
+        space = 64 + 64 + 8,
         bump
     )]
     pub order_state: Box<Account<'info, OrderState>>,
@@ -665,9 +588,65 @@ pub struct Settle<'info> {
 }
 
 
+#[derive(Accounts)]
+#[instruction(
+    title: String,
+)]
+pub struct Settle<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(
+        init_if_needed,
+        payer = authority,
+        seeds = [b"order_state", &authority.key().to_bytes()[..]],
+        space = 64 + 64 + 8,
+        bump
+    )]
+    pub order_state: Box<Account<'info, OrderState>>,
+    
+    #[account(
+        init_if_needed,
+        payer = authority,
+        seeds = [b"rfq_state", name_seed(&title)],
+        space = 1024,
+        bump
+    )]
+    pub rfq_state: Box<Account<'info, RfqState>>,
+    #[account(
+        init_if_needed,
+        payer = authority,
+        seeds = [b"convergence_rfq"],
+        space = 1024,
+        bump
+    )]
+    pub protocol: Account<'info, Protocol>,
+    
+    #[account(mut)]
+    pub asset_token: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub quote_token: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub escrow_asset_token: Box<Account<'info, TokenAccount>>, 
+    #[account(mut)]
+    pub escrow_quote_token: Box<Account<'info, TokenAccount>>, 
+
+    #[account(mut)]
+    pub asset_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub quote_mint: Box<Account<'info, Mint>>,
+
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+
 #[account]
 /// Holds state of one RFQ
 pub struct RfqState { 
+    pub title: String,
     pub instrument: u8,
     pub expiry: i64, // 30secs?
     pub expired: bool,
@@ -690,20 +669,24 @@ pub struct RfqState {
 
 /// global state for the entire RFQ system
 #[account]
-pub struct GlobalState {
+pub struct Protocol {
     pub rfq_count: u64,
     pub access_manager_count: u64,
     pub authority: Pubkey,
     pub fee_denominator: u64,
     pub fee_numerator: u64,
+    pub titles: Vec<String>,
+    pub treasury_wallet: Pubkey,
 }
 
 /// MM order state
 #[account]
 pub struct OrderState {
-    pub ask: u64,
-    pub bid: u64,
+    pub ask: u64, //ask collateral
+    pub bid: u64, //bid collateral
+    pub collateral_returned: bool,
 }
+
 
 pub fn name_seed(name: &str) -> &[u8] {
     let b = name.as_bytes();
@@ -718,7 +701,7 @@ pub enum ErrorCode {
     InvalidTakerAddress,
     #[msg("Trade has not been confirmed by taker")]
     TradeNotConfirmed,
-    #[msg("Trade has not been approved by maker")]
+    #[msg("Trade has not been approved (last look) by maker")]
     TradeNotApproved,
     #[msg("Timed out on response to request")]
     ResponseTimeElapsed,
