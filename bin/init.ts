@@ -4,7 +4,7 @@ import * as anchor from '@project-serum/anchor';
 import {
   getProgram,
   getPda
-} from './helpers';
+} from '../lib/helpers';
 
 const provider = anchor.getProvider();
 
