@@ -1,12 +1,15 @@
 [programs.localnet]
-rfq = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+rfq = "6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2"
+
+[programs.devnet]
+rfq = "6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
-wallet = "/Users/vitalys/.config/solana/id.json"
+cluster = "devnet"
+wallet = "~/.config/solana/convergence.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

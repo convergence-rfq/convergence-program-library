@@ -11,7 +11,7 @@ use anchor_lang::solana_program::{
 };
 use solana_program::sysvar::clock::Clock;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2");
 
 const U64_UPPER_LIMIT: u64 = 18446744073709551615;
 
