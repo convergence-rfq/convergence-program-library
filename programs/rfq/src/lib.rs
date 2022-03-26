@@ -18,6 +18,7 @@ const U64_UPPER_LIMIT: u64 = 18446744073709551615;
 #[program]
 pub mod rfq {
     use super::*;
+
     /// Initializes protocol.
     /// fee_denominator Fee denominator
     /// fee_numerator Fee numerator
@@ -64,7 +65,7 @@ pub mod rfq {
         Ok(())
     }
 
-    /// maker's response with one-way or two-way quotes
+    /// Maker's response with one-way or two-way quotes
     pub fn respond(
         ctx: Context<Respond>,
         title: String,
@@ -95,7 +96,7 @@ pub mod rfq {
                         authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
-                order_amount, // collateral is an asset token amount
+                order_amount, // Collateral is an asset token amount
             )?;
 
             order_state.ask = ask;
@@ -114,7 +115,7 @@ pub mod rfq {
                         authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
-                bid, // collateral is a quote token amount
+                bid, // Collateral is a quote token amount
             )?;
             
             order_state.bid = bid;
@@ -128,13 +129,13 @@ pub mod rfq {
         Ok(())
     }
 
-    // taker confirms order type
+    // Taker confirms order type
     pub fn confirm(
         ctx: Context<Confirm>,
         title: String,
         confirm_order_type: u8,
     ) -> ProgramResult {
-        // check if valid best_bid or best_offer exists
+        // Check if valid best_bid or best_offer exists
         let rfq_state: &mut Account<RfqState>  = &mut ctx.accounts.rfq_state;
         let best_bid_amount = rfq_state.best_bid_amount;
         let best_ask_amount = rfq_state.best_ask_amount;
@@ -142,7 +143,7 @@ pub mod rfq {
         let request_order_type = rfq_state.request_order_type;
         let authority = ctx.accounts.authority.key();
 
-        // make sure current authority matches original taker address from 'request' fn call
+        // Make sure current authority matches original taker address from 'request' fn call
         require!(taker_address == authority, Err(ErrorCode::InvalidTakerAddress.into()));
         require!(confirm_order_type < 3, Err(ErrorCode::InvalidOrder.into()));
 
@@ -209,7 +210,7 @@ pub mod rfq {
         Ok(())
     }
 
-    /// returns collateral of non-winning makers
+    /// Returns collateral of non-winning makers
     pub fn return_collateral(
         ctx: Context<ReturnCollateral>,
         title: String,
@@ -268,7 +269,7 @@ pub mod rfq {
         Ok(())
     }
 
-    // settles winning maker's and taker's fund transfers
+    // Settles winning maker's and taker's fund transfers
     pub fn settle(
         ctx: Context<Settle>,
         title: String,
@@ -393,7 +394,6 @@ pub struct Request<'info> {
         bump
     )]
     pub rfq_state: Box<Account<'info, RfqState>>,
-
     #[account(
         init_if_needed,
         payer = authority,
@@ -402,7 +402,6 @@ pub struct Request<'info> {
         bump
     )]
     pub protocol: Account<'info, Protocol>,
-    
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -432,12 +431,10 @@ pub struct Respond<'info> {
         bump
     )]
     pub rfq_state: Box<Account<'info, RfqState>>,
-    
     #[account(mut)]
     pub asset_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
-    
     #[account(
         init_if_needed,
         payer = authority,
@@ -458,13 +455,11 @@ pub struct Respond<'info> {
     pub escrow_quote_token: Box<Account<'info, TokenAccount>>,
     pub asset_mint: Box<Account<'info, Mint>>,
     pub quote_mint: Box<Account<'info, Mint>>,
-
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
 }
-
 
 #[derive(Accounts)]
 #[instruction(
@@ -473,7 +468,6 @@ pub struct Respond<'info> {
 pub struct Confirm<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
-    
     #[account(
         init_if_needed,
         payer = authority,
@@ -482,12 +476,10 @@ pub struct Confirm<'info> {
         bump
     )]
     pub rfq_state: Box<Account<'info, RfqState>>,
-    
     #[account(mut)]
     pub asset_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
-    
     #[account(
         init_if_needed,
         payer = authority,
@@ -508,7 +500,6 @@ pub struct Confirm<'info> {
     pub escrow_quote_token: Box<Account<'info, TokenAccount>>, 
     pub asset_mint: Box<Account<'info, Mint>>,
     pub quote_mint: Box<Account<'info, Mint>>,
-
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -556,7 +547,6 @@ pub struct ReturnCollateral<'info> {
         bump
     )]
     pub order_state: Box<Account<'info, OrderState>>,
-    
     #[account(
         init_if_needed,
         payer = authority,
@@ -565,28 +555,23 @@ pub struct ReturnCollateral<'info> {
         bump
     )]
     pub rfq_state: Box<Account<'info, RfqState>>,
-    
     #[account(mut)]
     pub asset_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
-
     #[account(mut)]
     pub escrow_asset_token: Box<Account<'info, TokenAccount>>, 
     #[account(mut)]
     pub escrow_quote_token: Box<Account<'info, TokenAccount>>, 
-
     #[account(mut)]
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub quote_mint: Box<Account<'info, Mint>>,
-
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
 }
-
 
 #[derive(Accounts)]
 #[instruction(
@@ -603,7 +588,6 @@ pub struct Settle<'info> {
         bump
     )]
     pub order_state: Box<Account<'info, OrderState>>,
-    
     #[account(
         init_if_needed,
         payer = authority,
@@ -620,35 +604,30 @@ pub struct Settle<'info> {
         bump
     )]
     pub protocol: Account<'info, Protocol>,
-    
     #[account(mut)]
     pub asset_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
-
     #[account(mut)]
     pub escrow_asset_token: Box<Account<'info, TokenAccount>>, 
     #[account(mut)]
     pub escrow_quote_token: Box<Account<'info, TokenAccount>>, 
-
     #[account(mut)]
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub quote_mint: Box<Account<'info, Mint>>,
-
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
 }
 
-
-#[account]
 /// Holds state of one RFQ
+#[account]
 pub struct RfqState { 
     pub title: String,
     pub instrument: u8,
-    pub expiry: i64, // 30secs?
+    pub expiry: i64, // 30 secs?
     pub expired: bool,
     pub asset_mint: Pubkey,
     pub quote_mint: Pubkey,
@@ -667,7 +646,7 @@ pub struct RfqState {
     pub time_response: i64,
 }
 
-/// global state for the entire RFQ system
+/// Global state for the entire RFQ system
 #[account]
 pub struct Protocol {
     pub rfq_count: u64,
@@ -687,10 +666,13 @@ pub struct OrderState {
     pub collateral_returned: bool,
 }
 
-
 pub fn name_seed(name: &str) -> &[u8] {
     let b = name.as_bytes();
-    if b.len() > 32 { &b[0..32] } else { b }
+    if b.len() > 32 { 
+        &b[0..32] 
+    } else { 
+        b 
+    }
 }
 
 #[error]
@@ -711,13 +693,13 @@ pub enum ErrorCode {
 
 #[macro_export]
 macro_rules! require{
-       ($a:expr,$b:expr)=>{
-           {
-               if !$a {
-                   return $b
-               }
-           }
-       }
+    ($a:expr,$b:expr)=>{
+        {
+            if !$a {
+                return $b
+            }
+        }
+    }
 }
 
 pub fn transfer_spl<'info>(
