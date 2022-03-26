@@ -1,11 +1,7 @@
 import * as anchor from '@project-serum/anchor';
 import * as dotenv from 'dotenv';
 
-import * as idl from '../target/idl/rfq.json';
-
-dotenv.config();
-
-anchor.setProvider(anchor.Provider.env());
+import * as idl from './idl/rfq.json';
 
 export async function getPda(provider: any, seed: string): Promise<any> {
   const program = await getProgram(provider);
