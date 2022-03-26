@@ -22,3 +22,10 @@ export const toBuffer = (x: any) => {
   console.log("boogie woogie: ", x);
   return Buffer.from(anchor.utils.bytes.utf8.encode(x));
 };
+
+export async function getLiveRFQs(provider: anchor.Provider): Promise<any> {
+  const program = await getProgram(provider);
+  const [protocolPda, _protocolBump] = await getPda(provider, 'convergence_rfq');
+  const protocol = await program.account.protocol.fetch(protocolPda);
+  return protocol.titles;
+};
