@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount}};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::sysvar::clock::Clock;
 
 declare_id!("6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2");
@@ -223,12 +223,8 @@ pub mod rfq {
     /// Return collateral of non-winning makers.
     ///
     /// ctx
-    /// id
-    pub fn return_collateral(
-        ctx: Context<ReturnCollateral>,
-        id: u64,
-    ) -> Result<()> {
-        let rfq = &mut ctx.accounts.rfq;
+    pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
+        let rfq = &ctx.accounts.rfq;
         let order = &mut ctx.accounts.order;
         
         require!(rfq.confirmed, ProtocolError::TradeNotConfirmed);
@@ -244,8 +240,13 @@ pub mod rfq {
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[ASSET_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
-                        &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
+                        &[
+                            ASSET_ESCROW_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            order.id.to_string().as_bytes(),
+                            &[order.bump]
+                        ][..],
+                        &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
                 rfq.order_amount,
@@ -262,8 +263,13 @@ pub mod rfq {
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[QUOTE_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
-                        &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
+                        &[
+                            QUOTE_ESCROW_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(), 
+                            order.id.to_string().as_bytes(),
+                            &[order.bump]
+                        ][..],
+                        &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
                 order.bid,
@@ -278,8 +284,7 @@ pub mod rfq {
     /// Settles winning maker and taker fund transfers.
     ///
     /// ctx
-    /// id
-    pub fn settle(ctx: Context<Settle>, id: u64) -> Result<()> {
+    pub fn settle(ctx: Context<Settle>) -> Result<()> {
         let rfq = &mut ctx.accounts.rfq;
         let taker_address = rfq.taker_address;
 
@@ -302,8 +307,13 @@ pub mod rfq {
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[ASSET_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
-                        &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
+                        &[
+                            ASSET_ESCROW_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(), 
+                            order.id.to_string().as_bytes(),
+                            &[order.bump]
+                        ][..],
+                        &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
                 rfq.order_amount,
@@ -320,8 +330,13 @@ pub mod rfq {
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[QUOTE_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
-                        &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
+                        &[
+                            QUOTE_ESCROW_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            order.id.to_string().as_bytes(),
+                            &[order.bump]
+                        ][..],
+                        &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
                 rfq.best_bid_amount,
@@ -338,8 +353,8 @@ pub mod rfq {
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[QUOTE_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
-                        &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
+                        &[QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[order.bump]][..],
+                        &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
                 order.ask,
@@ -356,8 +371,8 @@ pub mod rfq {
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[QUOTE_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
-                        &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
+                        &[QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[order.bump]][..],
+                        &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
                 rfq.order_amount,
@@ -525,7 +540,6 @@ pub struct Respond<'info> {
     pub quote_mint: Box<Account<'info, Mint>>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
 }
 
@@ -565,7 +579,6 @@ pub struct Confirm<'info> {
     pub quote_token: Box<Account<'info, TokenAccount>>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
 }
 
@@ -595,33 +608,28 @@ pub struct LastLook<'info> {
 pub struct ReturnCollateral<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
-    #[account(
-        mut,
-        seeds = [ORDER_SEED.as_bytes(), &authority.key().to_bytes()],
-        bump = order.bump
-    )]
-    pub order: Box<Account<'info, OrderState>>,
-    #[account(
-        mut,
-        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.bump
-    )]
-    pub rfq: Box<Account<'info, RfqState>>,
+    pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub asset_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub asset_escrow: Box<Account<'info, TokenAccount>>, 
+    #[account(
+        mut,
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.id.to_string().as_bytes(),
+            order.id.to_string().as_bytes()
+        ],
+        bump = order.bump
+    )]
+    pub order: Box<Account<'info, OrderState>>,
+    pub quote_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub quote_escrow: Box<Account<'info, TokenAccount>>, 
-    #[account(mut)]
-    pub asset_mint: Box<Account<'info, Mint>>,
-    #[account(mut)]
-    pub quote_mint: Box<Account<'info, Mint>>,
-    pub system_program: Program<'info, System>,
+    pub rfq: Box<Account<'info, RfqState>>,
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
 }
 
@@ -631,7 +639,6 @@ pub struct Settle<'info> {
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub asset_token: Box<Account<'info, TokenAccount>>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(mut)]
