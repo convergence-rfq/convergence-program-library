@@ -109,12 +109,12 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -184,12 +184,12 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -286,12 +286,12 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -357,12 +357,12 @@ export type Rfq = {
           "isSigner": true
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -714,12 +714,12 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -789,12 +789,12 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -891,12 +891,12 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -962,12 +962,12 @@ export const IDL: Rfq = {
           "isSigner": true
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },

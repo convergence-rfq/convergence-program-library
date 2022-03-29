@@ -195,26 +195,26 @@ describe('rfq', () => {
     assert.equal(response2.rfqState.bestBidAmount.toString(), MAKER_B_BID_AMOUNT.toString());
   });
 
-  return
-
-  it('confirms -> taker confirms RFQ price (pre-settlement)', async () => {
-    const title = "test rfq";
+  it('Taker confirms RFQ price pre-settlement', async () => {
+    const id = 1;
     const confirmOrderType = 1;
 
-    const state = await confirm(provider, title, confirmOrderType, taker, authorityAssetToken, authorityQuoteToken);
-    console.log('best ask(confirm): ', state.bestAskAmount.toNumber());
-    console.log('best bid(confirm): ', state.bestBidAmount.toNumber());
+    const { rfqState } = await confirm(provider, id, confirmOrderType, taker, authorityAssetToken, authorityQuoteToken);
+    console.log('best ask confirmation:', rfqState.bestAskAmount.toNumber());
+    console.log('best bid confirmation:', rfqState.bestBidAmount.toNumber());
 
     const assetMintBalance = await getBalance(taker, assetMint.publicKey);
     const quoteMintBalance = await getBalance(taker, quoteMint.publicKey);
 
-    console.log('taker asset balance(confirm): ', assetMintBalance);
-    console.log('taker quote balance(confirm): ', quoteMintBalance);
+    console.log('taker asset balance confirmation:', assetMintBalance);
+    console.log('taker quote balance confirmation:', quoteMintBalance);
 
     assert.equal(assetMintBalance, 0);
     assert.equal(quoteMintBalance, 100_000 - MAKER_B_ASK_AMOUNT.toNumber());
-    assert.equal(state.confirmed, true);
-  })
+    assert.equal(rfqState.confirmed, true);
+  });
+
+  return
 
   it('maker last look', async () => {
     const title = "test rfq";
@@ -375,12 +375,12 @@ export async function returnCollateral(
     [Buffer.from('rfq'), Buffer.from(title.slice(0, 32))],
     program.programId
   );
-  const [escrowAssetTokenPda, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('escrow-asset'), Buffer.from(title.slice(0, 32))],
+  const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from('asset-escrow'), Buffer.from(title.slice(0, 32))],
     program.programId
   );
-  const [escrowQuoteTokenPda, _escrowQuoteTokenPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('escrow-quote'), Buffer.from(title.slice(0, 32))],
+  const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from('quote-escrow'), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -399,8 +399,8 @@ export async function returnCollateral(
         quoteToken: quoteToken,
         assetMint: assetMint.publicKey,
         quoteMint: quoteMint.publicKey,
-        escrowAssetToken: escrowAssetTokenPda,
-        escrowQuoteToken: escrowQuoteTokenPda,
+        assetEscrow: assetEscrowPda,
+        quoteEscrow: quoteEscrowPda,
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: spl.TOKEN_PROGRAM_ID,
         associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -428,20 +428,20 @@ export async function settle(
 
   const [protocolPda, _protocolBump] = await getPda(provider, 'convergence_rfq');
   const [rfqPDA, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("rfq_state"), Buffer.from(title.slice(0, 32))],
+    [Buffer.from('rfq'), Buffer.from(title.slice(0, 32))],
     program.programId
   );
 
-  const [escrowAssetTokenPDA, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_asset"), Buffer.from(title.slice(0, 32))],
+  const [assetEscrowPDA, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from('asset-escrow'), Buffer.from(title.slice(0, 32))],
     program.programId
   );
-  const [escrowQuoteTokenPDA, _escrowQuoteTokenPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_quote"), Buffer.from(title.slice(0, 32))],
+  const [quoteEscrowPDA, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from('quote-escrow'), Buffer.from(title.slice(0, 32))],
     program.programId
   );
   const [orderPDA, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("order_state"), authority.publicKey.toBytes()],
+    [Buffer.from('order'), authority.publicKey.toBytes()],
     program.programId
   );
 
@@ -457,8 +457,8 @@ export async function settle(
         quoteToken: quoteToken,
         assetMint: assetMint.publicKey,
         quoteMint: quoteMint.publicKey,
-        escrowAssetToken: escrowAssetTokenPDA,
-        escrowQuoteToken: escrowQuoteTokenPDA,
+        assetEscrow: assetEscrowPDA,
+        quoteEscrow: quoteEscrowPDA,
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: spl.TOKEN_PROGRAM_ID,
         associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -477,51 +477,48 @@ export async function settle(
 
 export async function confirm(
   provider: Provider,
-  title: String,
+  id: number,
   confirmOrderType: number,
   authority: Keypair,
   assetToken: spl.Token,
   quoteToken: spl.Token,
 ): Promise<any> {
-
   const program = await getProgram(provider);
 
-  const [rfqPDA, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("rfq_state"), Buffer.from(title.slice(0, 32))],
+  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from('rfq'), toBuffer(id)],
     program.programId
   );
-  const [escrowAssetTokenPDA, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_asset"), Buffer.from(title.slice(0, 32))],
+  const [assetEscrowPDA, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [toBuffer('asset-escrow'), toBuffer(id)],
     program.programId
   );
-  const [escrowQuoteTokenPDA, _escrowQuoteTokenPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from("escrow_quote"), Buffer.from(title.slice(0, 32))],
+  const [quoteEscrowPDA, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
+    [toBuffer('quote-escrow'), toBuffer(id)],
     program.programId
   );
 
   const tx = await program.rpc.confirm(
-    title,
     confirmOrderType,
     {
       accounts: {
-        authority: authority.publicKey,
-        rfqState: rfqPDA,
-        assetToken: assetToken,
-        quoteToken: quoteToken,
-        escrowAssetToken: escrowAssetTokenPDA,
-        escrowQuoteToken: escrowQuoteTokenPDA,
         assetMint: assetMint.publicKey,
-        quoteMint: quoteMint.publicKey,
-
-        systemProgram: anchor.web3.SystemProgram.programId,
-        tokenProgram: spl.TOKEN_PROGRAM_ID,
+        assetToken: assetToken,
         associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
+        authority: authority.publicKey,
+        assetEscrow: assetEscrowPDA,
+        quoteToken: quoteToken,
+        quoteEscrow: quoteEscrowPDA,
+        quoteMint: quoteMint.publicKey,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        rfq: rfqPda,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        tokenProgram: spl.TOKEN_PROGRAM_ID
       },
-      signers: [authority],
+      signers: [authority]
     });
 
-  const rfqState = await program.account.rfqState.fetch(rfqPDA);
+  const rfqState = await program.account.rfqState.fetch(rfqPda);
 
   return {
     tx,
@@ -548,12 +545,12 @@ export async function respond(
   let rfqState = await program.account.rfqState.fetch(rfqPda);
   const responseId = rfqState.responseCount;
 
-  const [escrowAssetTokenPda, _escrowAssetTokenBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('escrow-asset'), toBuffer(rfqId), toBuffer(responseId)],
+  const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from('asset-escrow'), toBuffer(rfqId), toBuffer(responseId)],
     program.programId
   );
-  const [escrowQuoteTokenPda, _escrowQuoteTokenPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('escrow-quote'), toBuffer(rfqId), toBuffer(responseId)],
+  const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from('quote-escrow'), toBuffer(rfqId), toBuffer(responseId)],
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -570,8 +567,8 @@ export async function respond(
         assetToken: assetToken,
         associatedTokenProgram: spl.ASSOCIATED_TOKEN_PROGRAM_ID,
         authority: authority.publicKey,
-        escrowAssetToken: escrowAssetTokenPda,
-        escrowQuoteToken: escrowQuoteTokenPda,
+        assetEscrow: assetEscrowPda,
+        quoteEscrow: quoteEscrowPda,
         order: orderPda,
         quoteMint: quoteMint.publicKey,
         quoteToken: quoteToken,

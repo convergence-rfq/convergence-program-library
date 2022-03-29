@@ -109,12 +109,12 @@
           "isSigner": false
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -184,12 +184,12 @@
           "isSigner": false
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -286,12 +286,12 @@
           "isSigner": false
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -357,12 +357,12 @@
           "isSigner": true
         },
         {
-          "name": "escrowAssetToken",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowQuoteToken",
+          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },

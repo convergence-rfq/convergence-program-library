@@ -6,10 +6,10 @@ declare_id!("6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2");
 
 const U64_UPPER_LIMIT: u64 = 18446744073709551615;
 
-const ESCROW_ASSET_SEED: &str = "escrow-asset";
-const ESCROW_QUOTE_SEED: &str = "escrow-quote";
+const ASSET_ESCROW_SEED: &str = "asset-escrow";
 const ORDER_SEED: &str = "order";
 const PROTOCOL_SEED: &str = "protocol";
+const QUOTE_ESCROW_SEED: &str = "quote-escrow";
 const RFQ_SEED: &str = "rfq";
 
 #[program]
@@ -99,7 +99,7 @@ pub mod rfq {
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.asset_token.to_account_info(),
-                        to: ctx.accounts.escrow_asset_token.to_account_info(),
+                        to: ctx.accounts.asset_escrow.to_account_info(),
                         authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
@@ -120,7 +120,7 @@ pub mod rfq {
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.quote_token.to_account_info(),
-                        to: ctx.accounts.escrow_quote_token.to_account_info(),
+                        to: ctx.accounts.quote_escrow.to_account_info(),
                         authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
@@ -171,7 +171,7 @@ pub mod rfq {
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.quote_token.to_account_info(),
-                        to: ctx.accounts.escrow_quote_token.to_account_info(),
+                        to: ctx.accounts.quote_escrow.to_account_info(),
                         authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
@@ -183,7 +183,7 @@ pub mod rfq {
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.asset_token.to_account_info(),
-                        to: ctx.accounts.escrow_asset_token.to_account_info(),
+                        to: ctx.accounts.asset_escrow.to_account_info(),
                         authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
@@ -238,12 +238,12 @@ pub mod rfq {
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.escrow_asset_token.to_account_info(),
+                        from: ctx.accounts.asset_escrow.to_account_info(),
                         to: ctx.accounts.asset_token.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[ESCROW_ASSET_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
+                        &[ASSET_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
                         &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
@@ -256,12 +256,12 @@ pub mod rfq {
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.escrow_quote_token.to_account_info(),
+                        from: ctx.accounts.quote_escrow.to_account_info(),
                         to: ctx.accounts.quote_token.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[ESCROW_QUOTE_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
+                        &[QUOTE_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
                         &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
@@ -296,12 +296,12 @@ pub mod rfq {
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.escrow_asset_token.to_account_info(),
+                        from: ctx.accounts.asset_escrow.to_account_info(),
                         to: ctx.accounts.asset_token.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[ESCROW_ASSET_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
+                        &[ASSET_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
                         &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
@@ -314,12 +314,12 @@ pub mod rfq {
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.escrow_quote_token.to_account_info(),
+                        from: ctx.accounts.quote_escrow.to_account_info(),
                         to: ctx.accounts.quote_token.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[ESCROW_QUOTE_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
+                        &[QUOTE_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
                         &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
@@ -332,12 +332,12 @@ pub mod rfq {
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.escrow_quote_token.to_account_info(),
+                        from: ctx.accounts.quote_escrow.to_account_info(),
                         to: ctx.accounts.quote_token.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[ESCROW_QUOTE_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
+                        &[QUOTE_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
                         &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
@@ -350,12 +350,12 @@ pub mod rfq {
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.escrow_asset_token.to_account_info(),
+                        from: ctx.accounts.asset_escrow.to_account_info(),
                         to: ctx.accounts.asset_token.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[ESCROW_QUOTE_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
+                        &[QUOTE_ESCROW_SEED.as_bytes(), id.to_string().as_bytes(), &[order.bump]][..],
                         &[RFQ_SEED.as_bytes(), id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
@@ -497,7 +497,7 @@ pub struct Respond<'info> {
         init,
         payer = authority,
         seeds = [
-            ESCROW_ASSET_SEED.as_bytes(), 
+            ASSET_ESCROW_SEED.as_bytes(), 
             rfq.id.to_string().as_bytes(),
             rfq.response_count.to_string().as_bytes()
         ],
@@ -505,12 +505,12 @@ pub struct Respond<'info> {
         token::authority = rfq,
         bump,
     )]
-    pub escrow_asset_token: Box<Account<'info, TokenAccount>>,
+    pub asset_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
         init,
         payer = authority,
         seeds = [
-            ESCROW_QUOTE_SEED.as_bytes(), 
+            QUOTE_ESCROW_SEED.as_bytes(), 
             rfq.id.to_string().as_bytes(),
             rfq.response_count.to_string().as_bytes()
         ],
@@ -518,7 +518,7 @@ pub struct Respond<'info> {
         token::authority = rfq,
         bump,
     )]
-    pub escrow_quote_token: Box<Account<'info, TokenAccount>>,
+    pub quote_escrow: Box<Account<'info, TokenAccount>>,
     pub asset_mint: Box<Account<'info, Mint>>,
     pub quote_mint: Box<Account<'info, Mint>>,
     pub system_program: Program<'info, System>,
@@ -528,13 +528,12 @@ pub struct Respond<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(id: u64)]
 pub struct Confirm<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), id.to_string().as_bytes()],
+        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
@@ -547,19 +546,19 @@ pub struct Confirm<'info> {
         payer = authority,
         token::mint = asset_mint,
         token::authority = rfq,
-        seeds = [ESCROW_ASSET_SEED.as_bytes(), id.to_string().as_bytes()],
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump,
     )]
-    pub escrow_asset_token: Box<Account<'info, TokenAccount>>, 
+    pub asset_escrow: Box<Account<'info, TokenAccount>>, 
     #[account(
         init,
         payer = authority,
         token::mint = quote_mint,
         token::authority = rfq,
-        seeds = [ESCROW_QUOTE_SEED.as_bytes(), id.to_string().as_bytes()],
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump,
     )]
-    pub escrow_quote_token: Box<Account<'info, TokenAccount>>, 
+    pub quote_escrow: Box<Account<'info, TokenAccount>>, 
     pub asset_mint: Box<Account<'info, Mint>>,
     pub quote_mint: Box<Account<'info, Mint>>,
     pub system_program: Program<'info, System>,
@@ -569,7 +568,6 @@ pub struct Confirm<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(id: u64)]
 pub struct LastLook<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -581,7 +579,7 @@ pub struct LastLook<'info> {
     pub order: Box<Account<'info, OrderState>>,
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), id.to_string().as_bytes()],
+        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
@@ -589,7 +587,6 @@ pub struct LastLook<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(id: u64)]
 pub struct ReturnCollateral<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -601,7 +598,7 @@ pub struct ReturnCollateral<'info> {
     pub order: Box<Account<'info, OrderState>>,
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), id.to_string().as_bytes()],
+        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
@@ -610,9 +607,9 @@ pub struct ReturnCollateral<'info> {
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub escrow_asset_token: Box<Account<'info, TokenAccount>>, 
+    pub asset_escrow: Box<Account<'info, TokenAccount>>, 
     #[account(mut)]
-    pub escrow_quote_token: Box<Account<'info, TokenAccount>>, 
+    pub quote_escrow: Box<Account<'info, TokenAccount>>, 
     #[account(mut)]
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
@@ -624,7 +621,6 @@ pub struct ReturnCollateral<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(id: u64)]
 pub struct Settle<'info> {
     #[account(mut)]
     pub asset_mint: Box<Account<'info, Mint>>,
@@ -634,9 +630,9 @@ pub struct Settle<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(mut)]
-    pub escrow_asset_token: Box<Account<'info, TokenAccount>>, 
+    pub asset_escrow: Box<Account<'info, TokenAccount>>, 
     #[account(mut)]
-    pub escrow_quote_token: Box<Account<'info, TokenAccount>>, 
+    pub quote_escrow: Box<Account<'info, TokenAccount>>, 
     #[account(
         mut,
         seeds = [ORDER_SEED.as_bytes(), &authority.key().to_bytes()],
@@ -645,7 +641,7 @@ pub struct Settle<'info> {
     pub order: Box<Account<'info, OrderState>>,
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), id.to_string().as_bytes()],
+        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
