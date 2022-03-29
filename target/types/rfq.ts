@@ -179,8 +179,8 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteToken",
-          "isMut": true,
+          "name": "assetMint",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -194,13 +194,13 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetMint",
+          "name": "quoteMint",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "quoteMint",
-          "isMut": false,
+          "name": "quoteToken",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -247,11 +247,6 @@ export type Rfq = {
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
           "isSigner": false
         }
       ],
@@ -483,7 +478,7 @@ export type Rfq = {
           },
           {
             "name": "responseCount",
-            "type": "u16"
+            "type": "u64"
           },
           {
             "name": "requestOrderType",
@@ -564,6 +559,10 @@ export type Rfq = {
           {
             "name": "collateralReturned",
             "type": "bool"
+          },
+          {
+            "name": "id",
+            "type": "u64"
           }
         ]
       }
@@ -784,8 +783,8 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteToken",
-          "isMut": true,
+          "name": "assetMint",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -799,13 +798,13 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetMint",
+          "name": "quoteMint",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "quoteMint",
-          "isMut": false,
+          "name": "quoteToken",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -852,11 +851,6 @@ export const IDL: Rfq = {
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
           "isSigner": false
         }
       ],
@@ -1088,7 +1082,7 @@ export const IDL: Rfq = {
           },
           {
             "name": "responseCount",
-            "type": "u16"
+            "type": "u64"
           },
           {
             "name": "requestOrderType",
@@ -1169,6 +1163,10 @@ export const IDL: Rfq = {
           {
             "name": "collateralReturned",
             "type": "bool"
+          },
+          {
+            "name": "id",
+            "type": "u64"
           }
         ]
       }

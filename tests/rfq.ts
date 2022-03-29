@@ -214,23 +214,23 @@ describe('rfq', () => {
     assert.equal(rfqState.confirmed, true);
   });
 
+  it('Maker last look', async () => {
+    const rfqId = 1;
+
+    const response0 = await lastLook(provider, marketMakerA, rfqId, 0);
+    const response1 = await lastLook(provider, marketMakerB, rfqId, 1);
+    const response2 = await lastLook(provider, marketMakerC, rfqId, 2);
+
+    console.log('best ask approved:', response0.rfqState.bestAskAmount.toString());
+    console.log('best bid approved:', response1.rfqState.bestBidAmount.toString());
+    console.log('confirm order type:', response2.rfqState.confirmOrderType.toString());
+
+    assert.equal(response0.rfqState.approved, false);
+    assert.equal(response1.rfqState.approved, true);
+    assert.equal(response2.rfqState.approved, true);
+  });
+
   return
-
-  it('maker last look', async () => {
-    const title = "test rfq";
-
-    const rfqState1 = await lastLook(provider, marketMakerA, title);
-    const rfqState2 = await lastLook(provider, marketMakerB, title);
-    const rfqState3 = await lastLook(provider, marketMakerC, title);
-
-    console.log('bestAsk (approve): ', rfqState2.bestAskAmount.toString());
-    console.log('bestBid (approve): ', rfqState2.bestBidAmount.toString());
-    console.log('confirm order type: ', rfqState2.confirmOrderType.toString());
-
-    assert.equal(rfqState1.approved, false);
-    assert.equal(rfqState2.approved, true);
-    assert.equal(rfqState3.approved, true);
-  })
 
   it('returns collateral', async () => {
     const title = "test rfq";
@@ -305,7 +305,7 @@ describe('rfq', () => {
 export async function getRfqs(provider: Provider): Promise<any[]> {
   const program = await getProgram(provider);
   const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('protocol')],
+    [toBuffer('protocol')],
     program.programId
   );
 
@@ -329,6 +329,7 @@ export async function lastLook(
   provider: Provider,
   authority: Keypair,
   rfqId: number,
+  orderId: number
 ): Promise<any> {
   const program = await getProgram(provider);
 
@@ -337,7 +338,7 @@ export async function lastLook(
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('order'), authority.publicKey.toBytes()],
+    [Buffer.from('order'), toBuffer(rfqId), toBuffer(orderId)],
     program.programId
   );
 
@@ -345,9 +346,8 @@ export async function lastLook(
     {
       accounts: {
         authority: authority.publicKey,
-        orderState: orderPda,
-        rfqState: rfqPda,
-        systemProgram: anchor.web3.SystemProgram.programId,
+        order: orderPda,
+        rfq: rfqPda,
       },
       signers: [authority],
     });
@@ -543,7 +543,7 @@ export async function respond(
   );
 
   let rfqState = await program.account.rfqState.fetch(rfqPda);
-  const responseId = rfqState.responseCount;
+  const responseId = rfqState.responseCount.toNumber();
 
   const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from('asset-escrow'), toBuffer(rfqId), toBuffer(responseId)],

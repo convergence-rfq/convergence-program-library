@@ -86,6 +86,7 @@ pub mod rfq {
         let order = &mut ctx.accounts.order;
         order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.authority = authority;
+        order.id = rfq.response_count;
 
         require!((time_response - time_begin) < expiry, ProtocolError::ResponseTimeElapsed);
         require!(bid > 0 || ask > 0, ProtocolError::InvalidQuoteType);
@@ -205,10 +206,10 @@ pub mod rfq {
         
         let mut is_winner = false;
 
-        if (rfq.confirm_order_type == 1) && (rfq.best_ask_amount == order.ask) {
+        if rfq.confirm_order_type == 1 && rfq.best_ask_amount == order.ask {
             is_winner = true;
         }
-        if (rfq.confirm_order_type == 2) && (rfq.best_bid_amount == order.bid) {
+        if rfq.confirm_order_type == 2 && rfq.best_bid_amount == order.bid {
             is_winner = true;
         }
         
@@ -387,7 +388,7 @@ pub struct RfqState {
     pub instrument: u8,
     pub order_amount: u64,
     pub quote_mint: Pubkey,
-    pub response_count: u16,
+    pub response_count: u64,
     pub request_order_type: u8,
     pub taker_address: Pubkey,
     pub time_begin: i64,
@@ -395,7 +396,7 @@ pub struct RfqState {
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 5) + (8 * 7) + (2 * 1) + (1 * 4) + (1 * 3);
+    pub const LEN: usize = 8 + (32 * 5) + (8 * 8) + (1 * 4) + (1 * 3);
 }
 
 /// Global state for the entire RFQ system
@@ -422,10 +423,11 @@ pub struct OrderState {
     pub bid: u64, // Bid collateral
     pub bump: u8,
     pub collateral_returned: bool,
+    pub id: u64,
 }
 
 impl OrderState {
-    pub const LEN: usize = 8 + (32 * 1) + (8 * 2) + (1 * 1) + (1 * 1);
+    pub const LEN: usize = 8 + (32 * 1) + (8 * 3) + (1 * 1) + (1 * 1);
 }
 
 /// Contexts
@@ -534,13 +536,12 @@ pub struct Confirm<'info> {
     #[account(
         mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump
+        bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     #[account(mut)]
     pub asset_token: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
-    pub quote_token: Box<Account<'info, TokenAccount>>,
+    pub asset_mint: Box<Account<'info, Mint>>,
     #[account(
         init,
         payer = authority,
@@ -559,8 +560,9 @@ pub struct Confirm<'info> {
         bump,
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>, 
-    pub asset_mint: Box<Account<'info, Mint>>,
     pub quote_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub quote_token: Box<Account<'info, TokenAccount>>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -573,7 +575,11 @@ pub struct LastLook<'info> {
     pub authority: Signer<'info>,
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), &authority.key().to_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(), 
+            rfq.id.to_string().as_bytes(),
+            order.id.to_string().as_bytes()
+        ],
         bump = order.bump
     )]
     pub order: Box<Account<'info, OrderState>>,
@@ -583,7 +589,6 @@ pub struct LastLook<'info> {
         bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
-    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
