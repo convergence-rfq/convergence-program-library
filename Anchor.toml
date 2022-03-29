@@ -8,7 +8,7 @@ rfq = "6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/convergence.json"
 
 [scripts]

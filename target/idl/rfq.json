@@ -41,12 +41,17 @@
           "isSigner": true
         },
         {
-          "name": "rfqState",
+          "name": "protocol",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "protocol",
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
           "isMut": true,
           "isSigner": false
         },
@@ -54,28 +59,9 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
-        {
-          "name": "title",
-          "type": "string"
-        },
         {
           "name": "requestOrderType",
           "type": "u8"
@@ -103,12 +89,12 @@
           "isSigner": true
         },
         {
-          "name": "orderState",
+          "name": "order",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "rfqState",
+          "name": "rfq",
           "isMut": true,
           "isSigner": false
         },
@@ -164,10 +150,6 @@
         }
       ],
       "args": [
-        {
-          "name": "title",
-          "type": "string"
-        },
         {
           "name": "bid",
           "type": "u64"
@@ -187,7 +169,7 @@
           "isSigner": true
         },
         {
-          "name": "rfqState",
+          "name": "rfq",
           "isMut": true,
           "isSigner": false
         },
@@ -243,10 +225,6 @@
         }
       ],
       "args": [
-        {
-          "name": "title",
-          "type": "string"
-        },
         {
           "name": "confirmOrderType",
           "type": "u8"
@@ -262,12 +240,12 @@
           "isSigner": true
         },
         {
-          "name": "orderState",
+          "name": "order",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "rfqState",
+          "name": "rfq",
           "isMut": true,
           "isSigner": false
         },
@@ -277,12 +255,7 @@
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "title",
-          "type": "string"
-        }
-      ]
+      "args": []
     },
     {
       "name": "returnCollateral",
@@ -293,12 +266,12 @@
           "isSigner": true
         },
         {
-          "name": "orderState",
+          "name": "order",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "rfqState",
+          "name": "rfq",
           "isMut": true,
           "isSigner": false
         },
@@ -355,8 +328,8 @@
       ],
       "args": [
         {
-          "name": "title",
-          "type": "string"
+          "name": "id",
+          "type": "u64"
         }
       ]
     },
@@ -364,17 +337,42 @@
       "name": "settle",
       "accounts": [
         {
+          "name": "assetMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "authority",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "orderState",
+          "name": "escrowAssetToken",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "rfqState",
+          "name": "escrowQuoteToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "order",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
           "isMut": true,
           "isSigner": false
         },
@@ -384,33 +382,18 @@
           "isSigner": false
         },
         {
-          "name": "assetToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "quoteToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowAssetToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowQuoteToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetMint",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "quoteMint",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -422,22 +405,12 @@
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "title",
-          "type": "string"
+          "name": "id",
+          "type": "u64"
         }
       ]
     }
@@ -449,19 +422,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "title",
-            "type": "string"
-          },
-          {
-            "name": "instrument",
-            "type": "u8"
-          },
-          {
-            "name": "expiry",
-            "type": "i64"
-          },
-          {
-            "name": "expired",
+            "name": "approved",
             "type": "bool"
           },
           {
@@ -469,23 +430,55 @@
             "type": "publicKey"
           },
           {
-            "name": "quoteMint",
-            "type": "publicKey"
+            "name": "bestAskAmount",
+            "type": "u64"
           },
           {
             "name": "bestBidAmount",
             "type": "u64"
           },
           {
-            "name": "bestAskAmount",
-            "type": "u64"
+            "name": "bestAskAddress",
+            "type": "publicKey"
           },
           {
             "name": "bestBidAddress",
             "type": "publicKey"
           },
           {
-            "name": "bestAskAddress",
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "confirmOrderType",
+            "type": "u8"
+          },
+          {
+            "name": "confirmed",
+            "type": "bool"
+          },
+          {
+            "name": "expired",
+            "type": "bool"
+          },
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "instrument",
+            "type": "u8"
+          },
+          {
+            "name": "orderAmount",
+            "type": "u64"
+          },
+          {
+            "name": "quoteMint",
             "type": "publicKey"
           },
           {
@@ -495,22 +488,6 @@
           {
             "name": "requestOrderType",
             "type": "u8"
-          },
-          {
-            "name": "confirmOrderType",
-            "type": "u8"
-          },
-          {
-            "name": "orderAmount",
-            "type": "u64"
-          },
-          {
-            "name": "confirmed",
-            "type": "bool"
-          },
-          {
-            "name": "approved",
-            "type": "bool"
           },
           {
             "name": "takerAddress",
@@ -528,14 +505,10 @@
       }
     },
     {
-      "name": "Protocol",
+      "name": "ProtocolState",
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "rfqCount",
-            "type": "u64"
-          },
           {
             "name": "accessManagerCount",
             "type": "u64"
@@ -543,6 +516,10 @@
           {
             "name": "authority",
             "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           },
           {
             "name": "feeDenominator",
@@ -553,10 +530,8 @@
             "type": "u64"
           },
           {
-            "name": "titles",
-            "type": {
-              "vec": "string"
-            }
+            "name": "rfqCount",
+            "type": "u64"
           },
           {
             "name": "treasuryWallet",
@@ -575,8 +550,16 @@
             "type": "u64"
           },
           {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
             "name": "bid",
             "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           },
           {
             "name": "collateralReturned",
@@ -605,7 +588,7 @@
     {
       "code": 6003,
       "name": "TradeNotApproved",
-      "msg": "Trade has not been approved (last look) by maker"
+      "msg": "Trade has not been approved via last look by maker"
     },
     {
       "code": 6004,
