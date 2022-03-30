@@ -308,7 +308,7 @@
       "accounts": [
         {
           "name": "assetMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -342,18 +342,13 @@
           "isSigner": false
         },
         {
-          "name": "protocol",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "quoteToken",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "quoteMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -510,6 +505,10 @@
             "type": "u64"
           },
           {
+            "name": "assetEscrowBump",
+            "type": "u8"
+          },
+          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -528,6 +527,10 @@
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "quoteEscrowBump",
+            "type": "u8"
           }
         ]
       }

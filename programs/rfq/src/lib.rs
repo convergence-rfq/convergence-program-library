@@ -6,10 +6,11 @@ declare_id!("6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2");
 
 const U64_UPPER_LIMIT: u64 = 18446744073709551615;
 
-const ASSET_ESCROW_SEED: &str = "asset-escrow";
+// Do not use hyphens in seed
+const ASSET_ESCROW_SEED: &str = "asset_escrow";
 const ORDER_SEED: &str = "order";
 const PROTOCOL_SEED: &str = "protocol";
-const QUOTE_ESCROW_SEED: &str = "quote-escrow";
+const QUOTE_ESCROW_SEED: &str = "quote_escrow";
 const RFQ_SEED: &str = "rfq";
 
 #[program]
@@ -84,9 +85,11 @@ pub mod rfq {
         let authority = ctx.accounts.authority.key();
 
         let order = &mut ctx.accounts.order;
-        order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
+        order.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
         order.authority = authority;
+        order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.id = rfq.response_count;
+        order.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
 
         require!((time_response - time_begin) < expiry, ProtocolError::ResponseTimeElapsed);
         require!(bid > 0 || ask > 0, ProtocolError::InvalidQuoteType);
@@ -244,7 +247,7 @@ pub mod rfq {
                             ASSET_ESCROW_SEED.as_bytes(),
                             rfq.id.to_string().as_bytes(),
                             order.id.to_string().as_bytes(),
-                            &[order.bump]
+                            &[order.asset_escrow_bump]
                         ][..],
                         &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
@@ -267,7 +270,7 @@ pub mod rfq {
                             QUOTE_ESCROW_SEED.as_bytes(),
                             rfq.id.to_string().as_bytes(), 
                             order.id.to_string().as_bytes(),
-                            &[order.bump]
+                            &[order.quote_escrow_bump]
                         ][..],
                         &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
@@ -285,7 +288,7 @@ pub mod rfq {
     ///
     /// ctx
     pub fn settle(ctx: Context<Settle>) -> Result<()> {
-        let rfq = &mut ctx.accounts.rfq;
+        let rfq = &ctx.accounts.rfq;
         let taker_address = rfq.taker_address;
 
         let order = &mut ctx.accounts.order;
@@ -311,7 +314,7 @@ pub mod rfq {
                             ASSET_ESCROW_SEED.as_bytes(),
                             rfq.id.to_string().as_bytes(), 
                             order.id.to_string().as_bytes(),
-                            &[order.bump]
+                            &[order.asset_escrow_bump]
                         ][..],
                         &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
@@ -334,7 +337,7 @@ pub mod rfq {
                             QUOTE_ESCROW_SEED.as_bytes(),
                             rfq.id.to_string().as_bytes(),
                             order.id.to_string().as_bytes(),
-                            &[order.bump]
+                            &[order.quote_escrow_bump]
                         ][..],
                         &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
@@ -353,7 +356,7 @@ pub mod rfq {
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[order.bump]][..],
+                        &[QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[order.quote_escrow_bump]][..],
                         &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
@@ -371,7 +374,7 @@ pub mod rfq {
                         authority: rfq.to_account_info(),
                     },
                     &[
-                        &[QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[order.bump]][..],
+                        &[QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[order.asset_escrow_bump]][..],
                         &[RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes(), &[rfq.bump]][..]
                     ],
                 ),
@@ -434,15 +437,17 @@ impl ProtocolState {
 #[account]
 pub struct OrderState {
     pub ask: u64, // Ask collateral
+    pub asset_escrow_bump: u8,
     pub authority: Pubkey,
     pub bid: u64, // Bid collateral
     pub bump: u8,
     pub collateral_returned: bool,
     pub id: u64,
+    pub quote_escrow_bump: u8,
 }
 
 impl OrderState {
-    pub const LEN: usize = 8 + (32 * 1) + (8 * 3) + (1 * 1) + (1 * 1);
+    pub const LEN: usize = 8 + (32 * 1) + (8 * 3) + (1 * 3) + (1 * 1);
 }
 
 /// Contexts
@@ -513,27 +518,27 @@ pub struct Respond<'info> {
     #[account(
         init,
         payer = authority,
+        token::mint = asset_mint,
+        token::authority = rfq,
         seeds = [
             ASSET_ESCROW_SEED.as_bytes(), 
             rfq.id.to_string().as_bytes(),
             rfq.response_count.to_string().as_bytes()
         ],
-        token::mint = asset_mint,
-        token::authority = rfq,
-        bump,
+        bump
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
         init,
         payer = authority,
+        token::mint = quote_mint,
+        token::authority = rfq,
         seeds = [
             QUOTE_ESCROW_SEED.as_bytes(), 
             rfq.id.to_string().as_bytes(),
             rfq.response_count.to_string().as_bytes()
         ],
-        token::mint = quote_mint,
-        token::authority = rfq,
-        bump,
+        bump
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     pub asset_mint: Box<Account<'info, Mint>>,
@@ -613,7 +618,15 @@ pub struct ReturnCollateral<'info> {
     pub asset_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            ASSET_ESCROW_SEED.as_bytes(),
+            rfq.id.to_string().as_bytes(),
+            order.id.to_string().as_bytes()
+        ],
+        bump = order.asset_escrow_bump
+    )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>, 
     #[account(
         mut,
@@ -626,7 +639,15 @@ pub struct ReturnCollateral<'info> {
     )]
     pub order: Box<Account<'info, OrderState>>,
     pub quote_mint: Box<Account<'info, Mint>>,
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            QUOTE_ESCROW_SEED.as_bytes(),
+            rfq.id.to_string().as_bytes(),
+            order.id.to_string().as_bytes()
+        ],
+        bump = order.quote_escrow_bump
+    )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>, 
     pub rfq: Box<Account<'info, RfqState>>,
     pub token_program: Program<'info, Token>,
@@ -635,19 +656,38 @@ pub struct ReturnCollateral<'info> {
 
 #[derive(Accounts)]
 pub struct Settle<'info> {
-    #[account(mut)]
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub asset_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub authority: Signer<'info>,
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            ASSET_ESCROW_SEED.as_bytes(),
+            rfq.id.to_string().as_bytes(),
+            order.id.to_string().as_bytes()
+        ],
+        bump = order.asset_escrow_bump
+    )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>, 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            QUOTE_ESCROW_SEED.as_bytes(),
+            rfq.id.to_string().as_bytes(),
+            order.id.to_string().as_bytes()
+        ],
+        bump = order.quote_escrow_bump
+    )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>, 
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), &authority.key().to_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(), 
+            rfq.id.to_string().as_bytes(),
+            order.id.to_string().as_bytes()
+        ],
         bump = order.bump
     )]
     pub order: Box<Account<'info, OrderState>>,
@@ -657,15 +697,8 @@ pub struct Settle<'info> {
         bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
-    #[account(
-        mut,
-        seeds = [PROTOCOL_SEED.as_bytes()],
-        bump = protocol.bump
-    )]
-    pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
     pub quote_mint: Box<Account<'info, Mint>>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,

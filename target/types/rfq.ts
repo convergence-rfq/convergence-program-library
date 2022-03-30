@@ -308,7 +308,7 @@ export type Rfq = {
       "accounts": [
         {
           "name": "assetMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -342,18 +342,13 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "protocol",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "quoteToken",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "quoteMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -510,6 +505,10 @@ export type Rfq = {
             "type": "u64"
           },
           {
+            "name": "assetEscrowBump",
+            "type": "u8"
+          },
+          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -528,6 +527,10 @@ export type Rfq = {
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "quoteEscrowBump",
+            "type": "u8"
           }
         ]
       }
@@ -877,7 +880,7 @@ export const IDL: Rfq = {
       "accounts": [
         {
           "name": "assetMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -911,18 +914,13 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "protocol",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "quoteToken",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "quoteMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1079,6 +1077,10 @@ export const IDL: Rfq = {
             "type": "u64"
           },
           {
+            "name": "assetEscrowBump",
+            "type": "u8"
+          },
+          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -1097,6 +1099,10 @@ export const IDL: Rfq = {
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "quoteEscrowBump",
+            "type": "u8"
           }
         ]
       }
