@@ -70,7 +70,9 @@ export type Rfq = {
         },
         {
           "name": "instrument",
-          "type": "u8"
+          "type": {
+            "defined": "Instrument"
+          }
         },
         {
           "name": "expiry",
@@ -182,6 +184,11 @@ export type Rfq = {
         },
         {
           "name": "assetEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "order",
           "isMut": true,
           "isSigner": false
         },
@@ -432,7 +439,9 @@ export type Rfq = {
           },
           {
             "name": "instrument",
-            "type": "u8"
+            "type": {
+              "defined": "Instrument"
+            }
           },
           {
             "name": "orderAmount",
@@ -561,43 +570,58 @@ export type Rfq = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "InvalidOrder",
-      "msg": "Invalid order logic"
     },
     {
-      "code": 6001,
-      "name": "InvalidQuote",
-      "msg": "Invalid quote"
+      "name": "Instrument",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Call"
+          },
+          {
+            "name": "Future"
+          },
+          {
+            "name": "Put"
+          },
+          {
+            "name": "Spot"
+          }
+        ]
+      }
     },
     {
-      "code": 6002,
-      "name": "InvalidTakerAddress",
-      "msg": "Invalid taker address"
-    },
-    {
-      "code": 6003,
-      "name": "NotImplemented",
-      "msg": "Not implemented"
-    },
-    {
-      "code": 6004,
-      "name": "TradeNotConfirmed",
-      "msg": "Trade has not been confirmed by taker"
-    },
-    {
-      "code": 6005,
-      "name": "TradeNotApproved",
-      "msg": "Trade has not been approved via last look by maker"
-    },
-    {
-      "code": 6006,
-      "name": "ResponseTimeElapsed",
-      "msg": "Timed out on response to request"
+      "name": "ProtocolError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "InvalidOrder"
+          },
+          {
+            "name": "InvalidQuote"
+          },
+          {
+            "name": "InvalidTakerAddress"
+          },
+          {
+            "name": "InvalidOrderAmount"
+          },
+          {
+            "name": "NotImplemented"
+          },
+          {
+            "name": "TradeNotConfirmed"
+          },
+          {
+            "name": "TradeNotApproved"
+          },
+          {
+            "name": "ResponseTimeElapsed"
+          }
+        ]
+      }
     }
   ]
 };
@@ -674,7 +698,9 @@ export const IDL: Rfq = {
         },
         {
           "name": "instrument",
-          "type": "u8"
+          "type": {
+            "defined": "Instrument"
+          }
         },
         {
           "name": "expiry",
@@ -786,6 +812,11 @@ export const IDL: Rfq = {
         },
         {
           "name": "assetEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "order",
           "isMut": true,
           "isSigner": false
         },
@@ -1036,7 +1067,9 @@ export const IDL: Rfq = {
           },
           {
             "name": "instrument",
-            "type": "u8"
+            "type": {
+              "defined": "Instrument"
+            }
           },
           {
             "name": "orderAmount",
@@ -1165,43 +1198,58 @@ export const IDL: Rfq = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "InvalidOrder",
-      "msg": "Invalid order logic"
     },
     {
-      "code": 6001,
-      "name": "InvalidQuote",
-      "msg": "Invalid quote"
+      "name": "Instrument",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Call"
+          },
+          {
+            "name": "Future"
+          },
+          {
+            "name": "Put"
+          },
+          {
+            "name": "Spot"
+          }
+        ]
+      }
     },
     {
-      "code": 6002,
-      "name": "InvalidTakerAddress",
-      "msg": "Invalid taker address"
-    },
-    {
-      "code": 6003,
-      "name": "NotImplemented",
-      "msg": "Not implemented"
-    },
-    {
-      "code": 6004,
-      "name": "TradeNotConfirmed",
-      "msg": "Trade has not been confirmed by taker"
-    },
-    {
-      "code": 6005,
-      "name": "TradeNotApproved",
-      "msg": "Trade has not been approved via last look by maker"
-    },
-    {
-      "code": 6006,
-      "name": "ResponseTimeElapsed",
-      "msg": "Timed out on response to request"
+      "name": "ProtocolError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "InvalidOrder"
+          },
+          {
+            "name": "InvalidQuote"
+          },
+          {
+            "name": "InvalidTakerAddress"
+          },
+          {
+            "name": "InvalidOrderAmount"
+          },
+          {
+            "name": "NotImplemented"
+          },
+          {
+            "name": "TradeNotConfirmed"
+          },
+          {
+            "name": "TradeNotApproved"
+          },
+          {
+            "name": "ResponseTimeElapsed"
+          }
+        ]
+      }
     }
   ]
 };

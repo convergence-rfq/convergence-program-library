@@ -33,6 +33,7 @@ pub mod rfq {
         protocol.fee_denominator = fee_denominator;
         protocol.fee_numerator = fee_numerator;
         protocol.rfq_count = 0;
+
         Ok(())
     }
 
@@ -45,10 +46,13 @@ pub mod rfq {
     pub fn request(
         ctx: Context<Request>,
         request_order: Order,
-        instrument: u8,
+        instrument: Instrument,
         expiry: i64,
         amount: u64,
     ) -> Result<()> {
+        let protocol = &mut ctx.accounts.protocol;
+        protocol.rfq_count += 1;
+
         let rfq = &mut ctx.accounts.rfq;
         rfq.approved = false;
         rfq.best_ask_amount = U64_UPPER_LIMIT;
@@ -64,41 +68,28 @@ pub mod rfq {
         rfq.taker_address = *ctx.accounts.authority.key;
         rfq.time_begin = Clock::get().unwrap().unix_timestamp;
 
-        let protocol = &mut ctx.accounts.protocol;
-        protocol.rfq_count += 1;
-
         Ok(())
     }
 
-    /// Maker response with one-way or two-way quotes.
+    /// Maker responds with one-way or two-way quotes.
     ///
     /// ctx
     /// bid
     /// ask
+    #[access_control(respond_access_control(&ctx, bid, ask))]
     pub fn respond(ctx: Context<Respond>, bid: u64, ask: u64) -> Result<()> {
-        let time_response = Clock::get().unwrap().unix_timestamp;
-
         let rfq = &mut ctx.accounts.rfq;
-        let expiry = rfq.expiry;
         let order_amount = rfq.order_amount;
-        let time_begin = rfq.time_begin;
-        let authority = ctx.accounts.authority.key();
+        rfq.response_count += 1;
+        rfq.time_response = Clock::get().unwrap().unix_timestamp;
 
         let order = &mut ctx.accounts.order;
+        let authority = ctx.accounts.authority.key();
         order.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
         order.authority = authority;
         order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.id = rfq.response_count;
         order.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
-
-        require!(
-            (time_response - time_begin) < expiry,
-            ProtocolError::ResponseTimeElapsed
-        );
-        require!(bid > 0 || ask > 0, ProtocolError::InvalidQuote);
-
-        rfq.response_count += 1;
-        rfq.time_response = time_response;
 
         if ask > 0 {
             anchor_spl::token::transfer(
@@ -151,10 +142,13 @@ pub mod rfq {
     /// confirm_order
     #[access_control(confirm_access_control(&ctx, confirm_order))]
     pub fn confirm(ctx: Context<Confirm>, confirm_order: Order) -> Result<()> {
-        // Check if valid best_bid or best_offer exists
+        let order = &mut ctx.accounts.order;
+        order.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
+        order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
+        order.id = 0;
+        order.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
+
         let rfq = &mut ctx.accounts.rfq;
-        let best_bid_amount = rfq.best_bid_amount;
-        let best_ask_amount = rfq.best_ask_amount;
 
         match confirm_order {
             Order::Buy => {
@@ -168,7 +162,7 @@ pub mod rfq {
                             authority: ctx.accounts.authority.to_account_info(),
                         },
                     ),
-                    best_ask_amount,
+                    rfq.best_ask_amount,
                 )?;
             }
             Order::Sell => {
@@ -181,7 +175,7 @@ pub mod rfq {
                             authority: ctx.accounts.authority.to_account_info(),
                         },
                     ),
-                    best_bid_amount,
+                    rfq.best_bid_amount,
                 )?;
             }
             Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
@@ -216,12 +210,10 @@ pub mod rfq {
     /// Return collateral of non-winning makers.
     ///
     /// ctx
+    #[access_control(return_collateral_access_control(&ctx))]
     pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
         let rfq = &ctx.accounts.rfq;
         let order = &mut ctx.accounts.order;
-
-        require!(rfq.confirmed, ProtocolError::TradeNotConfirmed);
-        require!(!order.collateral_returned, ProtocolError::TradeNotConfirmed);
 
         if order.ask != 0 && (rfq.best_ask_amount != order.ask || rfq.confirm_order == Order::Sell)
         {
@@ -299,14 +291,6 @@ pub mod rfq {
         let mut quote_amount = 0;
 
         match confirm_order {
-            Order::Sell => {
-                if rfq.best_bid_amount == order.bid {
-                    asset_amount = order.ask;
-                }
-                if authority_address == taker_address {
-                    quote_amount = rfq.best_bid_amount;
-                }
-            }
             Order::Buy => {
                 if rfq.best_ask_amount == order.ask {
                     quote_amount = order.ask;
@@ -315,8 +299,16 @@ pub mod rfq {
                     asset_amount = rfq.order_amount;
                 }
             }
+            Order::Sell => {
+                if rfq.best_bid_amount == order.bid {
+                    asset_amount = rfq.order_amount;
+                }
+                if authority_address == taker_address {
+                    quote_amount = rfq.best_bid_amount;
+                }
+            }
             Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
-        };
+        }
 
         if asset_amount > 0 {
             anchor_spl::token::transfer(
@@ -393,7 +385,7 @@ pub struct RfqState {
     pub expired: bool,
     pub expiry: i64,
     pub id: u64,
-    pub instrument: u8,
+    pub instrument: Instrument,
     pub order_amount: u64,
     pub quote_mint: Pubkey,
     pub response_count: u64,
@@ -473,7 +465,10 @@ pub struct Request<'info> {
     #[account(
         init,
         payer = authority,
-        seeds = [RFQ_SEED.as_bytes(), protocol.rfq_count.to_string().as_bytes()],
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            (protocol.rfq_count + 1).to_string().as_bytes()
+        ],
         space = RfqState::LEN,
         bump
     )]
@@ -491,7 +486,7 @@ pub struct Respond<'info> {
         seeds = [
             ORDER_SEED.as_bytes(),
             rfq.id.to_string().as_bytes(),
-            rfq.response_count.to_string().as_bytes()
+            (rfq.response_count + 1).to_string().as_bytes()
         ],
         space = OrderState::LEN,
         bump
@@ -515,7 +510,7 @@ pub struct Respond<'info> {
         seeds = [
             ASSET_ESCROW_SEED.as_bytes(),
             rfq.id.to_string().as_bytes(),
-            rfq.response_count.to_string().as_bytes()
+            (rfq.response_count + 1).to_string().as_bytes()
         ],
         bump
     )]
@@ -528,7 +523,7 @@ pub struct Respond<'info> {
         seeds = [
             QUOTE_ESCROW_SEED.as_bytes(),
             rfq.id.to_string().as_bytes(),
-            rfq.response_count.to_string().as_bytes()
+            (rfq.response_count + 1).to_string().as_bytes()
         ],
         bump
     )]
@@ -558,16 +553,39 @@ pub struct Confirm<'info> {
         payer = authority,
         token::mint = asset_mint,
         token::authority = rfq,
-        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        // Confirmation account escrow seed always uses 0
+        seeds = [
+            ASSET_ESCROW_SEED.as_bytes(),
+            rfq.id.to_string().as_bytes(),
+            b"0"
+        ],
         bump,
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
+    // TODO: Is this actually an order or is there a better way?
+    #[account(
+        init,
+        payer = authority,
+        space = OrderState::LEN,
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.id.to_string().as_bytes(),
+            b"0"
+        ],
+        bump
+    )]
+    pub order: Box<Account<'info, OrderState>>,
     #[account(
         init,
         payer = authority,
         token::mint = quote_mint,
         token::authority = rfq,
-        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        // Confirmation account escrow seed always uses 0
+        seeds = [
+            QUOTE_ESCROW_SEED.as_bytes(),
+            rfq.id.to_string().as_bytes(),
+            b"0"
+        ],
         bump,
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
@@ -620,6 +638,7 @@ pub struct ReturnCollateral<'info> {
         bump = order.asset_escrow_bump
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
+    // Maker does not have an order so use this for now
     #[account(
         mut,
         seeds = [
@@ -697,7 +716,7 @@ pub struct Settle<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-/// Helpers
+/// Types
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Order {
@@ -706,24 +725,12 @@ pub enum Order {
     TwoWay,
 }
 
-/// Error handling
-
-#[error_code]
-pub enum ProtocolError {
-    #[msg("Invalid order logic")]
-    InvalidOrder,
-    #[msg("Invalid quote")]
-    InvalidQuote,
-    #[msg("Invalid taker address")]
-    InvalidTakerAddress,
-    #[msg("Not implemented")]
-    NotImplemented,
-    #[msg("Trade has not been confirmed by taker")]
-    TradeNotConfirmed,
-    #[msg("Trade has not been approved via last look by maker")]
-    TradeNotApproved,
-    #[msg("Timed out on response to request")]
-    ResponseTimeElapsed,
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Instrument {
+    Call,
+    Future,
+    Put,
+    Spot,
 }
 
 /// Access controls
@@ -734,7 +741,10 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     Ok(())
 }
 
-pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>, confirm_order: Order) -> Result<()> {
+pub fn confirm_access_control<'info>(
+    ctx: &Context<Confirm<'info>>,
+    confirm_order: Order,
+) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let taker_address = rfq.taker_address;
     let request_order = rfq.request_order;
@@ -753,4 +763,55 @@ pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>, confirm_orde
     }
 
     Ok(())
+}
+
+pub fn respond_access_control<'info>(
+    ctx: &Context<Respond<'info>>,
+    bid: u64,
+    ask: u64,
+) -> Result<()> {
+    let rfq = &ctx.accounts.rfq;
+    let expiry = rfq.expiry;
+    let order_amount = rfq.order_amount;
+    let time_begin = rfq.time_begin;
+    let unix_timestamp = Clock::get().unwrap().unix_timestamp;
+    let delay = unix_timestamp - time_begin;
+
+    require!(delay < expiry, ProtocolError::ResponseTimeElapsed);
+    require!(bid > 0 || ask > 0, ProtocolError::InvalidQuote);
+    require!(order_amount > 0, ProtocolError::InvalidOrderAmount);
+
+    Ok(())
+}
+
+pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) -> Result<()> {
+    let rfq = &ctx.accounts.rfq;
+    let order = &ctx.accounts.order;
+
+    require!(rfq.confirmed, ProtocolError::TradeNotConfirmed);
+    require!(!order.collateral_returned, ProtocolError::TradeNotConfirmed);
+
+    Ok(())
+}
+
+/// Error handling
+
+#[error_code]
+pub enum ProtocolError {
+    #[msg("Invalid order logic")]
+    InvalidOrder,
+    #[msg("Invalid quote")]
+    InvalidQuote,
+    #[msg("Invalid taker address")]
+    InvalidTakerAddress,
+    #[msg("Invalid order amount")]
+    InvalidOrderAmount,
+    #[msg("Not implemented")]
+    NotImplemented,
+    #[msg("Trade has not been confirmed by taker")]
+    TradeNotConfirmed,
+    #[msg("Trade has not been approved via last look by maker")]
+    TradeNotApproved,
+    #[msg("Timed out on response to request")]
+    ResponseTimeElapsed,
 }
