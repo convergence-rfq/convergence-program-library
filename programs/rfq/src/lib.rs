@@ -149,26 +149,12 @@ pub mod rfq {
     ///
     /// ctx
     /// confirm_order
+    #[access_control(confirm_access_control(&ctx, confirm_order))]
     pub fn confirm(ctx: Context<Confirm>, confirm_order: Order) -> Result<()> {
         // Check if valid best_bid or best_offer exists
         let rfq = &mut ctx.accounts.rfq;
         let best_bid_amount = rfq.best_bid_amount;
         let best_ask_amount = rfq.best_ask_amount;
-        let taker_address = rfq.taker_address;
-        let request_order = rfq.request_order;
-        let authority = ctx.accounts.authority.key();
-
-        // Make sure current authority matches original taker address from request instruction
-        require!(
-            taker_address == authority,
-            ProtocolError::InvalidTakerAddress
-        );
-
-        match request_order {
-            Order::Buy => require!(confirm_order == Order::Buy, ProtocolError::InvalidOrder),
-            Order::Sell => require!(confirm_order == Order::Sell, ProtocolError::InvalidOrder),
-            Order::TwoWay => require!(confirm_order == Order::TwoWay, ProtocolError::InvalidOrder),
-        }
 
         match confirm_order {
             Order::Buy => {
@@ -300,20 +286,39 @@ pub mod rfq {
     /// Settles winning maker and taker fund transfers.
     ///
     /// ctx
+    #[access_control(settle_access_control(&ctx))]
     pub fn settle(ctx: Context<Settle>) -> Result<()> {
         let rfq = &ctx.accounts.rfq;
+        let confirm_order = rfq.confirm_order;
         let taker_address = rfq.taker_address;
 
         let order = &mut ctx.accounts.order;
         let authority_address = *ctx.accounts.authority.to_account_info().key;
-        let confirm_order = rfq.confirm_order;
 
-        require!(rfq.confirmed, ProtocolError::TradeNotConfirmed);
-        require!(rfq.approved, ProtocolError::TradeNotApproved);
+        let mut asset_amount = 0;
+        let mut quote_amount = 0;
 
-        let is_taker_address = authority_address == taker_address;
+        match confirm_order {
+            Order::Sell => {
+                if rfq.best_bid_amount == order.bid {
+                    asset_amount = order.ask;
+                }
+                if authority_address == taker_address {
+                    quote_amount = rfq.best_bid_amount;
+                }
+            }
+            Order::Buy => {
+                if rfq.best_ask_amount == order.ask {
+                    quote_amount = order.ask;
+                }
+                if authority_address == taker_address {
+                    asset_amount = rfq.order_amount;
+                }
+            }
+            Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
+        };
 
-        if is_taker_address && confirm_order == Order::Buy {
+        if asset_amount > 0 {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -336,11 +341,11 @@ pub mod rfq {
                         ][..],
                     ],
                 ),
-                rfq.order_amount,
+                asset_amount,
             )?;
         }
 
-        if is_taker_address && confirm_order == Order::Sell {
+        if quote_amount > 0 {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -363,61 +368,7 @@ pub mod rfq {
                         ][..],
                     ],
                 ),
-                rfq.best_bid_amount,
-            )?;
-        }
-
-        if confirm_order == Order::Buy && (rfq.best_ask_amount == order.ask) {
-            anchor_spl::token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: ctx.accounts.quote_escrow.to_account_info(),
-                        to: ctx.accounts.quote_token.to_account_info(),
-                        authority: rfq.to_account_info(),
-                    },
-                    &[
-                        &[
-                            QUOTE_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            order.id.to_string().as_bytes(),
-                            &[order.quote_escrow_bump],
-                        ][..],
-                        &[
-                            RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            &[rfq.bump],
-                        ][..],
-                    ],
-                ),
-                order.ask,
-            )?;
-        }
-
-        if confirm_order == Order::Sell && (rfq.best_bid_amount == order.bid) {
-            anchor_spl::token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: ctx.accounts.asset_escrow.to_account_info(),
-                        to: ctx.accounts.asset_token.to_account_info(),
-                        authority: rfq.to_account_info(),
-                    },
-                    &[
-                        &[
-                            QUOTE_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            order.id.to_string().as_bytes(),
-                            &[order.asset_escrow_bump],
-                        ][..],
-                        &[
-                            RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            &[rfq.bump],
-                        ][..],
-                    ],
-                ),
-                rfq.order_amount,
+                quote_amount,
             )?;
         }
 
@@ -475,10 +426,12 @@ impl ProtocolState {
 /// Market maker order state
 #[account]
 pub struct OrderState {
-    pub ask: u64, // Ask collateral
+    // Ask collateral
+    pub ask: u64,
     pub asset_escrow_bump: u8,
     pub authority: Pubkey,
-    pub bid: u64, // Bid collateral
+    // Bid collateral
+    pub bid: u64,
     pub bump: u8,
     pub collateral_returned: bool,
     pub id: u64,
@@ -771,4 +724,33 @@ pub enum ProtocolError {
     TradeNotApproved,
     #[msg("Timed out on response to request")]
     ResponseTimeElapsed,
+}
+
+/// Access controls
+
+pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> {
+    require!(ctx.accounts.rfq.confirmed, ProtocolError::TradeNotConfirmed);
+    require!(ctx.accounts.rfq.approved, ProtocolError::TradeNotApproved);
+    Ok(())
+}
+
+pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>, confirm_order: Order) -> Result<()> {
+    let rfq = &ctx.accounts.rfq;
+    let taker_address = rfq.taker_address;
+    let request_order = rfq.request_order;
+    let authority = ctx.accounts.authority.key();
+
+    // Make sure current authority matches original taker address from request instruction
+    require!(
+        taker_address == authority,
+        ProtocolError::InvalidTakerAddress
+    );
+
+    match request_order {
+        Order::Buy => require!(confirm_order == Order::Buy, ProtocolError::InvalidOrder),
+        Order::Sell => require!(confirm_order == Order::Sell, ProtocolError::InvalidOrder),
+        Order::TwoWay => require!(confirm_order == Order::TwoWay, ProtocolError::InvalidOrder),
+    }
+
+    Ok(())
 }

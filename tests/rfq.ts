@@ -515,7 +515,8 @@ export async function settle(
 export async function confirm(
   provider: Provider,
   id: number,
-  confirmOrder: typeof Order,
+  // TODO: Fix
+  confirmOrder: any,
   authority: Keypair,
   assetToken: Token,
   quoteToken: Token,
@@ -626,7 +627,8 @@ export async function respond(
 export async function request(
   provider: Provider,
   authority: Keypair,
-  requestOrder: typeof Order,
+  // TODO: Fix
+  requestOrder: any,
   instrument: number,
   expiry: anchor.BN,
   amount: anchor.BN
