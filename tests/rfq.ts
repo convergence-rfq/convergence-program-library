@@ -36,6 +36,24 @@ import { Keypair } from "@solana/web3.js";
 import { Rfq } from '../target/types/rfq';
 import * as idl from '../target/idl/rfq.json';
 
+const RFQ_SEED = 'rfq';
+const ORDER_SEED = 'order';
+const PROTOCOL_SEED = 'protocol';
+const ASSET_ESCROW_SEED = 'asset_escrow';
+const QUOTE_ESCROW_SEED = 'quote_escrow';
+
+const Order = {
+  Buy: {
+    buy: {}
+  },
+  Sell: {
+    sell: {}
+  },
+  TwoWay: {
+    twoWay: {}
+  }
+};
+
 let assetMint: Token;
 let quoteMint: Token;
 let mintAuthority: any;
@@ -66,7 +84,7 @@ anchor.setProvider(anchor.Provider.env());
 const provider = anchor.getProvider();
 const program = anchor.workspace.Rfq as Program<Rfq>;
 
-describe('rfq', () => {
+describe(RFQ_SEED, () => {
   before(async () => {
     mintAuthority = anchor.web3.Keypair.generate();
     marketMakerA = anchor.web3.Keypair.generate();
@@ -144,11 +162,11 @@ describe('rfq', () => {
   });
 
   it('Maker initializes RFQ 0', async () => {
-    const requestOrderType = 1; // Buy
+    const requestOrder = Order.Buy;
     const instrument = 1; // ?
     const expiry = new anchor.BN(-1);
     const amount = TAKER_ORDER_AMOUNT;
-    const { protocolState } = await request(provider, taker, requestOrderType, instrument, expiry, amount);
+    const { protocolState } = await request(provider, taker, requestOrder, instrument, expiry, amount);
     assert.ok(protocolState.rfqCount.eq(new anchor.BN(1)));
   });
 
@@ -168,22 +186,22 @@ describe('rfq', () => {
   });
 
   it('Taker initializes RFQ 1', async () => {
-    const requestOrderType = 1; // Buy
+    const requestOrder = Order.Buy;
     const instrument = 1;
     const expiry = new anchor.BN(1_000);
     const amount = TAKER_ORDER_AMOUNT;
 
-    const { rfqState } = await request(provider, taker, requestOrderType, instrument, expiry, amount);
+    const { rfqState } = await request(provider, taker, requestOrder, instrument, expiry, amount);
     assert.equal(rfqState.expired, false);
-    assert.equal(rfqState.requestOrderType, requestOrderType);
+    assert.deepEqual(rfqState.requestOrder, requestOrder);
     assert.equal(rfqState.instrument, instrument);
     assert.equal(rfqState.expiry.toString(), expiry.toString());
-    //assert.equal(rfqState.amount.toString(), TAKER_ORDER_AMOUNT.toString());
+    assert.equal(rfqState.orderAmount.toString(), TAKER_ORDER_AMOUNT.toString());
 
     const assetMintBalance = await getBalance(taker, assetMint.publicKey);
     const quoteMintBalance = await getBalance(taker, quoteMint.publicKey);
 
-    console.log('taker order type:', rfqState.requestOrderType);
+    console.log('taker order:', rfqState.requestOrder);
     console.log('taker amount:', rfqState.orderAmount.toString());
     console.log('taker asset balance:', assetMintBalance);
     console.log('taker quote balance:', quoteMintBalance);
@@ -226,9 +244,9 @@ describe('rfq', () => {
 
   it('Taker confirms RFQ 1 price pre-settlement', async () => {
     const id = 1;
-    const confirmOrderType = 1;
+    const confirmOrder = Order.Buy;
 
-    const { rfqState } = await confirm(provider, id, confirmOrderType, taker, authorityAssetToken, authorityQuoteToken);
+    const { rfqState } = await confirm(provider, id, confirmOrder, taker, authorityAssetToken, authorityQuoteToken);
     console.log('best ask confirmation:', rfqState.bestAskAmount.toNumber());
     console.log('best bid confirmation:', rfqState.bestBidAmount.toNumber());
 
@@ -252,7 +270,7 @@ describe('rfq', () => {
 
     console.log('best ask approved:', response0.rfqState.bestAskAmount.toString());
     console.log('best bid approved:', response1.rfqState.bestBidAmount.toString());
-    console.log('confirm order type:', response2.rfqState.confirmOrderType.toString());
+    console.log('confirm order:', response2.rfqState.confirmOrder.toString());
 
     assert.equal(response0.rfqState.approved, false);
     assert.equal(response1.rfqState.approved, true);
@@ -328,7 +346,7 @@ describe('rfq', () => {
 export async function getRfqs(provider: Provider): Promise<any[]> {
   const program = await getProgram(provider);
   const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer('protocol')],
+    [toBuffer(PROTOCOL_SEED)],
     program.programId
   );
 
@@ -338,7 +356,7 @@ export async function getRfqs(provider: Provider): Promise<any[]> {
   let rfqs = [];
   for (let i = 0; i < rfqCount; i++) {
     const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [toBuffer('rfq'), toBuffer(i)],
+      [toBuffer(RFQ_SEED), toBuffer(i)],
       program.programId
     );
     const rfq = await program.account.rfqState.fetch(rfqPda);
@@ -357,11 +375,11 @@ export async function lastLook(
   const program = await getProgram(provider);
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('rfq'), toBuffer(rfqId)],
+    [Buffer.from(RFQ_SEED), toBuffer(rfqId)],
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('order'), toBuffer(rfqId), toBuffer(orderId)],
+    [Buffer.from(ORDER_SEED), toBuffer(rfqId), toBuffer(orderId)],
     program.programId
   );
 
@@ -396,19 +414,19 @@ export async function returnCollateral(
   const program = await getProgram(provider);
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('rfq'), toBuffer(rfqId)],
+    [Buffer.from(RFQ_SEED), toBuffer(rfqId)],
     program.programId
   );
   const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('asset_escrow'), toBuffer(rfqId), toBuffer(orderId)],
+    [Buffer.from(ASSET_ESCROW_SEED), toBuffer(rfqId), toBuffer(orderId)],
     program.programId
   );
   const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('quote_escrow'), toBuffer(rfqId), toBuffer(orderId)],
+    [Buffer.from(QUOTE_ESCROW_SEED), toBuffer(rfqId), toBuffer(orderId)],
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('order'), toBuffer(rfqId), toBuffer(orderId)],
+    [Buffer.from(ORDER_SEED), toBuffer(rfqId), toBuffer(orderId)],
     program.programId
   );
 
@@ -450,19 +468,19 @@ export async function settle(
   const program = await getProgram(provider);
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer('rfq'), Buffer.from(rfqId.toString())],
+    [toBuffer(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('asset_escrow'), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
+    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
     program.programId
   );
   const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('quote_escrow'), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
+    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('order'), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
+    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
     program.programId
   );
 
@@ -497,7 +515,7 @@ export async function settle(
 export async function confirm(
   provider: Provider,
   id: number,
-  confirmOrderType: number,
+  confirmOrder: typeof Order,
   authority: Keypair,
   assetToken: Token,
   quoteToken: Token,
@@ -505,20 +523,20 @@ export async function confirm(
   const program = await getProgram(provider);
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('rfq'), toBuffer(id)],
+    [Buffer.from(RFQ_SEED), toBuffer(id)],
     program.programId
   );
   const [assetEscrowPDA, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer('asset_escrow'), toBuffer(id)],
+    [toBuffer(ASSET_ESCROW_SEED), toBuffer(id)],
     program.programId
   );
   const [quoteEscrowPDA, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer('quote_escrow'), toBuffer(id)],
+    [toBuffer(QUOTE_ESCROW_SEED), toBuffer(id)],
     program.programId
   );
 
   const tx = await program.rpc.confirm(
-    confirmOrderType,
+    confirmOrder,
     {
       accounts: {
         assetMint: assetMint.publicKey,
@@ -556,7 +574,7 @@ export async function respond(
   const program = await getProgram(provider);
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer('rfq'), toBuffer(rfqId)],
+    [toBuffer(RFQ_SEED), toBuffer(rfqId)],
     program.programId
   );
 
@@ -564,15 +582,15 @@ export async function respond(
   const responseId = rfqState.responseCount.toNumber();
 
   const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer('asset_escrow'), toBuffer(rfqId), toBuffer(responseId)],
+    [toBuffer(ASSET_ESCROW_SEED), toBuffer(rfqId), toBuffer(responseId)],
     program.programId
   );
   const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer('quote_escrow'), toBuffer(rfqId), toBuffer(responseId)],
+    [toBuffer(QUOTE_ESCROW_SEED), toBuffer(rfqId), toBuffer(responseId)],
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer('order'), toBuffer(rfqId), toBuffer(responseId)],
+    [toBuffer(ORDER_SEED), toBuffer(rfqId), toBuffer(responseId)],
     program.programId
   );
 
@@ -608,7 +626,7 @@ export async function respond(
 export async function request(
   provider: Provider,
   authority: Keypair,
-  requestOrderType: number,
+  requestOrder: typeof Order,
   instrument: number,
   expiry: anchor.BN,
   amount: anchor.BN
@@ -616,7 +634,7 @@ export async function request(
   const program = await getProgram(provider);
 
   const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('protocol')],
+    [Buffer.from(PROTOCOL_SEED)],
     program.programId
   );
 
@@ -624,12 +642,12 @@ export async function request(
   const rfqId = protocolState.rfqCount.toNumber();
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('rfq'), toBuffer(rfqId)],
+    [Buffer.from(RFQ_SEED), toBuffer(rfqId)],
     program.programId
   );
 
   const tx = await program.rpc.request(
-    requestOrderType,
+    requestOrder,
     instrument,
     expiry,
     amount,
@@ -662,7 +680,7 @@ export async function initializeProtocol(
 ): Promise<any> {
   const program = await getProgram(provider);
   const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from('protocol')],
+    [Buffer.from(PROTOCOL_SEED)],
     program.programId
   );
   const tx = await program.rpc.initialize(

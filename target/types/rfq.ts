@@ -63,8 +63,10 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "requestOrderType",
-          "type": "u8"
+          "name": "requestOrder",
+          "type": {
+            "defined": "Order"
+          }
         },
         {
           "name": "instrument",
@@ -216,8 +218,10 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "confirmOrderType",
-          "type": "u8"
+          "name": "confirmOrder",
+          "type": {
+            "defined": "Order"
+          }
         }
       ]
     },
@@ -405,8 +409,10 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "confirmOrderType",
-            "type": "u8"
+            "name": "confirmOrder",
+            "type": {
+              "defined": "Order"
+            }
           },
           {
             "name": "confirmed",
@@ -441,8 +447,10 @@ export type Rfq = {
             "type": "u64"
           },
           {
-            "name": "requestOrderType",
-            "type": "u8"
+            "name": "requestOrder",
+            "type": {
+              "defined": "Order"
+            }
           },
           {
             "name": "takerAddress",
@@ -536,36 +544,60 @@ export type Rfq = {
       }
     }
   ],
+  "types": [
+    {
+      "name": "Order",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "TwoWay"
+          }
+        ]
+      }
+    }
+  ],
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidQuoteType",
-      "msg": "Invalid quote type"
+      "name": "InvalidOrder",
+      "msg": "Invalid order logic"
     },
     {
       "code": 6001,
+      "name": "InvalidQuote",
+      "msg": "Invalid quote"
+    },
+    {
+      "code": 6002,
       "name": "InvalidTakerAddress",
       "msg": "Invalid taker address"
     },
     {
-      "code": 6002,
+      "code": 6003,
+      "name": "NotImplemented",
+      "msg": "Not implemented"
+    },
+    {
+      "code": 6004,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6003,
+      "code": 6005,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidOrder",
-      "msg": "Invalid order logic"
     }
   ]
 };
@@ -635,8 +667,10 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "requestOrderType",
-          "type": "u8"
+          "name": "requestOrder",
+          "type": {
+            "defined": "Order"
+          }
         },
         {
           "name": "instrument",
@@ -788,8 +822,10 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "confirmOrderType",
-          "type": "u8"
+          "name": "confirmOrder",
+          "type": {
+            "defined": "Order"
+          }
         }
       ]
     },
@@ -977,8 +1013,10 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "confirmOrderType",
-            "type": "u8"
+            "name": "confirmOrder",
+            "type": {
+              "defined": "Order"
+            }
           },
           {
             "name": "confirmed",
@@ -1013,8 +1051,10 @@ export const IDL: Rfq = {
             "type": "u64"
           },
           {
-            "name": "requestOrderType",
-            "type": "u8"
+            "name": "requestOrder",
+            "type": {
+              "defined": "Order"
+            }
           },
           {
             "name": "takerAddress",
@@ -1108,36 +1148,60 @@ export const IDL: Rfq = {
       }
     }
   ],
+  "types": [
+    {
+      "name": "Order",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "TwoWay"
+          }
+        ]
+      }
+    }
+  ],
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidQuoteType",
-      "msg": "Invalid quote type"
+      "name": "InvalidOrder",
+      "msg": "Invalid order logic"
     },
     {
       "code": 6001,
+      "name": "InvalidQuote",
+      "msg": "Invalid quote"
+    },
+    {
+      "code": 6002,
       "name": "InvalidTakerAddress",
       "msg": "Invalid taker address"
     },
     {
-      "code": 6002,
+      "code": 6003,
+      "name": "NotImplemented",
+      "msg": "Not implemented"
+    },
+    {
+      "code": 6004,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6003,
+      "code": 6005,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidOrder",
-      "msg": "Invalid order logic"
     }
   ]
 };
