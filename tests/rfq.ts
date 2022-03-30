@@ -306,8 +306,7 @@ describe(RFQ_SEED, () => {
   it('Miner returns collateral for RFQ 2', async () => {
     const rfqId = 2;
 
-    // TODO: Fails because no order
-    await returnCollateral(provider, taker, rfqId, 0, makerAassetToken, makerAquoteToken);
+    await returnCollateral(provider, taker, rfqId, 0, makerAassetToken, authorityQuoteToken);
     await returnCollateral(provider, marketMakerA, rfqId, 1, makerAassetToken, makerAquoteToken);
     await returnCollateral(provider, marketMakerB, rfqId, 2, makerBassetToken, makerBquoteToken);
     await returnCollateral(provider, marketMakerC, rfqId, 3, makerCassetToken, makerCquoteToken);
@@ -337,8 +336,11 @@ describe(RFQ_SEED, () => {
     const rfqId = 2;
 
     await settle(provider, taker, rfqId, 0, authorityAssetToken, authorityQuoteToken);
+    console.log(1)
     await settle(provider, marketMakerA, rfqId, 1, makerAassetToken, makerAquoteToken);
+    console.log(2)
     await settle(provider, marketMakerB, rfqId, 2, makerBassetToken, makerBquoteToken);
+    console.log(3)
 
     const takerAssetBalance = await getBalance(taker, assetMint.publicKey);
     const takerQuoteBalance = await getBalance(taker, quoteMint.publicKey);
@@ -350,10 +352,10 @@ describe(RFQ_SEED, () => {
     const makerCassetBalance = await getBalance(marketMakerC, assetMint.publicKey);
     const makerCquoteBalance = await getBalance(marketMakerC, quoteMint.publicKey);
 
-    //assert.equal(makerAassetBalance, MINT_AIRDROP);
-    //assert.equal(makerAquoteBalance, MINT_AIRDROP);
-    //assert.equal(makerBassetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT.toNumber());
-    //assert.equal(makerBquoteBalance, MINT_AIRDROP + MAKER_B_ASK_AMOUNT.toNumber());
+    assert.equal(makerAassetBalance, MINT_AIRDROP);
+    assert.equal(makerAquoteBalance, MINT_AIRDROP);
+    assert.equal(makerBassetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT.toNumber());
+    assert.equal(makerBquoteBalance, MINT_AIRDROP + MAKER_B_ASK_AMOUNT.toNumber());
 
     console.log('taker asset balance:', takerAssetBalance);
     console.log('taker quote balance:', takerQuoteBalance);

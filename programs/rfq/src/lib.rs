@@ -287,82 +287,119 @@ pub mod rfq {
         let order = &mut ctx.accounts.order;
         let authority_address = *ctx.accounts.authority.to_account_info().key;
 
-        let mut asset_amount = 0;
-        let mut quote_amount = 0;
-
         match confirm_order {
             Order::Buy => {
-                if rfq.best_ask_amount == order.ask {
-                    quote_amount = order.ask;
-                }
                 if authority_address == taker_address {
-                    asset_amount = rfq.order_amount;
+                    anchor_spl::token::transfer(
+                        CpiContext::new_with_signer(
+                            ctx.accounts.token_program.to_account_info(),
+                            anchor_spl::token::Transfer {
+                                from: ctx.accounts.asset_escrow.to_account_info(),
+                                to: ctx.accounts.asset_token.to_account_info(),
+                                authority: rfq.to_account_info(),
+                            },
+                            &[
+                                &[
+                                    ASSET_ESCROW_SEED.as_bytes(),
+                                    rfq.id.to_string().as_bytes(),
+                                    order.id.to_string().as_bytes(),
+                                    &[order.asset_escrow_bump],
+                                ][..],
+                                &[
+                                    RFQ_SEED.as_bytes(),
+                                    rfq.id.to_string().as_bytes(),
+                                    &[rfq.bump],
+                                ][..],
+                            ],
+                        ),
+                        rfq.order_amount,
+                    )?;
+                }
+
+                if rfq.best_ask_amount == order.ask {
+                    anchor_spl::token::transfer(
+                        CpiContext::new_with_signer(
+                            ctx.accounts.token_program.to_account_info(),
+                            anchor_spl::token::Transfer {
+                                from: ctx.accounts.quote_escrow.to_account_info(),
+                                to: ctx.accounts.quote_token.to_account_info(),
+                                authority: rfq.to_account_info(),
+                            },
+                            &[
+                                &[
+                                    QUOTE_ESCROW_SEED.as_bytes(),
+                                    rfq.id.to_string().as_bytes(),
+                                    order.id.to_string().as_bytes(),
+                                    &[order.quote_escrow_bump],
+                                ][..],
+                                &[
+                                    RFQ_SEED.as_bytes(),
+                                    rfq.id.to_string().as_bytes(),
+                                    &[rfq.bump],
+                                ][..],
+                            ],
+                        ),
+                        order.ask,
+                    )?;
                 }
             }
             Order::Sell => {
-                if rfq.best_bid_amount == order.bid {
-                    asset_amount = rfq.order_amount;
-                }
                 if authority_address == taker_address {
-                    quote_amount = rfq.best_bid_amount;
+                    anchor_spl::token::transfer(
+                        CpiContext::new_with_signer(
+                            ctx.accounts.token_program.to_account_info(),
+                            anchor_spl::token::Transfer {
+                                from: ctx.accounts.quote_escrow.to_account_info(),
+                                to: ctx.accounts.quote_token.to_account_info(),
+                                authority: rfq.to_account_info(),
+                            },
+                            &[
+                                &[
+                                    QUOTE_ESCROW_SEED.as_bytes(),
+                                    rfq.id.to_string().as_bytes(),
+                                    order.id.to_string().as_bytes(),
+                                    &[order.quote_escrow_bump],
+                                ][..],
+                                &[
+                                    RFQ_SEED.as_bytes(),
+                                    rfq.id.to_string().as_bytes(),
+                                    &[rfq.bump],
+                                ][..],
+                            ],
+                        ),
+                        rfq.best_bid_amount,
+                    )?;
+                }
+
+                if rfq.best_bid_amount == order.bid {
+                    anchor_spl::token::transfer(
+                        CpiContext::new_with_signer(
+                            ctx.accounts.token_program.to_account_info(),
+                            anchor_spl::token::Transfer {
+                                from: ctx.accounts.asset_escrow.to_account_info(),
+                                to: ctx.accounts.asset_token.to_account_info(),
+                                authority: rfq.to_account_info(),
+                            },
+                            &[
+                                &[
+                                    ASSET_ESCROW_SEED.as_bytes(),
+                                    rfq.id.to_string().as_bytes(),
+                                    order.id.to_string().as_bytes(),
+                                    &[order.asset_escrow_bump],
+                                ][..],
+                                &[
+                                    RFQ_SEED.as_bytes(),
+                                    rfq.id.to_string().as_bytes(),
+                                    &[rfq.bump],
+                                ][..],
+                            ],
+                        ),
+                        rfq.order_amount,
+                    )?;
                 }
             }
             Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
-        }
-
-        if asset_amount > 0 {
-            anchor_spl::token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: ctx.accounts.asset_escrow.to_account_info(),
-                        to: ctx.accounts.asset_token.to_account_info(),
-                        authority: rfq.to_account_info(),
-                    },
-                    &[
-                        &[
-                            ASSET_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            order.id.to_string().as_bytes(),
-                            &[order.asset_escrow_bump],
-                        ][..],
-                        &[
-                            RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            &[rfq.bump],
-                        ][..],
-                    ],
-                ),
-                asset_amount,
-            )?;
-        }
-
-        if quote_amount > 0 {
-            anchor_spl::token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: ctx.accounts.quote_escrow.to_account_info(),
-                        to: ctx.accounts.quote_token.to_account_info(),
-                        authority: rfq.to_account_info(),
-                    },
-                    &[
-                        &[
-                            QUOTE_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            order.id.to_string().as_bytes(),
-                            &[order.quote_escrow_bump],
-                        ][..],
-                        &[
-                            RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            &[rfq.bump],
-                        ][..],
-                    ],
-                ),
-                quote_amount,
-            )?;
-        }
+        } 
 
         Ok(())
     }
