@@ -6,8 +6,6 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { Rfq } from '../target/types/rfq';
 import * as idl from '../target/idl/rfq.json';
 
-export const program = anchor.workspace.Rfq as Program<Rfq>;
-
 export const RFQ_SEED = 'rfq';
 export const ORDER_SEED = 'order';
 export const PROTOCOL_SEED = 'protocol';
@@ -82,20 +80,16 @@ export async function getRfqs(provider: Provider): Promise<object[]> {
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   );
-
   const protocolState = await program.account.protocolState.fetch(protocolPda);
-  const rfqCount = protocolState.rfqCount.toNumber();
+  const range = Array.from({ length: protocolState.rfqCount.toNumber() }, (_, i) => 1 + i);
 
-  let rfqs = [];
-  for (let i = 0; i < rfqCount; i++) {
+  const rfqs = await Promise.all(range.map(async (i) => {
     const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(RFQ_SEED), Buffer.from((i + 1).toString())],
+      [Buffer.from(RFQ_SEED), Buffer.from(i.toString())],
       program.programId
     );
-    // TODO: Make asyc
-    const rfq = await program.account.rfqState.fetch(rfqPda);
-    rfqs.push(rfq);
-  }
+    return await program.account.rfqState.fetch(rfqPda);
+  }));
 
   return rfqs;
 }

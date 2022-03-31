@@ -43,13 +43,14 @@ import {
   lastLook,
   respond,
   returnCollateral,
-  program,
   request,
   requestAirdrop,
   settle,
   Venue,
   Side,
+  getProgram,
 } from '../lib/helpers';
+import { Program } from '@project-serum/anchor';
 
 let assetMint: Token;
 let quoteMint: Token;
@@ -84,9 +85,12 @@ const MINT_AIRDROP = 100_000;
 anchor.setProvider(anchor.Provider.env());
 
 const provider = anchor.getProvider();
+let program: Program;
 
 describe('rfq', () => {
   before(async () => {
+    program = await getProgram(provider);
+
     dao = Keypair.generate();
     marketMakerA = Keypair.generate();
     marketMakerB = Keypair.generate();

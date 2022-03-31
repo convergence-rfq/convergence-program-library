@@ -419,8 +419,7 @@ pub struct RfqState {
 }
 
 impl RfqState {
-    pub const LEN: usize =
-        8 + (32 * 5) + (Leg::LEN * 10 + 1) + (8 * 8) + (1 * 6) + (1 * 3) + (1 * 4);
+    pub const LEN: usize = 8 + (32 * 5) + (Leg::LEN * 10 + 1) + (8 * 8) + (1 * 13);
 }
 
 /// Global state for the entire RFQ system
