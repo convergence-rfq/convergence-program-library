@@ -477,7 +477,7 @@ pub struct Request<'info> {
     #[account(
         init,
         payer = authority,
-        token::mint = quote_mint,
+        token::mint = asset_mint,
         token::authority = rfq,
         seeds = [
             ASSET_ESCROW_SEED.as_bytes(),

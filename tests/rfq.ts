@@ -373,7 +373,7 @@ describe(RFQ_SEED, () => {
 export async function getRfqs(provider: Provider): Promise<any[]> {
   const program = await getProgram(provider);
   const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer(PROTOCOL_SEED)],
+    [Buffer.from(PROTOCOL_SEED)],
     program.programId
   );
 
@@ -402,11 +402,11 @@ export async function lastLook(
   const program = await getProgram(provider);
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), toBuffer(rfqId)],
+    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(ORDER_SEED), toBuffer(rfqId), toBuffer(orderId)],
+    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
     program.programId
   );
 
@@ -495,15 +495,15 @@ export async function settle(
   const program = await getProgram(provider);
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer(RFQ_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
+    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
+    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -551,19 +551,19 @@ export async function confirm(
   const program = await getProgram(provider);
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), toBuffer(rfqId)],
+    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString()), Buffer.from('0')],
+    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [quoteEscrowPda, _quoteEscrowPda] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString()), Buffer.from('0')],
+    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [orderPda, _orderPda] = await anchor.web3.PublicKey.findProgramAddress(
-    [toBuffer(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from('0')],
+    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from('0')],
     program.programId
   );
 
@@ -615,11 +615,11 @@ export async function respond(
   const responseId = rfqState.responseCount.toNumber() + 1;
 
   const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString()), Buffer.from(responseId.toString())],
+    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString()), Buffer.from(responseId.toString())],
+    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
   const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -697,9 +697,11 @@ export async function request(
     {
       accounts: {
         assetEscrow: assetEscrowPda,
+        assetMint: assetMint.publicKey,
         authority: authority.publicKey,
         protocol: protocolPda,
         quoteEscrow: quoteEscrowPda,
+        quoteMint: quoteMint.publicKey,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -744,23 +746,10 @@ export async function initializeProtocol(
   return { tx, protocolState };
 }
 
-export async function getPda(provider: any, seed: string): Promise<any> {
-  const program = await getProgram(provider);
-  const [protocolPda, protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(anchor.utils.bytes.utf8.encode(seed))],
-    program.programId
-  );
-  return [protocolPda, protocolBump];
-}
-
 export async function getProgram(provider: Provider): Promise<any> {
   const programId = new anchor.web3.PublicKey(idl.metadata.address);
   // @ts-ignore
   return new anchor.Program(idl, programId, provider);
-}
-
-export const toBuffer = (x: any) => {
-  return Buffer.from(anchor.utils.bytes.utf8.encode(x));
 }
 
 export async function requestAirdrop(
