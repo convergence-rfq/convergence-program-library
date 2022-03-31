@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::sysvar::clock::Clock;
 
-declare_id!("6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2");
+declare_id!("7DMzw449Xx3czELx3x6iUD4E5Leours2i2Wjk8JxVqM8");
 
 // Do not use hyphens in seed
 const ASSET_ESCROW_SEED: &str = "asset_escrow";

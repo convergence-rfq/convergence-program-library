@@ -3,17 +3,16 @@
 import * as anchor from '@project-serum/anchor';
 import * as dotenv from 'dotenv';
 
-import { getLiveRFQs } from '../lib/helpers';
+import { getRfqs } from '../lib/helpers';
 
 dotenv.config();
-
 anchor.setProvider(anchor.Provider.env());
 
 const provider = anchor.getProvider();
 
 const main = async (): Promise<any> => {
-  const titles = await getLiveRFQs(provider);
-  return titles;
+  const rfqs = await getRfqs(provider);
+  return rfqs;
 }
 
 main()
