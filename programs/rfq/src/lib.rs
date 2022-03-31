@@ -55,6 +55,7 @@ pub mod rfq {
 
         let rfq = &mut ctx.accounts.rfq;
         rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
+        rfq.asset_mint = ctx.accounts.asset_mint.key();
         rfq.approved = false;
         rfq.best_ask_amount = U64_UPPER_LIMIT;
         rfq.best_bid_amount = 0;
@@ -65,6 +66,7 @@ pub mod rfq {
         rfq.instrument = instrument;
         rfq.order_amount = amount;
         rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
+        rfq.quote_mint = ctx.accounts.quote_mint.key();
         rfq.request_order = request_order;
         rfq.response_count = 0;
         rfq.taker_address = *ctx.accounts.authority.key;
@@ -213,8 +215,7 @@ pub mod rfq {
         let order = &mut ctx.accounts.order;
         order.collateral_returned = true;
 
-        if order.ask != 0 && (rfq.best_ask_amount != order.ask || rfq.confirm_order == Order::Sell)
-        {
+        if order.ask > 0 && (rfq.best_ask_amount != order.ask || rfq.confirm_order == Order::Sell) {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -240,7 +241,7 @@ pub mod rfq {
             )?;
         }
 
-        if order.bid != 0 && (rfq.best_ask_amount != order.ask || rfq.confirm_order == Order::Buy) {
+        if order.bid > 0 && (rfq.best_ask_amount != order.ask || rfq.confirm_order == Order::Buy) {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -281,7 +282,30 @@ pub mod rfq {
         let order = &ctx.accounts.order;
         let authority_address = *ctx.accounts.authority.to_account_info().key;
 
-        if authority_address == taker_address && confirm_order == Order::Buy {
+        let mut quote_amount = 0;
+        let mut asset_amount = 0;
+
+        match confirm_order {
+            Order::Buy => {
+                if authority_address == taker_address {
+                    asset_amount = rfq.order_amount;
+                }
+                if rfq.best_ask_amount == order.ask {
+                    quote_amount = order.ask;
+                }
+            }
+            Order::Sell => {
+                if authority_address == taker_address {
+                    quote_amount = rfq.best_bid_amount;
+                }
+                if rfq.best_bid_amount == order.bid {
+                    asset_amount = rfq.order_amount;
+                }
+            }
+            Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
+        }
+
+        if asset_amount > 0 {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -303,11 +327,11 @@ pub mod rfq {
                         ][..],
                     ],
                 ),
-                rfq.order_amount,
+                asset_amount,
             )?;
         }
 
-        if authority_address == taker_address && confirm_order == Order::Sell {
+        if quote_amount > 0 {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -329,59 +353,7 @@ pub mod rfq {
                         ][..],
                     ],
                 ),
-                rfq.best_bid_amount,
-            )?;
-        }
-
-        if rfq.best_ask_amount == order.ask && confirm_order == Order::Buy {
-            anchor_spl::token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: ctx.accounts.quote_escrow.to_account_info(),
-                        to: ctx.accounts.quote_token.to_account_info(),
-                        authority: rfq.to_account_info(),
-                    },
-                    &[
-                        &[
-                            QUOTE_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            &[rfq.quote_escrow_bump],
-                        ][..],
-                        &[
-                            RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            &[rfq.bump],
-                        ][..],
-                    ],
-                ),
-                order.ask,
-            )?;
-        }
-
-        if rfq.best_bid_amount == order.bid && confirm_order == Order::Sell {
-            anchor_spl::token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: ctx.accounts.asset_escrow.to_account_info(),
-                        to: ctx.accounts.asset_token.to_account_info(),
-                        authority: rfq.to_account_info(),
-                    },
-                    &[
-                        &[
-                            ASSET_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            &[rfq.asset_escrow_bump],
-                        ][..],
-                        &[
-                            RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
-                            &[rfq.bump],
-                        ][..],
-                    ],
-                ),
-                rfq.order_amount,
+                quote_amount,
             )?;
         }
 
@@ -652,7 +624,6 @@ pub struct ReturnCollateral<'info> {
         bump = rfq.asset_escrow_bump
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
-    // Maker does not have an order so use this for now
     #[account(
         mut,
         seeds = [
