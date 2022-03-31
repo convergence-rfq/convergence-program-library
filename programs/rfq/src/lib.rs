@@ -37,7 +37,7 @@ pub mod rfq {
         Ok(())
     }
 
-    /// Request quote.
+    /// Taker requests quote.
     ///
     /// request_order
     /// instrument
@@ -54,6 +54,7 @@ pub mod rfq {
         protocol.rfq_count += 1;
 
         let rfq = &mut ctx.accounts.rfq;
+        rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
         rfq.approved = false;
         rfq.best_ask_amount = U64_UPPER_LIMIT;
         rfq.best_bid_amount = 0;
@@ -63,6 +64,7 @@ pub mod rfq {
         rfq.id = ctx.accounts.protocol.rfq_count;
         rfq.instrument = instrument;
         rfq.order_amount = amount;
+        rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
         rfq.request_order = request_order;
         rfq.response_count = 0;
         rfq.taker_address = *ctx.accounts.authority.key;
@@ -85,11 +87,9 @@ pub mod rfq {
 
         let order = &mut ctx.accounts.order;
         let authority = ctx.accounts.authority.key();
-        order.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
         order.authority = authority;
         order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.id = rfq.response_count;
-        order.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
 
         if ask > 0 {
             anchor_spl::token::transfer(
@@ -143,12 +143,12 @@ pub mod rfq {
     #[access_control(confirm_access_control(&ctx, confirm_order))]
     pub fn confirm(ctx: Context<Confirm>, confirm_order: Order) -> Result<()> {
         let order = &mut ctx.accounts.order;
-        order.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
         order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.id = 0;
-        order.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
 
         let rfq = &mut ctx.accounts.rfq;
+        rfq.confirmed = true;
+        rfq.confirm_order = confirm_order;
 
         match confirm_order {
             Order::Buy => {
@@ -181,9 +181,6 @@ pub mod rfq {
             Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
         }
 
-        rfq.confirmed = true;
-        rfq.confirm_order = confirm_order;
-
         Ok(())
     }
 
@@ -214,6 +211,7 @@ pub mod rfq {
     pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
         let rfq = &ctx.accounts.rfq;
         let order = &mut ctx.accounts.order;
+        order.collateral_returned = true;
 
         if order.ask != 0 && (rfq.best_ask_amount != order.ask || rfq.confirm_order == Order::Sell)
         {
@@ -229,8 +227,7 @@ pub mod rfq {
                         &[
                             ASSET_ESCROW_SEED.as_bytes(),
                             rfq.id.to_string().as_bytes(),
-                            order.id.to_string().as_bytes(),
-                            &[order.asset_escrow_bump],
+                            &[rfq.asset_escrow_bump],
                         ][..],
                         &[
                             RFQ_SEED.as_bytes(),
@@ -256,8 +253,7 @@ pub mod rfq {
                         &[
                             QUOTE_ESCROW_SEED.as_bytes(),
                             rfq.id.to_string().as_bytes(),
-                            order.id.to_string().as_bytes(),
-                            &[order.quote_escrow_bump],
+                            &[rfq.quote_escrow_bump],
                         ][..],
                         &[
                             RFQ_SEED.as_bytes(),
@@ -269,8 +265,6 @@ pub mod rfq {
                 order.bid,
             )?;
         }
-
-        order.collateral_returned = true;
 
         Ok(())
     }
@@ -284,122 +278,112 @@ pub mod rfq {
         let confirm_order = rfq.confirm_order;
         let taker_address = rfq.taker_address;
 
-        let order = &mut ctx.accounts.order;
+        let order = &ctx.accounts.order;
         let authority_address = *ctx.accounts.authority.to_account_info().key;
 
-        match confirm_order {
-            Order::Buy => {
-                if authority_address == taker_address {
-                    anchor_spl::token::transfer(
-                        CpiContext::new_with_signer(
-                            ctx.accounts.token_program.to_account_info(),
-                            anchor_spl::token::Transfer {
-                                from: ctx.accounts.asset_escrow.to_account_info(),
-                                to: ctx.accounts.asset_token.to_account_info(),
-                                authority: rfq.to_account_info(),
-                            },
-                            &[
-                                &[
-                                    ASSET_ESCROW_SEED.as_bytes(),
-                                    rfq.id.to_string().as_bytes(),
-                                    order.id.to_string().as_bytes(),
-                                    &[order.asset_escrow_bump],
-                                ][..],
-                                &[
-                                    RFQ_SEED.as_bytes(),
-                                    rfq.id.to_string().as_bytes(),
-                                    &[rfq.bump],
-                                ][..],
-                            ],
-                        ),
-                        rfq.order_amount,
-                    )?;
-                }
+        if authority_address == taker_address && confirm_order == Order::Buy {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.asset_escrow.to_account_info(),
+                        to: ctx.accounts.asset_token.to_account_info(),
+                        authority: rfq.to_account_info(),
+                    },
+                    &[
+                        &[
+                            ASSET_ESCROW_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            &[rfq.asset_escrow_bump],
+                        ][..],
+                        &[
+                            RFQ_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            &[rfq.bump],
+                        ][..],
+                    ],
+                ),
+                rfq.order_amount,
+            )?;
+        }
 
-                if rfq.best_ask_amount == order.ask {
-                    anchor_spl::token::transfer(
-                        CpiContext::new_with_signer(
-                            ctx.accounts.token_program.to_account_info(),
-                            anchor_spl::token::Transfer {
-                                from: ctx.accounts.quote_escrow.to_account_info(),
-                                to: ctx.accounts.quote_token.to_account_info(),
-                                authority: rfq.to_account_info(),
-                            },
-                            &[
-                                &[
-                                    QUOTE_ESCROW_SEED.as_bytes(),
-                                    rfq.id.to_string().as_bytes(),
-                                    order.id.to_string().as_bytes(),
-                                    &[order.quote_escrow_bump],
-                                ][..],
-                                &[
-                                    RFQ_SEED.as_bytes(),
-                                    rfq.id.to_string().as_bytes(),
-                                    &[rfq.bump],
-                                ][..],
-                            ],
-                        ),
-                        order.ask,
-                    )?;
-                }
-            }
-            Order::Sell => {
-                if authority_address == taker_address {
-                    anchor_spl::token::transfer(
-                        CpiContext::new_with_signer(
-                            ctx.accounts.token_program.to_account_info(),
-                            anchor_spl::token::Transfer {
-                                from: ctx.accounts.quote_escrow.to_account_info(),
-                                to: ctx.accounts.quote_token.to_account_info(),
-                                authority: rfq.to_account_info(),
-                            },
-                            &[
-                                &[
-                                    QUOTE_ESCROW_SEED.as_bytes(),
-                                    rfq.id.to_string().as_bytes(),
-                                    order.id.to_string().as_bytes(),
-                                    &[order.quote_escrow_bump],
-                                ][..],
-                                &[
-                                    RFQ_SEED.as_bytes(),
-                                    rfq.id.to_string().as_bytes(),
-                                    &[rfq.bump],
-                                ][..],
-                            ],
-                        ),
-                        rfq.best_bid_amount,
-                    )?;
-                }
+        if authority_address == taker_address && confirm_order == Order::Sell {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.quote_escrow.to_account_info(),
+                        to: ctx.accounts.quote_token.to_account_info(),
+                        authority: rfq.to_account_info(),
+                    },
+                    &[
+                        &[
+                            QUOTE_ESCROW_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            &[rfq.quote_escrow_bump],
+                        ][..],
+                        &[
+                            RFQ_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            &[rfq.bump],
+                        ][..],
+                    ],
+                ),
+                rfq.best_bid_amount,
+            )?;
+        }
 
-                if rfq.best_bid_amount == order.bid {
-                    anchor_spl::token::transfer(
-                        CpiContext::new_with_signer(
-                            ctx.accounts.token_program.to_account_info(),
-                            anchor_spl::token::Transfer {
-                                from: ctx.accounts.asset_escrow.to_account_info(),
-                                to: ctx.accounts.asset_token.to_account_info(),
-                                authority: rfq.to_account_info(),
-                            },
-                            &[
-                                &[
-                                    ASSET_ESCROW_SEED.as_bytes(),
-                                    rfq.id.to_string().as_bytes(),
-                                    order.id.to_string().as_bytes(),
-                                    &[order.asset_escrow_bump],
-                                ][..],
-                                &[
-                                    RFQ_SEED.as_bytes(),
-                                    rfq.id.to_string().as_bytes(),
-                                    &[rfq.bump],
-                                ][..],
-                            ],
-                        ),
-                        rfq.order_amount,
-                    )?;
-                }
-            }
-            Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
-        } 
+        if rfq.best_ask_amount == order.ask && confirm_order == Order::Buy {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.quote_escrow.to_account_info(),
+                        to: ctx.accounts.quote_token.to_account_info(),
+                        authority: rfq.to_account_info(),
+                    },
+                    &[
+                        &[
+                            QUOTE_ESCROW_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            &[rfq.quote_escrow_bump],
+                        ][..],
+                        &[
+                            RFQ_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            &[rfq.bump],
+                        ][..],
+                    ],
+                ),
+                order.ask,
+            )?;
+        }
+
+        if rfq.best_bid_amount == order.bid && confirm_order == Order::Sell {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.asset_escrow.to_account_info(),
+                        to: ctx.accounts.asset_token.to_account_info(),
+                        authority: rfq.to_account_info(),
+                    },
+                    &[
+                        &[
+                            ASSET_ESCROW_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            &[rfq.asset_escrow_bump],
+                        ][..],
+                        &[
+                            RFQ_SEED.as_bytes(),
+                            rfq.id.to_string().as_bytes(),
+                            &[rfq.bump],
+                        ][..],
+                    ],
+                ),
+                rfq.order_amount,
+            )?;
+        }
 
         Ok(())
     }
@@ -411,6 +395,7 @@ pub mod rfq {
 #[account]
 pub struct RfqState {
     pub approved: bool,
+    pub asset_escrow_bump: u8,
     pub asset_mint: Pubkey,
     pub best_ask_amount: u64,
     pub best_bid_amount: u64,
@@ -424,6 +409,7 @@ pub struct RfqState {
     pub id: u64,
     pub instrument: Instrument,
     pub order_amount: u64,
+    pub quote_escrow_bump: u8,
     pub quote_mint: Pubkey,
     pub response_count: u64,
     pub request_order: Order,
@@ -433,7 +419,7 @@ pub struct RfqState {
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 5) + (8 * 8) + (1 * 4) + (1 * 3);
+    pub const LEN: usize = 8 + (32 * 5) + (8 * 8) + (1 * 6) + (1 * 3);
 }
 
 /// Global state for the entire RFQ system
@@ -457,18 +443,16 @@ impl ProtocolState {
 pub struct OrderState {
     // Ask collateral
     pub ask: u64,
-    pub asset_escrow_bump: u8,
     pub authority: Pubkey,
     // Bid collateral
     pub bid: u64,
     pub bump: u8,
     pub collateral_returned: bool,
     pub id: u64,
-    pub quote_escrow_bump: u8,
 }
 
 impl OrderState {
-    pub const LEN: usize = 8 + (32 * 1) + (8 * 3) + (1 * 3) + (1 * 1);
+    pub const LEN: usize = 8 + (32 * 1) + (8 * 3) + (1 * 1) + (1 * 1);
 }
 
 /// Contexts
@@ -490,6 +474,19 @@ pub struct Initialize<'info> {
 
 #[derive(Accounts)]
 pub struct Request<'info> {
+    #[account(
+        init,
+        payer = authority,
+        token::mint = quote_mint,
+        token::authority = rfq,
+        seeds = [
+            ASSET_ESCROW_SEED.as_bytes(),
+            (protocol.rfq_count + 1).to_string().as_bytes()
+        ],
+        bump
+    )]
+    pub asset_escrow: Account<'info, TokenAccount>,
+    pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
@@ -498,6 +495,19 @@ pub struct Request<'info> {
         bump = protocol.bump
     )]
     pub protocol: Account<'info, ProtocolState>,
+    #[account(
+        init,
+        payer = authority,
+        token::mint = quote_mint,
+        token::authority = rfq,
+        seeds = [
+            QUOTE_ESCROW_SEED.as_bytes(),
+            (protocol.rfq_count + 1).to_string().as_bytes()
+        ],
+        bump
+    )]
+    pub quote_escrow: Account<'info, TokenAccount>,
+    pub quote_mint: Box<Account<'info, Mint>>,
     pub rent: Sysvar<'info, Rent>,
     #[account(
         init,
@@ -511,6 +521,7 @@ pub struct Request<'info> {
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
@@ -540,29 +551,15 @@ pub struct Respond<'info> {
     #[account(mut)]
     pub quote_token: Box<Account<'info, TokenAccount>>,
     #[account(
-        init,
-        payer = authority,
-        token::mint = asset_mint,
-        token::authority = rfq,
-        seeds = [
-            ASSET_ESCROW_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            (rfq.response_count + 1).to_string().as_bytes()
-        ],
-        bump
+        mut,
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.asset_escrow_bump
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
-        init,
-        payer = authority,
-        token::mint = quote_mint,
-        token::authority = rfq,
-        seeds = [
-            QUOTE_ESCROW_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            (rfq.response_count + 1).to_string().as_bytes()
-        ],
-        bump
+        mut,
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.quote_escrow_bump
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     pub asset_mint: Box<Account<'info, Mint>>,
@@ -586,17 +583,9 @@ pub struct Confirm<'info> {
     pub asset_token: Box<Account<'info, TokenAccount>>,
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(
-        init,
-        payer = authority,
-        token::mint = asset_mint,
-        token::authority = rfq,
-        // Confirmation account escrow seed always uses 0
-        seeds = [
-            ASSET_ESCROW_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            b"0"
-        ],
-        bump,
+        mut,
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.asset_escrow_bump,
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     // TODO: Is this actually an order or is there a better way?
@@ -613,17 +602,9 @@ pub struct Confirm<'info> {
     )]
     pub order: Box<Account<'info, OrderState>>,
     #[account(
-        init,
-        payer = authority,
-        token::mint = quote_mint,
-        token::authority = rfq,
-        // Confirmation account escrow seed always uses 0
-        seeds = [
-            QUOTE_ESCROW_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            b"0"
-        ],
-        bump,
+        mut,
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.quote_escrow_bump
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     pub quote_mint: Box<Account<'info, Mint>>,
@@ -667,12 +648,8 @@ pub struct ReturnCollateral<'info> {
     pub quote_token: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [
-            ASSET_ESCROW_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            order.id.to_string().as_bytes()
-        ],
-        bump = order.asset_escrow_bump
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.asset_escrow_bump
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     // Maker does not have an order so use this for now
@@ -689,12 +666,8 @@ pub struct ReturnCollateral<'info> {
     pub quote_mint: Box<Account<'info, Mint>>,
     #[account(
         mut,
-        seeds = [
-            QUOTE_ESCROW_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            order.id.to_string().as_bytes()
-        ],
-        bump = order.quote_escrow_bump
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.quote_escrow_bump
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     pub rfq: Box<Account<'info, RfqState>>,
@@ -711,22 +684,14 @@ pub struct Settle<'info> {
     pub authority: Signer<'info>,
     #[account(
         mut,
-        seeds = [
-            ASSET_ESCROW_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            order.id.to_string().as_bytes()
-        ],
-        bump = order.asset_escrow_bump
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.asset_escrow_bump
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [
-            QUOTE_ESCROW_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            order.id.to_string().as_bytes()
-        ],
-        bump = order.quote_escrow_bump
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.quote_escrow_bump
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     #[account(

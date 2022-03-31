@@ -36,6 +36,16 @@ export type Rfq = {
       "name": "request",
       "accounts": [
         {
+          "name": "assetEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "authority",
           "isMut": true,
           "isSigner": true
@@ -43,6 +53,16 @@ export type Rfq = {
         {
           "name": "protocol",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -57,6 +77,11 @@ export type Rfq = {
         },
         {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -392,6 +417,10 @@ export type Rfq = {
             "type": "bool"
           },
           {
+            "name": "assetEscrowBump",
+            "type": "u8"
+          },
+          {
             "name": "assetMint",
             "type": "publicKey"
           },
@@ -446,6 +475,10 @@ export type Rfq = {
           {
             "name": "orderAmount",
             "type": "u64"
+          },
+          {
+            "name": "quoteEscrowBump",
+            "type": "u8"
           },
           {
             "name": "quoteMint",
@@ -522,10 +555,6 @@ export type Rfq = {
             "type": "u64"
           },
           {
-            "name": "assetEscrowBump",
-            "type": "u8"
-          },
-          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -544,10 +573,6 @@ export type Rfq = {
           {
             "name": "id",
             "type": "u64"
-          },
-          {
-            "name": "quoteEscrowBump",
-            "type": "u8"
           }
         ]
       }
@@ -664,6 +689,16 @@ export const IDL: Rfq = {
       "name": "request",
       "accounts": [
         {
+          "name": "assetEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "assetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "authority",
           "isMut": true,
           "isSigner": true
@@ -671,6 +706,16 @@ export const IDL: Rfq = {
         {
           "name": "protocol",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -685,6 +730,11 @@ export const IDL: Rfq = {
         },
         {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1020,6 +1070,10 @@ export const IDL: Rfq = {
             "type": "bool"
           },
           {
+            "name": "assetEscrowBump",
+            "type": "u8"
+          },
+          {
             "name": "assetMint",
             "type": "publicKey"
           },
@@ -1074,6 +1128,10 @@ export const IDL: Rfq = {
           {
             "name": "orderAmount",
             "type": "u64"
+          },
+          {
+            "name": "quoteEscrowBump",
+            "type": "u8"
           },
           {
             "name": "quoteMint",
@@ -1150,10 +1208,6 @@ export const IDL: Rfq = {
             "type": "u64"
           },
           {
-            "name": "assetEscrowBump",
-            "type": "u8"
-          },
-          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -1172,10 +1226,6 @@ export const IDL: Rfq = {
           {
             "name": "id",
             "type": "u64"
-          },
-          {
-            "name": "quoteEscrowBump",
-            "type": "u8"
           }
         ]
       }
