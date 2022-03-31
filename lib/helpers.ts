@@ -223,8 +223,7 @@ export async function settle(
 export async function confirm(
   provider: Provider,
   rfqId: number,
-  // TODO: Fix
-  confirmOrder: any,
+  confirmOrder: object,
   authority: Keypair,
   assetToken: PublicKey,
   quoteToken: PublicKey,
@@ -350,12 +349,10 @@ export async function request(
   assetMint: Token,
   authority: Keypair,
   expiry: anchor.BN,
-  // TODO: Fix
-  instrument: any,
+  instrument: object,
   provider: Provider,
   quoteMint: Token,
-  // TODO: Fix
-  requestOrder: any,
+  requestOrder: object,
 ): Promise<any> {
   const program = await getProgram(provider);
 
