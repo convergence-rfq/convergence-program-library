@@ -31,7 +31,7 @@
 import * as anchor from '@project-serum/anchor';
 import * as assert from 'assert';
 import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 import {
   Instrument,
@@ -47,6 +47,8 @@ import {
   request,
   requestAirdrop,
   settle,
+  Venue,
+  Side,
 } from '../lib/helpers';
 
 let assetMint: Token;
@@ -62,10 +64,12 @@ let makerBQuoteWallet: PublicKey;
 let makerCAssetWallet: PublicKey;
 let makerCQuoteWallet: PublicKey;
 
-let mintAuthority: Keypair;
+let dao: Keypair;
 let marketMakerA: Keypair;
 let marketMakerB: Keypair;
 let marketMakerC: Keypair;
+let mintAuthority: Keypair;
+let miner: Keypair;
 let taker: Keypair;
 
 const TAKER_ORDER_AMOUNT = new anchor.BN(10); // Order to buy 10 asset tokens for XX? quote tokens
@@ -83,17 +87,21 @@ const provider = anchor.getProvider();
 
 describe('rfq', () => {
   before(async () => {
-    mintAuthority = Keypair.generate();
+    dao = Keypair.generate();
     marketMakerA = Keypair.generate();
     marketMakerB = Keypair.generate();
     marketMakerC = Keypair.generate();
+    miner = Keypair.generate();
+    mintAuthority = Keypair.generate();
     taker = Keypair.generate();
 
-    await requestAirdrop(provider, taker.publicKey, 10_000_000_000);
-    await requestAirdrop(provider, mintAuthority.publicKey, 10_000_000_000);
-    await requestAirdrop(provider, marketMakerA.publicKey, 10_000_000_000);
-    await requestAirdrop(provider, marketMakerB.publicKey, 10_000_000_000);
-    await requestAirdrop(provider, marketMakerC.publicKey, 10_000_000_000);
+    await requestAirdrop(provider, dao.publicKey, LAMPORTS_PER_SOL * 10);
+    await requestAirdrop(provider, miner.publicKey, LAMPORTS_PER_SOL * 10);
+    await requestAirdrop(provider, mintAuthority.publicKey, LAMPORTS_PER_SOL * 10);
+    await requestAirdrop(provider, marketMakerA.publicKey, LAMPORTS_PER_SOL * 10);
+    await requestAirdrop(provider, marketMakerB.publicKey, LAMPORTS_PER_SOL * 10);
+    await requestAirdrop(provider, marketMakerC.publicKey, LAMPORTS_PER_SOL * 10);
+    await requestAirdrop(provider, taker.publicKey, LAMPORTS_PER_SOL * 10);
 
     const walletBalance = await provider.connection.getBalance(taker.publicKey);
     console.log('taker wallet balance:', walletBalance);
@@ -138,17 +146,23 @@ describe('rfq', () => {
   it('DAO initializes protocol', async () => {
     const feeDenominator = 1_000;
     const feeNumerator = 0;
-    const { protocolState } = await initializeProtocol(provider, taker, feeDenominator, feeNumerator);
+    const { protocolState } = await initializeProtocol(provider, dao, feeDenominator, feeNumerator);
     assert.ok(protocolState.rfqCount.eq(new anchor.BN(0)));
     assert.ok(protocolState.accessManagerCount.eq(new anchor.BN(0)));
   });
 
-  it('Maker initializes RFQ 1', async () => {
+  it('Taker initializes RFQ 1', async () => {
     const requestOrder = Order.Buy;
-    const instrument = Instrument.Spot;
     const expiry = new anchor.BN(-1);
-    const amount = TAKER_ORDER_AMOUNT;
-    const { rfqState, protocolState } = await request(amount, assetMint, taker, expiry, instrument, provider, quoteMint, requestOrder);
+    const orderAmount = TAKER_ORDER_AMOUNT;
+    const legs = [{
+      amount: TAKER_ORDER_AMOUNT,
+      instrument: Instrument.Spot,
+      side: Side.Buy,
+      venue: Venue.Convergence,
+    }];
+    const { rfqState, protocolState } = await request(assetMint, taker, expiry, legs, orderAmount, provider, quoteMint, requestOrder);
+    //assert.deepEqual(rfqState.legs, legs);
     assert.ok(rfqState.id.eq(new anchor.BN(1)));
     assert.ok(protocolState.rfqCount.eq(new anchor.BN(1)));
   });
@@ -170,14 +184,18 @@ describe('rfq', () => {
 
   it('Taker initializes RFQ 2', async () => {
     const requestOrder = Order.Buy;
-    const instrument = Instrument.Spot;
     const expiry = new anchor.BN(1_000);
-    const amount = TAKER_ORDER_AMOUNT;
-
-    const { rfqState, protocolState } = await request(amount, assetMint, taker, expiry, instrument, provider, quoteMint, requestOrder);
+    const orderAmount = TAKER_ORDER_AMOUNT;
+    const legs = [{
+      venue: Venue.Convergence,
+      side: Side.Buy,
+      amount: TAKER_ORDER_AMOUNT,
+      instrument: Instrument.Spot,
+    }];
+    const { rfqState, protocolState } = await request(assetMint, taker, expiry, legs, orderAmount, provider, quoteMint, requestOrder);
     assert.equal(rfqState.expired, false);
     assert.deepEqual(rfqState.requestOrder, requestOrder);
-    assert.deepEqual(rfqState.instrument, instrument);
+    //assert.deepEqual(rfqState.legs, legs);
     assert.equal(rfqState.expiry.toString(), expiry.toString());
     assert.equal(rfqState.orderAmount.toString(), TAKER_ORDER_AMOUNT.toString());
     assert.equal(protocolState.rfqCount.toNumber(), 2);

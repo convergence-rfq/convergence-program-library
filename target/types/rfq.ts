@@ -88,24 +88,26 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "requestOrder",
-          "type": {
-            "defined": "Order"
-          }
-        },
-        {
-          "name": "instrument",
-          "type": {
-            "defined": "Instrument"
-          }
-        },
-        {
           "name": "expiry",
           "type": "i64"
         },
         {
-          "name": "amount",
+          "name": "legs",
+          "type": {
+            "vec": {
+              "defined": "Leg"
+            }
+          }
+        },
+        {
+          "name": "orderAmount",
           "type": "u64"
+        },
+        {
+          "name": "requestOrder",
+          "type": {
+            "defined": "Order"
+          }
         }
       ]
     },
@@ -479,9 +481,11 @@ export type Rfq = {
             "type": "u64"
           },
           {
-            "name": "instrument",
+            "name": "legs",
             "type": {
-              "defined": "Instrument"
+              "vec": {
+                "defined": "Leg"
+              }
             }
           },
           {
@@ -596,18 +600,31 @@ export type Rfq = {
   ],
   "types": [
     {
-      "name": "Order",
+      "name": "Leg",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "Buy"
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
           },
           {
-            "name": "Sell"
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           },
           {
-            "name": "TwoWay"
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
           }
         ]
       }
@@ -628,6 +645,51 @@ export type Rfq = {
           },
           {
             "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Side",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Venue",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Convergence"
+          },
+          {
+            "name": "PsyOptions"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Order",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "TwoWay"
           }
         ]
       }
@@ -757,24 +819,26 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "requestOrder",
-          "type": {
-            "defined": "Order"
-          }
-        },
-        {
-          "name": "instrument",
-          "type": {
-            "defined": "Instrument"
-          }
-        },
-        {
           "name": "expiry",
           "type": "i64"
         },
         {
-          "name": "amount",
+          "name": "legs",
+          "type": {
+            "vec": {
+              "defined": "Leg"
+            }
+          }
+        },
+        {
+          "name": "orderAmount",
           "type": "u64"
+        },
+        {
+          "name": "requestOrder",
+          "type": {
+            "defined": "Order"
+          }
         }
       ]
     },
@@ -1148,9 +1212,11 @@ export const IDL: Rfq = {
             "type": "u64"
           },
           {
-            "name": "instrument",
+            "name": "legs",
             "type": {
-              "defined": "Instrument"
+              "vec": {
+                "defined": "Leg"
+              }
             }
           },
           {
@@ -1265,18 +1331,31 @@ export const IDL: Rfq = {
   ],
   "types": [
     {
-      "name": "Order",
+      "name": "Leg",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "Buy"
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
           },
           {
-            "name": "Sell"
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           },
           {
-            "name": "TwoWay"
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
           }
         ]
       }
@@ -1297,6 +1376,51 @@ export const IDL: Rfq = {
           },
           {
             "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Side",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Venue",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Convergence"
+          },
+          {
+            "name": "PsyOptions"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Order",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "TwoWay"
           }
         ]
       }

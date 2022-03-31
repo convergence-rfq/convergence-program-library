@@ -38,15 +38,14 @@ pub mod rfq {
     /// Taker requests quote.
     ///
     /// request_order
-    /// instrument
+    /// legs
     /// expiry
-    /// amount
     pub fn request(
         ctx: Context<Request>,
-        request_order: Order,
-        instrument: Instrument,
         expiry: i64,
-        amount: u64,
+        legs: Vec<Leg>,
+        order_amount: u64,
+        request_order: Order,
     ) -> Result<()> {
         let protocol = &mut ctx.accounts.protocol;
         protocol.rfq_count += 1;
@@ -63,14 +62,15 @@ pub mod rfq {
         rfq.expired = false;
         rfq.expiry = expiry;
         rfq.id = ctx.accounts.protocol.rfq_count;
-        rfq.instrument = instrument;
-        rfq.order_amount = amount;
+        rfq.legs = vec![];
+        rfq.order_amount = order_amount;
         rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
         rfq.quote_mint = ctx.accounts.quote_mint.key();
         rfq.request_order = request_order;
         rfq.response_count = 0;
         rfq.taker_address = *ctx.accounts.authority.key;
         rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
+        rfq.legs = legs;
 
         Ok(())
     }
@@ -369,6 +369,22 @@ pub mod rfq {
             )?;
         }
 
+        // TODO: This function gets called multiple times so decide when to settle
+        for l in rfq.legs.iter() {
+            match l.venue {
+                Venue::PsyOptions => {
+                    // TODO: Finish @uwecerron
+                    //
+                    // Add instructions for PsyOptions
+                    //
+                    // Create_Portfolio
+                    // Deposit
+                    // Place_Orders
+                }
+                Venue::Convergence => (),
+            }
+        }
+
         Ok(())
     }
 }
@@ -391,7 +407,7 @@ pub struct RfqState {
     pub expired: bool,
     pub expiry: i64,
     pub id: u64,
-    pub instrument: Instrument,
+    pub legs: Vec<Leg>,
     pub order_amount: u64,
     pub quote_escrow_bump: u8,
     pub quote_mint: Pubkey,
@@ -403,7 +419,8 @@ pub struct RfqState {
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 5) + (8 * 8) + (1 * 6) + (1 * 3) + (1 * 4);
+    pub const LEN: usize =
+        8 + (32 * 5) + (Leg::LEN * 10 + 1) + (8 * 8) + (1 * 6) + (1 * 3) + (1 * 4);
 }
 
 /// Global state for the entire RFQ system
@@ -702,18 +719,42 @@ pub struct Settle<'info> {
 /// Types
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Order {
-    Buy,
-    Sell,
-    TwoWay,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instrument {
     Call,
     Future,
     Put,
     Spot,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Side {
+    Buy,
+    Sell,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Venue {
+    Convergence,
+    PsyOptions,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Leg {
+    instrument: Instrument,
+    venue: Venue,
+    side: Side,
+    amount: u64,
+}
+
+impl Leg {
+    pub const LEN: usize = (1 + (1 * 4)) + (1 + (1 * 2)) + (1 + (1 * 2)) + (8 * 1);
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Order {
+    Buy,
+    Sell,
+    TwoWay,
 }
 
 /// Access controls

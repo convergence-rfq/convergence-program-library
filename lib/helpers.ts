@@ -26,6 +26,8 @@ export const Order = {
   }
 };
 
+// Instrument from from Paradigm: BTC-25JUN21-20000-C
+
 export const Instrument = {
   Spot: {
     spot: {}
@@ -38,6 +40,39 @@ export const Instrument = {
   },
   Put: {
     put: {}
+  }
+};
+
+export const Side = {
+  Buy: {
+    buy: {}
+  },
+  Sell: {
+    sell: {}
+  }
+};
+
+export const Venue = {
+  Convergence: {
+    convergence: {}
+  },
+  PsyOptions: {
+    psyOptions: {}
+  }
+};
+
+export const Leg = {
+  Instrument: {
+    instrument: {}
+  },
+  Venue: {
+    venue: {}
+  },
+  Side: {
+    side: {}
+  },
+  Amount: {
+    amount: {}
   }
 };
 
@@ -57,6 +92,7 @@ export async function getRfqs(provider: Provider): Promise<object[]> {
       [Buffer.from(RFQ_SEED), Buffer.from((i + 1).toString())],
       program.programId
     );
+    // TODO: Make asyc
     const rfq = await program.account.rfqState.fetch(rfqPda);
     rfqs.push(rfq);
   }
@@ -345,11 +381,11 @@ export async function respond(
 }
 
 export async function request(
-  amount: anchor.BN,
   assetMint: Token,
   authority: Keypair,
   expiry: anchor.BN,
-  instrument: object,
+  legs: object[],
+  orderAmount: anchor.BN,
   provider: Provider,
   quoteMint: Token,
   requestOrder: object,
@@ -372,16 +408,16 @@ export async function request(
     [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
-  const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
+  const [quoteEscrowPda, _quoteEscrowPda] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   );
 
   const tx = await program.rpc.request(
-    requestOrder,
-    instrument,
     expiry,
-    amount,
+    legs,
+    orderAmount,
+    requestOrder,
     {
       accounts: {
         assetEscrow: assetEscrowPda,

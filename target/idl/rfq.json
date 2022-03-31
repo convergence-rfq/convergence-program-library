@@ -88,24 +88,26 @@
       ],
       "args": [
         {
-          "name": "requestOrder",
-          "type": {
-            "defined": "Order"
-          }
-        },
-        {
-          "name": "instrument",
-          "type": {
-            "defined": "Instrument"
-          }
-        },
-        {
           "name": "expiry",
           "type": "i64"
         },
         {
-          "name": "amount",
+          "name": "legs",
+          "type": {
+            "vec": {
+              "defined": "Leg"
+            }
+          }
+        },
+        {
+          "name": "orderAmount",
           "type": "u64"
+        },
+        {
+          "name": "requestOrder",
+          "type": {
+            "defined": "Order"
+          }
         }
       ]
     },
@@ -479,9 +481,11 @@
             "type": "u64"
           },
           {
-            "name": "instrument",
+            "name": "legs",
             "type": {
-              "defined": "Instrument"
+              "vec": {
+                "defined": "Leg"
+              }
             }
           },
           {
@@ -596,18 +600,31 @@
   ],
   "types": [
     {
-      "name": "Order",
+      "name": "Leg",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "Buy"
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
           },
           {
-            "name": "Sell"
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           },
           {
-            "name": "TwoWay"
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
           }
         ]
       }
@@ -628,6 +645,51 @@
           },
           {
             "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Side",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Venue",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Convergence"
+          },
+          {
+            "name": "PsyOptions"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Order",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "TwoWay"
           }
         ]
       }
