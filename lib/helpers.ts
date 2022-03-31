@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor';
-import { Program, Provider } from '@project-serum/anchor';
+import { Idl, Program, Provider } from '@project-serum/anchor';
 import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, PublicKey } from "@solana/web3.js";
 
@@ -439,8 +439,7 @@ export async function initializeProtocol(
 
 export async function getProgram(provider: Provider): Promise<Program> {
   const programId = new anchor.web3.PublicKey(idl.metadata.address);
-  // @ts-ignore
-  return new anchor.Program(idl, programId, provider);
+  return new anchor.Program(idl as Idl, programId, provider);
 }
 
 export async function requestAirdrop(
