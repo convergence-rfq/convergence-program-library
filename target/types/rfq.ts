@@ -176,11 +176,15 @@ export type Rfq = {
       "args": [
         {
           "name": "bid",
-          "type": "u64"
+          "type": {
+            "option": "u64"
+          }
         },
         {
           "name": "ask",
-          "type": "u64"
+          "type": {
+            "option": "u64"
+          }
         }
       ]
     },
@@ -560,7 +564,9 @@ export type Rfq = {
         "fields": [
           {
             "name": "ask",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "authority",
@@ -568,7 +574,9 @@ export type Rfq = {
           },
           {
             "name": "bid",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "bump",
@@ -837,11 +845,15 @@ export const IDL: Rfq = {
       "args": [
         {
           "name": "bid",
-          "type": "u64"
+          "type": {
+            "option": "u64"
+          }
         },
         {
           "name": "ask",
-          "type": "u64"
+          "type": {
+            "option": "u64"
+          }
         }
       ]
     },
@@ -1221,7 +1233,9 @@ export const IDL: Rfq = {
         "fields": [
           {
             "name": "ask",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "authority",
@@ -1229,7 +1243,9 @@ export const IDL: Rfq = {
           },
           {
             "name": "bid",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "bump",

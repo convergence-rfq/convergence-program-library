@@ -176,11 +176,15 @@
       "args": [
         {
           "name": "bid",
-          "type": "u64"
+          "type": {
+            "option": "u64"
+          }
         },
         {
           "name": "ask",
-          "type": "u64"
+          "type": {
+            "option": "u64"
+          }
         }
       ]
     },
@@ -560,7 +564,9 @@
         "fields": [
           {
             "name": "ask",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "authority",
@@ -568,7 +574,9 @@
           },
           {
             "name": "bid",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "bump",

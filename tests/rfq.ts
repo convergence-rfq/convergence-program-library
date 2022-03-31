@@ -70,7 +70,7 @@ let taker: Keypair;
 
 const TAKER_ORDER_AMOUNT = new anchor.BN(10); // Order to buy 10 asset tokens for XX? quote tokens
 const MAKER_A_ASK_AMOUNT = new anchor.BN(120);
-const MAKER_A_BID_AMOUNT = new anchor.BN(0);
+const MAKER_A_BID_AMOUNT = null;
 const MAKER_B_ASK_AMOUNT = new anchor.BN(110); // Winning maker
 const MAKER_B_BID_AMOUNT = new anchor.BN(105);
 const MAKER_C_ASK_AMOUNT = new anchor.BN(120);
@@ -161,7 +161,7 @@ describe('rfq', () => {
     const rfqId = 1;
 
     try {
-      const { rfqState } = await respond(provider, marketMakerA, rfqId, new anchor.BN(0), MAKER_A_ASK_AMOUNT, makerAAssetWallet, makerAQuoteWallet);
+      const { rfqState } = await respond(provider, marketMakerA, rfqId, null, MAKER_A_ASK_AMOUNT, makerAAssetWallet, makerAQuoteWallet);
       console.log('time delay:', rfqState.timeResponse - rfqState.unixTimestamp);
     } catch (err) {
       console.log('response timeout');
