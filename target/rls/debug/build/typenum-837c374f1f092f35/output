@@ -1,2 +1,0 @@
-cargo:rustc-env=TYPENUM_BUILD_CONSTS=/Users/vitalys/Developer/rfq/target/rls/debug/build/typenum-837c374f1f092f35/out/consts.rs
-cargo:rustc-env=TYPENUM_BUILD_OP=/Users/vitalys/Developer/rfq/target/rls/debug/build/typenum-837c374f1f092f35/out/op.rs

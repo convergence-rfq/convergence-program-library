@@ -1,5 +1,0 @@
-/Users/vitalys/Developer/rfq/target/rls/debug/deps/libanchor_attribute_event-da2eeb129b3fbc4c.dylib: /Users/vitalys/.cargo/registry/src/github.com-1ecc6299db9ec823/anchor-attribute-event-0.22.1/src/lib.rs
-
-/Users/vitalys/Developer/rfq/target/rls/debug/deps/anchor_attribute_event-da2eeb129b3fbc4c.d: /Users/vitalys/.cargo/registry/src/github.com-1ecc6299db9ec823/anchor-attribute-event-0.22.1/src/lib.rs
-
-/Users/vitalys/.cargo/registry/src/github.com-1ecc6299db9ec823/anchor-attribute-event-0.22.1/src/lib.rs:
