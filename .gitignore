@@ -1,4 +1,3 @@
-
 .anchor
 .DS_Store
 **/*.rs.bk
@@ -7,3 +6,4 @@ target/bpfel-unknown-unknown
 target/release
 target/deploy
 target/.rustc_info.json
+target/debug
