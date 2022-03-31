@@ -106,8 +106,8 @@ export async function returnCollateral(
   authority: Keypair,
   rfqId: number,
   orderId: number,
-  assetToken: PublicKey,
-  quoteToken: PublicKey,
+  assetWallet: PublicKey,
+  quoteWallet: PublicKey,
 ): Promise<any> {
   const program = await getProgram(provider);
 
@@ -138,11 +138,11 @@ export async function returnCollateral(
       accounts: {
         assetEscrow: assetEscrowPda,
         assetMint: assetMint,
-        assetToken: assetToken,
+        assetWallet: assetWallet,
         authority: authority.publicKey,
         order: orderPda,
         quoteEscrow: quoteEscrowPda,
-        quoteToken: quoteToken,
+        quoteWallet: quoteWallet,
         quoteMint: quoteMint,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
@@ -165,8 +165,8 @@ export async function settle(
   authority: Keypair,
   rfqId: number,
   orderId: number,
-  assetToken: PublicKey,
-  quoteToken: PublicKey,
+  assetWallet: PublicKey,
+  quoteWallet: PublicKey,
 ): Promise<any> {
   const program = await getProgram(provider);
 
@@ -197,12 +197,12 @@ export async function settle(
       accounts: {
         assetEscrow: assetEscrowPda,
         assetMint: assetMint,
-        assetToken: assetToken,
+        assetWallet: assetWallet,
         authority: authority.publicKey,
         order: orderPda,
         quoteEscrow: quoteEscrowPda,
         quoteMint: quoteMint,
-        quoteToken: quoteToken,
+        quoteWallet: quoteWallet,
         rfq: rfqPda,
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -225,8 +225,8 @@ export async function confirm(
   rfqId: number,
   confirmOrder: object,
   authority: Keypair,
-  assetToken: PublicKey,
-  quoteToken: PublicKey,
+  assetWallet: PublicKey,
+  quoteWallet: PublicKey,
 ): Promise<any> {
   const program = await getProgram(provider);
 
@@ -257,11 +257,11 @@ export async function confirm(
     {
       accounts: {
         assetMint: assetMint,
-        assetToken: assetToken,
+        assetWallet: assetWallet,
         authority: authority.publicKey,
         assetEscrow: assetEscrowPda,
         order: orderPda,
-        quoteToken: quoteToken,
+        quoteWallet: quoteWallet,
         quoteEscrow: quoteEscrowPda,
         quoteMint: quoteMint,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -286,8 +286,8 @@ export async function respond(
   rfqId: number,
   bid: anchor.BN,
   ask: anchor.BN,
-  assetToken: PublicKey,
-  quoteToken: PublicKey
+  assetWallet: PublicKey,
+  quoteWallet: PublicKey
 ): Promise<any> {
   const program = await getProgram(provider);
 
@@ -321,13 +321,13 @@ export async function respond(
     {
       accounts: {
         assetMint: assetMint,
-        assetToken: assetToken,
+        assetWallet: assetWallet,
         authority: authority.publicKey,
         assetEscrow: assetEscrowPda,
         quoteEscrow: quoteEscrowPda,
         order: orderPda,
         quoteMint: quoteMint,
-        quoteToken: quoteToken,
+        quoteWallet: quoteWallet,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
         systemProgram: anchor.web3.SystemProgram.programId,

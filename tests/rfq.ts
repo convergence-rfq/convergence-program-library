@@ -51,14 +51,17 @@ import {
 
 let assetMint: Token;
 let quoteMint: Token;
-let authorityAssetToken: PublicKey;
-let authorityQuoteToken: PublicKey;
-let makerAAssetToken: PublicKey;
-let makerAQuoteToken: PublicKey;
-let makerBAssetToken: PublicKey;
-let makerBQuoteToken: PublicKey;
-let makerCAssetToken: PublicKey;
-let makerCQuoteToken: PublicKey;
+
+let authorityAssetWallet: PublicKey;
+let authorityQuoteWallet: PublicKey;
+
+let makerAAssetWallet: PublicKey;
+let makerAQuoteWallet: PublicKey;
+let makerBAssetWallet: PublicKey;
+let makerBQuoteWallet: PublicKey;
+let makerCAssetWallet: PublicKey;
+let makerCQuoteWallet: PublicKey;
+
 let mintAuthority: Keypair;
 let marketMakerA: Keypair;
 let marketMakerB: Keypair;
@@ -114,22 +117,22 @@ describe('rfq', () => {
       TOKEN_PROGRAM_ID
     );
 
-    authorityAssetToken = await assetMint.createAssociatedTokenAccount(taker.publicKey);
-    authorityQuoteToken = await quoteMint.createAssociatedTokenAccount(taker.publicKey);
-    makerAAssetToken = await assetMint.createAssociatedTokenAccount(marketMakerA.publicKey);
-    makerAQuoteToken = await quoteMint.createAssociatedTokenAccount(marketMakerA.publicKey);
-    makerBAssetToken = await assetMint.createAssociatedTokenAccount(marketMakerB.publicKey);
-    makerBQuoteToken = await quoteMint.createAssociatedTokenAccount(marketMakerB.publicKey);
-    makerCAssetToken = await assetMint.createAssociatedTokenAccount(marketMakerC.publicKey);
-    makerCQuoteToken = await quoteMint.createAssociatedTokenAccount(marketMakerC.publicKey);
+    authorityAssetWallet = await assetMint.createAssociatedTokenAccount(taker.publicKey);
+    authorityQuoteWallet = await quoteMint.createAssociatedTokenAccount(taker.publicKey);
+    makerAAssetWallet = await assetMint.createAssociatedTokenAccount(marketMakerA.publicKey);
+    makerAQuoteWallet = await quoteMint.createAssociatedTokenAccount(marketMakerA.publicKey);
+    makerBAssetWallet = await assetMint.createAssociatedTokenAccount(marketMakerB.publicKey);
+    makerBQuoteWallet = await quoteMint.createAssociatedTokenAccount(marketMakerB.publicKey);
+    makerCAssetWallet = await assetMint.createAssociatedTokenAccount(marketMakerC.publicKey);
+    makerCQuoteWallet = await quoteMint.createAssociatedTokenAccount(marketMakerC.publicKey);
 
-    await quoteMint.mintTo(authorityQuoteToken, mintAuthority.publicKey, [], MINT_AIRDROP);
-    await assetMint.mintTo(makerAAssetToken, mintAuthority.publicKey, [], MINT_AIRDROP);
-    await quoteMint.mintTo(makerAQuoteToken, mintAuthority.publicKey, [], MINT_AIRDROP);
-    await assetMint.mintTo(makerBAssetToken, mintAuthority.publicKey, [], MINT_AIRDROP);
-    await quoteMint.mintTo(makerBQuoteToken, mintAuthority.publicKey, [], MINT_AIRDROP);
-    await assetMint.mintTo(makerCAssetToken, mintAuthority.publicKey, [], MINT_AIRDROP);
-    await quoteMint.mintTo(makerCQuoteToken, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await quoteMint.mintTo(authorityQuoteWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await assetMint.mintTo(makerAAssetWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await quoteMint.mintTo(makerAQuoteWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await assetMint.mintTo(makerBAssetWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await quoteMint.mintTo(makerBQuoteWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await assetMint.mintTo(makerCAssetWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await quoteMint.mintTo(makerCQuoteWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
   });
 
   it('DAO initializes protocol', async () => {
@@ -158,7 +161,7 @@ describe('rfq', () => {
     const rfqId = 1;
 
     try {
-      const { rfqState } = await respond(provider, marketMakerA, rfqId, new anchor.BN(0), MAKER_A_ASK_AMOUNT, makerAAssetToken, makerAQuoteToken);
+      const { rfqState } = await respond(provider, marketMakerA, rfqId, new anchor.BN(0), MAKER_A_ASK_AMOUNT, makerAAssetWallet, makerAQuoteWallet);
       console.log('time delay:', rfqState.timeResponse - rfqState.unixTimestamp);
     } catch (err) {
       console.log('response timeout');
@@ -191,17 +194,17 @@ describe('rfq', () => {
   it('Maker responds to RFQ 2', async () => {
     const rfqId = 2;
 
-    const response1 = await respond(provider, marketMakerA, rfqId, MAKER_A_BID_AMOUNT, MAKER_A_ASK_AMOUNT, makerAAssetToken, makerAQuoteToken);
-    console.log('response 1 two-way ask:', response1.rfqState.bestAskAmount.toString());
-    console.log('response 1 two-way bid:', response1.rfqState.bestBidAmount.toString());
+    const response1 = await respond(provider, marketMakerA, rfqId, MAKER_A_BID_AMOUNT, MAKER_A_ASK_AMOUNT, makerAAssetWallet, makerAQuoteWallet);
+    console.log('response 1 two-way ask:', response1.rfqState.bestAskAmount?.toString());
+    console.log('response 1 two-way bid:', response1.rfqState.bestBidAmount?.toString());
 
-    const response2 = await respond(provider, marketMakerB, rfqId, MAKER_B_BID_AMOUNT, MAKER_B_ASK_AMOUNT, makerBAssetToken, makerBQuoteToken);
-    console.log('response 2 two-way ask:', response2.rfqState.bestAskAmount.toString());
-    console.log('response 2 two-way bid:', response2.rfqState.bestBidAmount.toString());
+    const response2 = await respond(provider, marketMakerB, rfqId, MAKER_B_BID_AMOUNT, MAKER_B_ASK_AMOUNT, makerBAssetWallet, makerBQuoteWallet);
+    console.log('response 2 two-way ask:', response2.rfqState.bestAskAmount?.toString());
+    console.log('response 2 two-way bid:', response2.rfqState.bestBidAmount?.toString());
 
-    const response3 = await respond(provider, marketMakerC, rfqId, MAKER_C_BID_AMOUNT, MAKER_C_ASK_AMOUNT, makerCAssetToken, makerCQuoteToken);
-    console.log('response 3 two-way ask:', response3.rfqState.bestAskAmount.toString());
-    console.log('response 3 two-way bid:', response3.rfqState.bestBidAmount.toString());
+    const response3 = await respond(provider, marketMakerC, rfqId, MAKER_C_BID_AMOUNT, MAKER_C_ASK_AMOUNT, makerCAssetWallet, makerCQuoteWallet);
+    console.log('response 3 two-way ask:', response3.rfqState.bestAskAmount?.toString());
+    console.log('response 3 two-way bid:', response3.rfqState.bestBidAmount?.toString());
 
     const makerAassetBalance = await getBalance(provider, marketMakerA, assetMint.publicKey);
     const makerAquoteBalance = await getBalance(provider, marketMakerA, quoteMint.publicKey);
@@ -218,18 +221,18 @@ describe('rfq', () => {
     console.log('maker C asset balance:', makerCassetBalance);
     console.log('maker C quote balance:', makerCquoteBalance);
 
-    assert.equal(response1.rfqState.bestAskAmount.toString(), MAKER_A_ASK_AMOUNT.toString());
-    assert.equal(response3.rfqState.bestAskAmount.toString(), MAKER_B_ASK_AMOUNT.toString());
-    assert.equal(response3.rfqState.bestBidAmount.toString(), MAKER_B_BID_AMOUNT.toString());
+    assert.equal(response1.rfqState.bestAskAmount?.toString(), MAKER_A_ASK_AMOUNT.toString());
+    assert.equal(response3.rfqState.bestAskAmount?.toString(), MAKER_B_ASK_AMOUNT.toString());
+    assert.equal(response3.rfqState.bestBidAmount?.toString(), MAKER_B_BID_AMOUNT.toString());
   });
 
   it('Taker confirms RFQ 2 price pre-settlement', async () => {
     const rfqId = 2;
     const confirmOrder = Order.Buy;
 
-    const { rfqState } = await confirm(provider, rfqId, confirmOrder, taker, authorityAssetToken, authorityQuoteToken);
-    console.log('best ask confirmation:', rfqState.bestAskAmount.toNumber());
-    console.log('best bid confirmation:', rfqState.bestBidAmount.toNumber());
+    const { rfqState } = await confirm(provider, rfqId, confirmOrder, taker, authorityAssetWallet, authorityQuoteWallet);
+    console.log('best ask confirmation:', rfqState.bestAskAmount?.toNumber());
+    console.log('best bid confirmation:', rfqState.bestBidAmount?.toNumber());
 
     const assetMintBalance = await getBalance(provider, taker, assetMint.publicKey);
     const quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey);
@@ -249,8 +252,8 @@ describe('rfq', () => {
     const response2 = await lastLook(provider, marketMakerB, rfqId, 2);
     const response3 = await lastLook(provider, marketMakerC, rfqId, 3);
 
-    console.log('best ask approved:', response1.rfqState.bestAskAmount.toString());
-    console.log('best bid approved:', response2.rfqState.bestBidAmount.toString());
+    console.log('best ask approved:', response1.rfqState.bestAskAmount?.toString());
+    console.log('best bid approved:', response2.rfqState.bestBidAmount?.toString());
     console.log('confirm order:', response3.rfqState.confirmOrder.toString());
 
     assert.equal(response1.rfqState.approved, false);
@@ -261,10 +264,10 @@ describe('rfq', () => {
   it('Miner returns collateral for RFQ 2', async () => {
     const rfqId = 2;
 
-    await returnCollateral(provider, taker, rfqId, 0, makerAAssetToken, authorityQuoteToken);
-    await returnCollateral(provider, marketMakerA, rfqId, 1, makerAAssetToken, makerAQuoteToken);
-    await returnCollateral(provider, marketMakerB, rfqId, 2, makerBAssetToken, makerBQuoteToken);
-    await returnCollateral(provider, marketMakerC, rfqId, 3, makerCAssetToken, makerCQuoteToken);
+    await returnCollateral(provider, taker, rfqId, 0, makerAAssetWallet, authorityQuoteWallet);
+    await returnCollateral(provider, marketMakerA, rfqId, 1, makerAAssetWallet, makerAQuoteWallet);
+    await returnCollateral(provider, marketMakerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet);
+    await returnCollateral(provider, marketMakerC, rfqId, 3, makerCAssetWallet, makerCQuoteWallet);
 
     const takerAassetBalance = await getBalance(provider, taker, assetMint.publicKey);
     const takerAquoteBalance = await getBalance(provider, taker, quoteMint.publicKey);
@@ -290,9 +293,9 @@ describe('rfq', () => {
   it('Miner settles RFQ 2', async () => {
     const rfqId = 2;
 
-    await settle(provider, taker, rfqId, 0, authorityAssetToken, authorityQuoteToken);
-    await settle(provider, marketMakerA, rfqId, 1, makerAAssetToken, makerAQuoteToken);
-    await settle(provider, marketMakerB, rfqId, 2, makerBAssetToken, makerBQuoteToken);
+    await settle(provider, taker, rfqId, 0, authorityAssetWallet, authorityQuoteWallet);
+    await settle(provider, marketMakerA, rfqId, 1, makerAAssetWallet, makerAQuoteWallet);
+    await settle(provider, marketMakerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet);
 
     const takerAssetBalance = await getBalance(provider, taker, assetMint.publicKey);
     const takerQuoteBalance = await getBalance(provider, taker, quoteMint.publicKey);

@@ -55,8 +55,10 @@ pub mod rfq {
         rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
         rfq.asset_mint = ctx.accounts.asset_mint.key();
         rfq.approved = false;
+        rfq.best_ask_address = None;
         rfq.best_ask_amount = None;
-        rfq.best_bid_amount = Some(0);
+        rfq.best_bid_address = None;
+        rfq.best_bid_amount = None;
         rfq.bump = *ctx.bumps.get(RFQ_SEED).unwrap();
         rfq.expired = false;
         rfq.expiry = expiry;
@@ -96,7 +98,7 @@ pub mod rfq {
                 CpiContext::new(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.asset_token.to_account_info(),
+                        from: ctx.accounts.asset_wallet.to_account_info(),
                         to: ctx.accounts.asset_escrow.to_account_info(),
                         authority: ctx.accounts.authority.to_account_info(),
                     },
@@ -117,7 +119,7 @@ pub mod rfq {
                 CpiContext::new(
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
-                        from: ctx.accounts.quote_token.to_account_info(),
+                        from: ctx.accounts.quote_wallet.to_account_info(),
                         to: ctx.accounts.quote_escrow.to_account_info(),
                         authority: ctx.accounts.authority.to_account_info(),
                     },
@@ -127,7 +129,7 @@ pub mod rfq {
 
             order.bid = bid;
 
-            if bid > rfq.best_bid_amount.unwrap() {
+            if rfq.best_bid_amount.is_none() || bid > rfq.best_bid_amount.unwrap() {
                 rfq.best_bid_amount = Some(bid);
                 rfq.best_bid_address = Some(authority);
             }
@@ -157,7 +159,7 @@ pub mod rfq {
                     CpiContext::new(
                         ctx.accounts.token_program.to_account_info(),
                         anchor_spl::token::Transfer {
-                            from: ctx.accounts.quote_token.to_account_info(),
+                            from: ctx.accounts.quote_wallet.to_account_info(),
                             to: ctx.accounts.quote_escrow.to_account_info(),
                             authority: ctx.accounts.authority.to_account_info(),
                         },
@@ -170,7 +172,7 @@ pub mod rfq {
                     CpiContext::new(
                         ctx.accounts.token_program.to_account_info(),
                         anchor_spl::token::Transfer {
-                            from: ctx.accounts.asset_token.to_account_info(),
+                            from: ctx.accounts.asset_wallet.to_account_info(),
                             to: ctx.accounts.asset_escrow.to_account_info(),
                             authority: ctx.accounts.authority.to_account_info(),
                         },
@@ -221,7 +223,7 @@ pub mod rfq {
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.asset_escrow.to_account_info(),
-                        to: ctx.accounts.asset_token.to_account_info(),
+                        to: ctx.accounts.asset_wallet.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
@@ -249,7 +251,7 @@ pub mod rfq {
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.quote_escrow.to_account_info(),
-                        to: ctx.accounts.quote_token.to_account_info(),
+                        to: ctx.accounts.quote_wallet.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
@@ -313,7 +315,7 @@ pub mod rfq {
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.asset_escrow.to_account_info(),
-                        to: ctx.accounts.asset_token.to_account_info(),
+                        to: ctx.accounts.asset_wallet.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
@@ -339,7 +341,7 @@ pub mod rfq {
                     ctx.accounts.token_program.to_account_info(),
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.quote_escrow.to_account_info(),
-                        to: ctx.accounts.quote_token.to_account_info(),
+                        to: ctx.accounts.quote_wallet.to_account_info(),
                         authority: rfq.to_account_info(),
                     },
                     &[
@@ -521,9 +523,9 @@ pub struct Respond<'info> {
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     #[account(mut)]
-    pub asset_token: Box<Account<'info, TokenAccount>>,
+    pub asset_wallet: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub quote_token: Box<Account<'info, TokenAccount>>,
+    pub quote_wallet: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
@@ -554,7 +556,7 @@ pub struct Confirm<'info> {
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     #[account(mut)]
-    pub asset_token: Box<Account<'info, TokenAccount>>,
+    pub asset_wallet: Box<Account<'info, TokenAccount>>,
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(
         mut,
@@ -583,7 +585,7 @@ pub struct Confirm<'info> {
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     pub quote_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
-    pub quote_token: Box<Account<'info, TokenAccount>>,
+    pub quote_wallet: Box<Account<'info, TokenAccount>>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
@@ -617,9 +619,9 @@ pub struct ReturnCollateral<'info> {
     pub authority: Signer<'info>,
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
-    pub asset_token: Box<Account<'info, TokenAccount>>,
+    pub asset_wallet: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub quote_token: Box<Account<'info, TokenAccount>>,
+    pub quote_wallet: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
@@ -652,7 +654,7 @@ pub struct ReturnCollateral<'info> {
 pub struct Settle<'info> {
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
-    pub asset_token: Box<Account<'info, TokenAccount>>,
+    pub asset_wallet: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
@@ -684,7 +686,7 @@ pub struct Settle<'info> {
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     #[account(mut)]
-    pub quote_token: Box<Account<'info, TokenAccount>>,
+    pub quote_wallet: Box<Account<'info, TokenAccount>>,
     pub quote_mint: Box<Account<'info, Mint>>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,

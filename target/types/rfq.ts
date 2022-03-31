@@ -128,12 +128,12 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -198,7 +198,7 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -228,7 +228,7 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -292,12 +292,12 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -348,7 +348,7 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -378,7 +378,7 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -789,12 +789,12 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -859,7 +859,7 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -889,7 +889,7 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -953,12 +953,12 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -1009,7 +1009,7 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -1039,7 +1039,7 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },

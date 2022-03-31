@@ -128,12 +128,12 @@
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -198,7 +198,7 @@
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -228,7 +228,7 @@
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -292,12 +292,12 @@
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -348,7 +348,7 @@
           "isSigner": false
         },
         {
-          "name": "assetToken",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -378,7 +378,7 @@
           "isSigner": false
         },
         {
-          "name": "quoteToken",
+          "name": "quoteWallet",
           "isMut": true,
           "isSigner": false
         },
