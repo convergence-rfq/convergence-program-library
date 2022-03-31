@@ -4,8 +4,6 @@ use solana_program::sysvar::clock::Clock;
 
 declare_id!("6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2");
 
-const U64_UPPER_LIMIT: u64 = 18446744073709551615;
-
 // Do not use hyphens in seed
 const ASSET_ESCROW_SEED: &str = "asset_escrow";
 const ORDER_SEED: &str = "order";
@@ -57,8 +55,8 @@ pub mod rfq {
         rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
         rfq.asset_mint = ctx.accounts.asset_mint.key();
         rfq.approved = false;
-        rfq.best_ask_amount = U64_UPPER_LIMIT;
-        rfq.best_bid_amount = 0;
+        rfq.best_ask_amount = None;
+        rfq.best_bid_amount = Some(0);
         rfq.bump = *ctx.bumps.get(RFQ_SEED).unwrap();
         rfq.expired = false;
         rfq.expiry = expiry;
@@ -70,7 +68,7 @@ pub mod rfq {
         rfq.request_order = request_order;
         rfq.response_count = 0;
         rfq.taker_address = *ctx.accounts.authority.key;
-        rfq.time_begin = Clock::get().unwrap().unix_timestamp;
+        rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
 
         Ok(())
     }
@@ -108,9 +106,9 @@ pub mod rfq {
 
             order.ask = ask;
 
-            if ask < rfq.best_ask_amount {
-                rfq.best_ask_amount = ask;
-                rfq.best_ask_address = authority;
+            if rfq.best_ask_amount.is_none() || ask < rfq.best_ask_amount.unwrap() {
+                rfq.best_ask_amount = Some(ask);
+                rfq.best_ask_address = Some(authority);
             }
         }
 
@@ -129,9 +127,9 @@ pub mod rfq {
 
             order.bid = bid;
 
-            if bid > rfq.best_bid_amount {
-                rfq.best_bid_amount = bid;
-                rfq.best_bid_address = authority;
+            if bid > rfq.best_bid_amount.unwrap() {
+                rfq.best_bid_amount = Some(bid);
+                rfq.best_bid_address = Some(authority);
             }
         }
 
@@ -164,7 +162,7 @@ pub mod rfq {
                             authority: ctx.accounts.authority.to_account_info(),
                         },
                     ),
-                    rfq.best_ask_amount,
+                    rfq.best_ask_amount.unwrap(),
                 )?;
             }
             Order::Sell => {
@@ -177,7 +175,7 @@ pub mod rfq {
                             authority: ctx.accounts.authority.to_account_info(),
                         },
                     ),
-                    rfq.best_bid_amount,
+                    rfq.best_bid_amount.unwrap(),
                 )?;
             }
             Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
@@ -194,8 +192,8 @@ pub mod rfq {
         let order = &ctx.accounts.order;
 
         let is_winner = match rfq.confirm_order {
-            Order::Buy => rfq.best_ask_amount == order.ask,
-            Order::Sell => rfq.best_bid_amount == order.bid,
+            Order::Buy => rfq.best_ask_amount.unwrap() == order.ask,
+            Order::Sell => rfq.best_bid_amount.unwrap() == order.bid,
             Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
         };
 
@@ -215,7 +213,9 @@ pub mod rfq {
         let order = &mut ctx.accounts.order;
         order.collateral_returned = true;
 
-        if order.ask > 0 && (rfq.best_ask_amount != order.ask || rfq.confirm_order == Order::Sell) {
+        if order.ask > 0
+            && (rfq.best_ask_amount.unwrap() != order.ask || rfq.confirm_order == Order::Sell)
+        {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -241,7 +241,9 @@ pub mod rfq {
             )?;
         }
 
-        if order.bid > 0 && (rfq.best_ask_amount != order.ask || rfq.confirm_order == Order::Buy) {
+        if order.bid > 0
+            && (rfq.best_ask_amount.unwrap() != order.ask || rfq.confirm_order == Order::Buy)
+        {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -290,15 +292,15 @@ pub mod rfq {
                 if authority_address == taker_address {
                     asset_amount = rfq.order_amount;
                 }
-                if rfq.best_ask_amount == order.ask {
+                if rfq.best_ask_amount.unwrap() == order.ask {
                     quote_amount = order.ask;
                 }
             }
             Order::Sell => {
                 if authority_address == taker_address {
-                    quote_amount = rfq.best_bid_amount;
+                    quote_amount = rfq.best_bid_amount.unwrap();
                 }
-                if rfq.best_bid_amount == order.bid {
+                if rfq.best_bid_amount.unwrap() == order.bid {
                     asset_amount = rfq.order_amount;
                 }
             }
@@ -369,10 +371,10 @@ pub struct RfqState {
     pub approved: bool,
     pub asset_escrow_bump: u8,
     pub asset_mint: Pubkey,
-    pub best_ask_amount: u64,
-    pub best_bid_amount: u64,
-    pub best_ask_address: Pubkey,
-    pub best_bid_address: Pubkey,
+    pub best_ask_amount: Option<u64>,
+    pub best_bid_amount: Option<u64>,
+    pub best_ask_address: Option<Pubkey>,
+    pub best_bid_address: Option<Pubkey>,
     pub bump: u8,
     pub confirm_order: Order,
     pub confirmed: bool,
@@ -386,12 +388,12 @@ pub struct RfqState {
     pub response_count: u64,
     pub request_order: Order,
     pub taker_address: Pubkey,
-    pub time_begin: i64,
     pub time_response: i64,
+    pub unix_timestamp: i64,
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 5) + (8 * 8) + (1 * 6) + (1 * 3);
+    pub const LEN: usize = 8 + (32 * 5) + (8 * 8) + (1 * 6) + (1 * 3) + (1 * 4);
 }
 
 /// Global state for the entire RFQ system
@@ -746,9 +748,8 @@ pub fn respond_access_control<'info>(
     let rfq = &ctx.accounts.rfq;
     let expiry = rfq.expiry;
     let order_amount = rfq.order_amount;
-    let time_begin = rfq.time_begin;
-    let unix_timestamp = Clock::get().unwrap().unix_timestamp;
-    let delay = unix_timestamp - time_begin;
+    let current_unix_timestamp = Clock::get().unwrap().unix_timestamp;
+    let delay = current_unix_timestamp - rfq.unix_timestamp;
 
     require!(delay < expiry, ProtocolError::ResponseTimeElapsed);
     require!(bid > 0 || ask > 0, ProtocolError::InvalidQuote);

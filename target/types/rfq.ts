@@ -426,19 +426,27 @@ export type Rfq = {
           },
           {
             "name": "bestAskAmount",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "bestBidAmount",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "bestAskAddress",
-            "type": "publicKey"
+            "type": {
+              "option": "publicKey"
+            }
           },
           {
             "name": "bestBidAddress",
-            "type": "publicKey"
+            "type": {
+              "option": "publicKey"
+            }
           },
           {
             "name": "bump",
@@ -499,11 +507,11 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "timeBegin",
+            "name": "timeResponse",
             "type": "i64"
           },
           {
-            "name": "timeResponse",
+            "name": "unixTimestamp",
             "type": "i64"
           }
         ]
@@ -1079,19 +1087,27 @@ export const IDL: Rfq = {
           },
           {
             "name": "bestAskAmount",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "bestBidAmount",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "bestAskAddress",
-            "type": "publicKey"
+            "type": {
+              "option": "publicKey"
+            }
           },
           {
             "name": "bestBidAddress",
-            "type": "publicKey"
+            "type": {
+              "option": "publicKey"
+            }
           },
           {
             "name": "bump",
@@ -1152,11 +1168,11 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "timeBegin",
+            "name": "timeResponse",
             "type": "i64"
           },
           {
-            "name": "timeResponse",
+            "name": "unixTimestamp",
             "type": "i64"
           }
         ]

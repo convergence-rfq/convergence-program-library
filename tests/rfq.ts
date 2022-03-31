@@ -159,7 +159,7 @@ describe('rfq', () => {
 
     try {
       const { rfqState } = await respond(provider, marketMakerA, rfqId, new anchor.BN(0), MAKER_A_ASK_AMOUNT, makerAAssetToken, makerAQuoteToken);
-      console.log('time delay:', rfqState.timeResponse - rfqState.timeBegin);
+      console.log('time delay:', rfqState.timeResponse - rfqState.unixTimestamp);
     } catch (err) {
       console.log('response timeout');
     }
