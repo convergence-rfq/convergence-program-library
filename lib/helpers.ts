@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor';
-import { Idl, Program, Provider } from '@project-serum/anchor';
+import { Idl, Program, Provider, Wallet } from '@project-serum/anchor';
 import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, PublicKey } from "@solana/web3.js";
 
@@ -96,7 +96,7 @@ export async function getRfqs(provider: Provider): Promise<object[]> {
 
 export async function lastLook(
   provider: Provider,
-  authority: Keypair,
+  authority: Wallet,
   rfqId: number,
   orderId: number
 ): Promise<any> {
@@ -118,7 +118,7 @@ export async function lastLook(
         order: orderPda,
         rfq: rfqPda,
       },
-      signers: [authority],
+      signers: [authority.payer],
     });
 
   const rfqState = await program.account.rfqState.fetch(rfqPda);
@@ -133,7 +133,7 @@ export async function lastLook(
 
 export async function returnCollateral(
   provider: Provider,
-  authority: Keypair,
+  authority: Wallet,
   rfqId: number,
   orderId: number,
   assetWallet: PublicKey,
@@ -179,7 +179,7 @@ export async function returnCollateral(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID
       },
-      signers: [authority]
+      signers: [authority.payer]
     });
 
   rfqState = await program.account.rfqState.fetch(rfqPda);
@@ -192,7 +192,7 @@ export async function returnCollateral(
 
 export async function settle(
   provider: Provider,
-  authority: Keypair,
+  authority: Wallet,
   rfqId: number,
   orderId: number,
   assetWallet: PublicKey,
@@ -238,7 +238,7 @@ export async function settle(
         tokenProgram: TOKEN_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       },
-      signers: [authority]
+      signers: [authority.payer]
     }
   );
 
@@ -254,7 +254,7 @@ export async function confirm(
   provider: Provider,
   rfqId: number,
   confirmOrder: object,
-  authority: Keypair,
+  authority: Wallet,
   assetWallet: PublicKey,
   quoteWallet: PublicKey,
 ): Promise<any> {
@@ -299,7 +299,7 @@ export async function confirm(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID
       },
-      signers: [authority]
+      signers: [authority.payer]
     });
 
   rfqState = await program.account.rfqState.fetch(rfqPda);
@@ -312,7 +312,7 @@ export async function confirm(
 
 export async function respond(
   provider: Provider,
-  authority: Keypair,
+  authority: Wallet,
   rfqId: number,
   bid: anchor.BN,
   ask: anchor.BN,
@@ -363,7 +363,7 @@ export async function respond(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
-      signers: [authority],
+      signers: [authority.payer],
     });
 
   rfqState = await program.account.rfqState.fetch(rfqPda);
@@ -376,7 +376,7 @@ export async function respond(
 
 export async function request(
   assetMint: Token,
-  authority: Keypair,
+  authority: Wallet,
   expiry: anchor.BN,
   legs: object[],
   orderAmount: anchor.BN,
@@ -425,7 +425,7 @@ export async function request(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
-      signers: [authority],
+      signers: [authority.payer]
     });
 
   protocolState = await program.account.protocolState.fetch(protocolPda);
@@ -440,7 +440,7 @@ export async function request(
 
 export async function initializeProtocol(
   provider: Provider,
-  authority: Keypair,
+  authority: Wallet,
   feeDenominator: number,
   feeNumerator: number
 ): Promise<any> {
@@ -458,7 +458,7 @@ export async function initializeProtocol(
         protocol: protocolPda,
         systemProgram: anchor.web3.SystemProgram.programId
       },
-      signers: [authority],
+      signers: [authority.payer],
     });
   const protocolState = await program.account.protocolState.fetch(protocolPda)
   return { tx, protocolState };

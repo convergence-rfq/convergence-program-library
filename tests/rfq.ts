@@ -29,6 +29,7 @@
   */
 
 import * as anchor from '@project-serum/anchor';
+import { Wallet } from '@project-serum/anchor';
 import * as assert from 'assert';
 import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
@@ -65,13 +66,13 @@ let makerBQuoteWallet: PublicKey;
 let makerCAssetWallet: PublicKey;
 let makerCQuoteWallet: PublicKey;
 
-let dao: Keypair;
-let marketMakerA: Keypair;
-let marketMakerB: Keypair;
-let marketMakerC: Keypair;
-let mintAuthority: Keypair;
-let miner: Keypair;
-let taker: Keypair;
+let dao: Wallet;
+let marketMakerA: Wallet;
+let marketMakerB: Wallet;
+let marketMakerC: Wallet;
+let mintAuthority: Wallet;
+let miner: Wallet;
+let taker: Wallet;
 
 const TAKER_ORDER_AMOUNT = new anchor.BN(10); // Order to buy 10 asset tokens for XX? quote tokens
 const MAKER_A_ASK_AMOUNT = new anchor.BN(120);
@@ -91,13 +92,13 @@ describe('rfq', () => {
   before(async () => {
     program = await getProgram(provider);
 
-    dao = Keypair.generate();
-    marketMakerA = Keypair.generate();
-    marketMakerB = Keypair.generate();
-    marketMakerC = Keypair.generate();
-    miner = Keypair.generate();
-    mintAuthority = Keypair.generate();
-    taker = Keypair.generate();
+    dao = new Wallet(Keypair.generate());
+    marketMakerA = new Wallet(Keypair.generate());
+    marketMakerB = new Wallet(Keypair.generate());
+    marketMakerC = new Wallet(Keypair.generate());
+    miner = new Wallet(Keypair.generate());
+    mintAuthority = new Wallet(Keypair.generate());
+    taker = new Wallet(Keypair.generate());
 
     await requestAirdrop(provider, dao.publicKey, LAMPORTS_PER_SOL * 10);
     await requestAirdrop(provider, miner.publicKey, LAMPORTS_PER_SOL * 10);
@@ -114,7 +115,7 @@ describe('rfq', () => {
     console.log('mint wallet balance:', mintAuthorityBalance);
 
     assetMint = await Token.createMint(program.provider.connection,
-      mintAuthority,
+      mintAuthority.payer,
       mintAuthority.publicKey,
       mintAuthority.publicKey,
       0,
@@ -122,7 +123,7 @@ describe('rfq', () => {
     );
 
     quoteMint = await Token.createMint(program.provider.connection,
-      mintAuthority,
+      mintAuthority.payer,
       mintAuthority.publicKey,
       mintAuthority.publicKey,
       0,
