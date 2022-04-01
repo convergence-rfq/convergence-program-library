@@ -96,6 +96,7 @@ export async function getRfqs(provider: Provider): Promise<object[]> {
 
 export async function lastLook(
   provider: Provider,
+  // @ts-ignore
   authority: Wallet,
   rfqId: number,
   orderId: number
@@ -133,6 +134,7 @@ export async function lastLook(
 
 export async function returnCollateral(
   provider: Provider,
+  // @ts-ignore
   authority: Wallet,
   rfqId: number,
   orderId: number,
@@ -192,6 +194,7 @@ export async function returnCollateral(
 
 export async function settle(
   provider: Provider,
+  // @ts-ignore
   authority: Wallet,
   rfqId: number,
   orderId: number,
@@ -254,6 +257,7 @@ export async function confirm(
   provider: Provider,
   rfqId: number,
   confirmOrder: object,
+  // @ts-ignore
   authority: Wallet,
   assetWallet: PublicKey,
   quoteWallet: PublicKey,
@@ -312,6 +316,7 @@ export async function confirm(
 
 export async function respond(
   provider: Provider,
+  // @ts-ignore
   authority: Wallet,
   rfqId: number,
   bid: anchor.BN,
@@ -376,6 +381,7 @@ export async function respond(
 
 export async function request(
   assetMint: Token,
+  // @ts-ignore
   authority: Wallet,
   expiry: anchor.BN,
   legs: object[],
@@ -440,6 +446,7 @@ export async function request(
 
 export async function initializeProtocol(
   provider: Provider,
+  // @ts-ignore
   authority: Wallet,
   feeDenominator: number,
   feeNumerator: number
@@ -480,7 +487,12 @@ export async function requestAirdrop(
   );
 }
 
-export async function getBalance(provider: Provider, payer: Wallet, mint: PublicKey) {
+export async function getBalance(
+  provider: Provider,
+  // @ts-ignore
+  payer: Wallet,
+  mint: PublicKey
+) {
   const program = await getProgram(provider)
   try {
     const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(payer.publicKey, { mint });
