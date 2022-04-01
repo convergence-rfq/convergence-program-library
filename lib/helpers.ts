@@ -4,7 +4,7 @@ import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, PublicKey } from "@solana/web3.js";
 
 import { Rfq } from '../target/types/rfq';
-import * as idl from '../target/idl/rfq.json';
+import { default as idl } from '../target/idl/rfq.json';
 
 export const RFQ_SEED = 'rfq';
 export const ORDER_SEED = 'order';
