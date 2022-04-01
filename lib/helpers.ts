@@ -480,7 +480,7 @@ export async function requestAirdrop(
   );
 }
 
-export async function getBalance(provider: Provider, payer: Keypair, mint: PublicKey) {
+export async function getBalance(provider: Provider, payer: Wallet, mint: PublicKey) {
   const program = await getProgram(provider)
   try {
     const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(payer.publicKey, { mint });
