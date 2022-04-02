@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["rfq"] = [{"text":"impl AccountSerialize for <a class=\"struct\" href=\"rfq/struct.RfqState.html\" title=\"struct rfq::RfqState\">RfqState</a>","synthetic":false,"types":["rfq::RfqState"]},{"text":"impl AccountSerialize for <a class=\"struct\" href=\"rfq/struct.ProtocolState.html\" title=\"struct rfq::ProtocolState\">ProtocolState</a>","synthetic":false,"types":["rfq::ProtocolState"]},{"text":"impl AccountSerialize for <a class=\"struct\" href=\"rfq/struct.OrderState.html\" title=\"struct rfq::OrderState\">OrderState</a>","synthetic":false,"types":["rfq::OrderState"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
