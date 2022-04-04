@@ -169,6 +169,7 @@ describe('rfq', () => {
     const { rfqState, protocolState } = await request(assetMint, taker, expiry, legs, orderAmount, provider, quoteMint, requestOrder);
     //assert.deepEqual(rfqState.legs, legs);
     assert.ok(rfqState.id.eq(new anchor.BN(1)));
+    assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
     assert.ok(protocolState.rfqCount.eq(new anchor.BN(1)));
   });
 
@@ -198,6 +199,7 @@ describe('rfq', () => {
       instrument: Instrument.Spot,
     }];
     const { rfqState, protocolState } = await request(assetMint, taker, expiry, legs, orderAmount, provider, quoteMint, requestOrder);
+    assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
     assert.equal(rfqState.expired, false);
     assert.deepEqual(rfqState.requestOrder, requestOrder);
     //assert.deepEqual(rfqState.legs, legs);

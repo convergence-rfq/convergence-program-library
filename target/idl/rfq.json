@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.0.0",
   "name": "rfq",
   "instructions": [
     {
@@ -431,6 +431,10 @@
             "type": "publicKey"
           },
           {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
             "name": "bestAskAmount",
             "type": {
               "option": "u64"
@@ -707,6 +711,9 @@
           },
           {
             "name": "InvalidTakerAddress"
+          },
+          {
+            "name": "InvalidAuthorityAddress"
           },
           {
             "name": "InvalidOrderAmount"

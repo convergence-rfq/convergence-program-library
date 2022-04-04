@@ -1,16 +1,31 @@
+//! Fast and easy queue abstraction.
+//!
+//! Provides an abstraction over a queue.  When the abstraction is used
+//! there are these advantages:
+//! - Fast
+//! - [`Easy`]
+//!
+//! [`Easy`]: http://thatwaseasy.example.com
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::sysvar::clock::Clock;
 
 declare_id!("7DMzw449Xx3czELx3x6iUD4E5Leours2i2Wjk8JxVqM8");
 
-// Do not use hyphens in seed
-const ASSET_ESCROW_SEED: &str = "asset_escrow";
-const ORDER_SEED: &str = "order";
-const PROTOCOL_SEED: &str = "protocol";
-const QUOTE_ESCROW_SEED: &str = "quote_escrow";
-const RFQ_SEED: &str = "rfq";
+// NOTE: Do not use hyphens in seed
+/// Asset escrow PDA seed
+pub const ASSET_ESCROW_SEED: &str = "asset_escrow";
+/// Order PDA seed
+pub const ORDER_SEED: &str = "order";
+/// Protocol PDA seed
+pub const PROTOCOL_SEED: &str = "protocol";
+/// Quote PDA seed
+pub const QUOTE_ESCROW_SEED: &str = "quote_escrow";
+/// RFQ PDA seed
+pub const RFQ_SEED: &str = "rfq";
 
+/// Request for quote module.
 #[program]
 pub mod rfq {
     use super::*;
@@ -37,9 +52,11 @@ pub mod rfq {
 
     /// Taker requests quote.
     ///
-    /// request_order
+    /// expiry
     /// legs
     /// expiry
+    /// order_amount
+    /// request_order
     pub fn request(
         ctx: Context<Request>,
         expiry: i64,
@@ -53,6 +70,7 @@ pub mod rfq {
         let rfq = &mut ctx.accounts.rfq;
         rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
         rfq.asset_mint = ctx.accounts.asset_mint.key();
+        rfq.authority = ctx.accounts.authority.key();
         rfq.approved = false;
         rfq.best_ask_address = None;
         rfq.best_ask_amount = None;
@@ -397,6 +415,7 @@ pub struct RfqState {
     pub approved: bool,
     pub asset_escrow_bump: u8,
     pub asset_mint: Pubkey,
+    pub authority: Pubkey,
     pub best_ask_amount: Option<u64>,
     pub best_bid_amount: Option<u64>,
     pub best_ask_address: Option<Pubkey>,
@@ -419,7 +438,7 @@ pub struct RfqState {
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 5) + (Leg::LEN * 10 + 1) + (8 * 8) + (1 * 13);
+    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 8) + (1 * 13);
 }
 
 /// Global state for the entire RFQ system
@@ -798,7 +817,9 @@ pub fn respond_access_control<'info>(
     let order_amount = rfq.order_amount;
     let current_unix_timestamp = Clock::get().unwrap().unix_timestamp;
     let delay = current_unix_timestamp - rfq.unix_timestamp;
+    let authority = &ctx.accounts.authority;
 
+    require!(rfq.authority.key() != authority.key(), ProtocolError::InvalidAuthorityAddress);
     require!(delay < expiry, ProtocolError::ResponseTimeElapsed);
 
     match bid {
@@ -835,6 +856,8 @@ pub enum ProtocolError {
     InvalidQuote,
     #[msg("Invalid taker address")]
     InvalidTakerAddress,
+    #[msg("Invalid authority address")]
+    InvalidAuthorityAddress,
     #[msg("Invalid order amount")]
     InvalidOrderAmount,
     #[msg("Not implemented")]

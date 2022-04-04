@@ -848,19 +848,56 @@
 <span id="846">846</span>
 <span id="847">847</span>
 <span id="848">848</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">anchor_lang::prelude</span>::<span class="kw-2">*</span>;
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Fast and easy queue abstraction.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Provides an abstraction over a queue.  When the abstraction is used</span>
+<span class="doccomment">//! there are these advantages:</span>
+<span class="doccomment">//! - Fast</span>
+<span class="doccomment">//! - [`Easy`]</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`Easy`]: http://thatwaseasy.example.com</span>
+
+<span class="kw">use</span> <span class="ident">anchor_lang::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anchor_spl::token</span>::{<span class="ident">Mint</span>, <span class="ident">Token</span>, <span class="ident">TokenAccount</span>};
 <span class="kw">use</span> <span class="ident">solana_program::sysvar::clock::Clock</span>;
 
 <span class="macro">declare_id!</span>(<span class="string">&quot;7DMzw449Xx3czELx3x6iUD4E5Leours2i2Wjk8JxVqM8&quot;</span>);
 
-<span class="comment">// Do not use hyphens in seed</span>
-<span class="kw">const</span> <span class="ident">ASSET_ESCROW_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;asset_escrow&quot;</span>;
-<span class="kw">const</span> <span class="ident">ORDER_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;order&quot;</span>;
-<span class="kw">const</span> <span class="ident">PROTOCOL_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;protocol&quot;</span>;
-<span class="kw">const</span> <span class="ident">QUOTE_ESCROW_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;quote_escrow&quot;</span>;
-<span class="kw">const</span> <span class="ident">RFQ_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;rfq&quot;</span>;
+<span class="comment">// NOTE: Do not use hyphens in seed</span>
+<span class="doccomment">/// Asset escrow PDA seed</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASSET_ESCROW_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;asset_escrow&quot;</span>;
+<span class="doccomment">/// Order PDA seed</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ORDER_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;order&quot;</span>;
+<span class="doccomment">/// Protocol PDA seed</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PROTOCOL_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;protocol&quot;</span>;
+<span class="doccomment">/// Quote PDA seed</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUOTE_ESCROW_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;quote_escrow&quot;</span>;
+<span class="doccomment">/// RFQ PDA seed</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RFQ_SEED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;rfq&quot;</span>;
 
+<span class="doccomment">/// Request for quote module.</span>
 <span class="attribute">#[<span class="ident">program</span>]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rfq</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
@@ -874,22 +911,16 @@
         <span class="ident">fee_denominator</span>: <span class="ident">u64</span>,
         <span class="ident">fee_numerator</span>: <span class="ident">u64</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">protocol</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">protocol</span>;
-        <span class="ident">protocol</span>.<span class="ident">access_manager_count</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">protocol</span>.<span class="ident">authority</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">authority</span>.<span class="ident">key</span>();
-        <span class="ident">protocol</span>.<span class="ident">bump</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ctx</span>.<span class="ident">bumps</span>.<span class="ident">get</span>(<span class="ident">PROTOCOL_SEED</span>).<span class="ident">unwrap</span>();
-        <span class="ident">protocol</span>.<span class="ident">fee_denominator</span> <span class="op">=</span> <span class="ident">fee_denominator</span>;
-        <span class="ident">protocol</span>.<span class="ident">fee_numerator</span> <span class="op">=</span> <span class="ident">fee_numerator</span>;
-        <span class="ident">protocol</span>.<span class="ident">rfq_count</span> <span class="op">=</span> <span class="number">0</span>;
-
-        <span class="prelude-val">Ok</span>(())
+        <span class="ident">initialize_ix</span>(<span class="ident">ctx</span>, <span class="ident">fee_denominator</span>, <span class="ident">fee_numerator</span>)
     }
 
     <span class="doccomment">/// Taker requests quote.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// request_order</span>
+    <span class="doccomment">/// expiry</span>
     <span class="doccomment">/// legs</span>
     <span class="doccomment">/// expiry</span>
+    <span class="doccomment">/// order_amount</span>
+    <span class="doccomment">/// request_order</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request</span>(
         <span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Request</span><span class="op">&gt;</span>,
         <span class="ident">expiry</span>: <span class="ident">i64</span>,
@@ -1695,6 +1726,19 @@
     <span class="ident">TradeNotApproved</span>,
     <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Timed out on response to request&quot;</span>)]</span>
     <span class="ident">ResponseTimeElapsed</span>,
+}
+
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+<span class="kw">fn</span> <span class="ident">initialize_ix</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Initialize</span><span class="op">&gt;</span>, <span class="ident">fee_denominator</span>: <span class="ident">u64</span>, <span class="ident">fee_numerator</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">protocol</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">protocol</span>;
+    <span class="ident">protocol</span>.<span class="ident">access_manager_count</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="ident">protocol</span>.<span class="ident">authority</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">authority</span>.<span class="ident">key</span>();
+    <span class="ident">protocol</span>.<span class="ident">bump</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ctx</span>.<span class="ident">bumps</span>.<span class="ident">get</span>(<span class="ident">PROTOCOL_SEED</span>).<span class="ident">unwrap</span>();
+    <span class="ident">protocol</span>.<span class="ident">fee_denominator</span> <span class="op">=</span> <span class="ident">fee_denominator</span>;
+    <span class="ident">protocol</span>.<span class="ident">fee_numerator</span> <span class="op">=</span> <span class="ident">fee_numerator</span>;
+    <span class="ident">protocol</span>.<span class="ident">rfq_count</span> <span class="op">=</span> <span class="number">0</span>;
+
+    <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rfq" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0 (9d1b2106e 2022-02-23)" ></div>
