@@ -431,6 +431,10 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
             "name": "bestAskAmount",
             "type": {
               "option": "u64"
@@ -693,38 +697,53 @@ export type Rfq = {
           }
         ]
       }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidOrder",
+      "msg": "Invalid order logic"
     },
     {
-      "name": "ProtocolError",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "InvalidOrder"
-          },
-          {
-            "name": "InvalidQuote"
-          },
-          {
-            "name": "InvalidTakerAddress"
-          },
-          {
-            "name": "InvalidOrderAmount"
-          },
-          {
-            "name": "NotImplemented"
-          },
-          {
-            "name": "TradeNotConfirmed"
-          },
-          {
-            "name": "TradeNotApproved"
-          },
-          {
-            "name": "ResponseTimeElapsed"
-          }
-        ]
-      }
+      "code": 6001,
+      "name": "InvalidQuote",
+      "msg": "Invalid quote"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidTakerAddress",
+      "msg": "Invalid taker address"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidAuthorityAddress",
+      "msg": "Invalid authority address"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidOrderAmount",
+      "msg": "Invalid order amount"
+    },
+    {
+      "code": 6005,
+      "name": "NotImplemented",
+      "msg": "Not implemented"
+    },
+    {
+      "code": 6006,
+      "name": "TradeNotConfirmed",
+      "msg": "Trade has not been confirmed by taker"
+    },
+    {
+      "code": 6007,
+      "name": "TradeNotApproved",
+      "msg": "Trade has not been approved via last look by maker"
+    },
+    {
+      "code": 6008,
+      "name": "ResponseTimeElapsed",
+      "msg": "Timed out on response to request"
     }
   ]
 };
@@ -1162,6 +1181,10 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
             "name": "bestAskAmount",
             "type": {
               "option": "u64"
@@ -1424,38 +1447,53 @@ export const IDL: Rfq = {
           }
         ]
       }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidOrder",
+      "msg": "Invalid order logic"
     },
     {
-      "name": "ProtocolError",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "InvalidOrder"
-          },
-          {
-            "name": "InvalidQuote"
-          },
-          {
-            "name": "InvalidTakerAddress"
-          },
-          {
-            "name": "InvalidOrderAmount"
-          },
-          {
-            "name": "NotImplemented"
-          },
-          {
-            "name": "TradeNotConfirmed"
-          },
-          {
-            "name": "TradeNotApproved"
-          },
-          {
-            "name": "ResponseTimeElapsed"
-          }
-        ]
-      }
+      "code": 6001,
+      "name": "InvalidQuote",
+      "msg": "Invalid quote"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidTakerAddress",
+      "msg": "Invalid taker address"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidAuthorityAddress",
+      "msg": "Invalid authority address"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidOrderAmount",
+      "msg": "Invalid order amount"
+    },
+    {
+      "code": 6005,
+      "name": "NotImplemented",
+      "msg": "Not implemented"
+    },
+    {
+      "code": 6006,
+      "name": "TradeNotConfirmed",
+      "msg": "Trade has not been confirmed by taker"
+    },
+    {
+      "code": 6007,
+      "name": "TradeNotApproved",
+      "msg": "Trade has not been approved via last look by maker"
+    },
+    {
+      "code": 6008,
+      "name": "ResponseTimeElapsed",
+      "msg": "Timed out on response to request"
     }
   ]
 };

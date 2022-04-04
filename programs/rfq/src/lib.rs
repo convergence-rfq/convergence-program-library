@@ -1,17 +1,12 @@
-//! Fast and easy queue abstraction.
+//! Request for quote (RFQ) protocol.
 //!
-//! Provides an abstraction over a queue.  When the abstraction is used
-//! there are these advantages:
-//! - Fast
-//! - [`Easy`]
-//!
-//! [`Easy`]: http://thatwaseasy.example.com
+//! Provides an abstraction and implements the RFQ mechanism. 
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::sysvar::clock::Clock;
 
-declare_id!("7DMzw449Xx3czELx3x6iUD4E5Leours2i2Wjk8JxVqM8");
+declare_id!("H2tGQVUikR4hBgHL5JRX9UY5LQy8C4qjQdX6Xw4LricZ");
 
 // NOTE: Do not use hyphens in seed
 /// Asset escrow PDA seed

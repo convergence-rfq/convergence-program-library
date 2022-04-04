@@ -3,10 +3,7 @@
 import * as anchor from '@project-serum/anchor';
 import * as dotenv from 'dotenv';
 
-import {
-  PROTOCOL_SEED,
-  getProgram,
-} from '../lib/helpers';
+import { PROTOCOL_SEED, getProgram } from '../lib/helpers';
 
 dotenv.config();
 anchor.setProvider(anchor.Provider.env());

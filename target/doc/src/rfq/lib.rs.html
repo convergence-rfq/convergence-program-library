@@ -866,25 +866,15 @@
 <span id="864">864</span>
 <span id="865">865</span>
 <span id="866">866</span>
-<span id="867">867</span>
-<span id="868">868</span>
-<span id="869">869</span>
-<span id="870">870</span>
-<span id="871">871</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Fast and easy queue abstraction.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Request for quote (RFQ) protocol.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! Provides an abstraction over a queue.  When the abstraction is used</span>
-<span class="doccomment">//! there are these advantages:</span>
-<span class="doccomment">//! - Fast</span>
-<span class="doccomment">//! - [`Easy`]</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [`Easy`]: http://thatwaseasy.example.com</span>
+<span class="doccomment">//! Provides an abstraction and implements the RFQ mechanism. </span>
 
 <span class="kw">use</span> <span class="ident">anchor_lang::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anchor_spl::token</span>::{<span class="ident">Mint</span>, <span class="ident">Token</span>, <span class="ident">TokenAccount</span>};
 <span class="kw">use</span> <span class="ident">solana_program::sysvar::clock::Clock</span>;
 
-<span class="macro">declare_id!</span>(<span class="string">&quot;7DMzw449Xx3czELx3x6iUD4E5Leours2i2Wjk8JxVqM8&quot;</span>);
+<span class="macro">declare_id!</span>(<span class="string">&quot;H2tGQVUikR4hBgHL5JRX9UY5LQy8C4qjQdX6Xw4LricZ&quot;</span>);
 
 <span class="comment">// NOTE: Do not use hyphens in seed</span>
 <span class="doccomment">/// Asset escrow PDA seed</span>
