@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor';
 import { Idl, Program, Provider, Wallet } from '@project-serum/anchor';
 import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 
 import { default as idl } from '../target/idl/rfq.json';
 
@@ -75,7 +75,7 @@ export const Leg = {
 
 export async function getRfqs(provider: Provider): Promise<object[]> {
   const program = await getProgram(provider);
-  const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   );
@@ -83,7 +83,7 @@ export async function getRfqs(provider: Provider): Promise<object[]> {
   const range = Array.from({ length: protocolState.rfqCount.toNumber() }, (_, i) => 1 + i);
 
   const rfqs = await Promise.all(range.map(async (i) => {
-    const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+    const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
       [Buffer.from(RFQ_SEED), Buffer.from(i.toString())],
       program.programId
     );
@@ -91,6 +91,28 @@ export async function getRfqs(provider: Provider): Promise<object[]> {
   }));
 
   return rfqs;
+}
+
+export async function getResponses(provider: Provider, rfqs: any[]): Promise<object[]> {
+  let orderPdas = [];
+
+  const program = await getProgram(provider);
+
+  for (let i = 0; i < rfqs.length; i++) {
+    for (let j = 0; j < rfqs[i].responseCount.toNumber(); j++) {
+      const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
+        [Buffer.from(ORDER_SEED), Buffer.from(rfqs[i].id.toString()), Buffer.from((j + 1).toString())],
+        program.programId
+      );
+      orderPdas.push(orderPda);
+    }
+  }
+
+  const orders = await Promise.all(orderPdas.map(async (orderPda) => {
+    return await program.account.orderState.fetch(orderPda);
+  }));
+
+  return orders;
 }
 
 export async function lastLook(

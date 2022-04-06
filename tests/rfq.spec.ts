@@ -50,6 +50,7 @@ import {
   Venue,
   Side,
   getProgram,
+  getResponses,
 } from '../lib/helpers';
 import { Program } from '@project-serum/anchor';
 
@@ -87,6 +88,10 @@ anchor.setProvider(anchor.Provider.env());
 
 const provider = anchor.getProvider();
 let program: Program;
+
+const sleep = (ms: number) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
 
 describe('rfq', () => {
   before(async () => {
@@ -158,7 +163,9 @@ describe('rfq', () => {
 
   it('Taker initializes RFQ 1', async () => {
     const requestOrder = Order.Buy;
-    const expiry = new anchor.BN(-1);
+    const now = (new Date()).getTime() / 1_000;
+    // Expires in 0.25 seconds
+    const expiry = new anchor.BN(now + 0.25);
     const orderAmount = TAKER_ORDER_AMOUNT;
     const legs = [{
       amount: TAKER_ORDER_AMOUNT,
@@ -174,23 +181,25 @@ describe('rfq', () => {
   });
 
   it('Maker responds to RFQ 1 and times out', async () => {
-    setTimeout(() => {
-      console.log('delay of 500ms');
-    }, 500);
+    console.log('delay of 500 ms...');
+    await sleep(500);
 
     const rfqId = 1;
 
     try {
-      const { rfqState } = await respond(provider, marketMakerA, rfqId, null, MAKER_A_ASK_AMOUNT, makerAAssetWallet, makerAQuoteWallet);
-      console.log('time delay:', rfqState.timeResponse - rfqState.unixTimestamp);
+      await respond(provider, marketMakerA, rfqId, null, MAKER_A_ASK_AMOUNT, makerAAssetWallet, makerAQuoteWallet);
+      assert.ok(false);
     } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'ResponseTimeElapsed');
       console.log('response timeout');
     }
   });
 
   it('Taker initializes RFQ 2', async () => {
     const requestOrder = Order.Buy;
-    const expiry = new anchor.BN(1_000);
+    const now = (new Date()).getTime() / 1_000;
+    // Expires in 15 seconds
+    const expiry = new anchor.BN(now + 15);
     const orderAmount = TAKER_ORDER_AMOUNT;
     const legs = [{
       venue: Venue.Convergence,
@@ -200,7 +209,6 @@ describe('rfq', () => {
     }];
     const { rfqState, protocolState } = await request(assetMint, taker, expiry, legs, orderAmount, provider, quoteMint, requestOrder);
     assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
-    assert.equal(rfqState.expired, false);
     assert.deepEqual(rfqState.requestOrder, requestOrder);
     //assert.deepEqual(rfqState.legs, legs);
     assert.equal(rfqState.expiry.toString(), expiry.toString());
@@ -347,8 +355,10 @@ describe('rfq', () => {
     console.log('maker C quote balance:', makerCQuoteBalance);
   });
 
-  it('View RFQs', async () => {
+  it('View RFQs and responses', async () => {
     const rfqs = await getRfqs(provider);
+    const responses = await getResponses(provider, rfqs);
     assert.ok(rfqs.length === 2);
+    assert.ok(responses.length === 3);
   });
 });

@@ -866,9 +866,119 @@
 <span id="864">864</span>
 <span id="865">865</span>
 <span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Request for quote (RFQ) protocol.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! Provides an abstraction and implements the RFQ mechanism. </span>
+<span class="doccomment">//! Provides an abstraction and implements the RFQ mechanism.</span>
 
 <span class="kw">use</span> <span class="ident">anchor_lang::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anchor_spl::token</span>::{<span class="ident">Mint</span>, <span class="ident">Token</span>, <span class="ident">TokenAccount</span>};
@@ -895,8 +1005,611 @@
 
     <span class="doccomment">/// Initializes protocol.</span>
     <span class="doccomment">///</span>
+    <span class="doccomment">/// ctx</span>
     <span class="doccomment">/// fee_denominator Fee denominator</span>
     <span class="doccomment">/// fee_numerator Fee numerator</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initialize</span>(
+        <span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Initialize</span><span class="op">&gt;</span>,
+        <span class="ident">fee_denominator</span>: <span class="ident">u64</span>,
+        <span class="ident">fee_numerator</span>: <span class="ident">u64</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">instructions::initialize</span>(<span class="ident">ctx</span>, <span class="ident">fee_denominator</span>, <span class="ident">fee_numerator</span>)
+    }
+
+    <span class="doccomment">/// Taker requests quote (RFQ).</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// expiry</span>
+    <span class="doccomment">/// legs</span>
+    <span class="doccomment">/// expiry</span>
+    <span class="doccomment">/// order_amount</span>
+    <span class="doccomment">/// request_order</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request</span>(
+        <span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Request</span><span class="op">&gt;</span>,
+        <span class="ident">expiry</span>: <span class="ident">i64</span>,
+        <span class="ident">legs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Leg</span><span class="op">&gt;</span>,
+        <span class="ident">order_amount</span>: <span class="ident">u64</span>,
+        <span class="ident">request_order</span>: <span class="ident">Order</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">instructions::request</span>(<span class="ident">ctx</span>, <span class="ident">expiry</span>, <span class="ident">legs</span>, <span class="ident">order_amount</span>, <span class="ident">request_order</span>)
+    }
+
+    <span class="doccomment">/// Maker responds with one-way or two-way quotes.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ctx</span>
+    <span class="doccomment">/// bid</span>
+    <span class="doccomment">/// ask</span>
+    <span class="attribute">#[<span class="ident">access_control</span>(<span class="ident">respond_access_control</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="ident">bid</span>, <span class="ident">ask</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">respond</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Respond</span><span class="op">&gt;</span>, <span class="ident">bid</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="ident">ask</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">instructions::respond</span>(<span class="ident">ctx</span>, <span class="ident">bid</span>, <span class="ident">ask</span>)
+    }
+
+    <span class="doccomment">/// Taker confirms order.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ctx</span>
+    <span class="doccomment">/// confirm_order</span>
+    <span class="attribute">#[<span class="ident">access_control</span>(<span class="ident">confirm_access_control</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="ident">confirm_order</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">confirm</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Confirm</span><span class="op">&gt;</span>, <span class="ident">confirm_order</span>: <span class="ident">Order</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">instructions::confirm</span>(<span class="ident">ctx</span>, <span class="ident">confirm_order</span>)
+    }
+
+    <span class="doccomment">/// Last look.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ctx</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_look</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">LastLook</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">instructions::last_look</span>(<span class="ident">ctx</span>)
+    }
+
+    <span class="doccomment">/// Return collateral of losting makers.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ctx</span>
+    <span class="attribute">#[<span class="ident">access_control</span>(<span class="ident">return_collateral_access_control</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">return_collateral</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">ReturnCollateral</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">instructions::return_collateral</span>(<span class="ident">ctx</span>)
+    }
+
+    <span class="doccomment">/// Settles winning maker and taker fund transfers.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ctx</span>
+    <span class="attribute">#[<span class="ident">access_control</span>(<span class="ident">settle_access_control</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">settle</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Settle</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">instructions::settle</span>(<span class="ident">ctx</span>)
+    }
+}
+
+<span class="comment">// State</span>
+
+<span class="doccomment">/// Holds state of a single RFQ.</span>
+<span class="attribute">#[<span class="ident">account</span>]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RfqState</span> {
+    <span class="doccomment">/// If approved by authority</span>
+    <span class="kw">pub</span> <span class="ident">approved</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Asset escrow bump</span>
+    <span class="kw">pub</span> <span class="ident">asset_escrow_bump</span>: <span class="ident">u8</span>,
+    <span class="doccomment">/// Asset mint</span>
+    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Pubkey</span>,
+    <span class="doccomment">/// Authority</span>
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Pubkey</span>,
+    <span class="doccomment">/// Best ask amount</span>
+    <span class="kw">pub</span> <span class="ident">best_ask_amount</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Best bid amount</span>
+    <span class="kw">pub</span> <span class="ident">best_bid_amount</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Best ask amount</span>
+    <span class="kw">pub</span> <span class="ident">best_ask_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Pubkey</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Best bid amount</span>
+    <span class="kw">pub</span> <span class="ident">best_bid_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Pubkey</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// PDA bump</span>
+    <span class="kw">pub</span> <span class="ident">bump</span>: <span class="ident">u8</span>,
+    <span class="doccomment">/// Confirm order</span>
+    <span class="kw">pub</span> <span class="ident">confirm_order</span>: <span class="ident">Order</span>,
+    <span class="doccomment">/// Confirmed</span>
+    <span class="kw">pub</span> <span class="ident">confirmed</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Expiry time</span>
+    <span class="kw">pub</span> <span class="ident">expiry</span>: <span class="ident">i64</span>,
+    <span class="doccomment">/// Incremental integer id</span>
+    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// Legs</span>
+    <span class="kw">pub</span> <span class="ident">legs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Leg</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Order amount</span>
+    <span class="kw">pub</span> <span class="ident">order_amount</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// Quote escrow bump</span>
+    <span class="kw">pub</span> <span class="ident">quote_escrow_bump</span>: <span class="ident">u8</span>,
+    <span class="doccomment">/// Quote mint</span>
+    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Pubkey</span>,
+    <span class="doccomment">/// Response count</span>
+    <span class="kw">pub</span> <span class="ident">response_count</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// Request order</span>
+    <span class="kw">pub</span> <span class="ident">request_order</span>: <span class="ident">Order</span>,
+    <span class="doccomment">/// Taker address</span>
+    <span class="kw">pub</span> <span class="ident">taker_address</span>: <span class="ident">Pubkey</span>,
+    <span class="doccomment">/// Creation time</span>
+    <span class="kw">pub</span> <span class="ident">unix_timestamp</span>: <span class="ident">i64</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">RfqState</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span> <span class="op">+</span> (<span class="number">32</span> <span class="op">*</span> <span class="number">6</span>) <span class="op">+</span> (<span class="ident">Leg::LEN</span> <span class="op">*</span> <span class="number">10</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">+</span> (<span class="number">8</span> <span class="op">*</span> <span class="number">7</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">12</span>);
+}
+
+<span class="doccomment">/// Global state for the entire RFQ system</span>
+<span class="attribute">#[<span class="ident">account</span>]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProtocolState</span> {
+    <span class="kw">pub</span> <span class="ident">access_manager_count</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Pubkey</span>,
+    <span class="kw">pub</span> <span class="ident">bump</span>: <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">fee_denominator</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">fee_numerator</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">rfq_count</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">treasury_wallet</span>: <span class="ident">Pubkey</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">ProtocolState</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span> <span class="op">+</span> (<span class="number">32</span> <span class="op">*</span> <span class="number">2</span>) <span class="op">+</span> (<span class="number">8</span> <span class="op">*</span> <span class="number">4</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">1</span>);
+}
+
+<span class="doccomment">/// Market maker order state</span>
+<span class="attribute">#[<span class="ident">account</span>]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OrderState</span> {
+    <span class="kw">pub</span> <span class="ident">ask</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Pubkey</span>,
+    <span class="kw">pub</span> <span class="ident">bid</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">bump</span>: <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">collateral_returned</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// Creation time</span>
+    <span class="kw">pub</span> <span class="ident">unix_timestamp</span>: <span class="ident">i64</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">OrderState</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span> <span class="op">+</span> (<span class="number">32</span> <span class="op">*</span> <span class="number">1</span>) <span class="op">+</span> (<span class="number">8</span> <span class="op">*</span> <span class="number">4</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">1</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">1</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">2</span>);
+}
+
+<span class="comment">// Contexts</span>
+
+<span class="doccomment">/// Intializes protocol.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Initialize</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Protocol authority</span>
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Protocol state</span>
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="ident">init</span>,
+        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">PROTOCOL_SEED</span>.<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">space</span> <span class="op">=</span> <span class="ident">ProtocolState::LEN</span>,
+        <span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">protocol</span>: <span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">ProtocolState</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Solana system program</span>
+    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// Requests quote (RFQ).</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Request</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Asset escrow account</span>
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="ident">init</span>,
+        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
+        <span class="ident">token::mint</span> <span class="op">=</span> <span class="ident">asset_mint</span>,
+        <span class="ident">token::authority</span> <span class="op">=</span> <span class="ident">rfq</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [
+            <span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(),
+            (<span class="ident">protocol</span>.<span class="ident">rfq_count</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
+        ]</span>,
+        <span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Asset mint</span>
+    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Request authority</span>
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Protocol state</span>
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">PROTOCOL_SEED</span>.<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">protocol</span>.<span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">protocol</span>: <span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">ProtocolState</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Quote escrow account</span>
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="ident">init</span>,
+        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
+        <span class="ident">token::mint</span> <span class="op">=</span> <span class="ident">quote_mint</span>,
+        <span class="ident">token::authority</span> <span class="op">=</span> <span class="ident">rfq</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [
+            <span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(),
+            (<span class="ident">protocol</span>.<span class="ident">rfq_count</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
+        ]</span>,
+        <span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Quote mint</span>
+    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// TODO: Decide what to do about this</span>
+    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// RFQ state</span>
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="ident">init</span>,
+        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [
+            <span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(),
+            (<span class="ident">protocol</span>.<span class="ident">rfq_count</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
+        ]</span>,
+        <span class="ident">space</span> <span class="op">=</span> <span class="ident">RfqState::LEN</span>,
+        <span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// System program used for initializing accounts</span>
+    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Token program used for initializing token accounts</span>
+    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// Responds to quote.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Respond</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="ident">init</span>,
+        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [
+            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
+            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
+            (<span class="ident">rfq</span>.<span class="ident">response_count</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
+        ]</span>,
+        <span class="ident">space</span> <span class="op">=</span> <span class="ident">OrderState::LEN</span>,
+        <span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">asset_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">quote_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">asset_escrow_bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">quote_escrow_bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// Confirms RFQ response.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Confirm</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">asset_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">asset_escrow_bump</span>,
+    )]
+    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="comment">// TODO: Is this actually an order or is there a better way?</span>
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="ident">init</span>,
+        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
+        <span class="ident">space</span> <span class="op">=</span> <span class="ident">OrderState::LEN</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [
+            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
+            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
+            <span class="string">b&quot;0&quot;</span>
+        ]</span>,
+        <span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">quote_escrow_bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">quote_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// Last look for RFQ.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LastLook</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [
+            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
+            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
+            <span class="ident">order</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
+        ]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">order</span>.<span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// Returns collateral.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReturnCollateral</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">asset_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">quote_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">asset_escrow_bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [
+            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
+            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
+            <span class="ident">order</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
+        ]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">order</span>.<span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">quote_escrow_bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// Settles RFQ.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Settle</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">asset_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">asset_escrow_bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">quote_escrow_bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [
+            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
+            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
+            <span class="ident">order</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
+        ]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">order</span>.<span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(
+        <span class="kw-2">mut</span>,
+        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
+        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">bump</span>
+    )]
+    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">quote_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
+}
+
+<span class="comment">// Types</span>
+
+<span class="doccomment">/// RFQ instrument type.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Instrument</span> {
+    <span class="ident">Call</span>,
+    <span class="ident">Future</span>,
+    <span class="ident">Put</span>,
+    <span class="ident">Spot</span>,
+}
+
+<span class="doccomment">/// Side for RFQ.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Side</span> {
+    <span class="ident">Buy</span>,
+    <span class="ident">Sell</span>,
+}
+
+<span class="doccomment">/// Venue for RFQ leg.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Venue</span> {
+    <span class="ident">Convergence</span>,
+    <span class="ident">PsyOptions</span>,
+}
+
+<span class="doccomment">/// RFQ implementation.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Leg</span> {
+    <span class="ident">instrument</span>: <span class="ident">Instrument</span>,
+    <span class="ident">venue</span>: <span class="ident">Venue</span>,
+    <span class="ident">side</span>: <span class="ident">Side</span>,
+    <span class="ident">amount</span>: <span class="ident">u64</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Leg</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span> <span class="op">=</span> (<span class="number">1</span> <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">4</span>)) <span class="op">+</span> (<span class="number">1</span> <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">2</span>)) <span class="op">+</span> (<span class="number">1</span> <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">2</span>)) <span class="op">+</span> (<span class="number">8</span> <span class="op">*</span> <span class="number">1</span>);
+}
+
+<span class="doccomment">/// Order.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Order</span> {
+    <span class="ident">Buy</span>,
+    <span class="ident">Sell</span>,
+    <span class="ident">TwoWay</span>,
+}
+
+<span class="comment">// Access controls</span>
+
+<span class="doccomment">/// Settlement access control. Ensures RFQ is:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// 1. Confirmed</span>
+<span class="doccomment">/// 2. Approved</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">settle_access_control</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Settle</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="macro">require!</span>(<span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>.<span class="ident">confirmed</span>, <span class="ident">ProtocolError::TradeNotConfirmed</span>);
+    <span class="macro">require!</span>(<span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>.<span class="ident">approved</span>, <span class="ident">ProtocolError::TradeNotApproved</span>);
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="doccomment">/// Confirmation access control. Ensures confirmation is:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// 1. Executed by taker</span>
+<span class="doccomment">/// 2. Confirmation order is same as request order</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">confirm_access_control</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>(
+    <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Confirm</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">confirm_order</span>: <span class="ident">Order</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
+    <span class="kw">let</span> <span class="ident">taker_address</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">taker_address</span>;
+    <span class="kw">let</span> <span class="ident">request_order</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">request_order</span>;
+    <span class="kw">let</span> <span class="ident">authority</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">authority</span>.<span class="ident">key</span>();
+
+    <span class="comment">// Make sure current authority matches original taker address from request instruction</span>
+    <span class="macro">require!</span>(
+        <span class="ident">taker_address</span> <span class="op">==</span> <span class="ident">authority</span>,
+        <span class="ident">ProtocolError::InvalidTakerAddress</span>
+    );
+
+    <span class="kw">match</span> <span class="ident">request_order</span> {
+        <span class="ident">Order::Buy</span> =&gt; <span class="macro">require!</span>(<span class="ident">confirm_order</span> <span class="op">==</span> <span class="ident">Order::Buy</span>, <span class="ident">ProtocolError::InvalidOrder</span>),
+        <span class="ident">Order::Sell</span> =&gt; <span class="macro">require!</span>(<span class="ident">confirm_order</span> <span class="op">==</span> <span class="ident">Order::Sell</span>, <span class="ident">ProtocolError::InvalidOrder</span>),
+        <span class="ident">Order::TwoWay</span> =&gt; <span class="macro">require!</span>(<span class="ident">confirm_order</span> <span class="op">==</span> <span class="ident">Order::TwoWay</span>, <span class="ident">ProtocolError::InvalidOrder</span>),
+    }
+
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="doccomment">/// Response access control. Ensures response satisfies the following conditions:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// 1. RFQ authority is not the same as the taker authority</span>
+<span class="doccomment">/// 2. RFQ is not expired</span>
+<span class="doccomment">/// 3. Order amount is greater than 0</span>
+<span class="doccomment">/// 4. If response is a bid the amount is greater than 0</span>
+<span class="doccomment">/// 5. If response is an ask the amount is greater than 0</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">respond_access_control</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>(
+    <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Respond</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">bid</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+    <span class="ident">ask</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">authority</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">authority</span>;
+    <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
+    <span class="kw">let</span> <span class="ident">expiry</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">expiry</span>;
+    <span class="kw">let</span> <span class="ident">unix_timestamp</span> <span class="op">=</span> <span class="ident">Clock::get</span>().<span class="ident">unwrap</span>().<span class="ident">unix_timestamp</span>;
+    <span class="kw">let</span> <span class="ident">order_amount</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">order_amount</span>;
+
+    <span class="macro">require!</span>(
+        <span class="ident">rfq</span>.<span class="ident">authority</span>.<span class="ident">key</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">authority</span>.<span class="ident">key</span>(),
+        <span class="ident">ProtocolError::InvalidAuthorityAddress</span>
+    );
+    <span class="macro">require!</span>(<span class="ident">expiry</span> <span class="op">&gt;</span> <span class="ident">unix_timestamp</span>, <span class="ident">ProtocolError::ResponseTimeElapsed</span>);
+    <span class="macro">require!</span>(<span class="ident">order_amount</span> <span class="op">&gt;</span> <span class="number">0</span>, <span class="ident">ProtocolError::InvalidOrderAmount</span>);
+
+    <span class="kw">match</span> <span class="ident">bid</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">b</span>) =&gt; <span class="macro">require!</span>(<span class="ident">b</span> <span class="op">&gt;</span> <span class="number">0</span>, <span class="ident">ProtocolError::InvalidQuote</span>),
+        <span class="prelude-val">None</span> =&gt; (),
+    }
+    <span class="kw">match</span> <span class="ident">ask</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">a</span>) =&gt; <span class="macro">require!</span>(<span class="ident">a</span> <span class="op">&gt;</span> <span class="number">0</span>, <span class="ident">ProtocolError::InvalidQuote</span>),
+        <span class="prelude-val">None</span> =&gt; (),
+    }
+
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="doccomment">/// Return collateral access control. Ensures returning collateral for RFQ that is:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// 1. Confirmed</span>
+<span class="doccomment">/// 2. Collateral has not already by returned</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">return_collateral_access_control</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">ReturnCollateral</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
+    <span class="kw">let</span> <span class="ident">order</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">order</span>;
+
+    <span class="macro">require!</span>(<span class="ident">rfq</span>.<span class="ident">confirmed</span>, <span class="ident">ProtocolError::TradeNotConfirmed</span>);
+    <span class="macro">require!</span>(<span class="op">!</span><span class="ident">order</span>.<span class="ident">collateral_returned</span>, <span class="ident">ProtocolError::TradeNotConfirmed</span>);
+
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="comment">// Error handling</span>
+
+<span class="doccomment">/// Error handling codes.</span>
+<span class="attribute">#[<span class="ident">error_code</span>]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProtocolError</span> {
+    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid order logic&quot;</span>)]</span>
+    <span class="ident">InvalidOrder</span>,
+    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid quote&quot;</span>)]</span>
+    <span class="ident">InvalidQuote</span>,
+    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid taker address&quot;</span>)]</span>
+    <span class="ident">InvalidTakerAddress</span>,
+    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid authority address&quot;</span>)]</span>
+    <span class="ident">InvalidAuthorityAddress</span>,
+    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid order amount&quot;</span>)]</span>
+    <span class="ident">InvalidOrderAmount</span>,
+    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Not implemented&quot;</span>)]</span>
+    <span class="ident">NotImplemented</span>,
+    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Trade has not been confirmed by taker&quot;</span>)]</span>
+    <span class="ident">TradeNotConfirmed</span>,
+    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Trade has not been approved via last look by maker&quot;</span>)]</span>
+    <span class="ident">TradeNotApproved</span>,
+    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Timed out on response to request&quot;</span>)]</span>
+    <span class="ident">ResponseTimeElapsed</span>,
+}
+
+<span class="doccomment">/// Private module for program instructions.</span>
+<span class="kw">mod</span> <span class="ident">instructions</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initialize</span>(
         <span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Initialize</span><span class="op">&gt;</span>,
         <span class="ident">fee_denominator</span>: <span class="ident">u64</span>,
@@ -913,13 +1626,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Taker requests quote.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// expiry</span>
-    <span class="doccomment">/// legs</span>
-    <span class="doccomment">/// expiry</span>
-    <span class="doccomment">/// order_amount</span>
-    <span class="doccomment">/// request_order</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request</span>(
         <span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Request</span><span class="op">&gt;</span>,
         <span class="ident">expiry</span>: <span class="ident">i64</span>,
@@ -940,7 +1646,6 @@
         <span class="ident">rfq</span>.<span class="ident">best_bid_address</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="ident">rfq</span>.<span class="ident">best_bid_amount</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="ident">rfq</span>.<span class="ident">bump</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ctx</span>.<span class="ident">bumps</span>.<span class="ident">get</span>(<span class="ident">RFQ_SEED</span>).<span class="ident">unwrap</span>();
-        <span class="ident">rfq</span>.<span class="ident">expired</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="ident">rfq</span>.<span class="ident">expiry</span> <span class="op">=</span> <span class="ident">expiry</span>;
         <span class="ident">rfq</span>.<span class="ident">id</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">protocol</span>.<span class="ident">rfq_count</span>;
         <span class="ident">rfq</span>.<span class="ident">legs</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -956,23 +1661,17 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Maker responds with one-way or two-way quotes.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ctx</span>
-    <span class="doccomment">/// bid</span>
-    <span class="doccomment">/// ask</span>
-    <span class="attribute">#[<span class="ident">access_control</span>(<span class="ident">respond_access_control</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="ident">bid</span>, <span class="ident">ask</span>))]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">respond</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Respond</span><span class="op">&gt;</span>, <span class="ident">bid</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="ident">ask</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
         <span class="kw">let</span> <span class="ident">order_amount</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">order_amount</span>;
         <span class="ident">rfq</span>.<span class="ident">response_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-        <span class="ident">rfq</span>.<span class="ident">time_response</span> <span class="op">=</span> <span class="ident">Clock::get</span>().<span class="ident">unwrap</span>().<span class="ident">unix_timestamp</span>;
 
         <span class="kw">let</span> <span class="ident">order</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">order</span>;
         <span class="kw">let</span> <span class="ident">authority</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">authority</span>.<span class="ident">key</span>();
         <span class="ident">order</span>.<span class="ident">authority</span> <span class="op">=</span> <span class="ident">authority</span>;
         <span class="ident">order</span>.<span class="ident">bump</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ctx</span>.<span class="ident">bumps</span>.<span class="ident">get</span>(<span class="ident">ORDER_SEED</span>).<span class="ident">unwrap</span>();
         <span class="ident">order</span>.<span class="ident">id</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">response_count</span>;
+        <span class="ident">order</span>.<span class="ident">unix_timestamp</span> <span class="op">=</span> <span class="ident">Clock::get</span>().<span class="ident">unwrap</span>().<span class="ident">unix_timestamp</span>;
 
         <span class="kw">match</span> <span class="ident">ask</span> {
             <span class="prelude-val">Some</span>(<span class="ident">a</span>) =&gt; {
@@ -1025,11 +1724,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Taker confirms order.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ctx</span>
-    <span class="doccomment">/// confirm_order</span>
-    <span class="attribute">#[<span class="ident">access_control</span>(<span class="ident">confirm_access_control</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="ident">confirm_order</span>))]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">confirm</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Confirm</span><span class="op">&gt;</span>, <span class="ident">confirm_order</span>: <span class="ident">Order</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">order</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">order</span>;
         <span class="ident">order</span>.<span class="ident">bump</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ctx</span>.<span class="ident">bumps</span>.<span class="ident">get</span>(<span class="ident">ORDER_SEED</span>).<span class="ident">unwrap</span>();
@@ -1073,9 +1767,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Last look.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ctx</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_look</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">LastLook</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
         <span class="kw">let</span> <span class="ident">order</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">order</span>;
@@ -1093,10 +1784,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Return collateral of non-winning makers.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ctx</span>
-    <span class="attribute">#[<span class="ident">access_control</span>(<span class="ident">return_collateral_access_control</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>))]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">return_collateral</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">ReturnCollateral</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
         <span class="kw">let</span> <span class="ident">order</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">order</span>;
@@ -1163,10 +1850,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Settles winning maker and taker fund transfers.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ctx</span>
-    <span class="attribute">#[<span class="ident">access_control</span>(<span class="ident">settle_access_control</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>))]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">settle</span>(<span class="ident">ctx</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Settle</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
         <span class="kw">let</span> <span class="ident">confirm_order</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">confirm_order</span>;
@@ -1268,469 +1951,6 @@
 
         <span class="prelude-val">Ok</span>(())
     }
-}
-
-<span class="doccomment">/// State</span>
-
-<span class="doccomment">/// Holds state of one RFQ</span>
-<span class="attribute">#[<span class="ident">account</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RfqState</span> {
-    <span class="kw">pub</span> <span class="ident">approved</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">asset_escrow_bump</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Pubkey</span>,
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Pubkey</span>,
-    <span class="kw">pub</span> <span class="ident">best_ask_amount</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">best_bid_amount</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">best_ask_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Pubkey</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">best_bid_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Pubkey</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">bump</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">confirm_order</span>: <span class="ident">Order</span>,
-    <span class="kw">pub</span> <span class="ident">confirmed</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">expired</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">expiry</span>: <span class="ident">i64</span>,
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">legs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Leg</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">order_amount</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">quote_escrow_bump</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Pubkey</span>,
-    <span class="kw">pub</span> <span class="ident">response_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">request_order</span>: <span class="ident">Order</span>,
-    <span class="kw">pub</span> <span class="ident">taker_address</span>: <span class="ident">Pubkey</span>,
-    <span class="kw">pub</span> <span class="ident">time_response</span>: <span class="ident">i64</span>,
-    <span class="kw">pub</span> <span class="ident">unix_timestamp</span>: <span class="ident">i64</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">RfqState</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span> <span class="op">+</span> (<span class="number">32</span> <span class="op">*</span> <span class="number">6</span>) <span class="op">+</span> (<span class="ident">Leg::LEN</span> <span class="op">*</span> <span class="number">10</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">+</span> (<span class="number">8</span> <span class="op">*</span> <span class="number">8</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">13</span>);
-}
-
-<span class="doccomment">/// Global state for the entire RFQ system</span>
-<span class="attribute">#[<span class="ident">account</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProtocolState</span> {
-    <span class="kw">pub</span> <span class="ident">access_manager_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Pubkey</span>,
-    <span class="kw">pub</span> <span class="ident">bump</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">fee_denominator</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">fee_numerator</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rfq_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">treasury_wallet</span>: <span class="ident">Pubkey</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">ProtocolState</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span> <span class="op">+</span> (<span class="number">32</span> <span class="op">*</span> <span class="number">2</span>) <span class="op">+</span> (<span class="number">8</span> <span class="op">*</span> <span class="number">4</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">1</span>);
-}
-
-<span class="doccomment">/// Market maker order state</span>
-<span class="attribute">#[<span class="ident">account</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OrderState</span> {
-    <span class="kw">pub</span> <span class="ident">ask</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Pubkey</span>,
-    <span class="kw">pub</span> <span class="ident">bid</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">bump</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">collateral_returned</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">u64</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">OrderState</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span> <span class="op">+</span> (<span class="number">32</span> <span class="op">*</span> <span class="number">1</span>) <span class="op">+</span> (<span class="number">8</span> <span class="op">*</span> <span class="number">3</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">1</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">1</span>) <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">2</span>);
-}
-
-<span class="doccomment">/// Contexts</span>
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Initialize</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="ident">init</span>,
-        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">PROTOCOL_SEED</span>.<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">space</span> <span class="op">=</span> <span class="ident">ProtocolState::LEN</span>,
-        <span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">protocol</span>: <span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">ProtocolState</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Request</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="ident">init</span>,
-        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
-        <span class="ident">token::mint</span> <span class="op">=</span> <span class="ident">asset_mint</span>,
-        <span class="ident">token::authority</span> <span class="op">=</span> <span class="ident">rfq</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [
-            <span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(),
-            (<span class="ident">protocol</span>.<span class="ident">rfq_count</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
-        ]</span>,
-        <span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">PROTOCOL_SEED</span>.<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">protocol</span>.<span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">protocol</span>: <span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">ProtocolState</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="ident">init</span>,
-        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
-        <span class="ident">token::mint</span> <span class="op">=</span> <span class="ident">quote_mint</span>,
-        <span class="ident">token::authority</span> <span class="op">=</span> <span class="ident">rfq</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [
-            <span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(),
-            (<span class="ident">protocol</span>.<span class="ident">rfq_count</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
-        ]</span>,
-        <span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="ident">init</span>,
-        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [
-            <span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(),
-            (<span class="ident">protocol</span>.<span class="ident">rfq_count</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
-        ]</span>,
-        <span class="ident">space</span> <span class="op">=</span> <span class="ident">RfqState::LEN</span>,
-        <span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Respond</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="ident">init</span>,
-        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [
-            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
-            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
-            (<span class="ident">rfq</span>.<span class="ident">response_count</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
-        ]</span>,
-        <span class="ident">space</span> <span class="op">=</span> <span class="ident">OrderState::LEN</span>,
-        <span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">asset_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">quote_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">asset_escrow_bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">quote_escrow_bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Confirm</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">asset_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">asset_escrow_bump</span>,
-    )]
-    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="comment">// TODO: Is this actually an order or is there a better way?</span>
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="ident">init</span>,
-        <span class="ident">payer</span> <span class="op">=</span> <span class="ident">authority</span>,
-        <span class="ident">space</span> <span class="op">=</span> <span class="ident">OrderState::LEN</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [
-            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
-            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
-            <span class="string">b&quot;0&quot;</span>
-        ]</span>,
-        <span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">quote_escrow_bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">quote_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LastLook</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [
-            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
-            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
-            <span class="ident">order</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
-        ]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">order</span>.<span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReturnCollateral</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">asset_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">quote_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">asset_escrow_bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [
-            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
-            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
-            <span class="ident">order</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
-        ]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">order</span>.<span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">quote_escrow_bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Accounts</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Settle</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">asset_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">asset_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">authority</span>: <span class="ident">Signer</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">ASSET_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">asset_escrow_bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">asset_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">QUOTE_ESCROW_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">quote_escrow_bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">quote_escrow</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [
-            <span class="ident">ORDER_SEED</span>.<span class="ident">as_bytes</span>(),
-            <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
-            <span class="ident">order</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()
-        ]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">order</span>.<span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">order</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">OrderState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(
-        <span class="kw-2">mut</span>,
-        <span class="ident">seeds</span> <span class="op">=</span> [<span class="ident">RFQ_SEED</span>.<span class="ident">as_bytes</span>(), <span class="ident">rfq</span>.<span class="ident">id</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()]</span>,
-        <span class="ident">bump</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">bump</span>
-    )]
-    <span class="kw">pub</span> <span class="ident">rfq</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">RfqState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">account</span>(<span class="kw-2">mut</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">quote_wallet</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">TokenAccount</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">quote_mint</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Mint</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">rent</span>: <span class="ident">Sysvar</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Rent</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">system_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">System</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">token_program</span>: <span class="ident">Program</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span>, <span class="ident">Token</span><span class="op">&gt;</span>,
-}
-
-<span class="doccomment">/// Types</span>
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Instrument</span> {
-    <span class="ident">Call</span>,
-    <span class="ident">Future</span>,
-    <span class="ident">Put</span>,
-    <span class="ident">Spot</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Side</span> {
-    <span class="ident">Buy</span>,
-    <span class="ident">Sell</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Venue</span> {
-    <span class="ident">Convergence</span>,
-    <span class="ident">PsyOptions</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Leg</span> {
-    <span class="ident">instrument</span>: <span class="ident">Instrument</span>,
-    <span class="ident">venue</span>: <span class="ident">Venue</span>,
-    <span class="ident">side</span>: <span class="ident">Side</span>,
-    <span class="ident">amount</span>: <span class="ident">u64</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">Leg</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span> <span class="op">=</span> (<span class="number">1</span> <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">4</span>)) <span class="op">+</span> (<span class="number">1</span> <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">2</span>)) <span class="op">+</span> (<span class="number">1</span> <span class="op">+</span> (<span class="number">1</span> <span class="op">*</span> <span class="number">2</span>)) <span class="op">+</span> (<span class="number">8</span> <span class="op">*</span> <span class="number">1</span>);
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AnchorSerialize</span>, <span class="ident">AnchorDeserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Order</span> {
-    <span class="ident">Buy</span>,
-    <span class="ident">Sell</span>,
-    <span class="ident">TwoWay</span>,
-}
-
-<span class="doccomment">/// Access controls</span>
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">settle_access_control</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Settle</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="macro">require!</span>(<span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>.<span class="ident">confirmed</span>, <span class="ident">ProtocolError::TradeNotConfirmed</span>);
-    <span class="macro">require!</span>(<span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>.<span class="ident">approved</span>, <span class="ident">ProtocolError::TradeNotApproved</span>);
-    <span class="prelude-val">Ok</span>(())
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">confirm_access_control</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>(
-    <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Confirm</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">confirm_order</span>: <span class="ident">Order</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
-    <span class="kw">let</span> <span class="ident">taker_address</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">taker_address</span>;
-    <span class="kw">let</span> <span class="ident">request_order</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">request_order</span>;
-    <span class="kw">let</span> <span class="ident">authority</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">authority</span>.<span class="ident">key</span>();
-
-    <span class="comment">// Make sure current authority matches original taker address from request instruction</span>
-    <span class="macro">require!</span>(
-        <span class="ident">taker_address</span> <span class="op">==</span> <span class="ident">authority</span>,
-        <span class="ident">ProtocolError::InvalidTakerAddress</span>
-    );
-
-    <span class="kw">match</span> <span class="ident">request_order</span> {
-        <span class="ident">Order::Buy</span> =&gt; <span class="macro">require!</span>(<span class="ident">confirm_order</span> <span class="op">==</span> <span class="ident">Order::Buy</span>, <span class="ident">ProtocolError::InvalidOrder</span>),
-        <span class="ident">Order::Sell</span> =&gt; <span class="macro">require!</span>(<span class="ident">confirm_order</span> <span class="op">==</span> <span class="ident">Order::Sell</span>, <span class="ident">ProtocolError::InvalidOrder</span>),
-        <span class="ident">Order::TwoWay</span> =&gt; <span class="macro">require!</span>(<span class="ident">confirm_order</span> <span class="op">==</span> <span class="ident">Order::TwoWay</span>, <span class="ident">ProtocolError::InvalidOrder</span>),
-    }
-
-    <span class="prelude-val">Ok</span>(())
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">respond_access_control</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>(
-    <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">Respond</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">bid</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-    <span class="ident">ask</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
-    <span class="kw">let</span> <span class="ident">expiry</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">expiry</span>;
-    <span class="kw">let</span> <span class="ident">order_amount</span> <span class="op">=</span> <span class="ident">rfq</span>.<span class="ident">order_amount</span>;
-    <span class="kw">let</span> <span class="ident">current_unix_timestamp</span> <span class="op">=</span> <span class="ident">Clock::get</span>().<span class="ident">unwrap</span>().<span class="ident">unix_timestamp</span>;
-    <span class="kw">let</span> <span class="ident">delay</span> <span class="op">=</span> <span class="ident">current_unix_timestamp</span> <span class="op">-</span> <span class="ident">rfq</span>.<span class="ident">unix_timestamp</span>;
-    <span class="kw">let</span> <span class="ident">authority</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">authority</span>;
-
-    <span class="macro">require!</span>(<span class="ident">rfq</span>.<span class="ident">authority</span>.<span class="ident">key</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">authority</span>.<span class="ident">key</span>(), <span class="ident">ProtocolError::InvalidAuthorityAddress</span>);
-    <span class="macro">require!</span>(<span class="ident">delay</span> <span class="op">&lt;</span> <span class="ident">expiry</span>, <span class="ident">ProtocolError::ResponseTimeElapsed</span>);
-
-    <span class="kw">match</span> <span class="ident">bid</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">b</span>) =&gt; <span class="macro">require!</span>(<span class="ident">b</span> <span class="op">&gt;</span> <span class="number">0</span>, <span class="ident">ProtocolError::InvalidQuote</span>),
-        <span class="prelude-val">None</span> =&gt; (),
-    }
-    <span class="kw">match</span> <span class="ident">ask</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">a</span>) =&gt; <span class="macro">require!</span>(<span class="ident">a</span> <span class="op">&gt;</span> <span class="number">0</span>, <span class="ident">ProtocolError::InvalidQuote</span>),
-        <span class="prelude-val">None</span> =&gt; (),
-    }
-
-    <span class="macro">require!</span>(<span class="ident">order_amount</span> <span class="op">&gt;</span> <span class="number">0</span>, <span class="ident">ProtocolError::InvalidOrderAmount</span>);
-
-    <span class="prelude-val">Ok</span>(())
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">return_collateral_access_control</span><span class="op">&lt;</span><span class="lifetime">&#39;info</span><span class="op">&gt;</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">ReturnCollateral</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">rfq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">rfq</span>;
-    <span class="kw">let</span> <span class="ident">order</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">accounts</span>.<span class="ident">order</span>;
-
-    <span class="macro">require!</span>(<span class="ident">rfq</span>.<span class="ident">confirmed</span>, <span class="ident">ProtocolError::TradeNotConfirmed</span>);
-    <span class="macro">require!</span>(<span class="op">!</span><span class="ident">order</span>.<span class="ident">collateral_returned</span>, <span class="ident">ProtocolError::TradeNotConfirmed</span>);
-
-    <span class="prelude-val">Ok</span>(())
-}
-
-<span class="doccomment">/// Error handling</span>
-
-<span class="attribute">#[<span class="ident">error_code</span>]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProtocolError</span> {
-    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid order logic&quot;</span>)]</span>
-    <span class="ident">InvalidOrder</span>,
-    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid quote&quot;</span>)]</span>
-    <span class="ident">InvalidQuote</span>,
-    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid taker address&quot;</span>)]</span>
-    <span class="ident">InvalidTakerAddress</span>,
-    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid authority address&quot;</span>)]</span>
-    <span class="ident">InvalidAuthorityAddress</span>,
-    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Invalid order amount&quot;</span>)]</span>
-    <span class="ident">InvalidOrderAmount</span>,
-    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Not implemented&quot;</span>)]</span>
-    <span class="ident">NotImplemented</span>,
-    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Trade has not been confirmed by taker&quot;</span>)]</span>
-    <span class="ident">TradeNotConfirmed</span>,
-    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Trade has not been approved via last look by maker&quot;</span>)]</span>
-    <span class="ident">TradeNotApproved</span>,
-    <span class="attribute">#[<span class="ident">msg</span>(<span class="string">&quot;Timed out on response to request&quot;</span>)]</span>
-    <span class="ident">ResponseTimeElapsed</span>,
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rfq" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0 (9d1b2106e 2022-02-23)" ></div>

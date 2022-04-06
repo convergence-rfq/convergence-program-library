@@ -473,10 +473,6 @@
             "type": "bool"
           },
           {
-            "name": "expired",
-            "type": "bool"
-          },
-          {
             "name": "expiry",
             "type": "i64"
           },
@@ -517,10 +513,6 @@
           {
             "name": "takerAddress",
             "type": "publicKey"
-          },
-          {
-            "name": "timeResponse",
-            "type": "i64"
           },
           {
             "name": "unixTimestamp",
@@ -597,6 +589,10 @@
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "unixTimestamp",
+            "type": "i64"
           }
         ]
       }

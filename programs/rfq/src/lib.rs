@@ -1,6 +1,6 @@
 //! Request for quote (RFQ) protocol.
 //!
-//! Provides an abstraction and implements the RFQ mechanism. 
+//! Provides an abstraction and implements the RFQ mechanism.
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -27,7 +27,7 @@ pub mod rfq {
 
     /// Initializes protocol.
     ///
-    /// ctx 
+    /// ctx
     /// fee_denominator Fee denominator
     /// fee_numerator Fee numerator
     pub fn initialize(
@@ -103,33 +103,52 @@ pub mod rfq {
 /// Holds state of a single RFQ.
 #[account]
 pub struct RfqState {
+    /// If approved by authority
     pub approved: bool,
+    /// Asset escrow bump
     pub asset_escrow_bump: u8,
+    /// Asset mint
     pub asset_mint: Pubkey,
+    /// Authority
     pub authority: Pubkey,
+    /// Best ask amount
     pub best_ask_amount: Option<u64>,
+    /// Best bid amount
     pub best_bid_amount: Option<u64>,
+    /// Best ask amount
     pub best_ask_address: Option<Pubkey>,
+    /// Best bid amount
     pub best_bid_address: Option<Pubkey>,
+    /// PDA bump
     pub bump: u8,
+    /// Confirm order
     pub confirm_order: Order,
+    /// Confirmed
     pub confirmed: bool,
-    pub expired: bool,
+    /// Expiry time
     pub expiry: i64,
+    /// Incremental integer id
     pub id: u64,
+    /// Legs
     pub legs: Vec<Leg>,
+    /// Order amount
     pub order_amount: u64,
+    /// Quote escrow bump
     pub quote_escrow_bump: u8,
+    /// Quote mint
     pub quote_mint: Pubkey,
+    /// Response count
     pub response_count: u64,
+    /// Request order
     pub request_order: Order,
+    /// Taker address
     pub taker_address: Pubkey,
-    pub time_response: i64,
+    /// Creation time
     pub unix_timestamp: i64,
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 8) + (1 * 13);
+    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 12);
 }
 
 /// Global state for the entire RFQ system
@@ -157,10 +176,12 @@ pub struct OrderState {
     pub bump: u8,
     pub collateral_returned: bool,
     pub id: u64,
+    /// Creation time
+    pub unix_timestamp: i64,
 }
 
 impl OrderState {
-    pub const LEN: usize = 8 + (32 * 1) + (8 * 3) + (1 * 1) + (1 * 1) + (1 * 2);
+    pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 1) + (1 * 1) + (1 * 2);
 }
 
 // Contexts
@@ -187,6 +208,7 @@ pub struct Initialize<'info> {
 /// Requests quote (RFQ).
 #[derive(Accounts)]
 pub struct Request<'info> {
+    /// Asset escrow account
     #[account(
         init,
         payer = authority,
@@ -199,15 +221,19 @@ pub struct Request<'info> {
         bump
     )]
     pub asset_escrow: Account<'info, TokenAccount>,
+    /// Asset mint
     pub asset_mint: Box<Account<'info, Mint>>,
+    /// Request authority
     #[account(mut)]
     pub authority: Signer<'info>,
+    /// Protocol state
     #[account(
         mut,
         seeds = [PROTOCOL_SEED.as_bytes()],
         bump = protocol.bump
     )]
     pub protocol: Account<'info, ProtocolState>,
+    /// Quote escrow account
     #[account(
         init,
         payer = authority,
@@ -220,8 +246,11 @@ pub struct Request<'info> {
         bump
     )]
     pub quote_escrow: Account<'info, TokenAccount>,
+    /// Quote mint
     pub quote_mint: Box<Account<'info, Mint>>,
+    /// TODO: Decide what to do about this
     pub rent: Sysvar<'info, Rent>,
+    /// RFQ state
     #[account(
         init,
         payer = authority,
@@ -233,7 +262,9 @@ pub struct Request<'info> {
         bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
+    /// System program used for initializing accounts
     pub system_program: Program<'info, System>,
+    /// Token program used for initializing token accounts
     pub token_program: Program<'info, Token>,
 }
 
@@ -484,7 +515,7 @@ pub enum Order {
 // Access controls
 
 /// Settlement access control. Ensures RFQ is:
-/// 
+///
 /// 1. Confirmed
 /// 2. Approved
 pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> {
@@ -494,9 +525,9 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
 }
 
 /// Confirmation access control. Ensures confirmation is:
-/// 
+///
 /// 1. Executed by taker
-/// 2. Confirmation order is same as request order 
+/// 2. Confirmation order is same as request order
 pub fn confirm_access_control<'info>(
     ctx: &Context<Confirm<'info>>,
     confirm_order: Order,
@@ -507,7 +538,10 @@ pub fn confirm_access_control<'info>(
     let authority = ctx.accounts.authority.key();
 
     // Make sure current authority matches original taker address from request instruction
-    require!(taker_address == authority, ProtocolError::InvalidTakerAddress);
+    require!(
+        taker_address == authority,
+        ProtocolError::InvalidTakerAddress
+    );
 
     match request_order {
         Order::Buy => require!(confirm_order == Order::Buy, ProtocolError::InvalidOrder),
@@ -518,26 +552,30 @@ pub fn confirm_access_control<'info>(
     Ok(())
 }
 
-/// Response access control. Ensures response is:
-/// 
-/// 1. RFQ authority does not match taker authority
-/// 2. If response is a bid the amount is greater than 0
-/// 3. If response is an ask the amount is greater than 0
-/// 4. Order amount is greater than 0
+/// Response access control. Ensures response satisfies the following conditions:
+///
+/// 1. RFQ authority is not the same as the taker authority
+/// 2. RFQ is not expired
+/// 3. Order amount is greater than 0
+/// 4. If response is a bid the amount is greater than 0
+/// 5. If response is an ask the amount is greater than 0
 pub fn respond_access_control<'info>(
     ctx: &Context<Respond<'info>>,
     bid: Option<u64>,
     ask: Option<u64>,
 ) -> Result<()> {
+    let authority = &ctx.accounts.authority;
     let rfq = &ctx.accounts.rfq;
     let expiry = rfq.expiry;
+    let unix_timestamp = Clock::get().unwrap().unix_timestamp;
     let order_amount = rfq.order_amount;
-    let current_unix_timestamp = Clock::get().unwrap().unix_timestamp;
-    let delay = current_unix_timestamp - rfq.unix_timestamp;
-    let authority = &ctx.accounts.authority;
 
-    require!(rfq.authority.key() != authority.key(), ProtocolError::InvalidAuthorityAddress);
-    require!(delay < expiry, ProtocolError::ResponseTimeElapsed);
+    require!(
+        rfq.authority.key() != authority.key(),
+        ProtocolError::InvalidAuthorityAddress
+    );
+    require!(expiry > unix_timestamp, ProtocolError::ResponseTimeElapsed);
+    require!(order_amount > 0, ProtocolError::InvalidOrderAmount);
 
     match bid {
         Some(b) => require!(b > 0, ProtocolError::InvalidQuote),
@@ -548,13 +586,11 @@ pub fn respond_access_control<'info>(
         None => (),
     }
 
-    require!(order_amount > 0, ProtocolError::InvalidOrderAmount);
-
     Ok(())
 }
 
 /// Return collateral access control. Ensures returning collateral for RFQ that is:
-/// 
+///
 /// 1. Confirmed
 /// 2. Collateral has not already by returned
 pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) -> Result<()> {
@@ -596,7 +632,11 @@ pub enum ProtocolError {
 mod instructions {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, fee_denominator: u64, fee_numerator: u64) -> Result<()> {
+    pub fn initialize(
+        ctx: Context<Initialize>,
+        fee_denominator: u64,
+        fee_numerator: u64,
+    ) -> Result<()> {
         let protocol = &mut ctx.accounts.protocol;
         protocol.access_manager_count = 0;
         protocol.authority = ctx.accounts.authority.key();
@@ -628,7 +668,6 @@ mod instructions {
         rfq.best_bid_address = None;
         rfq.best_bid_amount = None;
         rfq.bump = *ctx.bumps.get(RFQ_SEED).unwrap();
-        rfq.expired = false;
         rfq.expiry = expiry;
         rfq.id = ctx.accounts.protocol.rfq_count;
         rfq.legs = vec![];
@@ -648,13 +687,13 @@ mod instructions {
         let rfq = &mut ctx.accounts.rfq;
         let order_amount = rfq.order_amount;
         rfq.response_count += 1;
-        rfq.time_response = Clock::get().unwrap().unix_timestamp;
 
         let order = &mut ctx.accounts.order;
         let authority = ctx.accounts.authority.key();
         order.authority = authority;
         order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.id = rfq.response_count;
+        order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
 
         match ask {
             Some(a) => {

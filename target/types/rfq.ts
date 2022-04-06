@@ -473,10 +473,6 @@ export type Rfq = {
             "type": "bool"
           },
           {
-            "name": "expired",
-            "type": "bool"
-          },
-          {
             "name": "expiry",
             "type": "i64"
           },
@@ -517,10 +513,6 @@ export type Rfq = {
           {
             "name": "takerAddress",
             "type": "publicKey"
-          },
-          {
-            "name": "timeResponse",
-            "type": "i64"
           },
           {
             "name": "unixTimestamp",
@@ -597,6 +589,10 @@ export type Rfq = {
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "unixTimestamp",
+            "type": "i64"
           }
         ]
       }
@@ -1223,10 +1219,6 @@ export const IDL: Rfq = {
             "type": "bool"
           },
           {
-            "name": "expired",
-            "type": "bool"
-          },
-          {
             "name": "expiry",
             "type": "i64"
           },
@@ -1267,10 +1259,6 @@ export const IDL: Rfq = {
           {
             "name": "takerAddress",
             "type": "publicKey"
-          },
-          {
-            "name": "timeResponse",
-            "type": "i64"
           },
           {
             "name": "unixTimestamp",
@@ -1347,6 +1335,10 @@ export const IDL: Rfq = {
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "unixTimestamp",
+            "type": "i64"
           }
         ]
       }
