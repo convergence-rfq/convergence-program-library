@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::sysvar::clock::Clock;
 
-declare_id!("FN4DFZzE993RQur3jC1T2CvXTThYhF6t1YLA54hhcnj");
+declare_id!("FN4DFZzE993RQur3jC1T2CvXTThYhF6t1YLA54hhcnjA");
 
 // NOTE: Do not use hyphens in seed
 /// Asset escrow PDA seed
