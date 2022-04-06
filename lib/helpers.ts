@@ -104,12 +104,12 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
         [Buffer.from(ORDER_SEED), Buffer.from(rfqs[i].id.toString()), Buffer.from((j + 1).toString())],
         program.programId
       );
-      orderPdas.push(orderPda);
+      orderPdas.push([orderPda, rfqs[i]]);
     }
   }
 
-  const orders = await Promise.all(orderPdas.map(async (orderPda) => {
-    return await program.account.orderState.fetch(orderPda);
+  const orders = await Promise.all(orderPdas.map(async ([orderPda, rfqState]) => {
+    return [await program.account.orderState.fetch(orderPda), rfqState];
   }));
 
   return orders;
