@@ -92,6 +92,10 @@
           "type": "i64"
         },
         {
+          "name": "lastLook",
+          "type": "bool"
+        },
+        {
           "name": "legs",
           "type": {
             "vec": {
@@ -489,6 +493,10 @@
             }
           },
           {
+            "name": "lastLook",
+            "type": "bool"
+          },
+          {
             "name": "orderAmount",
             "type": "u64"
           },
@@ -723,26 +731,31 @@
     },
     {
       "code": 6005,
+      "name": "LastLookNotSet",
+      "msg": "Last look has not been configured for this RFQ"
+    },
+    {
+      "code": 6006,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
     }
   ],
   "metadata": {
-    "address": "FN4DFZzE993RQur3jC1T2CvXTThYhF6t1YLA54hhcnjA"
+    "address": "2rPciaAyyvNKZV5fiabaC3Rsje16t6CqpPaL1pCVVX6M"
   }
 }

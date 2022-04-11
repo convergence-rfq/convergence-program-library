@@ -405,6 +405,7 @@ export async function request(
   // @ts-ignore
   authority: Wallet,
   expiry: anchor.BN,
+  lastLook: boolean,
   legs: object[],
   orderAmount: anchor.BN,
   provider: Provider,
@@ -436,6 +437,7 @@ export async function request(
 
   const tx = await program.rpc.request(
     expiry,
+    lastLook,
     legs,
     orderAmount,
     requestOrder,

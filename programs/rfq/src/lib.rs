@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::sysvar::clock::Clock;
 
-declare_id!("FN4DFZzE993RQur3jC1T2CvXTThYhF6t1YLA54hhcnjA");
+declare_id!("2rPciaAyyvNKZV5fiabaC3Rsje16t6CqpPaL1pCVVX6M");
 
 // NOTE: Do not use hyphens in seed
 /// Asset escrow PDA seed
@@ -41,6 +41,7 @@ pub mod rfq {
     /// Taker requests quote (RFQ).
     ///
     /// expiry
+    /// last_look
     /// legs
     /// expiry
     /// order_amount
@@ -48,11 +49,12 @@ pub mod rfq {
     pub fn request(
         ctx: Context<Request>,
         expiry: i64,
+        last_look: bool,
         legs: Vec<Leg>,
         order_amount: u64,
         request_order: Order,
     ) -> Result<()> {
-        instructions::request(ctx, expiry, legs, order_amount, request_order)
+        instructions::request(ctx, expiry, last_look, legs, order_amount, request_order)
     }
 
     /// Maker responds with one-way or two-way quotes.
@@ -77,6 +79,7 @@ pub mod rfq {
     /// Last look.
     ///
     /// ctx
+    #[access_control(last_look_access_control(&ctx))]
     pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
         instructions::last_look(ctx)
     }
@@ -131,6 +134,8 @@ pub struct RfqState {
     pub id: u64,
     /// Legs
     pub legs: Vec<Leg>,
+    /// Last look required to approve trade
+    pub last_look: bool,
     /// Order amount
     pub order_amount: u64,
     /// Quote escrow bump
@@ -148,7 +153,7 @@ pub struct RfqState {
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 12);
+    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 13);
 }
 
 /// Global state for the entire RFQ system
@@ -517,13 +522,35 @@ pub enum Order {
 /// Settlement access control. Ensures RFQ is:
 ///
 /// 1. Confirmed
-/// 2. Approved
+/// 2. If last look is required, make sure approved
 pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> {
-    require!(ctx.accounts.rfq.confirmed, ProtocolError::TradeNotConfirmed);
-    require!(ctx.accounts.rfq.approved, ProtocolError::TradeNotApproved);
+    let rfq = &ctx.accounts.rfq;
+
+    require!(rfq.confirmed, ProtocolError::TradeNotConfirmed);
+    if rfq.last_look {
+        require!(rfq.approved, ProtocolError::TradeNotApproved);
+    }
+
     Ok(())
 }
 
+/// Last look access control. Ensures last look:
+///
+/// 1. Last looks is configured for RFQ
+/// 2. Order belongs to authority approving via last look
+pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result<()> {
+    let rfq = &ctx.accounts.rfq;
+    let authority = ctx.accounts.authority.key();
+    let order_authority = ctx.accounts.order.authority.key();
+
+    require!(rfq.last_look, ProtocolError::LastLookNotSet);
+    require!(
+        order_authority == authority,
+        ProtocolError::TradeNotApproved
+    );
+
+    Ok(())
+}
 /// Confirmation access control. Ensures confirmation is:
 ///
 /// 1. Executed by taker
@@ -618,6 +645,8 @@ pub enum ProtocolError {
     InvalidAuthorityAddress,
     #[msg("Invalid order amount")]
     InvalidOrderAmount,
+    #[msg("Last look has not been configured for this RFQ")]
+    LastLookNotSet,
     #[msg("Not implemented")]
     NotImplemented,
     #[msg("Trade has not been confirmed by taker")]
@@ -651,6 +680,7 @@ mod instructions {
     pub fn request(
         ctx: Context<Request>,
         expiry: i64,
+        last_look: bool,
         legs: Vec<Leg>,
         order_amount: u64,
         request_order: Order,
@@ -670,6 +700,7 @@ mod instructions {
         rfq.bump = *ctx.bumps.get(RFQ_SEED).unwrap();
         rfq.expiry = expiry;
         rfq.id = ctx.accounts.protocol.rfq_count;
+        rfq.last_look = last_look;
         rfq.legs = vec![];
         rfq.order_amount = order_amount;
         rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
@@ -956,8 +987,8 @@ mod instructions {
         }
 
         // TODO: This function gets called multiple times so decide when to settle
-        for l in rfq.legs.iter() {
-            match l.venue {
+        for leg in rfq.legs.iter() {
+            match leg.venue {
                 Venue::PsyOptions => {
                     // TODO: Finish @uwecerron
                     //

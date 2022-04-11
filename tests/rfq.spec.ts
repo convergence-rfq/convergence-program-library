@@ -75,7 +75,7 @@ let mintAuthority: Wallet;
 let miner: Wallet;
 let taker: Wallet;
 
-const TAKER_ORDER_AMOUNT = new anchor.BN(10); // Order to buy 10 asset tokens for XX? quote tokens
+const TAKER_ORDER_AMOUNT = new anchor.BN(10); // Order to buy 10 asset tokens for X quote tokens
 const MAKER_A_ASK_AMOUNT = new anchor.BN(120);
 const MAKER_A_BID_AMOUNT = null;
 const MAKER_B_ASK_AMOUNT = new anchor.BN(110); // Winning maker
@@ -173,7 +173,7 @@ describe('rfq', () => {
       side: Side.Buy,
       venue: Venue.Convergence,
     }];
-    const { rfqState, protocolState } = await request(assetMint, taker, expiry, legs, orderAmount, provider, quoteMint, requestOrder);
+    const { rfqState, protocolState } = await request(assetMint, taker, expiry, true, legs, orderAmount, provider, quoteMint, requestOrder);
     //assert.deepEqual(rfqState.legs, legs);
     assert.ok(rfqState.id.eq(new anchor.BN(1)));
     assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
@@ -207,7 +207,7 @@ describe('rfq', () => {
       amount: TAKER_ORDER_AMOUNT,
       instrument: Instrument.Spot,
     }];
-    const { rfqState, protocolState } = await request(assetMint, taker, expiry, legs, orderAmount, provider, quoteMint, requestOrder);
+    const { rfqState, protocolState } = await request(assetMint, taker, expiry, true, legs, orderAmount, provider, quoteMint, requestOrder);
     assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
     assert.deepEqual(rfqState.requestOrder, requestOrder);
     //assert.deepEqual(rfqState.legs, legs);

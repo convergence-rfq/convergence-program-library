@@ -92,6 +92,10 @@ export type Rfq = {
           "type": "i64"
         },
         {
+          "name": "lastLook",
+          "type": "bool"
+        },
+        {
           "name": "legs",
           "type": {
             "vec": {
@@ -489,6 +493,10 @@ export type Rfq = {
             }
           },
           {
+            "name": "lastLook",
+            "type": "bool"
+          },
+          {
             "name": "orderAmount",
             "type": "u64"
           },
@@ -723,21 +731,26 @@ export type Rfq = {
     },
     {
       "code": 6005,
+      "name": "LastLookNotSet",
+      "msg": "Last look has not been configured for this RFQ"
+    },
+    {
+      "code": 6006,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
     }
@@ -838,6 +851,10 @@ export const IDL: Rfq = {
           "type": "i64"
         },
         {
+          "name": "lastLook",
+          "type": "bool"
+        },
+        {
           "name": "legs",
           "type": {
             "vec": {
@@ -1235,6 +1252,10 @@ export const IDL: Rfq = {
             }
           },
           {
+            "name": "lastLook",
+            "type": "bool"
+          },
+          {
             "name": "orderAmount",
             "type": "u64"
           },
@@ -1469,21 +1490,26 @@ export const IDL: Rfq = {
     },
     {
       "code": 6005,
+      "name": "LastLookNotSet",
+      "msg": "Last look has not been configured for this RFQ"
+    },
+    {
+      "code": 6006,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
     }
