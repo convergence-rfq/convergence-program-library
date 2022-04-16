@@ -618,14 +618,19 @@ pub fn respond_access_control<'info>(
 
 /// Return collateral access control. Ensures returning collateral for RFQ that is:
 ///
-/// 1. Confirmed
-/// 2. Collateral has not already by returned
+/// 1. Collateral has not already by returned
+/// 2. RFQ is either expired or confirmed
 pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
 
-    require!(rfq.confirmed, ProtocolError::TradeNotConfirmed);
-    require!(!order.collateral_returned, ProtocolError::TradeNotConfirmed);
+    let now = Clock::get().unwrap().unix_timestamp;
+
+    require!(!order.collateral_returned, ProtocolError::CollateralReturned);
+
+    if !rfq.confirmed {
+        require!(now > rfq.expiry, ProtocolError::NotExpiredOrConfirmed);
+    }
 
     Ok(())
 }
@@ -635,6 +640,10 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
 /// Error handling codes.
 #[error_code]
 pub enum ProtocolError {
+    #[msg("Collateral returned")]
+    CollateralReturned,
+    #[msg("Not expired or confirmed")]
+    NotExpiredOrConfirmed,
     #[msg("Invalid order logic")]
     InvalidOrder,
     #[msg("Invalid quote")]
@@ -802,6 +811,7 @@ mod instructions {
                 )?;
             }
             Order::Sell => {
+                // Taker wants to sell asset token, needs to post quote token as collateral
                 anchor_spl::token::transfer(
                     CpiContext::new(
                         ctx.accounts.token_program.to_account_info(),

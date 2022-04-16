@@ -706,51 +706,61 @@ export type Rfq = {
   "errors": [
     {
       "code": 6000,
+      "name": "CollateralReturned",
+      "msg": "Collateral returned"
+    },
+    {
+      "code": 6001,
+      "name": "NotExpiredOrConfirmed",
+      "msg": "Not expired or confirmed"
+    },
+    {
+      "code": 6002,
       "name": "InvalidOrder",
       "msg": "Invalid order logic"
     },
     {
-      "code": 6001,
+      "code": 6003,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6002,
+      "code": 6004,
       "name": "InvalidTakerAddress",
       "msg": "Invalid taker address"
     },
     {
-      "code": 6003,
+      "code": 6005,
       "name": "InvalidAuthorityAddress",
       "msg": "Invalid authority address"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6005,
+      "code": 6007,
       "name": "LastLookNotSet",
       "msg": "Last look has not been configured for this RFQ"
     },
     {
-      "code": 6006,
+      "code": 6008,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6007,
+      "code": 6009,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6008,
+      "code": 6010,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6009,
+      "code": 6011,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
     }
@@ -1465,51 +1475,61 @@ export const IDL: Rfq = {
   "errors": [
     {
       "code": 6000,
+      "name": "CollateralReturned",
+      "msg": "Collateral returned"
+    },
+    {
+      "code": 6001,
+      "name": "NotExpiredOrConfirmed",
+      "msg": "Not expired or confirmed"
+    },
+    {
+      "code": 6002,
       "name": "InvalidOrder",
       "msg": "Invalid order logic"
     },
     {
-      "code": 6001,
+      "code": 6003,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6002,
+      "code": 6004,
       "name": "InvalidTakerAddress",
       "msg": "Invalid taker address"
     },
     {
-      "code": 6003,
+      "code": 6005,
       "name": "InvalidAuthorityAddress",
       "msg": "Invalid authority address"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6005,
+      "code": 6007,
       "name": "LastLookNotSet",
       "msg": "Last look has not been configured for this RFQ"
     },
     {
-      "code": 6006,
+      "code": 6008,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6007,
+      "code": 6009,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6008,
+      "code": 6010,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6009,
+      "code": 6011,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
     }

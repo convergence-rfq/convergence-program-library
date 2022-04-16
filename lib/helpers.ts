@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor';
 import { Idl, Program, Provider, Wallet } from '@project-serum/anchor';
-import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 
 import { default as idl } from '../target/idl/rfq.json';
@@ -72,6 +72,59 @@ export const Leg = {
     amount: {}
   }
 };
+
+export async function clear(
+  provider: Provider,
+  rfqId: number,
+  authority: Wallet,
+): Promise<any> {
+  let txs = [];
+
+  const program = await getProgram(provider);
+
+  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
+    program.programId
+  );
+  const rfqState = await program.account.rfqState.fetch(rfqPda);
+
+  for (let i = 0; i < rfqState.responseCount.toNumber(); i++) {
+    const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from((i + 1).toString())],
+      program.programId
+    );
+    const orderState = await program.account.orderState.fetch(orderPda);
+
+    const makerAssetWallet = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      rfqState.assetMint,
+      orderState.authority
+    );
+    const makerQuoteWallet = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      rfqState.quoteMint,
+      orderState.authority
+    );
+
+    const { tx } = await returnCollateral(
+      provider,
+      authority,
+      rfqId,
+      orderState.id,
+      makerAssetWallet,
+      makerQuoteWallet
+    );
+    txs.push(tx);
+  }
+
+  // await settle(provider, taker, rfqId, 0, authorityAssetWallet, authorityQuoteWallet);
+  // await settle(provider, marketMakerA, rfqId, 1, makerAAssetWallet, makerAQuoteWallet);
+  // await settle(provider, marketMakerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet);
+
+  return { txs };
+}
 
 export async function getRfqs(provider: Provider): Promise<object[]> {
   const program = await getProgram(provider);
