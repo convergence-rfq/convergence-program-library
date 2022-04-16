@@ -853,7 +853,7 @@ mod instructions {
         order.collateral_returned = true;
 
         if order.ask.is_some()
-            && (rfq.best_ask_amount.unwrap() != order.ask.unwrap()
+            && (rfq.best_ask_address.unwrap() != order.authority
                 || rfq.confirm_order == Order::Sell)
         {
             anchor_spl::token::transfer(
@@ -882,7 +882,7 @@ mod instructions {
         }
 
         if order.bid.is_some()
-            && (rfq.best_ask_amount.unwrap() != order.ask.unwrap()
+            && (rfq.best_bid_address.unwrap() != order.authority
                 || rfq.confirm_order == Order::Buy)
         {
             anchor_spl::token::transfer(

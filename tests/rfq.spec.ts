@@ -181,8 +181,8 @@ describe('rfq', () => {
   });
 
   it('Maker responds to RFQ 1 and times out', async () => {
-    console.log('delay of 500 ms...');
-    await sleep(500);
+    console.log('delay of 760 ms...');
+    await sleep(750);
 
     const rfqId = 1;
 

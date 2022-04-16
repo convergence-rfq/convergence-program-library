@@ -95,6 +95,10 @@ export async function clear(
     );
     const orderState = await program.account.orderState.fetch(orderPda);
 
+    if (orderState.collateralReturned) {
+      continue;
+    }
+
     const makerAssetWallet = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
