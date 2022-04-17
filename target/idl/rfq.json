@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.0.0",
   "name": "rfq",
   "instructions": [
     {
@@ -726,8 +726,5 @@
         ]
       }
     }
-  ],
-  "metadata": {
-    "address": "6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2"
-  }
+  ]
 }

@@ -1,5 +1,5 @@
 export type Rfq = {
-  "version": "0.1.0",
+  "version": "0.0.0",
   "name": "rfq",
   "instructions": [
     {
@@ -730,7 +730,7 @@ export type Rfq = {
 };
 
 export const IDL: Rfq = {
-  "version": "0.1.0",
+  "version": "0.0.0",
   "name": "rfq",
   "instructions": [
     {
