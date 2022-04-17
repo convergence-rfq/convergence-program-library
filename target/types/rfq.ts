@@ -601,6 +601,10 @@ export type Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
           }
         ]
       }
@@ -716,51 +720,56 @@ export type Rfq = {
     },
     {
       "code": 6002,
+      "name": "OrderAlreadySettled",
+      "msg": "Order already settled"
+    },
+    {
+      "code": 6003,
       "name": "InvalidOrder",
       "msg": "Invalid order logic"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidTakerAddress",
       "msg": "Invalid taker address"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "InvalidAuthorityAddress",
       "msg": "Invalid authority address"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "LastLookNotSet",
       "msg": "Last look has not been configured for this RFQ"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
     }
@@ -1370,6 +1379,10 @@ export const IDL: Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
           }
         ]
       }
@@ -1485,51 +1498,56 @@ export const IDL: Rfq = {
     },
     {
       "code": 6002,
+      "name": "OrderAlreadySettled",
+      "msg": "Order already settled"
+    },
+    {
+      "code": 6003,
       "name": "InvalidOrder",
       "msg": "Invalid order logic"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidTakerAddress",
       "msg": "Invalid taker address"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "InvalidAuthorityAddress",
       "msg": "Invalid authority address"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "LastLookNotSet",
       "msg": "Last look has not been configured for this RFQ"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
     }

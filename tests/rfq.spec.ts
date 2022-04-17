@@ -294,7 +294,7 @@ describe('rfq', () => {
     assert.equal(response3.rfqState.approved, true);
   });
 
-  it('Miner returns collateral for RFQ 2', async () => {
+  it('Makers and takers return collateral for RFQ 2', async () => {
     const rfqId = 2;
 
     await returnCollateral(provider, taker, rfqId, 0, makerAAssetWallet, authorityQuoteWallet);
@@ -323,7 +323,7 @@ describe('rfq', () => {
     console.log('maker C quote collateral balance:', makerCquoteBalance);
   });
 
-  it('Miner settles RFQ 2', async () => {
+  it('Makers and takers settle RFQ 2', async () => {
     const rfqId = 2;
 
     await settle(provider, taker, rfqId, 0, authorityAssetWallet, authorityQuoteWallet);

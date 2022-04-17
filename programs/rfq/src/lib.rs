@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::sysvar::clock::Clock;
 
-declare_id!("2rPciaAyyvNKZV5fiabaC3Rsje16t6CqpPaL1pCVVX6M");
+declare_id!("DUiepfLXgDPuJEjwmZzwKJM5Lona1R6pd7pYgWaxZD3t");
 
 // NOTE: Do not use hyphens in seed
 /// Asset escrow PDA seed
@@ -183,10 +183,12 @@ pub struct OrderState {
     pub id: u64,
     /// Creation time
     pub unix_timestamp: i64,
+    /// If order has been settled
+    pub settled: bool,
 }
 
 impl OrderState {
-    pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 1) + (1 * 1) + (1 * 2);
+    pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 1) + (1 * 1) + (1 * 3);
 }
 
 // Contexts
@@ -522,11 +524,15 @@ pub enum Order {
 /// Settlement access control. Ensures RFQ is:
 ///
 /// 1. Confirmed
-/// 2. If last look is required, make sure approved
+/// 2. Order has not yet been settled
+/// 3. If last look is required, make sure approved
 pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
+    let order = &ctx.accounts.order;
 
     require!(rfq.confirmed, ProtocolError::TradeNotConfirmed);
+    require!(!order.settled, ProtocolError::OrderAlreadySettled);
+
     if rfq.last_look {
         require!(rfq.approved, ProtocolError::TradeNotApproved);
     }
@@ -644,6 +650,8 @@ pub enum ProtocolError {
     CollateralReturned,
     #[msg("Not expired or confirmed")]
     NotExpiredOrConfirmed,
+    #[msg("Order already settled")]
+    OrderAlreadySettled,
     #[msg("Invalid order logic")]
     InvalidOrder,
     #[msg("Invalid quote")]
@@ -734,6 +742,7 @@ mod instructions {
         order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.id = rfq.response_count;
         order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
+        order.settled = false;
 
         match ask {
             Some(a) => {
@@ -914,12 +923,13 @@ mod instructions {
     }
 
     pub fn settle(ctx: Context<Settle>) -> Result<()> {
+        let authority_address = ctx.accounts.authority.key();
         let rfq = &ctx.accounts.rfq;
         let confirm_order = rfq.confirm_order;
         let taker_address = rfq.taker_address;
 
-        let order = &ctx.accounts.order;
-        let authority_address = *ctx.accounts.authority.to_account_info().key;
+        let order = &mut ctx.accounts.order;
+        order.settled = true;
 
         let mut quote_amount = 0;
         let mut asset_amount = 0;
