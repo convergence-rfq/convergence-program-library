@@ -182,6 +182,67 @@ export type PsyAmerican = {
       ]
     },
     {
+      "name": "mintOptionV2",
+      "accounts": [
+        {
+          "name": "userAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "underlyingAssetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetSrc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintedOptionDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "writerTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintedWriterTokenDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "size",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "exerciseOption",
       "accounts": [
         {
@@ -246,6 +307,67 @@ export type PsyAmerican = {
         },
         {
           "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "size",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "exerciseOptionV2",
+      "accounts": [
+        {
+          "name": "userAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "optionAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "optionMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "optionMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "exerciserOptionTokenSrc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteAssetSrc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -913,6 +1035,67 @@ export const IDL: PsyAmerican = {
       ]
     },
     {
+      "name": "mintOptionV2",
+      "accounts": [
+        {
+          "name": "userAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "underlyingAssetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetSrc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintedOptionDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "writerTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintedWriterTokenDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "size",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "exerciseOption",
       "accounts": [
         {
@@ -977,6 +1160,67 @@ export const IDL: PsyAmerican = {
         },
         {
           "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "size",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "exerciseOptionV2",
+      "accounts": [
+        {
+          "name": "userAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "optionAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "optionMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "optionMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "exerciserOptionTokenSrc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteAssetSrc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
