@@ -70,10 +70,10 @@ pub mod rfq {
     /// Taker confirms order.
     ///
     /// ctx
-    /// confirm_order
-    #[access_control(confirm_access_control(&ctx, confirm_order))]
-    pub fn confirm(ctx: Context<Confirm>, confirm_order: Order) -> Result<()> {
-        instructions::confirm(ctx, confirm_order)
+    /// order_side
+    #[access_control(confirm_access_control(&ctx, order_side))]
+    pub fn confirm(ctx: Context<Confirm>, order_side: Order) -> Result<()> {
+        instructions::confirm(ctx, order_side)
     }
 
     /// Last look.
@@ -124,8 +124,8 @@ pub struct RfqState {
     pub best_bid_address: Option<Pubkey>,
     /// PDA bump
     pub bump: u8,
-    /// Confirm order
-    pub confirm_order: Order,
+    /// Order side
+    pub order_side: Order,
     /// Confirmed
     pub confirmed: bool,
     /// Expiry time
@@ -484,7 +484,7 @@ pub enum Instrument {
     Spot,
 }
 
-/// Side for RFQ.
+/// Order side for RFQ.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Side {
     Buy,
@@ -563,7 +563,7 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 /// 2. Confirmation order is same as request order
 pub fn confirm_access_control<'info>(
     ctx: &Context<Confirm<'info>>,
-    confirm_order: Order,
+    order_side: Order,
 ) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let taker_address = rfq.taker_address;
@@ -577,9 +577,9 @@ pub fn confirm_access_control<'info>(
     );
 
     match request_order {
-        Order::Buy => require!(confirm_order == Order::Buy, ProtocolError::InvalidOrder),
-        Order::Sell => require!(confirm_order == Order::Sell, ProtocolError::InvalidOrder),
-        Order::TwoWay => require!(confirm_order == Order::TwoWay, ProtocolError::InvalidOrder),
+        Order::Buy => require!(order_side == Order::Buy, ProtocolError::InvalidOrder),
+        Order::Sell => require!(order_side == Order::Sell, ProtocolError::InvalidOrder),
+        Order::TwoWay => require!(order_side == Order::TwoWay, ProtocolError::InvalidOrder),
     }
 
     Ok(())
@@ -794,16 +794,16 @@ mod instructions {
         Ok(())
     }
 
-    pub fn confirm(ctx: Context<Confirm>, confirm_order: Order) -> Result<()> {
+    pub fn confirm(ctx: Context<Confirm>, order_side: Order) -> Result<()> {
         let order = &mut ctx.accounts.order;
         order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.id = 0;
 
         let rfq = &mut ctx.accounts.rfq;
         rfq.confirmed = true;
-        rfq.confirm_order = confirm_order;
+        rfq.order_side = order_side;
 
-        match confirm_order {
+        match order_side {
             Order::Buy => {
                 // Taker wants to buy asset token, needs to post quote token as collateral
                 anchor_spl::token::transfer(
@@ -842,7 +842,7 @@ mod instructions {
         let rfq = &mut ctx.accounts.rfq;
         let order = &ctx.accounts.order;
 
-        let is_winner = match rfq.confirm_order {
+        let is_winner = match rfq.order_side {
             Order::Buy => rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
             Order::Sell => rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
             Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
@@ -862,7 +862,7 @@ mod instructions {
 
         if order.ask.is_some()
             && (rfq.best_ask_address.unwrap() != order.authority
-                || rfq.confirm_order == Order::Sell)
+                || rfq.order_side == Order::Sell)
         {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
@@ -891,7 +891,7 @@ mod instructions {
 
         if order.bid.is_some()
             && (rfq.best_bid_address.unwrap() != order.authority
-                || rfq.confirm_order == Order::Buy)
+                || rfq.order_side == Order::Buy)
         {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
@@ -929,13 +929,13 @@ mod instructions {
 
         let rfq = &mut ctx.accounts.rfq;
 
-        let confirm_order = rfq.confirm_order;
+        let order_side = rfq.order_side;
         let taker_address = rfq.taker_address;
 
         let mut quote_amount = 0;
         let mut asset_amount = 0;
 
-        match confirm_order {
+        match order_side {
             Order::Buy => {
                 if rfq.best_ask_address.is_some() && authority_address == rfq.best_ask_address.unwrap()  {
                     quote_amount = rfq.best_ask_amount.unwrap();

@@ -260,7 +260,7 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "confirmOrder",
+          "name": "orderSide",
           "type": {
             "defined": "Order"
           }
@@ -467,7 +467,7 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "confirmOrder",
+            "name": "orderSide",
             "type": {
               "defined": "Order"
             }
@@ -1038,7 +1038,7 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "confirmOrder",
+          "name": "orderSide",
           "type": {
             "defined": "Order"
           }
@@ -1245,7 +1245,7 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "confirmOrder",
+            "name": "orderSide",
             "type": {
               "defined": "Order"
             }

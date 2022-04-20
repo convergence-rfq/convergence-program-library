@@ -261,9 +261,9 @@ describe('rfq', () => {
 
   it('Taker confirms RFQ 2 price pre-settlement', async () => {
     const rfqId = 2;
-    const confirmOrder = Order.Buy;
+    const orderSide = Order.Buy;
 
-    const { rfqState } = await confirm(provider, rfqId, confirmOrder, taker, authorityAssetWallet, authorityQuoteWallet);
+    const { rfqState } = await confirm(provider, rfqId, orderSide, taker, authorityAssetWallet, authorityQuoteWallet);
     console.log('best ask confirmation:', rfqState.bestAskAmount?.toNumber());
     console.log('best bid confirmation:', rfqState.bestBidAmount?.toNumber());
 
@@ -287,7 +287,7 @@ describe('rfq', () => {
 
     console.log('best ask approved:', response1.rfqState.bestAskAmount?.toString());
     console.log('best bid approved:', response2.rfqState.bestBidAmount?.toString());
-    console.log('confirm order:', response3.rfqState.confirmOrder.toString());
+    console.log('order side:', response3.rfqState.orderSide.toString());
 
     assert.equal(response1.rfqState.approved, false);
     assert.equal(response2.rfqState.approved, true);

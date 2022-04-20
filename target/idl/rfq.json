@@ -260,7 +260,7 @@
       ],
       "args": [
         {
-          "name": "confirmOrder",
+          "name": "orderSide",
           "type": {
             "defined": "Order"
           }
@@ -467,7 +467,7 @@
             "type": "u8"
           },
           {
-            "name": "confirmOrder",
+            "name": "orderSide",
             "type": {
               "defined": "Order"
             }

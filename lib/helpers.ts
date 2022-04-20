@@ -371,7 +371,7 @@ export async function settle(
 export async function confirm(
   provider: Provider,
   rfqId: number,
-  confirmOrder: object,
+  orderSide: object,
   // @ts-ignore
   authority: Wallet,
   assetWallet: PublicKey,
@@ -402,7 +402,7 @@ export async function confirm(
   );
 
   const tx = await program.rpc.confirm(
-    confirmOrder,
+    orderSide,
     {
       accounts: {
         assetMint: assetMint,
