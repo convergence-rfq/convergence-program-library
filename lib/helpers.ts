@@ -1,12 +1,9 @@
 import * as anchor from '@project-serum/anchor';
-import { Idl, Program, Provider } from '@project-serum/anchor';
-import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Idl, Program, Provider, Wallet } from '@project-serum/anchor';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
 
-import { Rfq } from '../target/types/rfq';
-import * as idl from '../target/idl/rfq.json';
-
-export const program = anchor.workspace.Rfq as Program<Rfq>;
+import { default as idl } from '../target/idl/rfq.json';
 
 export const RFQ_SEED = 'rfq';
 export const ORDER_SEED = 'order';
@@ -76,33 +73,147 @@ export const Leg = {
   }
 };
 
+export async function clear(
+  provider: Provider,
+  rfqId: number,
+  // @ts-ignore
+  authority: Wallet,
+): Promise<any> {
+  let txs = [];
+
+  const program = await getProgram(provider);
+
+  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
+    program.programId
+  );
+  const rfqState = await program.account.rfqState.fetch(rfqPda);
+
+  for (let i = 0; i < rfqState.responseCount.toNumber(); i++) {
+    const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from((i + 1).toString())],
+      program.programId
+    );
+    const orderState = await program.account.orderState.fetch(orderPda);
+
+    if (orderState.collateralReturned) {
+      continue;
+    }
+
+    const makerAssetWallet = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      rfqState.assetMint,
+      orderState.authority
+    );
+    const makerQuoteWallet = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      rfqState.quoteMint,
+      orderState.authority
+    );
+
+    const { tx } = await returnCollateral(
+      provider,
+      authority,
+      rfqId,
+      orderState.id,
+      makerAssetWallet,
+      makerQuoteWallet
+    );
+    txs.push(tx);
+  }
+
+  for (let i = 0; i < rfqState.responseCount.toNumber() + 1; i++) {
+    let authorityPk = authority.publicKey;
+
+    if (i > 0) {
+      const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
+        [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(i.toString())],
+        program.programId
+      );
+      const orderState = await program.account.orderState.fetch(orderPda);
+      authorityPk = orderState.authority;
+    }
+
+    const assetWallet = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      rfqState.assetMint,
+      authorityPk
+    );
+    const quoteWallet = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      rfqState.quoteMint,
+      authorityPk
+    );
+
+    // When i = 0 this represents the taker asset and escrow accounts
+    let { tx } = await settle(
+      provider,
+      authority,
+      rfqId,
+      i,
+      assetWallet,
+      quoteWallet
+    );
+    txs.push(tx);
+  }
+
+  // await settle(provider, taker, rfqId, 0, authorityAssetWallet, authorityQuoteWallet);
+  // await settle(provider, marketMakerA, rfqId, 1, makerAAssetWallet, makerAQuoteWallet);
+  // await settle(provider, marketMakerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet);
+
+  return { txs };
+}
+
 export async function getRfqs(provider: Provider): Promise<object[]> {
   const program = await getProgram(provider);
-  const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   );
-
   const protocolState = await program.account.protocolState.fetch(protocolPda);
-  const rfqCount = protocolState.rfqCount.toNumber();
+  const range = Array.from({ length: protocolState.rfqCount.toNumber() }, (_, i) => 1 + i);
 
-  let rfqs = [];
-  for (let i = 0; i < rfqCount; i++) {
-    const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(RFQ_SEED), Buffer.from((i + 1).toString())],
+  const rfqs = await Promise.all(range.map(async (i) => {
+    const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(RFQ_SEED), Buffer.from(i.toString())],
       program.programId
     );
-    // TODO: Make asyc
-    const rfq = await program.account.rfqState.fetch(rfqPda);
-    rfqs.push(rfq);
-  }
+    return await program.account.rfqState.fetch(rfqPda);
+  }));
 
   return rfqs;
 }
 
+export async function getResponses(provider: Provider, rfqs: any[]): Promise<object[]> {
+  let orderPdas = [];
+
+  const program = await getProgram(provider);
+
+  for (let i = 0; i < rfqs.length; i++) {
+    for (let j = 0; j < rfqs[i].responseCount.toNumber(); j++) {
+      const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
+        [Buffer.from(ORDER_SEED), Buffer.from(rfqs[i].id.toString()), Buffer.from((j + 1).toString())],
+        program.programId
+      );
+      orderPdas.push([orderPda, rfqs[i]]);
+    }
+  }
+
+  const orders = await Promise.all(orderPdas.map(async ([orderPda, rfqState]) => {
+    return [await program.account.orderState.fetch(orderPda), rfqState];
+  }));
+
+  return orders;
+}
+
 export async function lastLook(
   provider: Provider,
-  authority: Keypair,
+  // @ts-ignore
+  authority: Wallet,
   rfqId: number,
   orderId: number
 ): Promise<any> {
@@ -124,7 +235,7 @@ export async function lastLook(
         order: orderPda,
         rfq: rfqPda,
       },
-      signers: [authority],
+      signers: [authority.payer],
     });
 
   const rfqState = await program.account.rfqState.fetch(rfqPda);
@@ -139,7 +250,8 @@ export async function lastLook(
 
 export async function returnCollateral(
   provider: Provider,
-  authority: Keypair,
+  // @ts-ignore
+  authority: Wallet,
   rfqId: number,
   orderId: number,
   assetWallet: PublicKey,
@@ -185,7 +297,7 @@ export async function returnCollateral(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID
       },
-      signers: [authority]
+      signers: [authority.payer]
     });
 
   rfqState = await program.account.rfqState.fetch(rfqPda);
@@ -198,7 +310,8 @@ export async function returnCollateral(
 
 export async function settle(
   provider: Provider,
-  authority: Keypair,
+  // @ts-ignore
+  authority: Wallet,
   rfqId: number,
   orderId: number,
   assetWallet: PublicKey,
@@ -244,7 +357,7 @@ export async function settle(
         tokenProgram: TOKEN_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       },
-      signers: [authority]
+      signers: [authority.payer]
     }
   );
 
@@ -259,8 +372,9 @@ export async function settle(
 export async function confirm(
   provider: Provider,
   rfqId: number,
-  confirmOrder: object,
-  authority: Keypair,
+  orderSide: object,
+  // @ts-ignore
+  authority: Wallet,
   assetWallet: PublicKey,
   quoteWallet: PublicKey,
 ): Promise<any> {
@@ -289,7 +403,7 @@ export async function confirm(
   );
 
   const tx = await program.rpc.confirm(
-    confirmOrder,
+    orderSide,
     {
       accounts: {
         assetMint: assetMint,
@@ -305,7 +419,7 @@ export async function confirm(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID
       },
-      signers: [authority]
+      signers: [authority.payer]
     });
 
   rfqState = await program.account.rfqState.fetch(rfqPda);
@@ -318,7 +432,8 @@ export async function confirm(
 
 export async function respond(
   provider: Provider,
-  authority: Keypair,
+  // @ts-ignore
+  authority: Wallet,
   rfqId: number,
   bid: anchor.BN,
   ask: anchor.BN,
@@ -369,7 +484,7 @@ export async function respond(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
-      signers: [authority],
+      signers: [authority.payer],
     });
 
   rfqState = await program.account.rfqState.fetch(rfqPda);
@@ -382,8 +497,10 @@ export async function respond(
 
 export async function request(
   assetMint: Token,
-  authority: Keypair,
+  // @ts-ignore
+  authority: Wallet,
   expiry: anchor.BN,
+  lastLook: boolean,
   legs: object[],
   orderAmount: anchor.BN,
   provider: Provider,
@@ -415,6 +532,7 @@ export async function request(
 
   const tx = await program.rpc.request(
     expiry,
+    lastLook,
     legs,
     orderAmount,
     requestOrder,
@@ -431,7 +549,7 @@ export async function request(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
-      signers: [authority],
+      signers: [authority.payer]
     });
 
   protocolState = await program.account.protocolState.fetch(protocolPda);
@@ -446,7 +564,8 @@ export async function request(
 
 export async function initializeProtocol(
   provider: Provider,
-  authority: Keypair,
+  // @ts-ignore
+  authority: Wallet,
   feeDenominator: number,
   feeNumerator: number
 ): Promise<any> {
@@ -464,7 +583,7 @@ export async function initializeProtocol(
         protocol: protocolPda,
         systemProgram: anchor.web3.SystemProgram.programId
       },
-      signers: [authority],
+      signers: [authority.payer],
     });
   const protocolState = await program.account.protocolState.fetch(protocolPda)
   return { tx, protocolState };
@@ -486,7 +605,12 @@ export async function requestAirdrop(
   );
 }
 
-export async function getBalance(provider: Provider, payer: Keypair, mint: PublicKey) {
+export async function getBalance(
+  provider: Provider,
+  // @ts-ignore
+  payer: Wallet,
+  mint: PublicKey
+) {
   const program = await getProgram(provider)
   try {
     const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(payer.publicKey, { mint });

@@ -3,13 +3,9 @@
 import * as anchor from '@project-serum/anchor';
 import * as dotenv from 'dotenv';
 
-import {
-  getProgram,
-  getPda
-} from '../lib/helpers';
+import { PROTOCOL_SEED, getProgram } from '../lib/helpers';
 
 dotenv.config();
-
 anchor.setProvider(anchor.Provider.env());
 
 const provider = anchor.getProvider();
@@ -20,7 +16,10 @@ const main = async (): Promise<any> => {
   const feeDenominator = 1_000;
   const feeNumerator = 0;
 
-  const [protocolPda, _protocolBump] = await getPda(provider, 'convergence_rfq');
+  const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from(PROTOCOL_SEED)],
+    program.programId
+  );
 
   const tx = await program.rpc.initialize(
     new anchor.BN(feeDenominator),

@@ -92,6 +92,10 @@ export type Rfq = {
           "type": "i64"
         },
         {
+          "name": "lastLook",
+          "type": "bool"
+        },
+        {
           "name": "legs",
           "type": {
             "vec": {
@@ -256,7 +260,7 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "confirmOrder",
+          "name": "orderSide",
           "type": {
             "defined": "Order"
           }
@@ -431,6 +435,10 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
             "name": "bestAskAmount",
             "type": {
               "option": "u64"
@@ -459,17 +467,13 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "confirmOrder",
+            "name": "orderSide",
             "type": {
               "defined": "Order"
             }
           },
           {
             "name": "confirmed",
-            "type": "bool"
-          },
-          {
-            "name": "expired",
             "type": "bool"
           },
           {
@@ -487,6 +491,10 @@ export type Rfq = {
                 "defined": "Leg"
               }
             }
+          },
+          {
+            "name": "lastLook",
+            "type": "bool"
           },
           {
             "name": "orderAmount",
@@ -513,10 +521,6 @@ export type Rfq = {
           {
             "name": "takerAddress",
             "type": "publicKey"
-          },
-          {
-            "name": "timeResponse",
-            "type": "i64"
           },
           {
             "name": "unixTimestamp",
@@ -593,6 +597,14 @@ export type Rfq = {
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
+            "name": "unixTimestamp",
+            "type": "i64"
           }
         ]
       }
@@ -693,38 +705,73 @@ export type Rfq = {
           }
         ]
       }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "CollateralReturned",
+      "msg": "Collateral returned"
     },
     {
-      "name": "ProtocolError",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "InvalidOrder"
-          },
-          {
-            "name": "InvalidQuote"
-          },
-          {
-            "name": "InvalidTakerAddress"
-          },
-          {
-            "name": "InvalidOrderAmount"
-          },
-          {
-            "name": "NotImplemented"
-          },
-          {
-            "name": "TradeNotConfirmed"
-          },
-          {
-            "name": "TradeNotApproved"
-          },
-          {
-            "name": "ResponseTimeElapsed"
-          }
-        ]
-      }
+      "code": 6001,
+      "name": "NotExpiredOrConfirmed",
+      "msg": "Not expired or confirmed"
+    },
+    {
+      "code": 6002,
+      "name": "AlreadySettled",
+      "msg": "Order settled"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidOrder",
+      "msg": "Invalid order logic"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidQuote",
+      "msg": "Invalid quote"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidTakerAddress",
+      "msg": "Invalid taker address"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidAuthorityAddress",
+      "msg": "Invalid authority address"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidOrderAmount",
+      "msg": "Invalid order amount"
+    },
+    {
+      "code": 6008,
+      "name": "LastLookNotSet",
+      "msg": "Last look has not been configured for this RFQ"
+    },
+    {
+      "code": 6009,
+      "name": "NotImplemented",
+      "msg": "Not implemented"
+    },
+    {
+      "code": 6010,
+      "name": "TradeNotConfirmed",
+      "msg": "Trade has not been confirmed by taker"
+    },
+    {
+      "code": 6011,
+      "name": "TradeNotApproved",
+      "msg": "Trade has not been approved via last look by maker"
+    },
+    {
+      "code": 6012,
+      "name": "ResponseTimeElapsed",
+      "msg": "Timed out on response to request"
     }
   ]
 };
@@ -823,6 +870,10 @@ export const IDL: Rfq = {
           "type": "i64"
         },
         {
+          "name": "lastLook",
+          "type": "bool"
+        },
+        {
           "name": "legs",
           "type": {
             "vec": {
@@ -987,7 +1038,7 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "confirmOrder",
+          "name": "orderSide",
           "type": {
             "defined": "Order"
           }
@@ -1162,6 +1213,10 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
             "name": "bestAskAmount",
             "type": {
               "option": "u64"
@@ -1190,17 +1245,13 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "confirmOrder",
+            "name": "orderSide",
             "type": {
               "defined": "Order"
             }
           },
           {
             "name": "confirmed",
-            "type": "bool"
-          },
-          {
-            "name": "expired",
             "type": "bool"
           },
           {
@@ -1218,6 +1269,10 @@ export const IDL: Rfq = {
                 "defined": "Leg"
               }
             }
+          },
+          {
+            "name": "lastLook",
+            "type": "bool"
           },
           {
             "name": "orderAmount",
@@ -1244,10 +1299,6 @@ export const IDL: Rfq = {
           {
             "name": "takerAddress",
             "type": "publicKey"
-          },
-          {
-            "name": "timeResponse",
-            "type": "i64"
           },
           {
             "name": "unixTimestamp",
@@ -1324,6 +1375,14 @@ export const IDL: Rfq = {
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
+            "name": "unixTimestamp",
+            "type": "i64"
           }
         ]
       }
@@ -1424,38 +1483,73 @@ export const IDL: Rfq = {
           }
         ]
       }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "CollateralReturned",
+      "msg": "Collateral returned"
     },
     {
-      "name": "ProtocolError",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "InvalidOrder"
-          },
-          {
-            "name": "InvalidQuote"
-          },
-          {
-            "name": "InvalidTakerAddress"
-          },
-          {
-            "name": "InvalidOrderAmount"
-          },
-          {
-            "name": "NotImplemented"
-          },
-          {
-            "name": "TradeNotConfirmed"
-          },
-          {
-            "name": "TradeNotApproved"
-          },
-          {
-            "name": "ResponseTimeElapsed"
-          }
-        ]
-      }
+      "code": 6001,
+      "name": "NotExpiredOrConfirmed",
+      "msg": "Not expired or confirmed"
+    },
+    {
+      "code": 6002,
+      "name": "AlreadySettled",
+      "msg": "Order settled"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidOrder",
+      "msg": "Invalid order logic"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidQuote",
+      "msg": "Invalid quote"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidTakerAddress",
+      "msg": "Invalid taker address"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidAuthorityAddress",
+      "msg": "Invalid authority address"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidOrderAmount",
+      "msg": "Invalid order amount"
+    },
+    {
+      "code": 6008,
+      "name": "LastLookNotSet",
+      "msg": "Last look has not been configured for this RFQ"
+    },
+    {
+      "code": 6009,
+      "name": "NotImplemented",
+      "msg": "Not implemented"
+    },
+    {
+      "code": 6010,
+      "name": "TradeNotConfirmed",
+      "msg": "Trade has not been confirmed by taker"
+    },
+    {
+      "code": 6011,
+      "name": "TradeNotApproved",
+      "msg": "Trade has not been approved via last look by maker"
+    },
+    {
+      "code": 6012,
+      "name": "ResponseTimeElapsed",
+      "msg": "Timed out on response to request"
     }
   ]
 };

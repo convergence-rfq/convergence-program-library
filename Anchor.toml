@@ -1,14 +1,14 @@
 [programs.localnet]
-rfq = "6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2"
-
+rfq = "BtrxsDE18uSiFUpoLd2kwsdM1HAGpqJMwpUdS6iS5y4H"
+       
 [programs.devnet]
-rfq = "6r538FKBpBtoGDSqLv2tL6HE3ffsWPBKSJ2QnnFpnFu2"
+rfq = "BtrxsDE18uSiFUpoLd2kwsdM1HAGpqJMwpUdS6iS5y4H"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/convergence.json"
 
 [scripts]
