@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["confirm","Taker confirms order."],["initialize","Initializes protocol."],["last_look","Last look."],["request","Taker requests quote (RFQ)."],["respond","Maker responds with one-way or two-way quotes."],["return_collateral","Return collateral of losting makers."],["settle","Settles winning maker and taker fund transfers."]]});

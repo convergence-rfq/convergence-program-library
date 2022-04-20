@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Rfq","Type representing the program."]]});

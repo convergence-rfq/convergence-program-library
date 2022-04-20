@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["state","Instruction struct definitions for `#[state]` methods."]],"struct":[["Confirm","Instruction."],["Initialize","Instruction."],["LastLook","Instruction."],["Request","Instruction."],["Respond","Instruction."],["ReturnCollateral","Instruction."],["Settle","Instruction."]]});
