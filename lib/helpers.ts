@@ -76,6 +76,7 @@ export const Leg = {
 export async function clear(
   provider: Provider,
   rfqId: number,
+  // @ts-ignore
   authority: Wallet,
 ): Promise<any> {
   let txs = [];
