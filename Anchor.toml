@@ -1,8 +1,8 @@
 [programs.localnet]
-rfq = "DUiepfLXgDPuJEjwmZzwKJM5Lona1R6pd7pYgWaxZD3t"
+rfq = "B29a1Ytkn3GpTBuNh1xbTe6Q59hcJzoT7nMXcgUemksG"
        
 [programs.devnet]
-rfq = "DUiepfLXgDPuJEjwmZzwKJM5Lona1R6pd7pYgWaxZD3t"
+rfq = "B29a1Ytkn3GpTBuNh1xbTe6Q59hcJzoT7nMXcgUemksG"
 
 [registry]
 url = "https://anchor.projectserum.com"

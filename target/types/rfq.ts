@@ -519,6 +519,10 @@ export type Rfq = {
             }
           },
           {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
             "name": "takerAddress",
             "type": "publicKey"
           },
@@ -601,10 +605,6 @@ export type Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
-          },
-          {
-            "name": "settled",
-            "type": "bool"
           }
         ]
       }
@@ -720,8 +720,8 @@ export type Rfq = {
     },
     {
       "code": 6002,
-      "name": "OrderAlreadySettled",
-      "msg": "Order already settled"
+      "name": "AlreadySettled",
+      "msg": "Order settled"
     },
     {
       "code": 6003,
@@ -1297,6 +1297,10 @@ export const IDL: Rfq = {
             }
           },
           {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
             "name": "takerAddress",
             "type": "publicKey"
           },
@@ -1379,10 +1383,6 @@ export const IDL: Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
-          },
-          {
-            "name": "settled",
-            "type": "bool"
           }
         ]
       }
@@ -1498,8 +1498,8 @@ export const IDL: Rfq = {
     },
     {
       "code": 6002,
-      "name": "OrderAlreadySettled",
-      "msg": "Order already settled"
+      "name": "AlreadySettled",
+      "msg": "Order settled"
     },
     {
       "code": 6003,
