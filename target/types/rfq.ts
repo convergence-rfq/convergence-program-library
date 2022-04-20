@@ -519,10 +519,6 @@ export type Rfq = {
             }
           },
           {
-            "name": "settled",
-            "type": "bool"
-          },
-          {
             "name": "takerAddress",
             "type": "publicKey"
           },
@@ -601,6 +597,10 @@ export type Rfq = {
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
           },
           {
             "name": "unixTimestamp",
@@ -1297,10 +1297,6 @@ export const IDL: Rfq = {
             }
           },
           {
-            "name": "settled",
-            "type": "bool"
-          },
-          {
             "name": "takerAddress",
             "type": "publicKey"
           },
@@ -1379,6 +1375,10 @@ export const IDL: Rfq = {
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
           },
           {
             "name": "unixTimestamp",

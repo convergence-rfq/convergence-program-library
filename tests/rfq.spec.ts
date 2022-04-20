@@ -165,7 +165,7 @@ describe('rfq', () => {
     const requestOrder = Order.Buy;
     const now = (new Date()).getTime() / 1_000;
     // Expires in 0.25 seconds
-    const expiry = new anchor.BN(now + 0.25);
+    const expiry = new anchor.BN(now + 0.1);
     const orderAmount = TAKER_ORDER_AMOUNT;
     const legs = [{
       amount: TAKER_ORDER_AMOUNT,

@@ -519,10 +519,6 @@
             }
           },
           {
-            "name": "settled",
-            "type": "bool"
-          },
-          {
             "name": "takerAddress",
             "type": "publicKey"
           },
@@ -601,6 +597,10 @@
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
           },
           {
             "name": "unixTimestamp",

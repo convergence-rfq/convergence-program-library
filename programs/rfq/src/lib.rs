@@ -146,8 +146,6 @@ pub struct RfqState {
     pub response_count: u64,
     /// Request order
     pub request_order: Order,
-    /// Request order
-    pub settled: bool,
     /// Taker address
     pub taker_address: Pubkey,
     /// Creation time
@@ -155,7 +153,7 @@ pub struct RfqState {
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 14);
+    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 13);
 }
 
 /// Global state for the entire RFQ system
@@ -183,12 +181,14 @@ pub struct OrderState {
     pub bump: u8,
     pub collateral_returned: bool,
     pub id: u64,
+    /// Settled
+    pub settled: bool,
     /// Creation time
     pub unix_timestamp: i64,
 }
 
 impl OrderState {
-    pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 1) + (1 * 1) + (1 * 2);
+    pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 1) + (1 * 1) + (1 * 3);
 }
 
 // Contexts
@@ -528,9 +528,10 @@ pub enum Order {
 /// 3. If last look is required, make sure approved
 pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
+    let order = &ctx.accounts.order;
 
     require!(rfq.confirmed, ProtocolError::TradeNotConfirmed);
-    require!(!rfq.settled, ProtocolError::AlreadySettled);
+    require!(!order.settled, ProtocolError::AlreadySettled);
 
     if rfq.last_look {
         require!(rfq.approved, ProtocolError::TradeNotApproved);
@@ -723,7 +724,6 @@ mod instructions {
         rfq.quote_mint = ctx.accounts.quote_mint.key();
         rfq.request_order = request_order;
         rfq.response_count = 0;
-        rfq.settled = false;
         rfq.taker_address = *ctx.accounts.authority.key;
         rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
         rfq.legs = legs;
@@ -819,7 +819,7 @@ mod instructions {
                 )?;
             }
             Order::Sell => {
-                // Taker wants to sell asset token, needs to post quote token as collateral
+                // Taker wants to sell asset token, needs to post asset token as collateral
                 anchor_spl::token::transfer(
                     CpiContext::new(
                         ctx.accounts.token_program.to_account_info(),
@@ -829,7 +829,7 @@ mod instructions {
                             authority: ctx.accounts.authority.to_account_info(),
                         },
                     ),
-                    rfq.best_bid_amount.unwrap(),
+                    rfq.order_amount,
                 )?;
             }
             Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
@@ -923,31 +923,32 @@ mod instructions {
 
     pub fn settle(ctx: Context<Settle>) -> Result<()> {
         let authority_address = ctx.accounts.authority.key();
+
+        let order = &mut ctx.accounts.order;
+        order.settled = true;
+
         let rfq = &mut ctx.accounts.rfq;
-        rfq.settled = true;
 
         let confirm_order = rfq.confirm_order;
         let taker_address = rfq.taker_address;
-
-        let order = &mut ctx.accounts.order;
 
         let mut quote_amount = 0;
         let mut asset_amount = 0;
 
         match confirm_order {
             Order::Buy => {
+                if rfq.best_ask_address.is_some() && authority_address == rfq.best_ask_address.unwrap()  {
+                    quote_amount = rfq.best_ask_amount.unwrap();
+                }
                 if authority_address == taker_address {
                     asset_amount = rfq.order_amount;
-                }
-                if order.ask.is_some() && rfq.best_ask_amount.unwrap() == order.ask.unwrap() {
-                    quote_amount = order.ask.unwrap();
                 }
             }
             Order::Sell => {
                 if authority_address == taker_address {
                     quote_amount = rfq.best_bid_amount.unwrap();
                 }
-                if order.bid.is_some() && rfq.best_bid_amount.unwrap() == order.bid.unwrap() {
+                if rfq.best_bid_address.is_some() && authority_address == rfq.best_bid_address.unwrap() {
                     asset_amount = rfq.order_amount;
                 }
             }
