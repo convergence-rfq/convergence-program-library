@@ -73,101 +73,6 @@ export const Leg = {
   }
 };
 
-export async function clear(
-  provider: Provider,
-  rfqId: number,
-  // @ts-ignore
-  authority: Wallet,
-): Promise<any> {
-  let txs = [];
-
-  const program = await getProgram(provider);
-
-  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    program.programId
-  );
-  const rfqState = await program.account.rfqState.fetch(rfqPda);
-
-  for (let i = 0; i < rfqState.responseCount.toNumber(); i++) {
-    const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from((i + 1).toString())],
-      program.programId
-    );
-    const orderState = await program.account.orderState.fetch(orderPda);
-
-    if (orderState.collateralReturned) {
-      continue;
-    }
-
-    const makerAssetWallet = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      rfqState.assetMint,
-      orderState.authority
-    );
-    const makerQuoteWallet = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      rfqState.quoteMint,
-      orderState.authority
-    );
-
-    const { tx } = await returnCollateral(
-      provider,
-      authority,
-      rfqId,
-      orderState.id,
-      makerAssetWallet,
-      makerQuoteWallet
-    );
-    txs.push(tx);
-  }
-
-  for (let i = 0; i < rfqState.responseCount.toNumber() + 1; i++) {
-    let authorityPk = authority.publicKey;
-
-    if (i > 0) {
-      const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
-        [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(i.toString())],
-        program.programId
-      );
-      const orderState = await program.account.orderState.fetch(orderPda);
-      authorityPk = orderState.authority;
-    }
-
-    const assetWallet = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      rfqState.assetMint,
-      authorityPk
-    );
-    const quoteWallet = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      rfqState.quoteMint,
-      authorityPk
-    );
-
-    // When i = 0 this represents the taker asset and escrow accounts
-    let { tx } = await settle(
-      provider,
-      authority,
-      rfqId,
-      i,
-      assetWallet,
-      quoteWallet
-    );
-    txs.push(tx);
-  }
-
-  // await settle(provider, taker, rfqId, 0, authorityAssetWallet, authorityQuoteWallet);
-  // await settle(provider, marketMakerA, rfqId, 1, makerAAssetWallet, makerAQuoteWallet);
-  // await settle(provider, marketMakerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet);
-
-  return { txs };
-}
-
 export async function getRfqs(provider: Provider): Promise<object[]> {
   const program = await getProgram(provider);
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
@@ -372,6 +277,7 @@ export async function settle(
 export async function confirm(
   provider: Provider,
   rfqId: number,
+  responseId: number,
   orderSide: object,
   // @ts-ignore
   authority: Wallet,
@@ -398,7 +304,7 @@ export async function confirm(
     program.programId
   );
   const [orderPda, _orderPda] = await PublicKey.findProgramAddress(
-    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from('0')],
+    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(responseId.toString())],
     program.programId
   );
 

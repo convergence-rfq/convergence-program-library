@@ -146,6 +146,8 @@ pub struct RfqState {
     pub response_count: u64,
     /// Request order
     pub request_order: Order,
+    /// Settled
+    pub settled: bool,
     /// Taker address
     pub taker_address: Pubkey,
     /// Creation time
@@ -153,7 +155,7 @@ pub struct RfqState {
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 13);
+    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 14);
 }
 
 /// Global state for the entire RFQ system
@@ -179,7 +181,11 @@ pub struct OrderState {
     pub authority: Pubkey,
     pub bid: Option<u64>,
     pub bump: u8,
+    /// Collateral returned
     pub collateral_returned: bool,
+    // Order has been confirmed
+    pub confirmed: bool,
+    // Order id
     pub id: u64,
     /// Settled
     pub settled: bool,
@@ -188,7 +194,7 @@ pub struct OrderState {
 }
 
 impl OrderState {
-    pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 1) + (1 * 1) + (1 * 3);
+    pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 2) + (1 * 3) + (1 * 1);
 }
 
 // Contexts
@@ -341,17 +347,14 @@ pub struct Confirm<'info> {
         bump = rfq.asset_escrow_bump,
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
-    // TODO: Is this actually an order or is there a better way?
     #[account(
-        init,
-        payer = authority,
-        space = OrderState::LEN,
+        mut,
         seeds = [
             ORDER_SEED.as_bytes(),
             rfq.id.to_string().as_bytes(),
-            b"0"
+            order.id.to_string().as_bytes(),
         ],
-        bump
+        bump = order.bump
     )]
     pub order: Box<Account<'info, OrderState>>,
     #[account(
@@ -530,8 +533,9 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
 
-    require!(rfq.confirmed, ProtocolError::TradeNotConfirmed);
-    require!(!order.settled, ProtocolError::AlreadySettled);
+    if ctx.accounts.authority.key() != rfq.authority.key() {
+        require!(!order.settled, ProtocolError::AlreadySettled);
+    }
 
     if rfq.last_look {
         require!(rfq.approved, ProtocolError::TradeNotApproved);
@@ -565,6 +569,7 @@ pub fn confirm_access_control<'info>(
     ctx: &Context<Confirm<'info>>,
     order_side: Order,
 ) -> Result<()> {
+    let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
     let taker_address = rfq.taker_address;
     let request_order = rfq.request_order;
@@ -576,9 +581,17 @@ pub fn confirm_access_control<'info>(
         ProtocolError::InvalidTakerAddress
     );
 
+    require!(!order.confirmed, ProtocolError::OrderConfirmed);
+
     match request_order {
-        Order::Buy => require!(order_side == Order::Buy, ProtocolError::InvalidOrder),
-        Order::Sell => require!(order_side == Order::Sell, ProtocolError::InvalidOrder),
+        Order::Buy => {
+            require!(order_side == Order::Buy, ProtocolError::InvalidOrder);
+            require!(rfq.best_ask_amount.unwrap() == order.ask.unwrap(), ProtocolError::InvalidConfirm);
+        },
+        Order::Sell => {
+            require!(order_side == Order::Sell, ProtocolError::InvalidOrder);
+            require!(rfq.best_bid_amount.unwrap() == order.bid.unwrap(), ProtocolError::InvalidConfirm);
+        },
         Order::TwoWay => require!(order_side == Order::TwoWay, ProtocolError::InvalidOrder),
     }
 
@@ -652,6 +665,10 @@ pub enum ProtocolError {
     NotExpiredOrConfirmed,
     #[msg("Order settled")]
     AlreadySettled,
+    #[msg("Invalid confirm")]
+    InvalidConfirm,
+    #[msg("Order confirmed")]
+    OrderConfirmed,
     #[msg("Invalid order logic")]
     InvalidOrder,
     #[msg("Invalid quote")]
@@ -724,6 +741,7 @@ mod instructions {
         rfq.quote_mint = ctx.accounts.quote_mint.key();
         rfq.request_order = request_order;
         rfq.response_count = 0;
+        rfq.settled = true;
         rfq.taker_address = *ctx.accounts.authority.key;
         rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
         rfq.legs = legs;
@@ -796,8 +814,7 @@ mod instructions {
 
     pub fn confirm(ctx: Context<Confirm>, order_side: Order) -> Result<()> {
         let order = &mut ctx.accounts.order;
-        order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
-        order.id = 0;
+        order.confirmed = true;
 
         let rfq = &mut ctx.accounts.rfq;
         rfq.confirmed = true;
@@ -922,22 +939,24 @@ mod instructions {
     }
 
     pub fn settle(ctx: Context<Settle>) -> Result<()> {
-        let authority_address = ctx.accounts.authority.key();
-
         let order = &mut ctx.accounts.order;
-        order.settled = true;
-
         let rfq = &mut ctx.accounts.rfq;
 
-        let order_side = rfq.order_side;
+        let authority_address = ctx.accounts.authority.key();
         let taker_address = rfq.taker_address;
+
+        if authority_address == taker_address {
+            rfq.settled = true;
+        } else {
+            order.settled = true;
+        }
 
         let mut quote_amount = 0;
         let mut asset_amount = 0;
 
-        match order_side {
+        match rfq.order_side {
             Order::Buy => {
-                if rfq.best_ask_address.is_some() && authority_address == rfq.best_ask_address.unwrap()  {
+                if rfq.best_ask_address.is_some() && authority_address == rfq.best_ask_address.unwrap() && order.confirmed {
                     quote_amount = rfq.best_ask_amount.unwrap();
                 }
                 if authority_address == taker_address {
@@ -948,7 +967,7 @@ mod instructions {
                 if authority_address == taker_address {
                     quote_amount = rfq.best_bid_amount.unwrap();
                 }
-                if rfq.best_bid_address.is_some() && authority_address == rfq.best_bid_address.unwrap() {
+                if rfq.best_bid_address.is_some() && authority_address == rfq.best_bid_address.unwrap() && order.confirmed {
                     asset_amount = rfq.order_amount;
                 }
             }

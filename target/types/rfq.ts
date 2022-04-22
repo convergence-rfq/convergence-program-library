@@ -519,6 +519,10 @@ export type Rfq = {
             }
           },
           {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
             "name": "takerAddress",
             "type": "publicKey"
           },
@@ -592,6 +596,10 @@ export type Rfq = {
           },
           {
             "name": "collateralReturned",
+            "type": "bool"
+          },
+          {
+            "name": "confirmed",
             "type": "bool"
           },
           {
@@ -725,51 +733,61 @@ export type Rfq = {
     },
     {
       "code": 6003,
+      "name": "InvalidConfirm",
+      "msg": "Invalid confirm"
+    },
+    {
+      "code": 6004,
+      "name": "OrderConfirmed",
+      "msg": "Order confirmed"
+    },
+    {
+      "code": 6005,
       "name": "InvalidOrder",
       "msg": "Invalid order logic"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6005,
+      "code": 6007,
       "name": "InvalidTakerAddress",
       "msg": "Invalid taker address"
     },
     {
-      "code": 6006,
+      "code": 6008,
       "name": "InvalidAuthorityAddress",
       "msg": "Invalid authority address"
     },
     {
-      "code": 6007,
+      "code": 6009,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6008,
+      "code": 6010,
       "name": "LastLookNotSet",
       "msg": "Last look has not been configured for this RFQ"
     },
     {
-      "code": 6009,
+      "code": 6011,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6010,
+      "code": 6012,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6011,
+      "code": 6013,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6012,
+      "code": 6014,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
     }
@@ -1297,6 +1315,10 @@ export const IDL: Rfq = {
             }
           },
           {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
             "name": "takerAddress",
             "type": "publicKey"
           },
@@ -1370,6 +1392,10 @@ export const IDL: Rfq = {
           },
           {
             "name": "collateralReturned",
+            "type": "bool"
+          },
+          {
+            "name": "confirmed",
             "type": "bool"
           },
           {
@@ -1503,51 +1529,61 @@ export const IDL: Rfq = {
     },
     {
       "code": 6003,
+      "name": "InvalidConfirm",
+      "msg": "Invalid confirm"
+    },
+    {
+      "code": 6004,
+      "name": "OrderConfirmed",
+      "msg": "Order confirmed"
+    },
+    {
+      "code": 6005,
       "name": "InvalidOrder",
       "msg": "Invalid order logic"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6005,
+      "code": 6007,
       "name": "InvalidTakerAddress",
       "msg": "Invalid taker address"
     },
     {
-      "code": 6006,
+      "code": 6008,
       "name": "InvalidAuthorityAddress",
       "msg": "Invalid authority address"
     },
     {
-      "code": 6007,
+      "code": 6009,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6008,
+      "code": 6010,
       "name": "LastLookNotSet",
       "msg": "Last look has not been configured for this RFQ"
     },
     {
-      "code": 6009,
+      "code": 6011,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6010,
+      "code": 6012,
       "name": "TradeNotConfirmed",
       "msg": "Trade has not been confirmed by taker"
     },
     {
-      "code": 6011,
+      "code": 6013,
       "name": "TradeNotApproved",
       "msg": "Trade has not been approved via last look by maker"
     },
     {
-      "code": 6012,
+      "code": 6014,
       "name": "ResponseTimeElapsed",
       "msg": "Timed out on response to request"
     }
