@@ -526,15 +526,19 @@ pub enum Order {
 
 /// Settlement access control. Ensures RFQ is:
 ///
-/// 1. Confirmed
-/// 2. RFQ has not yet been settled
-/// 3. If last look is required, make sure approved
+/// 1. RFQ has not yet been settled if taker
+/// 2. Order has not yet been settled if maker
+/// 3. If last look is required then RFQ is approved
 pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
 
-    if ctx.accounts.authority.key() != rfq.authority.key() {
-        require!(!order.settled, ProtocolError::AlreadySettled);
+    if ctx.accounts.authority.key() == rfq.authority.key() {
+        require!(!rfq.settled, ProtocolError::RfqSettled);
+    }
+
+    if ctx.accounts.authority.key() == order.authority.key() {
+        require!(!order.settled, ProtocolError::OrderSettled);
     }
 
     if rfq.last_look {
@@ -644,7 +648,8 @@ pub fn respond_access_control<'info>(
 /// Return collateral access control. Ensures returning collateral for RFQ that is:
 ///
 /// 1. Collateral has not already by returned
-/// 2. RFQ is either expired or confirmed
+/// 2. Order is not confirmed
+/// 3. RFQ is either expired or order has been confirmed
 pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
@@ -655,6 +660,8 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
         !order.collateral_returned,
         ProtocolError::CollateralReturned
     );
+
+    require!(!order.confirmed, ProtocolError::OrderConfirmed);
 
     if !rfq.confirmed {
         require!(now > rfq.expiry, ProtocolError::NotExpiredOrConfirmed);
@@ -673,7 +680,9 @@ pub enum ProtocolError {
     #[msg("Not expired or confirmed")]
     NotExpiredOrConfirmed,
     #[msg("Order settled")]
-    AlreadySettled,
+    OrderSettled,
+    #[msg("RFQ settled")]
+    RfqSettled,
     #[msg("Invalid confirm")]
     InvalidConfirm,
     #[msg("Order confirmed")]
@@ -750,7 +759,7 @@ mod instructions {
         rfq.quote_mint = ctx.accounts.quote_mint.key();
         rfq.request_order = request_order;
         rfq.response_count = 0;
-        rfq.settled = true;
+        rfq.settled = false;
         rfq.taker_address = *ctx.accounts.authority.key;
         rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
         rfq.legs = legs;
@@ -886,9 +895,7 @@ mod instructions {
         let order = &mut ctx.accounts.order;
         order.collateral_returned = true;
 
-        if order.ask.is_some()
-            && (rfq.best_ask_address.unwrap() != order.authority || rfq.order_side == Order::Sell)
-        {
+        if order.ask.is_some() {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -914,9 +921,7 @@ mod instructions {
             )?;
         }
 
-        if order.bid.is_some()
-            && (rfq.best_bid_address.unwrap() != order.authority || rfq.order_side == Order::Buy)
-        {
+        if order.bid.is_some() {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -963,25 +968,25 @@ mod instructions {
 
         match rfq.order_side {
             Order::Buy => {
-                if rfq.best_ask_address.is_some()
-                    && authority_address == rfq.best_ask_address.unwrap()
-                    && order.confirmed
-                {
-                    quote_amount = rfq.best_ask_amount.unwrap();
-                }
                 if authority_address == taker_address {
+                    // Taker
                     asset_amount = rfq.order_amount;
+                } else if authority_address == rfq.best_ask_address.unwrap() {
+                    // Maker
+                    if rfq.best_ask_address.is_some() && order.confirmed {
+                        quote_amount = rfq.best_ask_amount.unwrap();
+                    }
                 }
             }
             Order::Sell => {
                 if authority_address == taker_address {
+                    // Taker
                     quote_amount = rfq.best_bid_amount.unwrap();
-                }
-                if rfq.best_bid_address.is_some()
-                    && authority_address == rfq.best_bid_address.unwrap()
-                    && order.confirmed
-                {
-                    asset_amount = rfq.order_amount;
+                } else if authority_address == rfq.best_bid_address.unwrap() {
+                    // Maker
+                    if rfq.best_bid_address.is_some() && order.confirmed {
+                        asset_amount = rfq.order_amount;
+                    }
                 }
             }
             Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
