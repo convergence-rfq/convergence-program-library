@@ -24,7 +24,7 @@
   * - Maker B gets 110 USDC
   * 
   * TODO:
-  * - [ ] Add direction of order in respond, right now assumes it knows direction of request
+  * - [ ] Two-way
   * - [ ] Fees
   */
 
@@ -198,7 +198,7 @@ describe('rfq', () => {
   });
 
   it('Taker initializes RFQ 2', async () => {
-    const requestOrder = Order.Sell;
+    const orderSide = Order.Sell;
     const now = (new Date()).getTime() / 1_000;
     // Expires in 15 seconds
     const expiry = new anchor.BN(now + 15);
@@ -209,9 +209,9 @@ describe('rfq', () => {
       amount: TAKER_ORDER_AMOUNT1,
       instrument: Instrument.Spot,
     }];
-    const { rfqState, protocolState } = await request(assetMint, taker, expiry, true, legs, orderAmount, provider, quoteMint, requestOrder);
+    const { rfqState, protocolState } = await request(assetMint, taker, expiry, true, legs, orderAmount, provider, quoteMint, orderSide);
     assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
-    assert.deepEqual(rfqState.requestOrder, requestOrder);
+    assert.deepEqual(rfqState.orderSide, orderSide);
     assert.equal(rfqState.expiry.toString(), expiry.toString());
     assert.equal(rfqState.orderAmount.toString(), TAKER_ORDER_AMOUNT1.toString());
     assert.equal(protocolState.rfqCount.toNumber(), 2);
@@ -219,7 +219,7 @@ describe('rfq', () => {
     const assetMintBalance = await getBalance(provider, taker, assetMint.publicKey);
     const quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey);
 
-    console.log('taker order:', rfqState.requestOrder);
+    console.log('taker order:', rfqState.orderSide);
     console.log('taker amount:', rfqState.orderAmount.toNumber());
     console.log('taker asset balance:', assetMintBalance);
     console.log('taker quote balance:', quoteMintBalance);
@@ -266,15 +266,14 @@ describe('rfq', () => {
 
   it('Taker confirms RFQ 2 price pre-settlement', async () => {
     const rfqId = 2;
-    const orderSide = Order.Sell;
 
     try {
-      await confirm(provider, rfqId, 1, orderSide, taker, takerAssetWallet, takerQuoteWallet);
+      await confirm(provider, rfqId, 1, taker, takerAssetWallet, takerQuoteWallet);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'InvalidConfirm');
     }
 
-    const { rfqState } = await confirm(provider, rfqId, 2, orderSide, taker, takerAssetWallet, takerQuoteWallet);
+    const { rfqState } = await confirm(provider, rfqId, 2, taker, takerAssetWallet, takerQuoteWallet);
     console.log('best ask confirmation:', rfqState.bestAskAmount?.toNumber());
     console.log('best bid confirmation:', rfqState.bestBidAmount?.toNumber());
 

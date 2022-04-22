@@ -108,7 +108,7 @@
           "type": "u64"
         },
         {
-          "name": "requestOrder",
+          "name": "orderSide",
           "type": {
             "defined": "Order"
           }
@@ -258,14 +258,7 @@
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "orderSide",
-          "type": {
-            "defined": "Order"
-          }
-        }
-      ]
+      "args": []
     },
     {
       "name": "lastLook",
@@ -511,12 +504,6 @@
           {
             "name": "responseCount",
             "type": "u64"
-          },
-          {
-            "name": "requestOrder",
-            "type": {
-              "defined": "Order"
-            }
           },
           {
             "name": "settled",

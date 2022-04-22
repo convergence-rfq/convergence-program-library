@@ -45,16 +45,16 @@ pub mod rfq {
     /// legs
     /// expiry
     /// order_amount
-    /// request_order
+    /// order_side
     pub fn request(
         ctx: Context<Request>,
         expiry: i64,
         last_look: bool,
         legs: Vec<Leg>,
         order_amount: u64,
-        request_order: Order,
+        order_side: Order,
     ) -> Result<()> {
-        instructions::request(ctx, expiry, last_look, legs, order_amount, request_order)
+        instructions::request(ctx, expiry, last_look, legs, order_amount, order_side)
     }
 
     /// Maker responds with one-way or two-way quotes.
@@ -71,9 +71,9 @@ pub mod rfq {
     ///
     /// ctx
     /// order_side
-    #[access_control(confirm_access_control(&ctx, order_side))]
-    pub fn confirm(ctx: Context<Confirm>, order_side: Order) -> Result<()> {
-        instructions::confirm(ctx, order_side)
+    #[access_control(confirm_access_control(&ctx))]
+    pub fn confirm(ctx: Context<Confirm>) -> Result<()> {
+        instructions::confirm(ctx)
     }
 
     /// Last look.
@@ -144,8 +144,6 @@ pub struct RfqState {
     pub quote_mint: Pubkey,
     /// Response count
     pub response_count: u64,
-    /// Request order
-    pub request_order: Order,
     /// Settled
     pub settled: bool,
     /// Taker address
@@ -569,14 +567,11 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 ///
 /// 1. Executed by taker
 /// 2. Confirmation order is same as request order
-pub fn confirm_access_control<'info>(
-    ctx: &Context<Confirm<'info>>,
-    order_side: Order,
-) -> Result<()> {
+pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>) -> Result<()> {
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
     let taker_address = rfq.taker_address;
-    let request_order = rfq.request_order;
+    let order_side = rfq.order_side;
     let authority = ctx.accounts.authority.key();
 
     // Make sure current authority matches original taker address from request instruction
@@ -587,22 +582,16 @@ pub fn confirm_access_control<'info>(
 
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
 
-    match request_order {
-        Order::Buy => {
-            require!(order_side == Order::Buy, ProtocolError::InvalidOrder);
-            require!(
-                rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
-                ProtocolError::InvalidConfirm
-            );
-        }
-        Order::Sell => {
-            require!(order_side == Order::Sell, ProtocolError::InvalidOrder);
-            require!(
-                rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
-                ProtocolError::InvalidConfirm
-            );
-        }
-        Order::TwoWay => require!(order_side == Order::TwoWay, ProtocolError::InvalidOrder),
+    match order_side {
+        Order::Buy => require!(
+            rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
+            ProtocolError::InvalidConfirm
+        ),
+        Order::Sell => require!(
+            rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
+            ProtocolError::InvalidConfirm
+        ),
+        Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
     }
 
     Ok(())
@@ -735,7 +724,7 @@ mod instructions {
         last_look: bool,
         legs: Vec<Leg>,
         order_amount: u64,
-        request_order: Order,
+        order_side: Order,
     ) -> Result<()> {
         let protocol = &mut ctx.accounts.protocol;
         protocol.rfq_count += 1;
@@ -757,7 +746,7 @@ mod instructions {
         rfq.order_amount = order_amount;
         rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
         rfq.quote_mint = ctx.accounts.quote_mint.key();
-        rfq.request_order = request_order;
+        rfq.order_side = order_side;
         rfq.response_count = 0;
         rfq.settled = false;
         rfq.taker_address = *ctx.accounts.authority.key;
@@ -830,15 +819,14 @@ mod instructions {
         Ok(())
     }
 
-    pub fn confirm(ctx: Context<Confirm>, order_side: Order) -> Result<()> {
+    pub fn confirm(ctx: Context<Confirm>) -> Result<()> {
         let order = &mut ctx.accounts.order;
         order.confirmed = true;
 
         let rfq = &mut ctx.accounts.rfq;
         rfq.confirmed = true;
-        rfq.order_side = order_side;
 
-        match order_side {
+        match rfq.order_side {
             Order::Buy => {
                 // Taker wants to buy asset token, needs to post quote token as collateral
                 anchor_spl::token::transfer(

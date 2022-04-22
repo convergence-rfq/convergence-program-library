@@ -108,7 +108,7 @@ export type Rfq = {
           "type": "u64"
         },
         {
-          "name": "requestOrder",
+          "name": "orderSide",
           "type": {
             "defined": "Order"
           }
@@ -258,14 +258,7 @@ export type Rfq = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "orderSide",
-          "type": {
-            "defined": "Order"
-          }
-        }
-      ]
+      "args": []
     },
     {
       "name": "lastLook",
@@ -511,12 +504,6 @@ export type Rfq = {
           {
             "name": "responseCount",
             "type": "u64"
-          },
-          {
-            "name": "requestOrder",
-            "type": {
-              "defined": "Order"
-            }
           },
           {
             "name": "settled",
@@ -909,7 +896,7 @@ export const IDL: Rfq = {
           "type": "u64"
         },
         {
-          "name": "requestOrder",
+          "name": "orderSide",
           "type": {
             "defined": "Order"
           }
@@ -1059,14 +1046,7 @@ export const IDL: Rfq = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "orderSide",
-          "type": {
-            "defined": "Order"
-          }
-        }
-      ]
+      "args": []
     },
     {
       "name": "lastLook",
@@ -1312,12 +1292,6 @@ export const IDL: Rfq = {
           {
             "name": "responseCount",
             "type": "u64"
-          },
-          {
-            "name": "requestOrder",
-            "type": {
-              "defined": "Order"
-            }
           },
           {
             "name": "settled",

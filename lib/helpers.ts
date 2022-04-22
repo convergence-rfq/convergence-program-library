@@ -278,7 +278,6 @@ export async function confirm(
   provider: Provider,
   rfqId: number,
   responseId: number,
-  orderSide: object,
   // @ts-ignore
   authority: Wallet,
   assetWallet: PublicKey,
@@ -309,7 +308,6 @@ export async function confirm(
   );
 
   const tx = await program.rpc.confirm(
-    orderSide,
     {
       accounts: {
         assetMint: assetMint,
