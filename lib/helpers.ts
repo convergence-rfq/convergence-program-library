@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor';
 import { Idl, Program, Provider, Wallet } from '@project-serum/anchor';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 
 import { default as idl } from '../target/idl/rfq.json';

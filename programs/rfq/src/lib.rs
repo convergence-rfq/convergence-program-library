@@ -763,12 +763,10 @@ mod instructions {
 
     pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Result<()> {
         let rfq = &mut ctx.accounts.rfq;
-        let order_amount = rfq.order_amount;
         rfq.response_count += 1;
 
         let order = &mut ctx.accounts.order;
-        let authority = ctx.accounts.authority.key();
-        order.authority = authority;
+        order.authority = ctx.accounts.authority.key();
         order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.id = rfq.response_count;
         order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
@@ -784,14 +782,14 @@ mod instructions {
                             authority: ctx.accounts.authority.to_account_info(),
                         },
                     ),
-                    order_amount, // Collateral is an asset token amount
+                    rfq.order_amount, // Collateral is an asset token amount
                 )?;
 
-                order.ask = Some(a);
+                order.ask = ask;
 
                 if rfq.best_ask_amount.is_none() || a < rfq.best_ask_amount.unwrap() {
                     rfq.best_ask_amount = Some(a);
-                    rfq.best_ask_address = Some(authority);
+                    rfq.best_ask_address = Some(order.authority);
                 }
             }
             None => (),
@@ -815,7 +813,7 @@ mod instructions {
 
                 if rfq.best_bid_amount.is_none() || b > rfq.best_bid_amount.unwrap() {
                     rfq.best_bid_amount = Some(b);
-                    rfq.best_bid_address = Some(authority);
+                    rfq.best_bid_address = Some(order.authority);
                 }
             }
             None => (),
@@ -885,6 +883,7 @@ mod instructions {
 
     pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
         let rfq = &ctx.accounts.rfq;
+
         let order = &mut ctx.accounts.order;
         order.collateral_returned = true;
 
