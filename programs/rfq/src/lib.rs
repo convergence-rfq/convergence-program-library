@@ -586,12 +586,18 @@ pub fn confirm_access_control<'info>(
     match request_order {
         Order::Buy => {
             require!(order_side == Order::Buy, ProtocolError::InvalidOrder);
-            require!(rfq.best_ask_amount.unwrap() == order.ask.unwrap(), ProtocolError::InvalidConfirm);
-        },
+            require!(
+                rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
+                ProtocolError::InvalidConfirm
+            );
+        }
         Order::Sell => {
             require!(order_side == Order::Sell, ProtocolError::InvalidOrder);
-            require!(rfq.best_bid_amount.unwrap() == order.bid.unwrap(), ProtocolError::InvalidConfirm);
-        },
+            require!(
+                rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
+                ProtocolError::InvalidConfirm
+            );
+        }
         Order::TwoWay => require!(order_side == Order::TwoWay, ProtocolError::InvalidOrder),
     }
 
@@ -645,7 +651,10 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
 
     let now = Clock::get().unwrap().unix_timestamp;
 
-    require!(!order.collateral_returned, ProtocolError::CollateralReturned);
+    require!(
+        !order.collateral_returned,
+        ProtocolError::CollateralReturned
+    );
 
     if !rfq.confirmed {
         require!(now > rfq.expiry, ProtocolError::NotExpiredOrConfirmed);
@@ -878,8 +887,7 @@ mod instructions {
         order.collateral_returned = true;
 
         if order.ask.is_some()
-            && (rfq.best_ask_address.unwrap() != order.authority
-                || rfq.order_side == Order::Sell)
+            && (rfq.best_ask_address.unwrap() != order.authority || rfq.order_side == Order::Sell)
         {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
@@ -907,8 +915,7 @@ mod instructions {
         }
 
         if order.bid.is_some()
-            && (rfq.best_bid_address.unwrap() != order.authority
-                || rfq.order_side == Order::Buy)
+            && (rfq.best_bid_address.unwrap() != order.authority || rfq.order_side == Order::Buy)
         {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
@@ -956,7 +963,10 @@ mod instructions {
 
         match rfq.order_side {
             Order::Buy => {
-                if rfq.best_ask_address.is_some() && authority_address == rfq.best_ask_address.unwrap() && order.confirmed {
+                if rfq.best_ask_address.is_some()
+                    && authority_address == rfq.best_ask_address.unwrap()
+                    && order.confirmed
+                {
                     quote_amount = rfq.best_ask_amount.unwrap();
                 }
                 if authority_address == taker_address {
@@ -967,7 +977,10 @@ mod instructions {
                 if authority_address == taker_address {
                     quote_amount = rfq.best_bid_amount.unwrap();
                 }
-                if rfq.best_bid_address.is_some() && authority_address == rfq.best_bid_address.unwrap() && order.confirmed {
+                if rfq.best_bid_address.is_some()
+                    && authority_address == rfq.best_bid_address.unwrap()
+                    && order.confirmed
+                {
                     asset_amount = rfq.order_amount;
                 }
             }
