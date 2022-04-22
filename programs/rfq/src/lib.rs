@@ -540,7 +540,7 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     }
 
     if rfq.last_look {
-        require!(rfq.approved, ProtocolError::TradeNotApproved);
+        require!(rfq.approved, ProtocolError::OrderNotApproved);
     }
 
     Ok(())
@@ -558,7 +558,7 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
     require!(rfq.last_look, ProtocolError::LastLookNotSet);
     require!(
         order_authority == authority,
-        ProtocolError::TradeNotApproved
+        ProtocolError::OrderNotApproved
     );
 
     Ok(())
@@ -566,7 +566,8 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 /// Confirmation access control. Ensures confirmation is:
 ///
 /// 1. Executed by taker
-/// 2. Confirmation order is same as request order
+/// 2. Confirmed by maker
+/// 3. RFQ best bid/ask is same as order bid/ask
 pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>) -> Result<()> {
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
@@ -575,11 +576,7 @@ pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>) -> Result<()
     let authority = ctx.accounts.authority.key();
 
     // Make sure current authority matches original taker address from request instruction
-    require!(
-        taker_address == authority,
-        ProtocolError::InvalidTakerAddress
-    );
-
+    require!(taker_address == authority, ProtocolError::InvalidTaker);
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
 
     match order_side {
@@ -599,36 +596,45 @@ pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>) -> Result<()
 
 /// Response access control. Ensures response satisfies the following conditions:
 ///
-/// 1. RFQ authority is not the same as the taker authority
+/// 1. RFQ authority is not the same as maker authority
 /// 2. RFQ is not expired
-/// 3. Order amount is greater than 0
-/// 4. If response is a bid the amount is greater than 0
-/// 5. If response is an ask the amount is greater than 0
+/// 3. Response bid/ask match request order side
+/// 4. Response bid/ask amount is greater than 0
 pub fn respond_access_control<'info>(
     ctx: &Context<Respond<'info>>,
     bid: Option<u64>,
     ask: Option<u64>,
 ) -> Result<()> {
-    let authority = &ctx.accounts.authority;
     let rfq = &ctx.accounts.rfq;
-    let expiry = rfq.expiry;
-    let unix_timestamp = Clock::get().unwrap().unix_timestamp;
-    let order_amount = rfq.order_amount;
+
+    let maker_authority = &ctx.accounts.authority.key();
+    let taker_authority = &rfq.authority.key();
 
     require!(
-        rfq.authority.key() != authority.key(),
-        ProtocolError::InvalidAuthorityAddress
+        taker_authority != maker_authority,
+        ProtocolError::InvalidAuthority
     );
-    require!(expiry > unix_timestamp, ProtocolError::ResponseTimeElapsed);
-    require!(order_amount > 0, ProtocolError::InvalidOrderAmount);
+    require!(
+        rfq.expiry > Clock::get().unwrap().unix_timestamp,
+        ProtocolError::Expired
+    );
 
-    match bid {
-        Some(b) => require!(b > 0, ProtocolError::InvalidQuote),
-        None => (),
-    }
-    match ask {
-        Some(a) => require!(a > 0, ProtocolError::InvalidQuote),
-        None => (),
+    match rfq.order_side {
+        Order::Buy => {
+            require!(ask.is_some() && bid.is_none(), ProtocolError::InvalidQuote);
+            require!(
+                ask.is_some() && ask.unwrap() > 0,
+                ProtocolError::InvalidQuote
+            );
+        }
+        Order::Sell => {
+            require!(bid.is_some() && ask.is_none(), ProtocolError::InvalidQuote);
+            require!(
+                bid.is_some() && bid.unwrap() > 0,
+                ProtocolError::InvalidQuote
+            );
+        }
+        Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
     }
 
     Ok(())
@@ -638,12 +644,10 @@ pub fn respond_access_control<'info>(
 ///
 /// 1. Collateral has not already by returned
 /// 2. Order is not confirmed
-/// 3. RFQ is either expired or order has been confirmed
+/// 3. If RFQ is not confirmed either expired or order has been confirmed
 pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
-
-    let now = Clock::get().unwrap().unix_timestamp;
 
     require!(
         !order.collateral_returned,
@@ -653,7 +657,10 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
 
     if !rfq.confirmed {
-        require!(now > rfq.expiry, ProtocolError::NotExpiredOrConfirmed);
+        require!(
+            Clock::get().unwrap().unix_timestamp > rfq.expiry,
+            ProtocolError::ActiveOrUnconfirmed
+        );
     }
 
     Ok(())
@@ -664,38 +671,36 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
 /// Error handling codes.
 #[error_code]
 pub enum ProtocolError {
+    #[msg("RFQ is active or unconfirmed")]
+    ActiveOrUnconfirmed,
     #[msg("Collateral returned")]
     CollateralReturned,
-    #[msg("Not expired or confirmed")]
-    NotExpiredOrConfirmed,
-    #[msg("Order settled")]
-    OrderSettled,
-    #[msg("RFQ settled")]
-    RfqSettled,
+    #[msg("Expired")]
+    Expired,
     #[msg("Invalid confirm")]
     InvalidConfirm,
-    #[msg("Order confirmed")]
-    OrderConfirmed,
-    #[msg("Invalid order logic")]
+    #[msg("Invalid order")]
     InvalidOrder,
     #[msg("Invalid quote")]
     InvalidQuote,
-    #[msg("Invalid taker address")]
-    InvalidTakerAddress,
-    #[msg("Invalid authority address")]
-    InvalidAuthorityAddress,
+    #[msg("Invalid taker")]
+    InvalidTaker,
+    #[msg("Invalid authority")]
+    InvalidAuthority,
     #[msg("Invalid order amount")]
     InvalidOrderAmount,
-    #[msg("Last look has not been configured for this RFQ")]
+    #[msg("Last look has not been set")]
     LastLookNotSet,
     #[msg("Not implemented")]
     NotImplemented,
-    #[msg("Trade has not been confirmed by taker")]
-    TradeNotConfirmed,
-    #[msg("Trade has not been approved via last look by maker")]
-    TradeNotApproved,
-    #[msg("Timed out on response to request")]
-    ResponseTimeElapsed,
+    #[msg("Order confirmed")]
+    OrderConfirmed,
+    #[msg("Order settled")]
+    OrderSettled,
+    #[msg("Order last look has not been approved")]
+    OrderNotApproved,
+    #[msg("RFQ settled")]
+    RfqSettled,
 }
 
 /// Private module for program instructions.

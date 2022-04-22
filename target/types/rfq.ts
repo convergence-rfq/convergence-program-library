@@ -705,83 +705,78 @@ export type Rfq = {
   "errors": [
     {
       "code": 6000,
+      "name": "ActiveOrUnconfirmed",
+      "msg": "RFQ is active or unconfirmed"
+    },
+    {
+      "code": 6001,
       "name": "CollateralReturned",
       "msg": "Collateral returned"
     },
     {
-      "code": 6001,
-      "name": "NotExpiredOrConfirmed",
-      "msg": "Not expired or confirmed"
-    },
-    {
       "code": 6002,
-      "name": "OrderSettled",
-      "msg": "Order settled"
+      "name": "Expired",
+      "msg": "Expired"
     },
     {
       "code": 6003,
-      "name": "RfqSettled",
-      "msg": "RFQ settled"
-    },
-    {
-      "code": 6004,
       "name": "InvalidConfirm",
       "msg": "Invalid confirm"
     },
     {
-      "code": 6005,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
-    },
-    {
-      "code": 6006,
+      "code": 6004,
       "name": "InvalidOrder",
-      "msg": "Invalid order logic"
+      "msg": "Invalid order"
     },
     {
-      "code": 6007,
+      "code": 6005,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
+      "code": 6006,
+      "name": "InvalidTaker",
+      "msg": "Invalid taker"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidAuthority",
+      "msg": "Invalid authority"
+    },
+    {
       "code": 6008,
-      "name": "InvalidTakerAddress",
-      "msg": "Invalid taker address"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidAuthorityAddress",
-      "msg": "Invalid authority address"
-    },
-    {
-      "code": 6010,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6011,
+      "code": 6009,
       "name": "LastLookNotSet",
-      "msg": "Last look has not been configured for this RFQ"
+      "msg": "Last look has not been set"
     },
     {
-      "code": 6012,
+      "code": 6010,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
+      "code": 6011,
+      "name": "OrderConfirmed",
+      "msg": "Order confirmed"
+    },
+    {
+      "code": 6012,
+      "name": "OrderSettled",
+      "msg": "Order settled"
+    },
+    {
       "code": 6013,
-      "name": "TradeNotConfirmed",
-      "msg": "Trade has not been confirmed by taker"
+      "name": "OrderNotApproved",
+      "msg": "Order last look has not been approved"
     },
     {
       "code": 6014,
-      "name": "TradeNotApproved",
-      "msg": "Trade has not been approved via last look by maker"
-    },
-    {
-      "code": 6015,
-      "name": "ResponseTimeElapsed",
-      "msg": "Timed out on response to request"
+      "name": "RfqSettled",
+      "msg": "RFQ settled"
     }
   ]
 };
@@ -1493,83 +1488,78 @@ export const IDL: Rfq = {
   "errors": [
     {
       "code": 6000,
+      "name": "ActiveOrUnconfirmed",
+      "msg": "RFQ is active or unconfirmed"
+    },
+    {
+      "code": 6001,
       "name": "CollateralReturned",
       "msg": "Collateral returned"
     },
     {
-      "code": 6001,
-      "name": "NotExpiredOrConfirmed",
-      "msg": "Not expired or confirmed"
-    },
-    {
       "code": 6002,
-      "name": "OrderSettled",
-      "msg": "Order settled"
+      "name": "Expired",
+      "msg": "Expired"
     },
     {
       "code": 6003,
-      "name": "RfqSettled",
-      "msg": "RFQ settled"
-    },
-    {
-      "code": 6004,
       "name": "InvalidConfirm",
       "msg": "Invalid confirm"
     },
     {
-      "code": 6005,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
-    },
-    {
-      "code": 6006,
+      "code": 6004,
       "name": "InvalidOrder",
-      "msg": "Invalid order logic"
+      "msg": "Invalid order"
     },
     {
-      "code": 6007,
+      "code": 6005,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
+      "code": 6006,
+      "name": "InvalidTaker",
+      "msg": "Invalid taker"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidAuthority",
+      "msg": "Invalid authority"
+    },
+    {
       "code": 6008,
-      "name": "InvalidTakerAddress",
-      "msg": "Invalid taker address"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidAuthorityAddress",
-      "msg": "Invalid authority address"
-    },
-    {
-      "code": 6010,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6011,
+      "code": 6009,
       "name": "LastLookNotSet",
-      "msg": "Last look has not been configured for this RFQ"
+      "msg": "Last look has not been set"
     },
     {
-      "code": 6012,
+      "code": 6010,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
+      "code": 6011,
+      "name": "OrderConfirmed",
+      "msg": "Order confirmed"
+    },
+    {
+      "code": 6012,
+      "name": "OrderSettled",
+      "msg": "Order settled"
+    },
+    {
       "code": 6013,
-      "name": "TradeNotConfirmed",
-      "msg": "Trade has not been confirmed by taker"
+      "name": "OrderNotApproved",
+      "msg": "Order last look has not been approved"
     },
     {
       "code": 6014,
-      "name": "TradeNotApproved",
-      "msg": "Trade has not been approved via last look by maker"
-    },
-    {
-      "code": 6015,
-      "name": "ResponseTimeElapsed",
-      "msg": "Timed out on response to request"
+      "name": "RfqSettled",
+      "msg": "RFQ settled"
     }
   ]
 };

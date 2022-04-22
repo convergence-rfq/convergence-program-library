@@ -1,27 +1,29 @@
 /** 
   * RFQ Tests
   * 
-  * Taker wants to quote 10 MNGO tokens in USDC
+  * Request:
+  * Taker wants to quote 10 BTC in USDC
   * 
-  * Maker A makes one-way market, 10 MNGO at 100/x USDC, deposits 100 USDC as collateral
-  * Maker B makes two-way market, 10 MNGO at 105/110 USDC, deposits 105 USDC and 110 USDC as collateral
-  * Maker C makes two-way market, 10 MGNO at 90/120 USDC, deposits 90 USDC and 120 USDC as collateral
+  * Respond:
+  * Maker A makes one-way market, 10 BTC at 40K USDC, deposits USDC as collateral
+  * Maker B makes one-way market, 10 BTC at 41K USDC and 39K, deposits USDC as collateral
+  * Maker C makes one-way market, 10 BTC at 39K USDC, deposits USDC as collateral
   * 
-  * Taker reveals he wants to buy 10 MNGO
-  * Maker B is winner at 110
-  * Taker deposits 110 USDC as collateral
+  * Confirm:
+  * Maker B is winner at 39K
+  * Taker deposits 10 USDC as collateral
   * 
   * Return collateral:
-  * - A gets 100 USDC back
-  * - B gets 105 USDC back
-  * - C gets 90 USDC and 120 USDC back
+  * - A gets 40K USDC back
+  * - B gets 39K USDC back
+  * - C gets 39K USDC and 120 USDC back
   * 
   * Last look:
-  * - Set to true
+  * - Set to false
   * 
   * Settle:
-  * - Taker gets 10 MNGO
-  * - Maker B gets 110 USDC
+  * - Taker gets 41K USDC
+  * - Maker B gets 10 BTC
   * 
   * TODO:
   * - [ ] Two-way
@@ -78,12 +80,14 @@ let taker: Wallet;
 const TAKER_ORDER_AMOUNT1 = new anchor.BN(10); // Order to buy 10 asset tokens for X quote tokens
 const MAKER_A_ASK_AMOUNT1 = null;
 const MAKER_A_BID_AMOUNT1 = new anchor.BN(400_000);
+const MAKER_A_ASK_AMOUNT2 = new anchor.BN(420_000);
+const MAKER_A_BID_AMOUNT2 = new anchor.BN(410_000);
 const MAKER_B_ASK_AMOUNT1 = null;
 const MAKER_B_BID_AMOUNT1 = new anchor.BN(410_000); // Winning maker bid
 const MAKER_B_ASK_AMOUNT2 = null;
 const MAKER_B_BID_AMOUNT2 = new anchor.BN(390_000);
 const MAKER_C_ASK_AMOUNT1 = null;
-const MAKER_C_BID_AMOUNT1 = new anchor.BN(395_000);
+const MAKER_C_BID_AMOUNT1 = new anchor.BN(390_000);
 const MINT_AIRDROP = 1_000_000;
 
 anchor.setProvider(anchor.Provider.env());
@@ -183,7 +187,7 @@ describe('rfq', () => {
   });
 
   it('Maker responds to RFQ 1 and times out', async () => {
-    console.log('delay of 1s...');
+    console.log('sleeping 1s...');
     await sleep(1_000);
 
     const rfqId = 1;
@@ -192,8 +196,7 @@ describe('rfq', () => {
       await respond(provider, marketMakerA, rfqId, null, MAKER_A_ASK_AMOUNT1, makerAAssetWallet, makerAQuoteWallet);
       assert.ok(false);
     } catch (err) {
-      assert.strictEqual(err.error.errorCode.code, 'ResponseTimeElapsed');
-      console.log('response timeout');
+      assert.strictEqual(err.error.errorCode.code, 'Expired');
     }
   });
 
@@ -231,6 +234,12 @@ describe('rfq', () => {
     const response1 = await respond(provider, marketMakerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetWallet, makerAQuoteWallet);
     console.log('response 1 best ask:', response1.rfqState.bestAskAmount?.toNumber());
     console.log('response 1 best bid:', response1.rfqState.bestBidAmount?.toNumber());
+
+    try {
+      await respond(provider, marketMakerA, rfqId, MAKER_A_BID_AMOUNT2, MAKER_A_ASK_AMOUNT2, makerAAssetWallet, makerAQuoteWallet);
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'InvalidQuote');
+    }
 
     const response2 = await respond(provider, marketMakerB, rfqId, MAKER_B_BID_AMOUNT1, MAKER_B_ASK_AMOUNT1, makerBAssetWallet, makerBQuoteWallet);
     console.log('response 2 best ask:', response2.rfqState.bestAskAmount?.toNumber());
