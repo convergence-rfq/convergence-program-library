@@ -6,6 +6,7 @@ target/bpfel-unknown-unknown
 target/release
 target/deploy
 target/.rustc_info.json
+target/rls
 programs/target/rls
 programs/rfq/target/rls
 target/debug
