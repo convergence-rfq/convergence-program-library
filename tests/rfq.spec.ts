@@ -359,11 +359,25 @@ describe('rfq', () => {
     const rfqId = 2;
 
     await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet);
-
-    await settle(provider, marketMakerA, rfqId, 1, makerAAssetWallet, makerAQuoteWallet);
     await settle(provider, marketMakerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet);
-    await settle(provider, marketMakerB, rfqId, 3, makerBAssetWallet, makerBQuoteWallet);
-    await settle(provider, marketMakerC, rfqId, 4, makerCAssetWallet, makerCQuoteWallet);
+
+    try {
+      await settle(provider, marketMakerA, rfqId, 1, makerAAssetWallet, makerAQuoteWallet);
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'OrderSettled');
+    }
+
+    try {
+      await settle(provider, marketMakerB, rfqId, 3, makerBAssetWallet, makerBQuoteWallet);
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'OrderSettled');
+    }
+
+    try {
+      await settle(provider, marketMakerC, rfqId, 4, makerCAssetWallet, makerCQuoteWallet);
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'OrderSettled');
+    }
 
     try {
       await settle(provider, marketMakerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet);

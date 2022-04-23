@@ -572,14 +572,13 @@ pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>) -> Result<()
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
     let taker_address = rfq.taker_address;
-    let order_side = rfq.order_side;
     let authority = ctx.accounts.authority.key();
 
     // Make sure current authority matches original taker address from request instruction
     require!(taker_address == authority, ProtocolError::InvalidTaker);
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
 
-    match order_side {
+    match rfq.order_side {
         Order::Buy => require!(
             rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
             ProtocolError::InvalidConfirm
@@ -671,7 +670,7 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
 /// Error handling codes.
 #[error_code]
 pub enum ProtocolError {
-    #[msg("RFQ is active or unconfirmed")]
+    #[msg("Active or unconfirmed")]
     ActiveOrUnconfirmed,
     #[msg("Collateral returned")]
     CollateralReturned,
@@ -697,7 +696,7 @@ pub enum ProtocolError {
     OrderConfirmed,
     #[msg("Order settled")]
     OrderSettled,
-    #[msg("Order last look has not been approved")]
+    #[msg("Order not approved via last look")]
     OrderNotApproved,
     #[msg("RFQ settled")]
     RfqSettled,
@@ -771,52 +770,48 @@ mod instructions {
         order.id = rfq.response_count;
         order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
 
-        match ask {
-            Some(a) => {
-                anchor_spl::token::transfer(
-                    CpiContext::new(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.asset_wallet.to_account_info(),
-                            to: ctx.accounts.asset_escrow.to_account_info(),
-                            authority: ctx.accounts.authority.to_account_info(),
-                        },
-                    ),
-                    rfq.order_amount, // Collateral is an asset token amount
-                )?;
+        if ask.is_some() {
+            anchor_spl::token::transfer(
+                CpiContext::new(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.asset_wallet.to_account_info(),
+                        to: ctx.accounts.asset_escrow.to_account_info(),
+                        authority: ctx.accounts.authority.to_account_info(),
+                    },
+                ),
+                // Collateral is an asset token amount
+                rfq.order_amount,
+            )?;
 
-                order.ask = ask;
+            order.ask = ask;
 
-                if rfq.best_ask_amount.is_none() || a < rfq.best_ask_amount.unwrap() {
-                    rfq.best_ask_amount = Some(a);
-                    rfq.best_ask_address = Some(order.authority);
-                }
+            if rfq.best_ask_amount.is_none() || ask.unwrap() < rfq.best_ask_amount.unwrap() {
+                rfq.best_ask_amount = ask;
+                rfq.best_ask_address = Some(order.authority);
             }
-            None => (),
         }
 
-        match bid {
-            Some(b) => {
-                anchor_spl::token::transfer(
-                    CpiContext::new(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.quote_wallet.to_account_info(),
-                            to: ctx.accounts.quote_escrow.to_account_info(),
-                            authority: ctx.accounts.authority.to_account_info(),
-                        },
-                    ),
-                    b, // Collateral is a quote token amount
-                )?;
+        if bid.is_some() {
+            anchor_spl::token::transfer(
+                CpiContext::new(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.quote_wallet.to_account_info(),
+                        to: ctx.accounts.quote_escrow.to_account_info(),
+                        authority: ctx.accounts.authority.to_account_info(),
+                    },
+                ),
+                // Collateral is a quote token amount
+                bid.unwrap(),
+            )?;
 
-                order.bid = bid;
+            order.bid = bid;
 
-                if rfq.best_bid_amount.is_none() || b > rfq.best_bid_amount.unwrap() {
-                    rfq.best_bid_amount = Some(b);
-                    rfq.best_bid_address = Some(order.authority);
-                }
+            if rfq.best_bid_amount.is_none() || bid.unwrap() > rfq.best_bid_amount.unwrap() {
+                rfq.best_bid_amount = bid;
+                rfq.best_bid_address = Some(order.authority);
             }
-            None => (),
         }
 
         Ok(())
@@ -886,6 +881,7 @@ mod instructions {
 
         let order = &mut ctx.accounts.order;
         order.collateral_returned = true;
+        order.settled = true;
 
         if order.ask.is_some() {
             anchor_spl::token::transfer(
@@ -961,7 +957,6 @@ mod instructions {
         match rfq.order_side {
             Order::Buy => {
                 if authority_address == taker_address {
-                    // Taker
                     asset_amount = rfq.order_amount;
                 } else if authority_address == rfq.best_ask_address.unwrap() {
                     // Maker
@@ -972,7 +967,6 @@ mod instructions {
             }
             Order::Sell => {
                 if authority_address == taker_address {
-                    // Taker
                     quote_amount = rfq.best_bid_amount.unwrap();
                 } else if authority_address == rfq.best_bid_address.unwrap() {
                     // Maker

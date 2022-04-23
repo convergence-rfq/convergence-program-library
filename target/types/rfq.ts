@@ -706,7 +706,7 @@ export type Rfq = {
     {
       "code": 6000,
       "name": "ActiveOrUnconfirmed",
-      "msg": "RFQ is active or unconfirmed"
+      "msg": "Active or unconfirmed"
     },
     {
       "code": 6001,
@@ -771,7 +771,7 @@ export type Rfq = {
     {
       "code": 6013,
       "name": "OrderNotApproved",
-      "msg": "Order last look has not been approved"
+      "msg": "Order not approved via last look"
     },
     {
       "code": 6014,
@@ -1489,7 +1489,7 @@ export const IDL: Rfq = {
     {
       "code": 6000,
       "name": "ActiveOrUnconfirmed",
-      "msg": "RFQ is active or unconfirmed"
+      "msg": "Active or unconfirmed"
     },
     {
       "code": 6001,
@@ -1554,7 +1554,7 @@ export const IDL: Rfq = {
     {
       "code": 6013,
       "name": "OrderNotApproved",
-      "msg": "Order last look has not been approved"
+      "msg": "Order not approved via last look"
     },
     {
       "code": 6014,
