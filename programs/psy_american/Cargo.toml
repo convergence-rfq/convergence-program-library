@@ -1,17 +1,16 @@
 [package]
-name = "rfq"
-version = "0.1.0"
+name = "psy_american"
+version = "0.2.6"
 description = "Created with Anchor"
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "rfq"
+name = "psy_american"
 
 [features]
 no-entrypoint = []
 no-idl = []
-no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
 
@@ -20,4 +19,4 @@ anchor-lang = "0.24.2"
 anchor-spl = { version = "0.24.2", features = ["dex"] }
 solana-program = "1.9.13"
 spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
-psy_american = { path = "../psy_american", features = ["cpi"] }
+psyfi-serum-dex-permissioned = { version = "0.5.6" }

@@ -713,83 +713,59 @@ export type Rfq = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "CollateralReturned",
-      "msg": "Collateral returned"
     },
     {
-      "code": 6001,
-      "name": "NotExpiredOrConfirmed",
-      "msg": "Not expired or confirmed"
-    },
-    {
-      "code": 6002,
-      "name": "AlreadySettled",
-      "msg": "Order settled"
-    },
-    {
-      "code": 6003,
-      "name": "InvalidConfirm",
-      "msg": "Invalid confirm"
-    },
-    {
-      "code": 6004,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidOrder",
-      "msg": "Invalid order logic"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidQuote",
-      "msg": "Invalid quote"
-    },
-    {
-      "code": 6007,
-      "name": "InvalidTakerAddress",
-      "msg": "Invalid taker address"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidAuthorityAddress",
-      "msg": "Invalid authority address"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidOrderAmount",
-      "msg": "Invalid order amount"
-    },
-    {
-      "code": 6010,
-      "name": "LastLookNotSet",
-      "msg": "Last look has not been configured for this RFQ"
-    },
-    {
-      "code": 6011,
-      "name": "NotImplemented",
-      "msg": "Not implemented"
-    },
-    {
-      "code": 6012,
-      "name": "TradeNotConfirmed",
-      "msg": "Trade has not been confirmed by taker"
-    },
-    {
-      "code": 6013,
-      "name": "TradeNotApproved",
-      "msg": "Trade has not been approved via last look by maker"
-    },
-    {
-      "code": 6014,
-      "name": "ResponseTimeElapsed",
-      "msg": "Timed out on response to request"
+      "name": "ProtocolError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CollateralReturned"
+          },
+          {
+            "name": "NotExpiredOrConfirmed"
+          },
+          {
+            "name": "AlreadySettled"
+          },
+          {
+            "name": "InvalidConfirm"
+          },
+          {
+            "name": "OrderConfirmed"
+          },
+          {
+            "name": "InvalidOrder"
+          },
+          {
+            "name": "InvalidQuote"
+          },
+          {
+            "name": "InvalidTakerAddress"
+          },
+          {
+            "name": "InvalidAuthorityAddress"
+          },
+          {
+            "name": "InvalidOrderAmount"
+          },
+          {
+            "name": "LastLookNotSet"
+          },
+          {
+            "name": "NotImplemented"
+          },
+          {
+            "name": "TradeNotConfirmed"
+          },
+          {
+            "name": "TradeNotApproved"
+          },
+          {
+            "name": "ResponseTimeElapsed"
+          }
+        ]
+      }
     }
   ]
 };
@@ -1509,83 +1485,59 @@ export const IDL: Rfq = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "CollateralReturned",
-      "msg": "Collateral returned"
     },
     {
-      "code": 6001,
-      "name": "NotExpiredOrConfirmed",
-      "msg": "Not expired or confirmed"
-    },
-    {
-      "code": 6002,
-      "name": "AlreadySettled",
-      "msg": "Order settled"
-    },
-    {
-      "code": 6003,
-      "name": "InvalidConfirm",
-      "msg": "Invalid confirm"
-    },
-    {
-      "code": 6004,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidOrder",
-      "msg": "Invalid order logic"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidQuote",
-      "msg": "Invalid quote"
-    },
-    {
-      "code": 6007,
-      "name": "InvalidTakerAddress",
-      "msg": "Invalid taker address"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidAuthorityAddress",
-      "msg": "Invalid authority address"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidOrderAmount",
-      "msg": "Invalid order amount"
-    },
-    {
-      "code": 6010,
-      "name": "LastLookNotSet",
-      "msg": "Last look has not been configured for this RFQ"
-    },
-    {
-      "code": 6011,
-      "name": "NotImplemented",
-      "msg": "Not implemented"
-    },
-    {
-      "code": 6012,
-      "name": "TradeNotConfirmed",
-      "msg": "Trade has not been confirmed by taker"
-    },
-    {
-      "code": 6013,
-      "name": "TradeNotApproved",
-      "msg": "Trade has not been approved via last look by maker"
-    },
-    {
-      "code": 6014,
-      "name": "ResponseTimeElapsed",
-      "msg": "Timed out on response to request"
+      "name": "ProtocolError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CollateralReturned"
+          },
+          {
+            "name": "NotExpiredOrConfirmed"
+          },
+          {
+            "name": "AlreadySettled"
+          },
+          {
+            "name": "InvalidConfirm"
+          },
+          {
+            "name": "OrderConfirmed"
+          },
+          {
+            "name": "InvalidOrder"
+          },
+          {
+            "name": "InvalidQuote"
+          },
+          {
+            "name": "InvalidTakerAddress"
+          },
+          {
+            "name": "InvalidAuthorityAddress"
+          },
+          {
+            "name": "InvalidOrderAmount"
+          },
+          {
+            "name": "LastLookNotSet"
+          },
+          {
+            "name": "NotImplemented"
+          },
+          {
+            "name": "TradeNotConfirmed"
+          },
+          {
+            "name": "TradeNotApproved"
+          },
+          {
+            "name": "ResponseTimeElapsed"
+          }
+        ]
+      }
     }
   ]
 };
