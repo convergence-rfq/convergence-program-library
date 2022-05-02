@@ -187,13 +187,13 @@ describe('rfq', () => {
   });
 
   it('Maker responds to RFQ 1 and times out', async () => {
-    console.log('sleeping 1s...');
-    await sleep(1_000);
+    console.log('sleeping 1.5s...');
+    await sleep(1_500);
 
     const rfqId = 1;
 
     try {
-      await respond(provider, marketMakerA, rfqId, null, MAKER_A_ASK_AMOUNT1, makerAAssetWallet, makerAQuoteWallet);
+      await respond(provider, marketMakerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetWallet, makerAQuoteWallet);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'Expired');

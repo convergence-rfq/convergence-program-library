@@ -74,8 +74,8 @@ pub mod rfq {
     /// ctx
     /// order_side
     #[access_control(confirm_access_control(&ctx))]
-    pub fn confirm(ctx: Context<Confirm>) -> Result<()> {
-        instructions::confirm(ctx)
+    pub fn confirm(ctx: Context<Confirm>, order_side: Order) -> Result<()> {
+        instructions::confirm(ctx, order_side)
     }
 
     /// Last look.
@@ -570,7 +570,7 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 /// 1. Executed by taker
 /// 2. Confirmed by maker
 /// 3. RFQ best bid/ask is same as order bid/ask
-pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>) -> Result<()> {
+pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>, order_side: Order) -> Result<()> {
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
     let taker_address = rfq.taker_address;
@@ -580,6 +580,7 @@ pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>) -> Result<()
     require!(taker_address == authority, ProtocolError::InvalidTaker);
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
 
+    // TODO: Check order side
     match rfq.order_side {
         Order::Buy => require!(
             rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
@@ -624,18 +625,24 @@ pub fn respond_access_control<'info>(
         Order::Buy => {
             require!(ask.is_some() && bid.is_none(), ProtocolError::InvalidQuote);
             require!(
-                ask.is_some() && ask.unwrap() > 0,
+                ask.unwrap() > 0,
                 ProtocolError::InvalidQuote
             );
         }
         Order::Sell => {
             require!(bid.is_some() && ask.is_none(), ProtocolError::InvalidQuote);
             require!(
-                bid.is_some() && bid.unwrap() > 0,
+                bid.unwrap() > 0,
                 ProtocolError::InvalidQuote
             );
         }
-        Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
+        Order::TwoWay => {
+            require!(!(bid.is_some() && ask.is_some()), ProtocolError::InvalidQuote);
+            require!(
+                ask.unwrap() > 0 && bid.unwrap() > 0,
+                ProtocolError::InvalidQuote
+            );
+        }
     }
 
     Ok(())
