@@ -69,6 +69,8 @@ pub mod rfq {
 
     /// Taker confirms order.
     ///
+    /// TODO: Add order side
+    ///
     /// ctx
     /// order_side
     #[access_control(confirm_access_control(&ctx))]

@@ -80,7 +80,10 @@ export async function getRfqs(provider: Provider): Promise<object[]> {
     program.programId
   );
   const protocolState = await program.account.protocolState.fetch(protocolPda);
-  const range = Array.from({ length: protocolState.rfqCount.toNumber() }, (_, i) => 1 + i);
+  const range = Array.from({
+    // @ts-ignore
+    length: protocolState.rfqCount.toNumber()
+  }, (_, i) => 1 + i);
 
   const rfqs = await Promise.all(range.map(async (i) => {
     const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
@@ -170,7 +173,10 @@ export async function returnCollateral(
   );
 
   let rfqState = await program.account.rfqState.fetch(rfqPda);
+
+  // @ts-ignore
   const assetMint = new anchor.web3.PublicKey(rfqState.assetMint.toString());
+  // @ts-ignore
   const quoteMint = new anchor.web3.PublicKey(rfqState.quoteMint.toString());
 
   const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -230,7 +236,10 @@ export async function settle(
   );
 
   let rfqState = await program.account.rfqState.fetch(rfqPda);
+
+  // @ts-ignore
   const assetMint = new anchor.web3.PublicKey(rfqState.assetMint.toString());
+  // @ts-ignore
   const quoteMint = new anchor.web3.PublicKey(rfqState.quoteMint.toString());
 
   const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -291,7 +300,9 @@ export async function confirm(
   );
 
   let rfqState = await program.account.rfqState.fetch(rfqPda);
+  // @ts-ignore
   const assetMint = new anchor.web3.PublicKey(rfqState.assetMint.toString());
+  // @ts-ignore
   const quoteMint = new anchor.web3.PublicKey(rfqState.quoteMint.toString());
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
@@ -352,9 +363,12 @@ export async function respond(
   );
 
   let rfqState = await program.account.rfqState.fetch(rfqPda);
+  // @ts-ignore
   const responseId = rfqState.responseCount.toNumber() + 1;
 
+  // @ts-ignore
   const assetMint = new PublicKey(rfqState.assetMint.toString());
+  // @ts-ignore
   const quoteMint = new PublicKey(rfqState.quoteMint.toString());
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
@@ -419,7 +433,8 @@ export async function request(
   );
 
   let protocolState = await program.account.protocolState.fetch(protocolPda);
-  const rfqId = protocolState.rfqCount.toNumber() + 1;
+  // @ts-ignore
+  const rfqId = protocolState.rfqCount.toNumber() as number + 1;
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
