@@ -869,7 +869,7 @@ mod instructions {
 
         match rfq.order_side {
             Order::Buy => {
-                order_amount = rfq.best_bid_amount.unwrap();
+                order_amount = rfq.best_ask_amount.unwrap();
                 from = ctx.accounts.quote_wallet.to_account_info();
                 to = ctx.accounts.quote_escrow.to_account_info();
             }
