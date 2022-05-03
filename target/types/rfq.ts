@@ -258,7 +258,14 @@ export type Rfq = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "orderSide",
+          "type": {
+            "defined": "Side"
+          }
+        }
+      ]
     },
     {
       "name": "lastLook",
@@ -590,6 +597,14 @@ export type Rfq = {
             "type": "bool"
           },
           {
+            "name": "confirmedSide",
+            "type": {
+              "option": {
+                "defined": "Side"
+              }
+            }
+          },
+          {
             "name": "id",
             "type": "u64"
           },
@@ -657,20 +672,6 @@ export type Rfq = {
       }
     },
     {
-      "name": "Side",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Buy"
-          },
-          {
-            "name": "Sell"
-          }
-        ]
-      }
-    },
-    {
       "name": "Venue",
       "type": {
         "kind": "enum",
@@ -680,6 +681,20 @@ export type Rfq = {
           },
           {
             "name": "PsyOptions"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Side",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
           }
         ]
       }
@@ -750,31 +765,36 @@ export type Rfq = {
     },
     {
       "code": 6009,
+      "name": "InvalidSettle",
+      "msg": "Invalid settle"
+    },
+    {
+      "code": 6010,
       "name": "LastLookNotSet",
       "msg": "Last look has not been set"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }
@@ -1041,7 +1061,14 @@ export const IDL: Rfq = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "orderSide",
+          "type": {
+            "defined": "Side"
+          }
+        }
+      ]
     },
     {
       "name": "lastLook",
@@ -1373,6 +1400,14 @@ export const IDL: Rfq = {
             "type": "bool"
           },
           {
+            "name": "confirmedSide",
+            "type": {
+              "option": {
+                "defined": "Side"
+              }
+            }
+          },
+          {
             "name": "id",
             "type": "u64"
           },
@@ -1440,20 +1475,6 @@ export const IDL: Rfq = {
       }
     },
     {
-      "name": "Side",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Buy"
-          },
-          {
-            "name": "Sell"
-          }
-        ]
-      }
-    },
-    {
       "name": "Venue",
       "type": {
         "kind": "enum",
@@ -1463,6 +1484,20 @@ export const IDL: Rfq = {
           },
           {
             "name": "PsyOptions"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Side",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
           }
         ]
       }
@@ -1533,31 +1568,36 @@ export const IDL: Rfq = {
     },
     {
       "code": 6009,
+      "name": "InvalidSettle",
+      "msg": "Invalid settle"
+    },
+    {
+      "code": 6010,
       "name": "LastLookNotSet",
       "msg": "Last look has not been set"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }

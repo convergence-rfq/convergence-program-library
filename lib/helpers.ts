@@ -73,7 +73,11 @@ export const Leg = {
   }
 };
 
-export async function getRfqs(provider: Provider): Promise<object[]> {
+export async function getRfqs(
+  provider: Provider,
+  page: number | undefined,
+  pageSize: number | undefined
+): Promise<object[]> {
   const program = await getProgram(provider);
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
@@ -120,7 +124,6 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
 
 export async function lastLook(
   provider: Provider,
-  // @ts-ignore
   authority: Wallet,
   rfqId: number,
   orderId: number
@@ -158,7 +161,6 @@ export async function lastLook(
 
 export async function returnCollateral(
   provider: Provider,
-  // @ts-ignore
   authority: Wallet,
   rfqId: number,
   orderId: number,
@@ -221,7 +223,6 @@ export async function returnCollateral(
 
 export async function settle(
   provider: Provider,
-  // @ts-ignore
   authority: Wallet,
   rfqId: number,
   orderId: number,
@@ -287,10 +288,11 @@ export async function confirm(
   provider: Provider,
   rfqId: number,
   responseId: number,
-  // @ts-ignore
   authority: Wallet,
   assetWallet: PublicKey,
   quoteWallet: PublicKey,
+  // TODO: Add correct struct
+  side: any
 ): Promise<any> {
   const program = await getProgram(provider);
 
@@ -319,6 +321,7 @@ export async function confirm(
   );
 
   const tx = await program.rpc.confirm(
+    side,
     {
       accounts: {
         assetMint: assetMint,
@@ -347,11 +350,10 @@ export async function confirm(
 
 export async function respond(
   provider: Provider,
-  // @ts-ignore
   authority: Wallet,
   rfqId: number,
-  bid: anchor.BN,
-  ask: anchor.BN,
+  bid: number | null,
+  ask: number | null,
   assetWallet: PublicKey,
   quoteWallet: PublicKey
 ): Promise<any> {
@@ -385,8 +387,8 @@ export async function respond(
   );
 
   const tx = await program.rpc.respond(
-    bid,
-    ask,
+    bid ? new anchor.BN(bid) : null,
+    ask ? new anchor.BN(ask) : null,
     {
       accounts: {
         assetMint: assetMint,
@@ -415,12 +417,11 @@ export async function respond(
 
 export async function request(
   assetMint: Token,
-  // @ts-ignore
   authority: Wallet,
-  expiry: anchor.BN,
+  expiry: number,
   lastLook: boolean,
   legs: object[],
-  orderAmount: anchor.BN,
+  orderAmount: number,
   provider: Provider,
   quoteMint: Token,
   requestOrder: object,
@@ -434,7 +435,7 @@ export async function request(
 
   let protocolState = await program.account.protocolState.fetch(protocolPda);
   // @ts-ignore
-  const rfqId = protocolState.rfqCount.toNumber() as number + 1;
+  const rfqId = protocolState.rfqCount.toNumber() + 1;
 
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
@@ -450,10 +451,10 @@ export async function request(
   );
 
   const tx = await program.rpc.request(
-    expiry,
+    new anchor.BN(expiry),
     lastLook,
     legs,
-    orderAmount,
+    new anchor.BN(orderAmount),
     requestOrder,
     {
       accounts: {
@@ -483,7 +484,6 @@ export async function request(
 
 export async function initializeProtocol(
   provider: Provider,
-  // @ts-ignore
   authority: Wallet,
   feeDenominator: number,
   feeNumerator: number
@@ -526,7 +526,6 @@ export async function requestAirdrop(
 
 export async function getBalance(
   provider: Provider,
-  // @ts-ignore
   payer: Wallet,
   mint: PublicKey
 ) {

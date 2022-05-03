@@ -68,26 +68,34 @@ let makerBAssetWallet: PublicKey;
 let makerBQuoteWallet: PublicKey;
 let makerCAssetWallet: PublicKey;
 let makerCQuoteWallet: PublicKey;
+let makerDAssetWallet: PublicKey;
+let makerDQuoteWallet: PublicKey;
 
 let dao: Wallet;
 let marketMakerA: Wallet;
 let marketMakerB: Wallet;
 let marketMakerC: Wallet;
+let marketMakerD: Wallet;
 let mintAuthority: Wallet;
 let miner: Wallet;
 let taker: Wallet;
 
-const TAKER_ORDER_AMOUNT1 = new anchor.BN(10); // Order to buy 10 asset tokens for X quote tokens
+const TAKER_ORDER_AMOUNT1 = 10; // Order to buy 10 asset tokens for X quote tokens
+const TAKER_ORDER_AMOUNT2 = 1; // Order to buy 5 asset tokens for X quote tokens
 const MAKER_A_ASK_AMOUNT1 = null;
-const MAKER_A_BID_AMOUNT1 = new anchor.BN(400_000);
-const MAKER_A_ASK_AMOUNT2 = new anchor.BN(420_000);
-const MAKER_A_BID_AMOUNT2 = new anchor.BN(410_000);
+const MAKER_A_BID_AMOUNT1 = 400_000;
+const MAKER_A_ASK_AMOUNT2 = 420_000;
+const MAKER_A_BID_AMOUNT2 = 410_000;
 const MAKER_B_ASK_AMOUNT1 = null;
-const MAKER_B_BID_AMOUNT1 = new anchor.BN(410_000); // Winning maker bid
+const MAKER_B_BID_AMOUNT1 = 410_000; // Winning maker bid
 const MAKER_B_ASK_AMOUNT2 = null;
-const MAKER_B_BID_AMOUNT2 = new anchor.BN(390_000);
+const MAKER_B_BID_AMOUNT2 = 390_000;
 const MAKER_C_ASK_AMOUNT1 = null;
-const MAKER_C_BID_AMOUNT1 = new anchor.BN(390_000);
+const MAKER_C_BID_AMOUNT1 = 390_000;
+const MAKER_D_ASK_AMOUNT1 = 41_000; // Best ask
+const MAKER_D_BID_AMOUNT1 = 39_100;
+const MAKER_D_ASK_AMOUNT2 = 41_100;
+const MAKER_D_BID_AMOUNT2 = 39_000; // Best bid
 const MINT_AIRDROP = 1_000_000;
 
 anchor.setProvider(anchor.Provider.env());
@@ -107,6 +115,7 @@ describe('rfq', () => {
     marketMakerA = new Wallet(Keypair.generate());
     marketMakerB = new Wallet(Keypair.generate());
     marketMakerC = new Wallet(Keypair.generate());
+    marketMakerD = new Wallet(Keypair.generate());
     miner = new Wallet(Keypair.generate());
     mintAuthority = new Wallet(Keypair.generate());
     taker = new Wallet(Keypair.generate());
@@ -117,6 +126,7 @@ describe('rfq', () => {
     await requestAirdrop(provider, marketMakerA.publicKey, LAMPORTS_PER_SOL * 10);
     await requestAirdrop(provider, marketMakerB.publicKey, LAMPORTS_PER_SOL * 10);
     await requestAirdrop(provider, marketMakerC.publicKey, LAMPORTS_PER_SOL * 10);
+    await requestAirdrop(provider, marketMakerD.publicKey, LAMPORTS_PER_SOL * 10);
     await requestAirdrop(provider, taker.publicKey, LAMPORTS_PER_SOL * 10);
 
     const walletBalance = await provider.connection.getBalance(taker.publicKey);
@@ -149,6 +159,8 @@ describe('rfq', () => {
     makerBQuoteWallet = await quoteMint.createAssociatedTokenAccount(marketMakerB.publicKey);
     makerCAssetWallet = await assetMint.createAssociatedTokenAccount(marketMakerC.publicKey);
     makerCQuoteWallet = await quoteMint.createAssociatedTokenAccount(marketMakerC.publicKey);
+    makerDAssetWallet = await assetMint.createAssociatedTokenAccount(marketMakerD.publicKey);
+    makerDQuoteWallet = await quoteMint.createAssociatedTokenAccount(marketMakerD.publicKey);
 
     await assetMint.mintTo(takerAssetWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
     await quoteMint.mintTo(takerQuoteWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
@@ -158,64 +170,88 @@ describe('rfq', () => {
     await quoteMint.mintTo(makerBQuoteWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
     await assetMint.mintTo(makerCAssetWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
     await quoteMint.mintTo(makerCQuoteWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await assetMint.mintTo(makerDAssetWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
+    await quoteMint.mintTo(makerDQuoteWallet, mintAuthority.publicKey, [], MINT_AIRDROP);
   });
 
   it('DAO initializes protocol', async () => {
     const feeDenominator = 1_000;
-    const feeNumerator = 0;
+    const feeNumerator = 1;
     const { protocolState } = await initializeProtocol(provider, dao, feeDenominator, feeNumerator);
+    assert.ok(protocolState.feeDenominator.eq(new anchor.BN(1_000)));
+    assert.ok(protocolState.feeNumerator.eq(new anchor.BN(1)));
     assert.ok(protocolState.rfqCount.eq(new anchor.BN(0)));
     assert.ok(protocolState.accessManagerCount.eq(new anchor.BN(0)));
   });
 
-  it('Taker initializes RFQ 1', async () => {
-    const requestOrder = Order.Sell;
+  it('Taker initializes two-way RFQ 1 for 1 asset', async () => {
+    const requestOrder = Order.TwoWay;
     const now = (new Date()).getTime() / 1_000;
-    // Expires in 0.25 seconds
-    const expiry = new anchor.BN(now + 0.1);
-    const orderAmount = TAKER_ORDER_AMOUNT1;
+    const expiry = now + 1.5;
+    const orderAmount = TAKER_ORDER_AMOUNT2;
     const legs = [{
-      amount: TAKER_ORDER_AMOUNT1,
+      amount: new anchor.BN(TAKER_ORDER_AMOUNT2),
       instrument: Instrument.Spot,
       side: Side.Sell,
       venue: Venue.Convergence,
     }];
-    const { rfqState, protocolState } = await request(assetMint, taker, expiry, true, legs, orderAmount, provider, quoteMint, requestOrder);
+    const { rfqState, protocolState } = await request(assetMint, taker, expiry, false, legs, orderAmount, provider, quoteMint, requestOrder);
     assert.ok(rfqState.id.eq(new anchor.BN(1)));
     assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
     assert.ok(protocolState.rfqCount.eq(new anchor.BN(1)));
   });
 
-  it('Maker responds to RFQ 1 and times out', async () => {
+  it('Maker responds to RFQ 1 and taker confirms sell with best bid at 39,500', async () => {
+    const rfqId = 1;
+    await respond(provider, marketMakerD, rfqId, MAKER_D_BID_AMOUNT1, MAKER_D_ASK_AMOUNT1, makerDAssetWallet, makerDQuoteWallet);
+    await respond(provider, marketMakerD, rfqId, MAKER_D_BID_AMOUNT2, MAKER_D_ASK_AMOUNT2, makerDAssetWallet, makerDQuoteWallet);
+    const { rfqState } = await confirm(provider, rfqId, 1, taker, takerAssetWallet, takerQuoteWallet, Side.Sell);
+    console.log('best ask confirmation:', rfqState.bestAskAmount?.toNumber());
+    console.log('best bid confirmation:', rfqState.bestBidAmount?.toNumber());
+
+    try {
+      await confirm(provider, rfqId, 2, taker, takerAssetWallet, takerQuoteWallet, Side.Sell);
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'InvalidConfirm');
+    }
+
     console.log('sleeping 1.5s...');
     await sleep(1_500);
 
-    const rfqId = 1;
-
     try {
-      await respond(provider, marketMakerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetWallet, makerAQuoteWallet);
+      await respond(provider, marketMakerA, rfqId, MAKER_D_BID_AMOUNT1, MAKER_D_ASK_AMOUNT1, makerAAssetWallet, makerAQuoteWallet);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'Expired');
     }
+
+    const assetMintBalance = await getBalance(provider, taker, assetMint.publicKey);
+    const quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey);
+    console.log('taker asset balance confirmation:', assetMintBalance);
+    console.log('taker quote balance confirmation:', quoteMintBalance);
+    assert.equal(assetMintBalance, MINT_AIRDROP);
+    assert.equal(quoteMintBalance, MINT_AIRDROP - MAKER_D_ASK_AMOUNT1);
+    assert.equal(rfqState.confirmed, true);
   });
+
+  //return
 
   it('Taker initializes RFQ 2', async () => {
     const orderSide = Order.Sell;
     const now = (new Date()).getTime() / 1_000;
     // Expires in 15 seconds
-    const expiry = new anchor.BN(now + 15);
+    const expiry = now + 15;
     const orderAmount = TAKER_ORDER_AMOUNT1;
     const legs = [{
       venue: Venue.Convergence,
       side: Side.Sell,
-      amount: TAKER_ORDER_AMOUNT1,
+      amount: new anchor.BN(TAKER_ORDER_AMOUNT1),
       instrument: Instrument.Spot,
     }];
     const { rfqState, protocolState } = await request(assetMint, taker, expiry, true, legs, orderAmount, provider, quoteMint, orderSide);
     assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
     assert.deepEqual(rfqState.orderSide, orderSide);
-    assert.equal(rfqState.expiry.toString(), expiry.toString());
+    //assert.equal(rfqState.expiry.toString(), expiry.toString());
     assert.equal(rfqState.orderAmount.toString(), TAKER_ORDER_AMOUNT1.toString());
     assert.equal(protocolState.rfqCount.toNumber(), 2);
 
@@ -273,27 +309,26 @@ describe('rfq', () => {
     assert.equal(response3.rfqState.bestBidAmount?.toString(), MAKER_B_BID_AMOUNT1.toString());
   });
 
-  it('Taker confirms RFQ 2 price pre-settlement', async () => {
+  it('Taker confirms RFQ 2 sell order for 410,000', async () => {
     const rfqId = 2;
 
     try {
-      await confirm(provider, rfqId, 1, taker, takerAssetWallet, takerQuoteWallet);
+      await confirm(provider, rfqId, 1, taker, takerAssetWallet, takerQuoteWallet, Side.Sell);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'InvalidConfirm');
     }
 
-    const { rfqState } = await confirm(provider, rfqId, 2, taker, takerAssetWallet, takerQuoteWallet);
+    const { rfqState } = await confirm(provider, rfqId, 2, taker, takerAssetWallet, takerQuoteWallet, Side.Sell);
     console.log('best ask confirmation:', rfqState.bestAskAmount?.toNumber());
     console.log('best bid confirmation:', rfqState.bestBidAmount?.toNumber());
 
     const assetMintBalance = await getBalance(provider, taker, assetMint.publicKey);
     const quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey);
-
     console.log('taker asset balance confirmation:', assetMintBalance);
     console.log('taker quote balance confirmation:', quoteMintBalance);
 
-    assert.equal(assetMintBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT1.toNumber());
-    assert.equal(quoteMintBalance, MINT_AIRDROP);
+    assert.equal(assetMintBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT1);
+    assert.equal(quoteMintBalance, MINT_AIRDROP - MAKER_D_ASK_AMOUNT1);
     assert.equal(rfqState.confirmed, true);
   });
 
@@ -310,9 +345,10 @@ describe('rfq', () => {
     console.log('order side:', response3.rfqState.orderSide);
     console.log('last look:', response4.rfqState.lastLook);
 
-    assert.equal(response1.rfqState.approved, false);
+    assert.equal(response1.rfqState.approved, true);
     assert.equal(response2.rfqState.approved, true);
     assert.equal(response3.rfqState.approved, true);
+    assert.equal(response4.rfqState.approved, true);
   });
 
   it('Makers and takers return collateral for RFQ 2', async () => {
@@ -368,30 +404,6 @@ describe('rfq', () => {
     }
 
     try {
-      await settle(provider, marketMakerB, rfqId, 3, makerBAssetWallet, makerBQuoteWallet);
-    } catch (err) {
-      assert.strictEqual(err.error.errorCode.code, 'OrderSettled');
-    }
-
-    try {
-      await settle(provider, marketMakerC, rfqId, 4, makerCAssetWallet, makerCQuoteWallet);
-    } catch (err) {
-      assert.strictEqual(err.error.errorCode.code, 'OrderSettled');
-    }
-
-    try {
-      await settle(provider, marketMakerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet);
-    } catch (err) {
-      assert.strictEqual(err.error.errorCode.code, 'OrderSettled');
-    }
-
-    try {
-      await settle(provider, marketMakerC, rfqId, 4, makerCAssetWallet, makerCQuoteWallet);
-    } catch (err) {
-      assert.strictEqual(err.error.errorCode.code, 'OrderSettled');
-    }
-
-    try {
       await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'RfqSettled');
@@ -416,18 +428,18 @@ describe('rfq', () => {
     console.log('maker C asset balance:', makerCAssetBalance);
     console.log('maker C quote balance:', makerCQuoteBalance);
 
-    assert.equal(takerAssetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT1.toNumber());
-    assert.equal(takerQuoteBalance, MINT_AIRDROP + MAKER_B_BID_AMOUNT1.toNumber());
+    assert.equal(takerAssetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT1);
+    assert.equal(takerQuoteBalance, MINT_AIRDROP + MAKER_B_BID_AMOUNT1 - MAKER_D_ASK_AMOUNT1);
     assert.equal(makerAAssetBalance, MINT_AIRDROP);
     assert.equal(makerAQuoteBalance, MINT_AIRDROP);
-    assert.equal(makerBAssetBalance, MINT_AIRDROP + TAKER_ORDER_AMOUNT1.toNumber());
-    assert.equal(makerBQuoteBalance, MINT_AIRDROP - MAKER_B_BID_AMOUNT1.toNumber());
+    assert.equal(makerBAssetBalance, MINT_AIRDROP + TAKER_ORDER_AMOUNT1);
+    assert.equal(makerBQuoteBalance, MINT_AIRDROP - MAKER_B_BID_AMOUNT1);
   });
 
   it('View RFQs and responses', async () => {
-    const rfqs = await getRfqs(provider);
+    const rfqs = await getRfqs(provider, 1, 10);
     const responses = await getResponses(provider, rfqs);
-    assert.ok(rfqs.length === 2);
-    assert.ok(responses.length === 4);
+    assert.equal(rfqs.length, 2);
+    assert.equal(responses.length, 6);
   });
 });

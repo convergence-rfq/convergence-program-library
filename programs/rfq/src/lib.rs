@@ -8,7 +8,6 @@ use solana_program::sysvar::clock::Clock;
 
 declare_id!("669TjP6JkroCT5czWue2TGEPfcuFN8cz99Z1QMcNCWv7");
 
-// NOTE: Do not use hyphens in seed
 /// Asset escrow PDA seed
 pub const ASSET_ESCROW_SEED: &str = "asset_escrow";
 /// Order PDA seed
@@ -69,12 +68,10 @@ pub mod rfq {
 
     /// Taker confirms order.
     ///
-    /// TODO: Add order side
-    ///
     /// ctx
     /// order_side
-    #[access_control(confirm_access_control(&ctx))]
-    pub fn confirm(ctx: Context<Confirm>, order_side: Order) -> Result<()> {
+    #[access_control(confirm_access_control(&ctx, order_side))]
+    pub fn confirm(ctx: Context<Confirm>, order_side: Side) -> Result<()> {
         instructions::confirm(ctx, order_side)
     }
 
@@ -177,14 +174,20 @@ impl ProtocolState {
 /// Market maker order state
 #[account]
 pub struct OrderState {
+    // Optional ask
     pub ask: Option<u64>,
+    // Authority
     pub authority: Pubkey,
+    // Optional bid
     pub bid: Option<u64>,
+    // PDA bump
     pub bump: u8,
     /// Collateral returned
     pub collateral_returned: bool,
     // Order has been confirmed
     pub confirmed: bool,
+    // Confirmed side
+    pub confirmed_side: Option<Side>,
     // Order id
     pub id: u64,
     /// Settled
@@ -194,7 +197,7 @@ pub struct OrderState {
 }
 
 impl OrderState {
-    pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 2) + (1 * 3) + (1 * 1);
+    pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 2) + (1 * 3) + (1 + 4) + (1 * 1);
 }
 
 // Contexts
@@ -284,8 +287,10 @@ pub struct Request<'info> {
 /// Responds to quote.
 #[derive(Accounts)]
 pub struct Respond<'info> {
+    /// Authority
     #[account(mut)]
     pub authority: Signer<'info>,
+    /// Order
     #[account(
         init,
         payer = authority,
@@ -298,32 +303,42 @@ pub struct Respond<'info> {
         bump
     )]
     pub order: Box<Account<'info, OrderState>>,
+    /// Rfq
     #[account(
         mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
+    /// Asset wallet
     #[account(mut)]
     pub asset_wallet: Box<Account<'info, TokenAccount>>,
+    /// Quote wallet
     #[account(mut)]
     pub quote_wallet: Box<Account<'info, TokenAccount>>,
+    /// Asset escrow
     #[account(
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump = rfq.asset_escrow_bump
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
+    /// Quote escrow
     #[account(
         mut,
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump = rfq.quote_escrow_bump
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
+    /// Asset mint
     pub asset_mint: Box<Account<'info, Mint>>,
+    /// Quote mint
     pub quote_mint: Box<Account<'info, Mint>>,
+    /// System program
     pub system_program: Program<'info, System>,
+    /// Token program
     pub token_program: Program<'info, Token>,
+    /// Rent
     pub rent: Sysvar<'info, Rent>,
 }
 
@@ -487,13 +502,6 @@ pub enum Instrument {
     Spot,
 }
 
-/// Order side for RFQ.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Side {
-    Buy,
-    Sell,
-}
-
 /// Venue for RFQ leg.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Venue {
@@ -512,6 +520,13 @@ pub struct Leg {
 
 impl Leg {
     pub const LEN: usize = (1 + (1 * 4)) + (1 + (1 * 2)) + (1 + (1 * 2)) + (8 * 1);
+}
+
+/// Order side for RFQ.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Side {
+    Buy,
+    Sell,
 }
 
 /// Order.
@@ -533,11 +548,14 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
 
-    if ctx.accounts.authority.key() == rfq.authority.key() {
+    let authority_address = ctx.accounts.authority.key();
+    let taker_address = rfq.authority.key();
+
+    if authority_address == taker_address {
         require!(!rfq.settled, ProtocolError::RfqSettled);
     }
 
-    if ctx.accounts.authority.key() == order.authority.key() {
+    if authority_address == order.authority.key() {
         require!(!order.settled, ProtocolError::OrderSettled);
     }
 
@@ -565,12 +583,16 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 
     Ok(())
 }
+
 /// Confirmation access control. Ensures confirmation is:
 ///
-/// 1. Executed by taker
-/// 2. Confirmed by maker
+/// 1. Confirmed by taker
+/// 2. Is not already confirmed
 /// 3. RFQ best bid/ask is same as order bid/ask
-pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>, order_side: Order) -> Result<()> {
+pub fn confirm_access_control<'info>(
+    ctx: &Context<Confirm<'info>>,
+    order_side: Side,
+) -> Result<()> {
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
     let taker_address = rfq.taker_address;
@@ -580,17 +602,28 @@ pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>, order_side: 
     require!(taker_address == authority, ProtocolError::InvalidTaker);
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
 
-    // TODO: Check order side
     match rfq.order_side {
-        Order::Buy => require!(
-            rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
-            ProtocolError::InvalidConfirm
-        ),
-        Order::Sell => require!(
-            rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
-            ProtocolError::InvalidConfirm
-        ),
-        Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
+        Order::Buy => {
+            require!(order_side == Side::Buy, ProtocolError::InvalidConfirm);
+            require!(
+                rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
+                ProtocolError::InvalidConfirm
+            );
+        }
+        Order::Sell => {
+            require!(order_side == Side::Sell, ProtocolError::InvalidConfirm);
+            require!(
+                rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
+                ProtocolError::InvalidConfirm
+            )
+        }
+        Order::TwoWay => {
+            require!(
+                rfq.best_ask_amount.unwrap() == order.ask.unwrap()
+                    || rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
+                ProtocolError::InvalidConfirm
+            )
+        }
     }
 
     Ok(())
@@ -624,20 +657,14 @@ pub fn respond_access_control<'info>(
     match rfq.order_side {
         Order::Buy => {
             require!(ask.is_some() && bid.is_none(), ProtocolError::InvalidQuote);
-            require!(
-                ask.unwrap() > 0,
-                ProtocolError::InvalidQuote
-            );
+            require!(ask.unwrap() > 0, ProtocolError::InvalidQuote);
         }
         Order::Sell => {
             require!(bid.is_some() && ask.is_none(), ProtocolError::InvalidQuote);
-            require!(
-                bid.unwrap() > 0,
-                ProtocolError::InvalidQuote
-            );
+            require!(bid.unwrap() > 0, ProtocolError::InvalidQuote);
         }
         Order::TwoWay => {
-            require!(!(bid.is_some() && ask.is_some()), ProtocolError::InvalidQuote);
+            require!(bid.is_some() && ask.is_some(), ProtocolError::InvalidQuote);
             require!(
                 ask.unwrap() > 0 && bid.unwrap() > 0,
                 ProtocolError::InvalidQuote
@@ -697,6 +724,8 @@ pub enum ProtocolError {
     InvalidAuthority,
     #[msg("Invalid order amount")]
     InvalidOrderAmount,
+    #[msg("Invalid settle")]
+    InvalidSettle,
     #[msg("Last look has not been set")]
     LastLookNotSet,
     #[msg("Not implemented")]
@@ -826,61 +855,61 @@ mod instructions {
         Ok(())
     }
 
-    pub fn confirm(ctx: Context<Confirm>) -> Result<()> {
+    pub fn confirm(ctx: Context<Confirm>, side: Side) -> Result<()> {
         let order = &mut ctx.accounts.order;
         order.confirmed = true;
+        order.confirmed_side = Some(side);
 
         let rfq = &mut ctx.accounts.rfq;
         rfq.confirmed = true;
 
+        let order_amount;
+        let from;
+        let to;
+
         match rfq.order_side {
             Order::Buy => {
-                // Taker wants to buy asset token, needs to post quote token as collateral
-                anchor_spl::token::transfer(
-                    CpiContext::new(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.quote_wallet.to_account_info(),
-                            to: ctx.accounts.quote_escrow.to_account_info(),
-                            authority: ctx.accounts.authority.to_account_info(),
-                        },
-                    ),
-                    rfq.best_ask_amount.unwrap(),
-                )?;
+                order_amount = rfq.best_bid_amount.unwrap();
+                from = ctx.accounts.quote_wallet.to_account_info();
+                to = ctx.accounts.quote_escrow.to_account_info();
             }
             Order::Sell => {
-                // Taker wants to sell asset token, needs to post asset token as collateral
-                anchor_spl::token::transfer(
-                    CpiContext::new(
-                        ctx.accounts.token_program.to_account_info(),
-                        anchor_spl::token::Transfer {
-                            from: ctx.accounts.asset_wallet.to_account_info(),
-                            to: ctx.accounts.asset_escrow.to_account_info(),
-                            authority: ctx.accounts.authority.to_account_info(),
-                        },
-                    ),
-                    rfq.order_amount,
-                )?;
+                order_amount = rfq.order_amount;
+                from = ctx.accounts.asset_wallet.to_account_info();
+                to = ctx.accounts.asset_escrow.to_account_info();
             }
-            Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
-        }
+            Order::TwoWay => match side {
+                Side::Buy => {
+                    order_amount = rfq.best_bid_amount.unwrap();
+                    from = ctx.accounts.asset_wallet.to_account_info();
+                    to = ctx.accounts.asset_escrow.to_account_info();
+                }
+                Side::Sell => {
+                    order_amount = rfq.best_ask_amount.unwrap();
+                    from = ctx.accounts.quote_wallet.to_account_info();
+                    to = ctx.accounts.quote_escrow.to_account_info();
+                }
+            },
+        };
+
+        anchor_spl::token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from,
+                    to,
+                    authority: ctx.accounts.authority.to_account_info(),
+                },
+            ),
+            order_amount,
+        )?;
 
         Ok(())
     }
 
     pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
         let rfq = &mut ctx.accounts.rfq;
-        let order = &ctx.accounts.order;
-
-        let is_winner = match rfq.order_side {
-            Order::Buy => rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
-            Order::Sell => rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
-            Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
-        };
-
-        if is_winner {
-            rfq.approved = true;
-        }
+        rfq.approved = true;
 
         Ok(())
     }
@@ -963,28 +992,25 @@ mod instructions {
         let mut quote_amount = 0;
         let mut asset_amount = 0;
 
-        match rfq.order_side {
-            Order::Buy => {
+        match order.confirmed_side.unwrap() {
+            Side::Buy => {
                 if authority_address == taker_address {
+                    // Taker
                     asset_amount = rfq.order_amount;
-                } else if authority_address == rfq.best_ask_address.unwrap() {
+                } else if authority_address == rfq.best_ask_address.unwrap() && order.confirmed {
                     // Maker
-                    if rfq.best_ask_address.is_some() && order.confirmed {
-                        quote_amount = rfq.best_ask_amount.unwrap();
-                    }
+                    quote_amount = rfq.best_ask_amount.unwrap();
                 }
             }
-            Order::Sell => {
+            Side::Sell => {
                 if authority_address == taker_address {
+                    // Taker
                     quote_amount = rfq.best_bid_amount.unwrap();
-                } else if authority_address == rfq.best_bid_address.unwrap() {
+                } else if authority_address == rfq.best_bid_address.unwrap() && order.confirmed {
                     // Maker
-                    if rfq.best_bid_address.is_some() && order.confirmed {
-                        asset_amount = rfq.order_amount;
-                    }
+                    asset_amount = rfq.order_amount;
                 }
             }
-            Order::TwoWay => return Err(error!(ProtocolError::NotImplemented)),
         }
 
         if asset_amount > 0 {
