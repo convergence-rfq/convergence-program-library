@@ -517,10 +517,6 @@ export type Rfq = {
             "type": "bool"
           },
           {
-            "name": "takerAddress",
-            "type": "publicKey"
-          },
-          {
             "name": "unixTimestamp",
             "type": "i64"
           }
@@ -775,8 +771,8 @@ export type Rfq = {
     },
     {
       "code": 6011,
-      "name": "NotImplemented",
-      "msg": "Not implemented"
+      "name": "RfqConfirmed",
+      "msg": "RFQ confirmed"
     },
     {
       "code": 6012,
@@ -1320,10 +1316,6 @@ export const IDL: Rfq = {
             "type": "bool"
           },
           {
-            "name": "takerAddress",
-            "type": "publicKey"
-          },
-          {
             "name": "unixTimestamp",
             "type": "i64"
           }
@@ -1578,8 +1570,8 @@ export const IDL: Rfq = {
     },
     {
       "code": 6011,
-      "name": "NotImplemented",
-      "msg": "Not implemented"
+      "name": "RfqConfirmed",
+      "msg": "RFQ confirmed"
     },
     {
       "code": 6012,

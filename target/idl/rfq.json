@@ -517,10 +517,6 @@
             "type": "bool"
           },
           {
-            "name": "takerAddress",
-            "type": "publicKey"
-          },
-          {
             "name": "unixTimestamp",
             "type": "i64"
           }
@@ -775,8 +771,8 @@
     },
     {
       "code": 6011,
-      "name": "NotImplemented",
-      "msg": "Not implemented"
+      "name": "RfqConfirmed",
+      "msg": "RFQ confirmed"
     },
     {
       "code": 6012,

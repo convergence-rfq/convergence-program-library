@@ -145,14 +145,12 @@ pub struct RfqState {
     pub response_count: u64,
     /// Settled
     pub settled: bool,
-    /// Taker address
-    pub taker_address: Pubkey,
     /// Creation time
     pub unix_timestamp: i64,
 }
 
 impl RfqState {
-    pub const LEN: usize = 8 + (32 * 6) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 14);
+    pub const LEN: usize = 8 + (32 * 5) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 14);
 }
 
 /// Global state for the entire RFQ system
@@ -303,7 +301,7 @@ pub struct Respond<'info> {
         bump
     )]
     pub order: Box<Account<'info, OrderState>>,
-    /// Rfq
+    /// RFQ
     #[account(
         mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
@@ -548,20 +546,22 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
 
-    let authority_address = ctx.accounts.authority.key();
-    let taker_address = rfq.authority.key();
+    let authority = ctx.accounts.authority.key();
+    let taker = rfq.authority.key();
+    let maker = order.authority.key();
 
-    if authority_address == taker_address {
+    if authority == taker {
         require!(!rfq.settled, ProtocolError::RfqSettled);
     }
-
-    if authority_address == order.authority.key() {
+    if authority == maker {
         require!(!order.settled, ProtocolError::OrderSettled);
     }
 
     if rfq.last_look {
         require!(rfq.approved, ProtocolError::OrderNotApproved);
     }
+
+    require!(rfq.confirmed, ProtocolError::InvalidConfirm);
 
     Ok(())
 }
@@ -586,21 +586,22 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 
 /// Confirmation access control. Ensures confirmation is:
 ///
-/// 1. Confirmed by taker
-/// 2. Is not already confirmed
-/// 3. RFQ best bid/ask is same as order bid/ask
+/// 1. RFQ is unconfirmed
+/// 2. Confirmed by taker
+/// 3. Is not already confirmed
+/// 4. RFQ best bid/ask is same as order bid/ask
 pub fn confirm_access_control<'info>(
     ctx: &Context<Confirm<'info>>,
     order_side: Side,
 ) -> Result<()> {
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
-    let taker_address = rfq.taker_address;
+    let taker = rfq.authority.key();
     let authority = ctx.accounts.authority.key();
 
-    // Make sure current authority matches original taker address from request instruction
-    require!(taker_address == authority, ProtocolError::InvalidTaker);
+    require!(taker == authority, ProtocolError::InvalidTaker);
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
+    require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
 
     match rfq.order_side {
         Order::Buy => {
@@ -728,8 +729,8 @@ pub enum ProtocolError {
     InvalidSettle,
     #[msg("Last look has not been set")]
     LastLookNotSet,
-    #[msg("Not implemented")]
-    NotImplemented,
+    #[msg("RFQ confirmed")]
+    RfqConfirmed,
     #[msg("Order confirmed")]
     OrderConfirmed,
     #[msg("Order settled")]
@@ -791,7 +792,6 @@ mod instructions {
         rfq.order_side = order_side;
         rfq.response_count = 0;
         rfq.settled = false;
-        rfq.taker_address = *ctx.accounts.authority.key;
         rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
         rfq.legs = legs;
 
@@ -867,29 +867,17 @@ mod instructions {
         let from;
         let to;
 
-        match rfq.order_side {
-            Order::Buy => {
-                order_amount = rfq.best_ask_amount.unwrap();
+        match side {
+            Side::Buy => {
                 from = ctx.accounts.quote_wallet.to_account_info();
                 to = ctx.accounts.quote_escrow.to_account_info();
+                order_amount = rfq.best_ask_amount.unwrap();
             }
-            Order::Sell => {
-                order_amount = rfq.order_amount;
+            Side::Sell => {
                 from = ctx.accounts.asset_wallet.to_account_info();
                 to = ctx.accounts.asset_escrow.to_account_info();
+                order_amount = rfq.order_amount;
             }
-            Order::TwoWay => match side {
-                Side::Buy => {
-                    order_amount = rfq.best_bid_amount.unwrap();
-                    from = ctx.accounts.asset_wallet.to_account_info();
-                    to = ctx.accounts.asset_escrow.to_account_info();
-                }
-                Side::Sell => {
-                    order_amount = rfq.best_ask_amount.unwrap();
-                    from = ctx.accounts.quote_wallet.to_account_info();
-                    to = ctx.accounts.quote_escrow.to_account_info();
-                }
-            },
         };
 
         anchor_spl::token::transfer(
@@ -980,12 +968,14 @@ mod instructions {
         let order = &mut ctx.accounts.order;
         let rfq = &mut ctx.accounts.rfq;
 
-        let authority_address = ctx.accounts.authority.key();
-        let taker_address = rfq.taker_address;
+        let authority = ctx.accounts.authority.key();
+        let taker = rfq.authority.key();
+        let maker = order.authority.key();
 
-        if authority_address == taker_address {
+        if authority == taker {
             rfq.settled = true;
-        } else {
+        }
+        if authority == maker {
             order.settled = true;
         }
 
@@ -994,20 +984,16 @@ mod instructions {
 
         match order.confirmed_side.unwrap() {
             Side::Buy => {
-                if authority_address == taker_address {
-                    // Taker
+                if authority == taker {
                     asset_amount = rfq.order_amount;
-                } else if authority_address == rfq.best_ask_address.unwrap() && order.confirmed {
-                    // Maker
+                } else {
                     quote_amount = rfq.best_ask_amount.unwrap();
                 }
             }
             Side::Sell => {
-                if authority_address == taker_address {
-                    // Taker
+                if authority == taker {
                     quote_amount = rfq.best_bid_amount.unwrap();
-                } else if authority_address == rfq.best_bid_address.unwrap() && order.confirmed {
-                    // Maker
+                } else {
                     asset_amount = rfq.order_amount;
                 }
             }
@@ -1065,7 +1051,6 @@ mod instructions {
             )?;
         }
 
-        // TODO: This function gets called multiple times so decide when to settle
         for leg in rfq.legs.iter() {
             match leg.venue {
                 Venue::PsyOptions => {
