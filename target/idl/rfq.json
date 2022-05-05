@@ -383,6 +383,11 @@
           "isSigner": false
         },
         {
+          "name": "protocol",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "rfq",
           "isMut": true,
           "isSigner": false
@@ -410,6 +415,11 @@
         {
           "name": "tokenProgram",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryWallet",
+          "isMut": true,
           "isSigner": false
         }
       ],

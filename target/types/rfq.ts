@@ -383,6 +383,11 @@ export type Rfq = {
           "isSigner": false
         },
         {
+          "name": "protocol",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "rfq",
           "isMut": true,
           "isSigner": false
@@ -410,6 +415,11 @@ export type Rfq = {
         {
           "name": "tokenProgram",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryWallet",
+          "isMut": true,
           "isSigner": false
         }
       ],
@@ -1182,6 +1192,11 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
+          "name": "protocol",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "rfq",
           "isMut": true,
           "isSigner": false
@@ -1209,6 +1224,11 @@ export const IDL: Rfq = {
         {
           "name": "tokenProgram",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryWallet",
+          "isMut": true,
           "isSigner": false
         }
       ],

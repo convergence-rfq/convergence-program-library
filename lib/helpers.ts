@@ -228,9 +228,14 @@ export async function settle(
   orderId: number,
   assetWallet: PublicKey,
   quoteWallet: PublicKey,
+  treasuryWallet: PublicKey
 ): Promise<any> {
   const program = await getProgram(provider)
 
+  const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from(PROTOCOL_SEED)],
+    program.programId
+  )
   const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
@@ -260,16 +265,18 @@ export async function settle(
     {
       accounts: {
         assetEscrow: assetEscrowPda,
-        assetMint: assetMint,
-        assetWallet: assetWallet,
+        assetMint,
+        assetWallet,
         authority: authority.publicKey,
         order: orderPda,
         quoteEscrow: quoteEscrowPda,
-        quoteMint: quoteMint,
-        quoteWallet: quoteWallet,
+        quoteMint,
+        quoteWallet,
         rfq: rfqPda,
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
+        protocol: protocolPda,
+        treasuryWallet,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       },
       signers: [authority.payer]
@@ -291,8 +298,7 @@ export async function confirm(
   authority: Wallet,
   assetWallet: PublicKey,
   quoteWallet: PublicKey,
-  // TODO: Add correct struct
-  side: any
+  side: object
 ): Promise<any> {
   const program = await getProgram(provider)
 
@@ -532,7 +538,7 @@ export async function getBalance(
   const program = await getProgram(provider)
   try {
     const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(payer.publicKey, { mint })
-    return parsedAccount.value[0].account.data.parsed.info.tokenAmount.uiAmount
+    return parseInt(parsedAccount.value[0].account.data.parsed.info.tokenAmount.amount, 10);
   } catch (error) {
     console.log('No mints found for wallet')
   }

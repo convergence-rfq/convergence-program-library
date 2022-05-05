@@ -1,25 +1,20 @@
 /** 
-  * RFQ Tests
+  * RFQ Specification
   * 
   * Request:
-  * Taker wants to quote 10 BTC in USDC
+  * - Taker wants an asset quote for one or two-way market
   * 
   * Respond:
-  * Maker A makes one-way market, 10 BTC at 40K USDC, deposits USDC as collateral
-  * Maker B makes one-way market, 10 BTC at 41K USDC and 39K, deposits USDC as collateral
-  * Maker C makes one-way market, 10 BTC at 39K USDC, deposits USDC as collateral
+  * - Maker submits one or two-way order and deposits collateral
   * 
   * Confirm:
-  * Maker B is winner at 39K
-  * Taker deposits 10 USDC as collateral
-  * 
-  * Return collateral:
-  * - A gets 40K USDC back
-  * - B gets 39K USDC back
-  * - C gets 39K USDC and 120 USDC back
+  * - Taker confirms response by depositing collateral
   * 
   * Last look:
   * - Set to false
+  * 
+  * Return collateral:
+  * - Unconfirmed maker orders get collateral returned
   * 
   * Settle:
   * - Taker gets 41K USDC
@@ -58,6 +53,14 @@ import { Program } from '@project-serum/anchor'
 let assetMint: Token
 let quoteMint: Token
 
+const ASSET_DECIMALS = 6;
+const QUOTE_DECIMALS = 6;
+
+const FEE_NUMERATOR = 5;
+const FEE_DENOMINATOR = 100
+
+let daoAssetWallet: PublicKey
+let daoQuoteWallet: PublicKey
 let takerAssetWallet: PublicKey
 let takerQuoteWallet: PublicKey
 let makerAAssetWallet: PublicKey
@@ -107,6 +110,13 @@ const sleep = (ms: number) => {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+const calcFee = (amount: number, decimals: number): number => {
+  let uiAmount = amount / (10 ** decimals)
+  let uiFeeAmount = uiAmount * (FEE_NUMERATOR / FEE_DENOMINATOR)
+  let feeAmount = uiFeeAmount * (10 ** decimals)
+  return parseInt(feeAmount.toString(), 10)
+}
+
 describe('RFQ Specification', () => {
   before(async () => {
     program = await getProgram(provider)
@@ -137,17 +147,19 @@ describe('RFQ Specification', () => {
       dao.payer,
       dao.publicKey,
       dao.publicKey,
-      0,
+      ASSET_DECIMALS,
       TOKEN_PROGRAM_ID
     )
     quoteMint = await Token.createMint(program.provider.connection,
       dao.payer,
       dao.publicKey,
       dao.publicKey,
-      0,
+      QUOTE_DECIMALS,
       TOKEN_PROGRAM_ID
     )
 
+    daoAssetWallet = await assetMint.createAssociatedTokenAccount(dao.publicKey)
+    daoQuoteWallet = await quoteMint.createAssociatedTokenAccount(dao.publicKey)
     takerAssetWallet = await assetMint.createAssociatedTokenAccount(taker.publicKey)
     takerQuoteWallet = await quoteMint.createAssociatedTokenAccount(taker.publicKey)
     makerAAssetWallet = await assetMint.createAssociatedTokenAccount(makerA.publicKey)
@@ -172,11 +184,9 @@ describe('RFQ Specification', () => {
   })
 
   it('DAO initializes protocol with a 1bps fee', async () => {
-    const feeDenominator = 1_000
-    const feeNumerator = 1
-    const { protocolState } = await initializeProtocol(provider, dao, feeDenominator, feeNumerator)
-    assert.ok(protocolState.feeDenominator.eq(new anchor.BN(1_000)))
-    assert.ok(protocolState.feeNumerator.eq(new anchor.BN(1)))
+    const { protocolState } = await initializeProtocol(provider, dao, FEE_DENOMINATOR, FEE_NUMERATOR)
+    assert.ok(protocolState.feeDenominator.eq(new anchor.BN(FEE_DENOMINATOR)))
+    assert.ok(protocolState.feeNumerator.eq(new anchor.BN(FEE_NUMERATOR)))
     assert.ok(protocolState.rfqCount.eq(new anchor.BN(0)))
     assert.ok(protocolState.accessManagerCount.eq(new anchor.BN(0)))
   })
@@ -201,7 +211,6 @@ describe('RFQ Specification', () => {
     const rfqId = 1
     await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetWallet, makerAQuoteWallet)
     await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT2, MAKER_A_ASK_AMOUNT2, makerAAssetWallet, makerAQuoteWallet)
-
 
     let assetMintBalance = await getBalance(provider, taker, assetMint.publicKey)
     let quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey)
@@ -236,6 +245,8 @@ describe('RFQ Specification', () => {
     assert.equal(assetMintBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT1)
     assert.equal(quoteMintBalance, MINT_AIRDROP)
     assert.equal(rfqState.confirmed, true)
+
+    // TODO: Return collateral and settle
   })
 
   it('RFQ 2: Taker initializes sell for 10', async () => {
@@ -394,18 +405,18 @@ describe('RFQ Specification', () => {
   it('RFQ 2: Settle', async () => {
     const rfqId = 2
 
-    await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet)
-    await settle(provider, makerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet)
+    await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet, daoQuoteWallet)
+    await settle(provider, makerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet, daoQuoteWallet)
 
     try {
-      await settle(provider, makerB, rfqId, 1, makerBAssetWallet, makerBQuoteWallet)
+      await settle(provider, makerB, rfqId, 1, makerBAssetWallet, makerBQuoteWallet, daoQuoteWallet)
       assert.ok(false)
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'OrderSettled')
     }
 
     try {
-      await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet)
+      await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet, daoQuoteWallet)
       assert.ok(false)
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'RfqSettled')
@@ -426,7 +437,7 @@ describe('RFQ Specification', () => {
     console.log('Maker C quote balance:', makerCQuoteBalance)
 
     assert.equal(takerAssetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1)
-    assert.equal(takerQuoteBalance, MINT_AIRDROP + MAKER_C_BID_AMOUNT1)
+    assert.equal(takerQuoteBalance, MINT_AIRDROP + MAKER_C_BID_AMOUNT1 - calcFee(MAKER_C_BID_AMOUNT1, QUOTE_DECIMALS))
     assert.equal(makerBAssetBalance, MINT_AIRDROP + TAKER_ORDER_AMOUNT2)
     assert.equal(makerBQuoteBalance, MINT_AIRDROP)
     assert.equal(makerCAssetBalance, MINT_AIRDROP)
@@ -450,24 +461,26 @@ describe('RFQ Specification', () => {
     await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT2, MAKER_D_ASK_AMOUNT2, makerDAssetWallet, makerDQuoteWallet)
     await confirm(provider, rfqId, 2, taker, takerAssetWallet, takerQuoteWallet, requestOrder)
     await returnCollateral(provider, makerD, rfqId, 1, makerDAssetWallet, makerDQuoteWallet)
-    await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet)
-    await settle(provider, makerD, rfqId, 2, makerDAssetWallet, makerDQuoteWallet)
+    await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet, daoAssetWallet)
+    await settle(provider, makerD, rfqId, 2, makerDAssetWallet, makerDQuoteWallet, daoAssetWallet)
 
-    let assetMintBalance = await getBalance(provider, taker, assetMint.publicKey)
-    let quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey)
-    console.log('Taker asset balance:', assetMintBalance)
-    console.log('Taker quote balance:', quoteMintBalance)
+    let assetBalance = await getBalance(provider, taker, assetMint.publicKey)
+    let quoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
+    console.log('Taker asset balance:', assetBalance)
+    console.log('Taker quote balance:', quoteBalance)
 
-    assert.equal(assetMintBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3)
-    assert.equal(quoteMintBalance, MINT_AIRDROP + MAKER_C_BID_AMOUNT1 - MAKER_D_ASK_AMOUNT2)
+    const FEE1 = calcFee(MAKER_C_BID_AMOUNT1, QUOTE_DECIMALS)
+    const FEE2 = calcFee(MAKER_D_ASK_AMOUNT2, QUOTE_DECIMALS)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3)
+    assert.equal(quoteBalance, MINT_AIRDROP + MAKER_C_BID_AMOUNT1 - FEE1 - MAKER_D_ASK_AMOUNT2)
 
-    assetMintBalance = await getBalance(provider, makerD, assetMint.publicKey)
-    quoteMintBalance = await getBalance(provider, makerD, quoteMint.publicKey)
-    console.log('Maker asset balance confirmation:', assetMintBalance)
-    console.log('Maker quote balance confirmation:', quoteMintBalance)
+    assetBalance = await getBalance(provider, makerD, assetMint.publicKey)
+    quoteBalance = await getBalance(provider, makerD, quoteMint.publicKey)
+    console.log('Maker C asset balance confirmation:', assetBalance)
+    console.log('Maker C quote balance confirmation:', quoteBalance)
 
-    assert.equal(assetMintBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT3)
-    assert.equal(quoteMintBalance, MINT_AIRDROP + MAKER_D_ASK_AMOUNT2)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT3)
+    assert.equal(quoteBalance, MINT_AIRDROP + MAKER_D_ASK_AMOUNT2)
   })
 
   it('View all RFQs and responses', async () => {

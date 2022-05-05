@@ -477,6 +477,12 @@ pub struct Settle<'info> {
     pub order: Box<Account<'info, OrderState>>,
     #[account(
         mut,
+        seeds = [PROTOCOL_SEED.as_bytes()],
+        bump = protocol.bump
+    )]
+    pub protocol: Box<Account<'info, ProtocolState>>,
+    #[account(
+        mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump = rfq.bump
     )]
@@ -487,6 +493,8 @@ pub struct Settle<'info> {
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+    #[account(mut)]
+    pub treasury_wallet: Box<Account<'info, TokenAccount>>,
 }
 
 // Types
@@ -741,6 +749,14 @@ pub enum ProtocolError {
     RfqSettled,
 }
 
+fn calc_fee(amount: u64, decimals: u8, numerator: u64, denominator: u64) -> u64 {
+    // NOTE: When decimals are 0 and the amount is 1, there is no fee
+    let ui_amount = amount as f64 / (10u32.pow(decimals as u32) as f64);
+    let ui_fee_amount = ui_amount * (numerator as f64 / denominator as f64);
+    let fee_amount = ui_fee_amount * (10u32.pow(decimals as u32) as f64);
+    fee_amount as u64
+}
+
 /// Private module for program instructions.
 mod instructions {
     use super::*;
@@ -965,6 +981,7 @@ mod instructions {
     }
 
     pub fn settle(ctx: Context<Settle>) -> Result<()> {
+        let protocol = &mut ctx.accounts.protocol;
         let order = &mut ctx.accounts.order;
         let rfq = &mut ctx.accounts.rfq;
 
@@ -975,24 +992,38 @@ mod instructions {
         if authority == taker {
             rfq.settled = true;
         }
+
         if authority == maker {
             order.settled = true;
         }
 
         let mut quote_amount = 0;
         let mut asset_amount = 0;
+        let mut fee_amount = 0;
 
         match order.confirmed_side.unwrap() {
             Side::Buy => {
                 if authority == taker {
-                    asset_amount = rfq.order_amount;
+                    fee_amount = calc_fee(
+                        rfq.order_amount,
+                        ctx.accounts.asset_mint.decimals,
+                        protocol.fee_numerator,
+                        protocol.fee_denominator,
+                    );
+                    asset_amount = rfq.order_amount - fee_amount;
                 } else {
                     quote_amount = rfq.best_ask_amount.unwrap();
                 }
             }
             Side::Sell => {
                 if authority == taker {
-                    quote_amount = rfq.best_bid_amount.unwrap();
+                    fee_amount = calc_fee(
+                        rfq.best_bid_amount.unwrap(),
+                        ctx.accounts.quote_mint.decimals,
+                        protocol.fee_numerator,
+                        protocol.fee_denominator,
+                    );
+                    quote_amount = rfq.best_bid_amount.unwrap() - fee_amount;
                 } else {
                     asset_amount = rfq.order_amount;
                 }
@@ -1023,6 +1054,32 @@ mod instructions {
                 ),
                 asset_amount,
             )?;
+
+            if fee_amount > 0 {
+                anchor_spl::token::transfer(
+                    CpiContext::new_with_signer(
+                        ctx.accounts.token_program.to_account_info(),
+                        anchor_spl::token::Transfer {
+                            from: ctx.accounts.asset_escrow.to_account_info(),
+                            to: ctx.accounts.treasury_wallet.to_account_info(),
+                            authority: rfq.to_account_info(),
+                        },
+                        &[
+                            &[
+                                ASSET_ESCROW_SEED.as_bytes(),
+                                rfq.id.to_string().as_bytes(),
+                                &[rfq.asset_escrow_bump],
+                            ][..],
+                            &[
+                                RFQ_SEED.as_bytes(),
+                                rfq.id.to_string().as_bytes(),
+                                &[rfq.bump],
+                            ][..],
+                        ],
+                    ),
+                    fee_amount,
+                )?;
+            }
         }
 
         if quote_amount > 0 {
@@ -1049,6 +1106,32 @@ mod instructions {
                 ),
                 quote_amount,
             )?;
+
+            if fee_amount > 0 {
+                anchor_spl::token::transfer(
+                    CpiContext::new_with_signer(
+                        ctx.accounts.token_program.to_account_info(),
+                        anchor_spl::token::Transfer {
+                            from: ctx.accounts.quote_escrow.to_account_info(),
+                            to: ctx.accounts.treasury_wallet.to_account_info(),
+                            authority: rfq.to_account_info(),
+                        },
+                        &[
+                            &[
+                                QUOTE_ESCROW_SEED.as_bytes(),
+                                rfq.id.to_string().as_bytes(),
+                                &[rfq.quote_escrow_bump],
+                            ][..],
+                            &[
+                                RFQ_SEED.as_bytes(),
+                                rfq.id.to_string().as_bytes(),
+                                &[rfq.bump],
+                            ][..],
+                        ],
+                    ),
+                    fee_amount,
+                )?;
+            }
         }
 
         for leg in rfq.legs.iter() {
