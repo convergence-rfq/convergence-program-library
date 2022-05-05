@@ -17,11 +17,8 @@
   * - Unconfirmed maker orders get collateral returned
   * 
   * Settle:
-  * - Taker gets 41K USDC
-  * - Maker B gets 10 BTC
-  * 
-  * TODO:
-  * - [ ] Fees
+  * - Taker receives quote
+  * - Maker receives asset
   */
 
 import * as anchor from '@project-serum/anchor'
@@ -53,11 +50,33 @@ import { Program } from '@project-serum/anchor'
 let assetMint: Token
 let quoteMint: Token
 
-const ASSET_DECIMALS = 6;
-const QUOTE_DECIMALS = 6;
+const MINT_AIRDROP = 1_000_000
 
-const FEE_NUMERATOR = 5;
+const ASSET_DECIMALS = 6
+const QUOTE_DECIMALS = 6
+
+const FEE_NUMERATOR = 5
 const FEE_DENOMINATOR = 100
+
+const TAKER_ORDER_AMOUNT1 = 1
+const TAKER_ORDER_AMOUNT2 = 10
+const TAKER_ORDER_AMOUNT3 = 3
+const MAKER_A_ASK_AMOUNT1 = 41_000 // Winner
+const MAKER_A_BID_AMOUNT1 = 39_100
+const MAKER_A_ASK_AMOUNT2 = 41_100
+const MAKER_A_BID_AMOUNT2 = 39_200 // Winner
+const MAKER_B_ASK_AMOUNT1 = null
+const MAKER_B_BID_AMOUNT1 = 400_000
+const MAKER_B_ASK_AMOUNT2 = 420_000
+const MAKER_B_BID_AMOUNT2 = 410_000 // Invalid
+const MAKER_C_ASK_AMOUNT1 = null
+const MAKER_C_BID_AMOUNT1 = 411_000 // Winner
+const MAKER_C_ASK_AMOUNT2 = null
+const MAKER_C_BID_AMOUNT2 = 390_000
+const MAKER_D_ASK_AMOUNT1 = 395_000
+const MAKER_D_BID_AMOUNT1 = null
+const MAKER_D_ASK_AMOUNT2 = 390_000 // Winner
+const MAKER_D_BID_AMOUNT2 = null
 
 let daoAssetWallet: PublicKey
 let daoQuoteWallet: PublicKey
@@ -79,27 +98,6 @@ let makerA: Wallet
 let makerB: Wallet
 let makerC: Wallet
 let makerD: Wallet
-
-const TAKER_ORDER_AMOUNT1 = 1
-const TAKER_ORDER_AMOUNT2 = 10
-const TAKER_ORDER_AMOUNT3 = 3
-const MAKER_A_ASK_AMOUNT1 = 41_000 // Winner
-const MAKER_A_BID_AMOUNT1 = 39_100
-const MAKER_A_ASK_AMOUNT2 = 41_100
-const MAKER_A_BID_AMOUNT2 = 39_200 // Winner
-const MAKER_B_ASK_AMOUNT1 = null
-const MAKER_B_BID_AMOUNT1 = 400_000
-const MAKER_B_ASK_AMOUNT2 = 420_000
-const MAKER_B_BID_AMOUNT2 = 410_000 // Invalid
-const MAKER_C_ASK_AMOUNT1 = null
-const MAKER_C_BID_AMOUNT1 = 411_000 // Winner
-const MAKER_C_ASK_AMOUNT2 = null
-const MAKER_C_BID_AMOUNT2 = 390_000
-const MAKER_D_ASK_AMOUNT1 = 395_000
-const MAKER_D_BID_AMOUNT1 = null
-const MAKER_D_ASK_AMOUNT2 = 390_000 // Winner
-const MAKER_D_BID_AMOUNT2 = null
-const MINT_AIRDROP = 1_000_000
 
 anchor.setProvider(anchor.Provider.env())
 
@@ -137,11 +135,11 @@ describe('RFQ Specification', () => {
     await requestAirdrop(provider, makerC.publicKey, LAMPORTS_PER_SOL * 10)
     await requestAirdrop(provider, makerD.publicKey, LAMPORTS_PER_SOL * 10)
 
-    const walletBalance = await provider.connection.getBalance(taker.publicKey)
-    console.log('Taker wallet balance:', walletBalance)
+    const takerBalance = await provider.connection.getBalance(taker.publicKey)
+    console.log('Taker wallet balance:', takerBalance)
 
-    const mintAuthorityBalance = await provider.connection.getBalance(dao.publicKey)
-    console.log('Mint wallet balance:', mintAuthorityBalance)
+    const daoBalance = await provider.connection.getBalance(dao.publicKey)
+    console.log('DAO wallet balance:', daoBalance)
 
     assetMint = await Token.createMint(program.provider.connection,
       dao.payer,
@@ -201,7 +199,7 @@ describe('RFQ Specification', () => {
       side: Side.Sell,
       venue: Venue.Convergence,
     }]
-    const { rfqState, protocolState } = await request(assetMint, taker, expiry, false, legs, TAKER_ORDER_AMOUNT1, provider, quoteMint, requestOrder)
+    const { rfqState, protocolState } = await request(assetMint.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT1, provider, quoteMint.publicKey, requestOrder)
     assert.ok(rfqState.id.eq(new anchor.BN(1)))
     assert.ok(rfqState.authority.toString() === taker.publicKey.toString())
     assert.ok(protocolState.rfqCount.eq(new anchor.BN(1)))
@@ -212,10 +210,10 @@ describe('RFQ Specification', () => {
     await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetWallet, makerAQuoteWallet)
     await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT2, MAKER_A_ASK_AMOUNT2, makerAAssetWallet, makerAQuoteWallet)
 
-    let assetMintBalance = await getBalance(provider, taker, assetMint.publicKey)
-    let quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey)
-    console.log('Taker asset balance:', assetMintBalance)
-    console.log('Taker quote balance:', quoteMintBalance)
+    let assetBalance = await getBalance(provider, taker, assetMint.publicKey)
+    let quoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
+    console.log('Taker asset balance:', assetBalance)
+    console.log('Taker quote balance:', quoteBalance)
 
     const { rfqState } = await confirm(provider, rfqId, 1, taker, takerAssetWallet, takerQuoteWallet, Side.Sell)
     console.log('Best ask:', rfqState.bestAskAmount?.toNumber())
@@ -238,12 +236,12 @@ describe('RFQ Specification', () => {
       assert.strictEqual(err.error.errorCode.code, 'Expired')
     }
 
-    assetMintBalance = await getBalance(provider, taker, assetMint.publicKey)
-    quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey)
-    console.log('Taker asset balance:', assetMintBalance)
-    console.log('Taker quote balance:', quoteMintBalance)
-    assert.equal(assetMintBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT1)
-    assert.equal(quoteMintBalance, MINT_AIRDROP)
+    assetBalance = await getBalance(provider, taker, assetMint.publicKey)
+    quoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
+    console.log('Taker asset balance:', assetBalance)
+    console.log('Taker quote balance:', quoteBalance)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT1)
+    assert.equal(quoteBalance, MINT_AIRDROP)
     assert.equal(rfqState.confirmed, true)
 
     // TODO: Return collateral and settle
@@ -252,8 +250,7 @@ describe('RFQ Specification', () => {
   it('RFQ 2: Taker initializes sell for 10', async () => {
     const orderSide = Order.Sell
     const now = (new Date()).getTime() / 1_000
-    // Expires in 15 seconds
-    const expiry = now + 15
+    const expiry = now + 15 // Expires in 15 seconds
     const orderAmount = TAKER_ORDER_AMOUNT2
     const legs = [{
       venue: Venue.Convergence,
@@ -261,20 +258,22 @@ describe('RFQ Specification', () => {
       amount: new anchor.BN(TAKER_ORDER_AMOUNT2),
       instrument: Instrument.Spot,
     }]
-    const { rfqState, protocolState } = await request(assetMint, taker, expiry, true, legs, orderAmount, provider, quoteMint, orderSide)
+
+    const { rfqState, protocolState } = await request(assetMint.publicKey, taker, expiry, true, legs, orderAmount, provider, quoteMint.publicKey, orderSide)
+    console.log('Order side:', rfqState.orderSide)
+    console.log('Order amount:', rfqState.orderAmount.toNumber())
+
+    const assetBalance = await getBalance(provider, taker, assetMint.publicKey)
+    const quoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
+    console.log('Taker asset balance:', assetBalance)
+    console.log('Taker quote balance:', quoteBalance)
+
     assert.ok(rfqState.authority.toString() === taker.publicKey.toString())
     assert.deepEqual(rfqState.orderSide, orderSide)
-    //assert.equal(rfqState.expiry.toString(), expiry.toString())
     assert.equal(rfqState.orderAmount.toString(), TAKER_ORDER_AMOUNT2.toString())
     assert.equal(protocolState.rfqCount.toNumber(), 2)
-
-    const assetMintBalance = await getBalance(provider, taker, assetMint.publicKey)
-    const quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey)
-
-    console.log('Taker order:', rfqState.orderSide)
-    console.log('Taker amount:', rfqState.orderAmount.toNumber())
-    console.log('Taker asset balance:', assetMintBalance)
-    console.log('Taker quote balance:', quoteMintBalance)
+    // TODO: Fix
+    //assert.equal(rfqState.expiry.toString(), expiry.toString())
   })
 
   it('RFQ 2: Maker B and C respond', async () => {
@@ -334,13 +333,13 @@ describe('RFQ Specification', () => {
     console.log('Best ask:', rfqState.bestAskAmount?.toNumber())
     console.log('Best bid:', rfqState.bestBidAmount?.toNumber())
 
-    const assetMintBalance = await getBalance(provider, taker, assetMint.publicKey)
-    const quoteMintBalance = await getBalance(provider, taker, quoteMint.publicKey)
-    console.log('Taker asset balance:', assetMintBalance)
-    console.log('Taker quote balance:', quoteMintBalance)
+    let assetBalance = await getBalance(provider, taker, assetMint.publicKey)
+    let quoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
+    console.log('Taker asset balance:', assetBalance)
+    console.log('Taker quote balance:', quoteBalance)
 
-    assert.equal(assetMintBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1)
-    assert.equal(quoteMintBalance, MINT_AIRDROP)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1)
+    assert.equal(quoteBalance, MINT_AIRDROP)
     assert.equal(rfqState.confirmed, true)
   })
 
@@ -351,14 +350,10 @@ describe('RFQ Specification', () => {
     const response2 = await lastLook(provider, makerC, rfqId, 2)
     const response3 = await lastLook(provider, makerC, rfqId, 3)
 
-    console.log('Best ask approved:', response1.rfqState.bestAskAmount?.toNumber())
-    console.log('Best bid approved:', response2.rfqState.bestBidAmount?.toNumber())
-    console.log('Order side:', response3.rfqState.orderSide)
+    console.log('Order side:', response2.rfqState.orderSide)
     console.log('Last look:', response3.rfqState.lastLook)
 
     assert.equal(response1.rfqState.approved, true)
-    assert.equal(response2.rfqState.approved, true)
-    assert.equal(response3.rfqState.approved, true)
   })
 
   it('RFQ 2: Return maker B and C collateral', async () => {
@@ -381,67 +376,67 @@ describe('RFQ Specification', () => {
       assert.strictEqual(err.error.errorCode.code, 'CollateralReturned')
     }
 
-    const takerAassetBalance = await getBalance(provider, taker, assetMint.publicKey)
-    const takerAquoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
-    console.log('Taker asset balance:', takerAassetBalance)
-    console.log('Taker quote balance:', takerAquoteBalance)
+    let assetBalance = await getBalance(provider, taker, assetMint.publicKey)
+    let quoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
+    console.log('Taker asset balance:', assetBalance)
+    console.log('Taker quote balance:', quoteBalance)
 
-    const makerAassetBalance = await getBalance(provider, makerA, assetMint.publicKey)
-    const makerAquoteBalance = await getBalance(provider, makerA, quoteMint.publicKey)
-    console.log('Maker A asset balance:', makerAassetBalance)
-    console.log('Maker A quote balance:', makerAquoteBalance)
+    assetBalance = await getBalance(provider, makerA, assetMint.publicKey)
+    quoteBalance = await getBalance(provider, makerA, quoteMint.publicKey)
+    console.log('Maker A asset balance:', assetBalance)
+    console.log('Maker A quote balance:', quoteBalance)
 
-    const makerBassetBalance = await getBalance(provider, makerB, assetMint.publicKey)
-    const makerBquoteBalance = await getBalance(provider, makerB, quoteMint.publicKey)
-    console.log('Maker B asset balance:', makerBassetBalance)
-    console.log('Maker B quote balance:', makerBquoteBalance)
+    assetBalance = await getBalance(provider, makerB, assetMint.publicKey)
+    quoteBalance = await getBalance(provider, makerB, quoteMint.publicKey)
+    console.log('Maker B asset balance:', assetBalance)
+    console.log('Maker B quote balance:', quoteBalance)
 
-    const makerCassetBalance = await getBalance(provider, makerC, assetMint.publicKey)
-    const makerCquoteBalance = await getBalance(provider, makerC, quoteMint.publicKey)
-    console.log('Maker C asset balance:', makerCassetBalance)
-    console.log('Maker C quote balance:', makerCquoteBalance)
+    assetBalance = await getBalance(provider, makerC, assetMint.publicKey)
+    quoteBalance = await getBalance(provider, makerC, quoteMint.publicKey)
+    console.log('Maker C asset balance:', assetBalance)
+    console.log('Maker C quote balance:', quoteBalance)
   })
 
   it('RFQ 2: Settle', async () => {
     const rfqId = 2
 
-    await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet, daoQuoteWallet)
-    await settle(provider, makerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet, daoQuoteWallet)
+    await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet)
+    await settle(provider, makerB, rfqId, 2, makerBAssetWallet, makerBQuoteWallet)
 
     try {
-      await settle(provider, makerB, rfqId, 1, makerBAssetWallet, makerBQuoteWallet, daoQuoteWallet)
+      await settle(provider, makerB, rfqId, 1, makerBAssetWallet, makerBQuoteWallet)
       assert.ok(false)
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'OrderSettled')
     }
 
     try {
-      await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet, daoQuoteWallet)
+      await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet)
       assert.ok(false)
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'RfqSettled')
     }
 
-    const takerAssetBalance = await getBalance(provider, taker, assetMint.publicKey)
-    const takerQuoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
-    const makerBAssetBalance = await getBalance(provider, makerB, assetMint.publicKey)
-    const makerBQuoteBalance = await getBalance(provider, makerB, quoteMint.publicKey)
-    const makerCAssetBalance = await getBalance(provider, makerC, assetMint.publicKey)
-    const makerCQuoteBalance = await getBalance(provider, makerC, quoteMint.publicKey)
+    let assetBalance = await getBalance(provider, taker, assetMint.publicKey)
+    let quoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
+    console.log('Taker asset balance:', assetBalance)
+    console.log('Taker quote balance:', quoteBalance)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1)
+    assert.equal(quoteBalance, MINT_AIRDROP + MAKER_C_BID_AMOUNT1 - calcFee(MAKER_C_BID_AMOUNT1, QUOTE_DECIMALS))
 
-    console.log('Taker asset balance:', takerAssetBalance)
-    console.log('Taker quote balance:', takerQuoteBalance)
-    console.log('Maker B asset balance:', makerBAssetBalance)
-    console.log('Maker B quote balance:', makerBQuoteBalance)
-    console.log('Maker C asset balance:', makerCAssetBalance)
-    console.log('Maker C quote balance:', makerCQuoteBalance)
+    assetBalance = await getBalance(provider, makerB, assetMint.publicKey)
+    quoteBalance = await getBalance(provider, makerB, quoteMint.publicKey)
+    console.log('Maker B asset balance:', assetBalance)
+    console.log('Maker B quote balance:', quoteBalance)
+    assert.equal(assetBalance, MINT_AIRDROP + TAKER_ORDER_AMOUNT2)
+    assert.equal(quoteBalance, MINT_AIRDROP)
 
-    assert.equal(takerAssetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1)
-    assert.equal(takerQuoteBalance, MINT_AIRDROP + MAKER_C_BID_AMOUNT1 - calcFee(MAKER_C_BID_AMOUNT1, QUOTE_DECIMALS))
-    assert.equal(makerBAssetBalance, MINT_AIRDROP + TAKER_ORDER_AMOUNT2)
-    assert.equal(makerBQuoteBalance, MINT_AIRDROP)
-    assert.equal(makerCAssetBalance, MINT_AIRDROP)
-    assert.equal(makerCQuoteBalance, MINT_AIRDROP - MAKER_C_BID_AMOUNT1)
+    assetBalance = await getBalance(provider, makerC, assetMint.publicKey)
+    quoteBalance = await getBalance(provider, makerC, quoteMint.publicKey)
+    console.log('Maker C asset balance:', assetBalance)
+    console.log('Maker C quote balance:', quoteBalance)
+    assert.equal(assetBalance, MINT_AIRDROP)
+    assert.equal(quoteBalance, MINT_AIRDROP - MAKER_C_BID_AMOUNT1)
   })
 
   it('RFQ 3: Sell 10', async () => {
@@ -456,13 +451,13 @@ describe('RFQ Specification', () => {
       venue: Venue.Convergence,
     }]
 
-    await request(assetMint, taker, expiry, false, legs, TAKER_ORDER_AMOUNT3, provider, quoteMint, requestOrder)
+    await request(assetMint.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT3, provider, quoteMint.publicKey, requestOrder)
     await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT1, MAKER_D_ASK_AMOUNT1, makerDAssetWallet, makerDQuoteWallet)
     await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT2, MAKER_D_ASK_AMOUNT2, makerDAssetWallet, makerDQuoteWallet)
     await confirm(provider, rfqId, 2, taker, takerAssetWallet, takerQuoteWallet, requestOrder)
     await returnCollateral(provider, makerD, rfqId, 1, makerDAssetWallet, makerDQuoteWallet)
-    await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet, daoAssetWallet)
-    await settle(provider, makerD, rfqId, 2, makerDAssetWallet, makerDQuoteWallet, daoAssetWallet)
+    await settle(provider, taker, rfqId, 2, takerAssetWallet, takerQuoteWallet)
+    await settle(provider, makerD, rfqId, 2, makerDAssetWallet, makerDQuoteWallet)
 
     let assetBalance = await getBalance(provider, taker, assetMint.publicKey)
     let quoteBalance = await getBalance(provider, taker, quoteMint.publicKey)
@@ -472,13 +467,13 @@ describe('RFQ Specification', () => {
     const FEE1 = calcFee(MAKER_C_BID_AMOUNT1, QUOTE_DECIMALS)
     const FEE2 = calcFee(MAKER_D_ASK_AMOUNT2, QUOTE_DECIMALS)
     assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3)
+    // TODO: Add fee
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_C_BID_AMOUNT1 - FEE1 - MAKER_D_ASK_AMOUNT2)
 
     assetBalance = await getBalance(provider, makerD, assetMint.publicKey)
     quoteBalance = await getBalance(provider, makerD, quoteMint.publicKey)
-    console.log('Maker C asset balance confirmation:', assetBalance)
-    console.log('Maker C quote balance confirmation:', quoteBalance)
-
+    console.log('Maker C asset balance:', assetBalance)
+    console.log('Maker C quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT3)
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_D_ASK_AMOUNT2)
   })

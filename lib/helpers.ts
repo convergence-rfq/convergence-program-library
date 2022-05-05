@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
 import { Idl, Program, Provider, Wallet } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { PublicKey } from "@solana/web3.js"
 
 import { default as idl } from '../target/idl/rfq.json'
@@ -22,8 +22,6 @@ export const Order = {
     twoWay: {}
   }
 }
-
-// Instrument from from Paradigm: BTC-25JUN21-20000-C
 
 export const Instrument = {
   Spot: {
@@ -57,6 +55,8 @@ export const Venue = {
     psyOptions: {}
   }
 }
+
+// Instrument from from Paradigm: BTC-25JUN21-20000-C
 
 export const Leg = {
   Instrument: {
@@ -198,13 +198,13 @@ export async function returnCollateral(
     {
       accounts: {
         assetEscrow: assetEscrowPda,
-        assetMint: assetMint,
-        assetWallet: assetWallet,
+        assetMint,
+        assetWallet,
         authority: authority.publicKey,
         order: orderPda,
         quoteEscrow: quoteEscrowPda,
-        quoteWallet: quoteWallet,
-        quoteMint: quoteMint,
+        quoteWallet,
+        quoteMint,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -227,8 +227,7 @@ export async function settle(
   rfqId: number,
   orderId: number,
   assetWallet: PublicKey,
-  quoteWallet: PublicKey,
-  treasuryWallet: PublicKey
+  quoteWallet: PublicKey
 ): Promise<any> {
   const program = await getProgram(provider)
 
@@ -241,6 +240,7 @@ export async function settle(
     program.programId
   )
 
+  const protocolState = await program.account.protocolState.fetch(protocolPda)
   let rfqState = await program.account.rfqState.fetch(rfqPda)
 
   // @ts-ignore
@@ -260,6 +260,24 @@ export async function settle(
     [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
     program.programId
   )
+
+  const orderState = await program.account.orderState.fetch(orderPda)
+  let treasuryWallet: PublicKey
+  if (orderState.confirmedSide == Side.Buy) {
+    treasuryWallet = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      assetMint,
+      protocolState.authority
+    )
+  } else {
+    treasuryWallet = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      quoteMint,
+      protocolState.authority
+    )
+  }
 
   const tx = await program.rpc.settle(
     {
@@ -330,14 +348,14 @@ export async function confirm(
     side,
     {
       accounts: {
-        assetMint: assetMint,
-        assetWallet: assetWallet,
+        assetMint,
+        assetWallet,
         authority: authority.publicKey,
         assetEscrow: assetEscrowPda,
         order: orderPda,
-        quoteWallet: quoteWallet,
+        quoteWallet,
         quoteEscrow: quoteEscrowPda,
-        quoteMint: quoteMint,
+        quoteMint,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -397,14 +415,14 @@ export async function respond(
     ask ? new anchor.BN(ask) : null,
     {
       accounts: {
-        assetMint: assetMint,
-        assetWallet: assetWallet,
+        assetMint,
+        assetWallet,
         authority: authority.publicKey,
         assetEscrow: assetEscrowPda,
         quoteEscrow: quoteEscrowPda,
         order: orderPda,
-        quoteMint: quoteMint,
-        quoteWallet: quoteWallet,
+        quoteMint,
+        quoteWallet,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -422,14 +440,14 @@ export async function respond(
 }
 
 export async function request(
-  assetMint: Token,
+  assetMint: PublicKey,
   authority: Wallet,
   expiry: number,
   lastLook: boolean,
   legs: object[],
   orderAmount: number,
   provider: Provider,
-  quoteMint: Token,
+  quoteMint: PublicKey,
   requestOrder: object,
 ): Promise<any> {
   const program = await getProgram(provider)
@@ -465,11 +483,11 @@ export async function request(
     {
       accounts: {
         assetEscrow: assetEscrowPda,
-        assetMint: assetMint.publicKey,
+        assetMint,
         authority: authority.publicKey,
         protocol: protocolPda,
         quoteEscrow: quoteEscrowPda,
-        quoteMint: quoteMint.publicKey,
+        quoteMint,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
         systemProgram: anchor.web3.SystemProgram.programId,
