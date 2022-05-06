@@ -711,88 +711,62 @@ export type Rfq = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "ActiveOrUnconfirmed",
-      "msg": "Active or unconfirmed"
     },
     {
-      "code": 6001,
-      "name": "CollateralReturned",
-      "msg": "Collateral returned"
-    },
-    {
-      "code": 6002,
-      "name": "Expired",
-      "msg": "Expired"
-    },
-    {
-      "code": 6003,
-      "name": "InvalidConfirm",
-      "msg": "Invalid confirm"
-    },
-    {
-      "code": 6004,
-      "name": "InvalidOrder",
-      "msg": "Invalid order"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidQuote",
-      "msg": "Invalid quote"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidTaker",
-      "msg": "Invalid taker"
-    },
-    {
-      "code": 6007,
-      "name": "InvalidAuthority",
-      "msg": "Invalid authority"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidOrderAmount",
-      "msg": "Invalid order amount"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidSettle",
-      "msg": "Invalid settle"
-    },
-    {
-      "code": 6010,
-      "name": "LastLookNotSet",
-      "msg": "Last look has not been set"
-    },
-    {
-      "code": 6011,
-      "name": "RfqConfirmed",
-      "msg": "RFQ confirmed"
-    },
-    {
-      "code": 6012,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
-    },
-    {
-      "code": 6013,
-      "name": "OrderSettled",
-      "msg": "Order settled"
-    },
-    {
-      "code": 6014,
-      "name": "OrderNotApproved",
-      "msg": "Order not approved via last look"
-    },
-    {
-      "code": 6015,
-      "name": "RfqSettled",
-      "msg": "RFQ settled"
+      "name": "ProtocolError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "ActiveOrUnconfirmed"
+          },
+          {
+            "name": "CollateralReturned"
+          },
+          {
+            "name": "Expired"
+          },
+          {
+            "name": "InvalidConfirm"
+          },
+          {
+            "name": "InvalidOrder"
+          },
+          {
+            "name": "InvalidQuote"
+          },
+          {
+            "name": "InvalidTaker"
+          },
+          {
+            "name": "InvalidAuthority"
+          },
+          {
+            "name": "InvalidOrderAmount"
+          },
+          {
+            "name": "InvalidSettle"
+          },
+          {
+            "name": "LastLookNotSet"
+          },
+          {
+            "name": "RfqConfirmed"
+          },
+          {
+            "name": "OrderConfirmed"
+          },
+          {
+            "name": "OrderSettled"
+          },
+          {
+            "name": "OrderNotApproved"
+          },
+          {
+            "name": "RfqSettled"
+          }
+        ]
+      }
     }
   ]
 };
@@ -1510,88 +1484,62 @@ export const IDL: Rfq = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "ActiveOrUnconfirmed",
-      "msg": "Active or unconfirmed"
     },
     {
-      "code": 6001,
-      "name": "CollateralReturned",
-      "msg": "Collateral returned"
-    },
-    {
-      "code": 6002,
-      "name": "Expired",
-      "msg": "Expired"
-    },
-    {
-      "code": 6003,
-      "name": "InvalidConfirm",
-      "msg": "Invalid confirm"
-    },
-    {
-      "code": 6004,
-      "name": "InvalidOrder",
-      "msg": "Invalid order"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidQuote",
-      "msg": "Invalid quote"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidTaker",
-      "msg": "Invalid taker"
-    },
-    {
-      "code": 6007,
-      "name": "InvalidAuthority",
-      "msg": "Invalid authority"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidOrderAmount",
-      "msg": "Invalid order amount"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidSettle",
-      "msg": "Invalid settle"
-    },
-    {
-      "code": 6010,
-      "name": "LastLookNotSet",
-      "msg": "Last look has not been set"
-    },
-    {
-      "code": 6011,
-      "name": "RfqConfirmed",
-      "msg": "RFQ confirmed"
-    },
-    {
-      "code": 6012,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
-    },
-    {
-      "code": 6013,
-      "name": "OrderSettled",
-      "msg": "Order settled"
-    },
-    {
-      "code": 6014,
-      "name": "OrderNotApproved",
-      "msg": "Order not approved via last look"
-    },
-    {
-      "code": 6015,
-      "name": "RfqSettled",
-      "msg": "RFQ settled"
+      "name": "ProtocolError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "ActiveOrUnconfirmed"
+          },
+          {
+            "name": "CollateralReturned"
+          },
+          {
+            "name": "Expired"
+          },
+          {
+            "name": "InvalidConfirm"
+          },
+          {
+            "name": "InvalidOrder"
+          },
+          {
+            "name": "InvalidQuote"
+          },
+          {
+            "name": "InvalidTaker"
+          },
+          {
+            "name": "InvalidAuthority"
+          },
+          {
+            "name": "InvalidOrderAmount"
+          },
+          {
+            "name": "InvalidSettle"
+          },
+          {
+            "name": "LastLookNotSet"
+          },
+          {
+            "name": "RfqConfirmed"
+          },
+          {
+            "name": "OrderConfirmed"
+          },
+          {
+            "name": "OrderSettled"
+          },
+          {
+            "name": "OrderNotApproved"
+          },
+          {
+            "name": "RfqSettled"
+          }
+        ]
+      }
     }
   ]
 };
