@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Idl, Program, Provider, Wallet } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
-import { PublicKey } from "@solana/web3.js"
+import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
 
 import { default as idl } from '../target/idl/rfq.json'
 
@@ -74,8 +74,8 @@ export const Leg = {
 
 export async function getRFQs(
   provider: Provider,
-  page: number | undefined,
-  pageSize: number | undefined
+  _page: number,
+  _pageSize: number
 ): Promise<object[]> {
   const program = await getProgram(provider)
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
@@ -204,9 +204,9 @@ export async function returnCollateral(
         quoteEscrow: quoteEscrowPda,
         quoteWallet,
         quoteMint,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        rent: SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
-        systemProgram: anchor.web3.SystemProgram.programId,
+        systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID
       },
       signers: [signer.payer]
@@ -267,6 +267,7 @@ export async function settle(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       assetMint,
+      // @ts-ignore
       protocolState.authority
     )
   } else {
@@ -274,6 +275,7 @@ export async function settle(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       quoteMint,
+      // @ts-ignore
       protocolState.authority
     )
   }
@@ -290,11 +292,11 @@ export async function settle(
         quoteMint,
         quoteWallet,
         rfq: rfqPda,
-        systemProgram: anchor.web3.SystemProgram.programId,
+        systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
         protocol: protocolPda,
         treasuryWallet,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        rent: SYSVAR_RENT_PUBKEY,
       },
       signers: [signer.payer]
     }
@@ -355,9 +357,9 @@ export async function confirm(
         quoteWallet,
         quoteEscrow: quoteEscrowPda,
         quoteMint,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        rent: SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
-        systemProgram: anchor.web3.SystemProgram.programId,
+        systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID
       },
       signers: [signer.payer]
@@ -422,9 +424,9 @@ export async function respond(
         order: orderPda,
         quoteMint,
         quoteWallet,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        rent: SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
-        systemProgram: anchor.web3.SystemProgram.programId,
+        systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
       signers: [signer.payer],
@@ -487,9 +489,9 @@ export async function request(
         protocol: protocolPda,
         quoteEscrow: quoteEscrowPda,
         quoteMint,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        rent: SYSVAR_RENT_PUBKEY,
         rfq: rfqPda,
-        systemProgram: anchor.web3.SystemProgram.programId,
+        systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
       signers: [signer.payer]
@@ -523,7 +525,7 @@ export async function initializeProtocol(
       accounts: {
         signer: signer.publicKey,
         protocol: protocolPda,
-        systemProgram: anchor.web3.SystemProgram.programId
+        systemProgram: SystemProgram.programId
       },
       signers: [signer.payer],
     })

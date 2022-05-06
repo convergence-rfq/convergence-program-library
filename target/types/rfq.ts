@@ -621,6 +621,10 @@ export type Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
+          },
+          {
+            "name": "rfq",
+            "type": "publicKey"
           }
         ]
       }
@@ -756,51 +760,56 @@ export type Rfq = {
     },
     {
       "code": 6006,
+      "name": "InvalidRfq",
+      "msg": "Invalid RFQ"
+    },
+    {
+      "code": 6007,
       "name": "InvalidTaker",
       "msg": "Invalid taker"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidAuthority",
       "msg": "Invalid authority"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "InvalidSettle",
       "msg": "Invalid settle"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "LastLookNotSet",
       "msg": "Last look has not been set"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }
@@ -1430,6 +1439,10 @@ export const IDL: Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
+          },
+          {
+            "name": "rfq",
+            "type": "publicKey"
           }
         ]
       }
@@ -1565,51 +1578,56 @@ export const IDL: Rfq = {
     },
     {
       "code": 6006,
+      "name": "InvalidRfq",
+      "msg": "Invalid RFQ"
+    },
+    {
+      "code": 6007,
       "name": "InvalidTaker",
       "msg": "Invalid taker"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidAuthority",
       "msg": "Invalid authority"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "InvalidSettle",
       "msg": "Invalid settle"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "LastLookNotSet",
       "msg": "Last look has not been set"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }
