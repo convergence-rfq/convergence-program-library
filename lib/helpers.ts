@@ -57,7 +57,6 @@ export const Venue = {
 }
 
 // Instrument from from Paradigm: BTC-25JUN21-20000-C
-
 export const Leg = {
   Instrument: {
     instrument: {}
@@ -124,17 +123,17 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
 
 export async function lastLook(
   provider: Provider,
-  authority: Wallet,
+  signer: Wallet,
   rfqId: number,
   orderId: number
 ): Promise<any> {
   const program = await getProgram(provider)
 
-  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-  const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
     program.programId
   )
@@ -142,11 +141,11 @@ export async function lastLook(
   const tx = await program.rpc.lastLook(
     {
       accounts: {
-        authority: authority.publicKey,
+        signer: signer.publicKey,
         order: orderPda,
         rfq: rfqPda,
       },
-      signers: [authority.payer],
+      signers: [signer.payer],
     })
 
   const rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -161,7 +160,7 @@ export async function lastLook(
 
 export async function returnCollateral(
   provider: Provider,
-  authority: Wallet,
+  signer: Wallet,
   rfqId: number,
   orderId: number,
   assetWallet: PublicKey,
@@ -169,7 +168,7 @@ export async function returnCollateral(
 ): Promise<any> {
   const program = await getProgram(provider)
 
-  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
@@ -177,19 +176,19 @@ export async function returnCollateral(
   let rfqState = await program.account.rfqState.fetch(rfqPda)
 
   // @ts-ignore
-  const assetMint = new anchor.web3.PublicKey(rfqState.assetMint.toString())
+  const assetMint = new PublicKey(rfqState.assetMint.toString())
   // @ts-ignore
-  const quoteMint = new anchor.web3.PublicKey(rfqState.quoteMint.toString())
+  const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
-  const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-  const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
+  const [quoteEscrowPda, _quoteEscrowPDA] = await PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-  const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
     program.programId
   )
@@ -200,7 +199,7 @@ export async function returnCollateral(
         assetEscrow: assetEscrowPda,
         assetMint,
         assetWallet,
-        authority: authority.publicKey,
+        signer: signer.publicKey,
         order: orderPda,
         quoteEscrow: quoteEscrowPda,
         quoteWallet,
@@ -210,7 +209,7 @@ export async function returnCollateral(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID
       },
-      signers: [authority.payer]
+      signers: [signer.payer]
     })
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -223,7 +222,7 @@ export async function returnCollateral(
 
 export async function settle(
   provider: Provider,
-  authority: Wallet,
+  signer: Wallet,
   rfqId: number,
   orderId: number,
   assetWallet: PublicKey,
@@ -231,11 +230,11 @@ export async function settle(
 ): Promise<any> {
   const program = await getProgram(provider)
 
-  const [protocolPda, _protocolBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
-  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
@@ -244,19 +243,19 @@ export async function settle(
   let rfqState = await program.account.rfqState.fetch(rfqPda)
 
   // @ts-ignore
-  const assetMint = new anchor.web3.PublicKey(rfqState.assetMint.toString())
+  const assetMint = new PublicKey(rfqState.assetMint.toString())
   // @ts-ignore
-  const quoteMint = new anchor.web3.PublicKey(rfqState.quoteMint.toString())
+  const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
-  const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-  const [quoteEscrowPda, _quoteEscrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
+  const [quoteEscrowPda, _quoteEscrowPDA] = await PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-  const [orderPda, _orderBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
     program.programId
   )
@@ -285,7 +284,7 @@ export async function settle(
         assetEscrow: assetEscrowPda,
         assetMint,
         assetWallet,
-        authority: authority.publicKey,
+        signer: signer.publicKey,
         order: orderPda,
         quoteEscrow: quoteEscrowPda,
         quoteMint,
@@ -297,7 +296,7 @@ export async function settle(
         treasuryWallet,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       },
-      signers: [authority.payer]
+      signers: [signer.payer]
     }
   )
 
@@ -313,23 +312,23 @@ export async function confirm(
   provider: Provider,
   rfqId: number,
   responseId: number,
-  authority: Wallet,
+  signer: Wallet,
   assetWallet: PublicKey,
   quoteWallet: PublicKey,
   side: object
 ): Promise<any> {
   const program = await getProgram(provider)
 
-  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
 
   let rfqState = await program.account.rfqState.fetch(rfqPda)
   // @ts-ignore
-  const assetMint = new anchor.web3.PublicKey(rfqState.assetMint.toString())
+  const assetMint = new PublicKey(rfqState.assetMint.toString())
   // @ts-ignore
-  const quoteMint = new anchor.web3.PublicKey(rfqState.quoteMint.toString())
+  const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
@@ -350,7 +349,7 @@ export async function confirm(
       accounts: {
         assetMint,
         assetWallet,
-        authority: authority.publicKey,
+        signer: signer.publicKey,
         assetEscrow: assetEscrowPda,
         order: orderPda,
         quoteWallet,
@@ -361,7 +360,7 @@ export async function confirm(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID
       },
-      signers: [authority.payer]
+      signers: [signer.payer]
     })
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -374,7 +373,7 @@ export async function confirm(
 
 export async function respond(
   provider: Provider,
-  authority: Wallet,
+  signer: Wallet,
   rfqId: number,
   bid: number | null,
   ask: number | null,
@@ -383,7 +382,7 @@ export async function respond(
 ): Promise<any> {
   const program = await getProgram(provider)
 
-  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
@@ -417,7 +416,7 @@ export async function respond(
       accounts: {
         assetMint,
         assetWallet,
-        authority: authority.publicKey,
+        signer: signer.publicKey,
         assetEscrow: assetEscrowPda,
         quoteEscrow: quoteEscrowPda,
         order: orderPda,
@@ -428,7 +427,7 @@ export async function respond(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
-      signers: [authority.payer],
+      signers: [signer.payer],
     })
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -441,7 +440,7 @@ export async function respond(
 
 export async function request(
   assetMint: PublicKey,
-  authority: Wallet,
+  signer: Wallet,
   expiry: number,
   lastLook: boolean,
   legs: object[],
@@ -461,15 +460,15 @@ export async function request(
   // @ts-ignore
   const rfqId = protocolState.rfqCount.toNumber() + 1
 
-  const [rfqPda, _rfqBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-  const [assetEscrowPda, _assetEscrowBump] = await anchor.web3.PublicKey.findProgramAddress(
+  const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-  const [quoteEscrowPda, _quoteEscrowPda] = await anchor.web3.PublicKey.findProgramAddress(
+  const [quoteEscrowPda, _quoteEscrowPda] = await PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
@@ -484,7 +483,7 @@ export async function request(
       accounts: {
         assetEscrow: assetEscrowPda,
         assetMint,
-        authority: authority.publicKey,
+        signer: signer.publicKey,
         protocol: protocolPda,
         quoteEscrow: quoteEscrowPda,
         quoteMint,
@@ -493,7 +492,7 @@ export async function request(
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
-      signers: [authority.payer]
+      signers: [signer.payer]
     })
 
   protocolState = await program.account.protocolState.fetch(protocolPda)
@@ -508,7 +507,7 @@ export async function request(
 
 export async function initializeProtocol(
   provider: Provider,
-  authority: Wallet,
+  signer: Wallet,
   feeDenominator: number,
   feeNumerator: number
 ): Promise<any> {
@@ -522,18 +521,18 @@ export async function initializeProtocol(
     new anchor.BN(feeNumerator),
     {
       accounts: {
-        authority: authority.publicKey,
+        signer: signer.publicKey,
         protocol: protocolPda,
         systemProgram: anchor.web3.SystemProgram.programId
       },
-      signers: [authority.payer],
+      signers: [signer.payer],
     })
   const protocolState = await program.account.protocolState.fetch(protocolPda)
   return { tx, protocolState }
 }
 
 export async function getProgram(provider: Provider): Promise<Program> {
-  const programId = new anchor.web3.PublicKey(idl.metadata.address)
+  const programId = new PublicKey(idl.metadata.address)
   return new anchor.Program(idl as Idl, programId, provider)
 }
 

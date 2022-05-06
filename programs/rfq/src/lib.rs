@@ -44,16 +44,16 @@ pub mod rfq {
     /// legs
     /// expiry
     /// order_amount
-    /// order_side
+    /// order_type
     pub fn request(
         ctx: Context<Request>,
         expiry: i64,
         last_look: bool,
         legs: Vec<Leg>,
         order_amount: u64,
-        order_side: Order,
+        order_type: Order,
     ) -> Result<()> {
-        instructions::request(ctx, expiry, last_look, legs, order_amount, order_side)
+        instructions::request(ctx, expiry, last_look, legs, order_amount, order_type)
     }
 
     /// Maker responds with one-way or two-way quotes.
@@ -124,7 +124,7 @@ pub struct RfqState {
     /// PDA bump
     pub bump: u8,
     /// Order side
-    pub order_side: Order,
+    pub order_type: Order,
     /// Confirmed
     pub confirmed: bool,
     /// Expiry time
@@ -156,12 +156,19 @@ impl RfqState {
 /// Global state for the entire RFQ system
 #[account]
 pub struct ProtocolState {
+    // Access manager count
     pub access_manager_count: u64,
+    // Protocol authority
     pub authority: Pubkey,
+    // PDA bump
     pub bump: u8,
+    // Fee denominator
     pub fee_denominator: u64,
+    // Fee numerator
     pub fee_numerator: u64,
+    // RFQ count
     pub rfq_count: u64,
+    // Treasury wallet
     pub treasury_wallet: Pubkey,
 }
 
@@ -174,7 +181,7 @@ impl ProtocolState {
 pub struct OrderState {
     // Optional ask
     pub ask: Option<u64>,
-    // Authority
+    // Order athority
     pub authority: Pubkey,
     // Optional bid
     pub bid: Option<u64>,
@@ -203,13 +210,13 @@ impl OrderState {
 /// Intializes protocol.
 #[derive(Accounts)]
 pub struct Initialize<'info> {
-    /// Protocol authority
+    /// Signer
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub signer: Signer<'info>,
     /// Protocol state
     #[account(
         init,
-        payer = authority,
+        payer = signer,
         seeds = [PROTOCOL_SEED.as_bytes()],
         space = ProtocolState::LEN,
         bump
@@ -225,7 +232,7 @@ pub struct Request<'info> {
     /// Asset escrow account
     #[account(
         init,
-        payer = authority,
+        payer = signer,
         token::mint = asset_mint,
         token::authority = rfq,
         seeds = [
@@ -239,7 +246,7 @@ pub struct Request<'info> {
     pub asset_mint: Box<Account<'info, Mint>>,
     /// Request authority
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub signer: Signer<'info>,
     /// Protocol state
     #[account(
         mut,
@@ -250,7 +257,7 @@ pub struct Request<'info> {
     /// Quote escrow account
     #[account(
         init,
-        payer = authority,
+        payer = signer,
         token::mint = quote_mint,
         token::authority = rfq,
         seeds = [
@@ -267,7 +274,7 @@ pub struct Request<'info> {
     /// RFQ state
     #[account(
         init,
-        payer = authority,
+        payer = signer,
         seeds = [
             RFQ_SEED.as_bytes(),
             (protocol.rfq_count + 1).to_string().as_bytes()
@@ -287,11 +294,11 @@ pub struct Request<'info> {
 pub struct Respond<'info> {
     /// Authority
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub signer: Signer<'info>,
     /// Order
     #[account(
         init,
-        payer = authority,
+        payer = signer,
         seeds = [
             ORDER_SEED.as_bytes(),
             rfq.id.to_string().as_bytes(),
@@ -344,7 +351,7 @@ pub struct Respond<'info> {
 #[derive(Accounts)]
 pub struct Confirm<'info> {
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub signer: Signer<'info>,
     #[account(
         mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
@@ -388,7 +395,7 @@ pub struct Confirm<'info> {
 #[derive(Accounts)]
 pub struct LastLook<'info> {
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub signer: Signer<'info>,
     #[account(
         mut,
         seeds = [
@@ -411,7 +418,7 @@ pub struct LastLook<'info> {
 #[derive(Accounts)]
 pub struct ReturnCollateral<'info> {
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub signer: Signer<'info>,
     pub asset_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub asset_wallet: Box<Account<'info, TokenAccount>>,
@@ -452,7 +459,7 @@ pub struct Settle<'info> {
     #[account(mut)]
     pub asset_wallet: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub signer: Signer<'info>,
     #[account(
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
@@ -554,7 +561,7 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
 
-    let authority = ctx.accounts.authority.key();
+    let authority = ctx.accounts.signer.key();
     let taker = rfq.authority.key();
     let maker = order.authority.key();
 
@@ -580,7 +587,7 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
 /// 2. Order belongs to authority approving via last look
 pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
-    let authority = ctx.accounts.authority.key();
+    let authority = ctx.accounts.signer.key();
     let order_authority = ctx.accounts.order.authority.key();
 
     require!(rfq.last_look, ProtocolError::LastLookNotSet);
@@ -605,13 +612,13 @@ pub fn confirm_access_control<'info>(
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
     let taker = rfq.authority.key();
-    let authority = ctx.accounts.authority.key();
+    let authority = ctx.accounts.signer.key();
 
     require!(taker == authority, ProtocolError::InvalidTaker);
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
     require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
 
-    match rfq.order_side {
+    match rfq.order_type {
         Order::Buy => {
             require!(order_side == Side::Buy, ProtocolError::InvalidConfirm);
             require!(
@@ -644,6 +651,7 @@ pub fn confirm_access_control<'info>(
 /// 2. RFQ is not expired
 /// 3. Response bid/ask match request order side
 /// 4. Response bid/ask amount is greater than 0
+/// 5. RFQ is not confirmed
 pub fn respond_access_control<'info>(
     ctx: &Context<Respond<'info>>,
     bid: Option<u64>,
@@ -651,7 +659,7 @@ pub fn respond_access_control<'info>(
 ) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
 
-    let maker_authority = &ctx.accounts.authority.key();
+    let maker_authority = &ctx.accounts.signer.key();
     let taker_authority = &rfq.authority.key();
 
     require!(
@@ -662,8 +670,9 @@ pub fn respond_access_control<'info>(
         rfq.expiry > Clock::get().unwrap().unix_timestamp,
         ProtocolError::Expired
     );
+    require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
 
-    match rfq.order_side {
+    match rfq.order_type {
         Order::Buy => {
             require!(ask.is_some() && bid.is_none(), ProtocolError::InvalidQuote);
             require!(ask.unwrap() > 0, ProtocolError::InvalidQuote);
@@ -749,6 +758,8 @@ pub enum ProtocolError {
     RfqSettled,
 }
 
+/// Utils
+
 fn calc_fee(amount: u64, decimals: u8, numerator: u64, denominator: u64) -> u64 {
     // NOTE: When decimals are 0 and the amount is 1, there is no fee
     let ui_amount = amount as f64 / (10u32.pow(decimals as u32) as f64);
@@ -768,7 +779,7 @@ mod instructions {
     ) -> Result<()> {
         let protocol = &mut ctx.accounts.protocol;
         protocol.access_manager_count = 0;
-        protocol.authority = ctx.accounts.authority.key();
+        protocol.authority = ctx.accounts.signer.key();
         protocol.bump = *ctx.bumps.get(PROTOCOL_SEED).unwrap();
         protocol.fee_denominator = fee_denominator;
         protocol.fee_numerator = fee_numerator;
@@ -783,7 +794,7 @@ mod instructions {
         last_look: bool,
         legs: Vec<Leg>,
         order_amount: u64,
-        order_side: Order,
+        order_type: Order,
     ) -> Result<()> {
         let protocol = &mut ctx.accounts.protocol;
         protocol.rfq_count += 1;
@@ -791,7 +802,7 @@ mod instructions {
         let rfq = &mut ctx.accounts.rfq;
         rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
         rfq.asset_mint = ctx.accounts.asset_mint.key();
-        rfq.authority = ctx.accounts.authority.key();
+        rfq.authority = ctx.accounts.signer.key();
         rfq.approved = false;
         rfq.best_ask_address = None;
         rfq.best_ask_amount = None;
@@ -805,7 +816,7 @@ mod instructions {
         rfq.order_amount = order_amount;
         rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
         rfq.quote_mint = ctx.accounts.quote_mint.key();
-        rfq.order_side = order_side;
+        rfq.order_type = order_type;
         rfq.response_count = 0;
         rfq.settled = false;
         rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
@@ -819,7 +830,7 @@ mod instructions {
         rfq.response_count += 1;
 
         let order = &mut ctx.accounts.order;
-        order.authority = ctx.accounts.authority.key();
+        order.authority = ctx.accounts.signer.key();
         order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
         order.id = rfq.response_count;
         order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
@@ -831,7 +842,7 @@ mod instructions {
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.asset_wallet.to_account_info(),
                         to: ctx.accounts.asset_escrow.to_account_info(),
-                        authority: ctx.accounts.authority.to_account_info(),
+                        authority: ctx.accounts.signer.to_account_info(),
                     },
                 ),
                 // Collateral is an asset token amount
@@ -853,7 +864,7 @@ mod instructions {
                     anchor_spl::token::Transfer {
                         from: ctx.accounts.quote_wallet.to_account_info(),
                         to: ctx.accounts.quote_escrow.to_account_info(),
-                        authority: ctx.accounts.authority.to_account_info(),
+                        authority: ctx.accounts.signer.to_account_info(),
                     },
                 ),
                 // Collateral is a quote token amount
@@ -902,7 +913,7 @@ mod instructions {
                 anchor_spl::token::Transfer {
                     from,
                     to,
-                    authority: ctx.accounts.authority.to_account_info(),
+                    authority: ctx.accounts.signer.to_account_info(),
                 },
             ),
             order_amount,
@@ -985,7 +996,7 @@ mod instructions {
         let order = &mut ctx.accounts.order;
         let rfq = &mut ctx.accounts.rfq;
 
-        let authority = ctx.accounts.authority.key();
+        let authority = ctx.accounts.signer.key();
         let taker = rfq.authority.key();
         let maker = order.authority.key();
 

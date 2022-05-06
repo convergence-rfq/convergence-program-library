@@ -42,10 +42,10 @@
     "@ethersproject/logger" "^5.5.0"
     hash.js "1.1.7"
 
-"@project-serum/anchor@0.23.0":
-  version "0.23.0"
-  resolved "https://registry.npmjs.org/@project-serum/anchor/-/anchor-0.23.0.tgz"
-  integrity sha512-LV2/ifZOJVFTZ4GbEloXln3iVfCvO1YM8i7BBCrUm4tehP7irMx4nr4/IabHWOzrQcQElsxSP/lb1tBp+2ff8A==
+"@project-serum/anchor@0.24.2":
+  version "0.24.2"
+  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.24.2.tgz#a3c52a99605c80735f446ca9b3a4885034731004"
+  integrity sha512-0/718g8/DnEuwAidUwh5wLYphUYXhUbiClkuRNhvNoa+1Y8a4g2tJyxoae+emV+PG/Gikd/QUBNMkIcimiIRTA==
   dependencies:
     "@project-serum/borsh" "^0.2.5"
     "@solana/web3.js" "^1.36.0"
@@ -57,7 +57,6 @@
     cross-fetch "^3.1.5"
     crypto-hash "^1.3.0"
     eventemitter3 "^4.0.7"
-    find "^0.3.0"
     js-sha256 "^0.9.0"
     pako "^2.0.3"
     snake-case "^3.0.4"
@@ -644,13 +643,6 @@ find-up@5.0.0:
     locate-path "^6.0.0"
     path-exists "^4.0.0"
 
-find@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.npmjs.org/find/-/find-0.3.0.tgz"
-  integrity sha512-iSd+O4OEYV/I36Zl8MdYJO0xD82wH528SaCieTVHhclgiYNe9y+yPKSwK+A7/WsmHL1EZ+pYUJBXWTL5qofksw==
-  dependencies:
-    traverse-chain "~0.1.0"
-
 flat@^5.0.2:
   version "5.0.2"
   resolved "https://registry.npmjs.org/flat/-/flat-5.0.2.tgz"
@@ -923,6 +915,11 @@ mkdirp@^0.5.1:
   integrity sha512-NKmAlESf6jMGym1++R0Ra7wvhV+wFW63FaSOFPwRahvea0gMUcGUhVeAg/0BC0wiv9ih5NYPB1Wn1UEI1/L+xQ==
   dependencies:
     minimist "^1.2.5"
+
+mocha-dd-reporter@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/mocha-dd-reporter/-/mocha-dd-reporter-1.1.1.tgz#de44d539a61a47fa85fc1857deb1999f288609d4"
+  integrity sha512-fiVlMq5c+wO4v1gq1zCZgTa5x5YB4ZGtoIUJgSSyg4SI4Kql2a2ca+1G545lR5jlyCbNRWiddB6w+UTL4ZZkLg==
 
 mocha@^9.2.1:
   version "9.2.1"
@@ -1224,11 +1221,6 @@ tr46@~0.0.3:
   version "0.0.3"
   resolved "https://registry.npmjs.org/tr46/-/tr46-0.0.3.tgz"
   integrity sha1-gYT9NH2snNwYWZLzpmIuFLnZq2o=
-
-traverse-chain@~0.1.0:
-  version "0.1.0"
-  resolved "https://registry.npmjs.org/traverse-chain/-/traverse-chain-0.1.0.tgz"
-  integrity sha1-YdvC1Ttp/2CRoSoWj9fUMxB+QPE=
 
 ts-mocha@^9.0.2:
   version "9.0.2"

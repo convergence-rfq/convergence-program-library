@@ -6,7 +6,7 @@ export type Rfq = {
       "name": "initialize",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -46,7 +46,7 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -108,7 +108,7 @@ export type Rfq = {
           "type": "u64"
         },
         {
-          "name": "orderSide",
+          "name": "orderType",
           "type": {
             "defined": "Order"
           }
@@ -119,7 +119,7 @@ export type Rfq = {
       "name": "respond",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -198,7 +198,7 @@ export type Rfq = {
       "name": "confirm",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -271,7 +271,7 @@ export type Rfq = {
       "name": "lastLook",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -292,7 +292,7 @@ export type Rfq = {
       "name": "returnCollateral",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -363,7 +363,7 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -477,7 +477,7 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "orderSide",
+            "name": "orderType",
             "type": {
               "defined": "Order"
             }
@@ -815,7 +815,7 @@ export const IDL: Rfq = {
       "name": "initialize",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -855,7 +855,7 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -917,7 +917,7 @@ export const IDL: Rfq = {
           "type": "u64"
         },
         {
-          "name": "orderSide",
+          "name": "orderType",
           "type": {
             "defined": "Order"
           }
@@ -928,7 +928,7 @@ export const IDL: Rfq = {
       "name": "respond",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -1007,7 +1007,7 @@ export const IDL: Rfq = {
       "name": "confirm",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -1080,7 +1080,7 @@ export const IDL: Rfq = {
       "name": "lastLook",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -1101,7 +1101,7 @@ export const IDL: Rfq = {
       "name": "returnCollateral",
       "accounts": [
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -1172,7 +1172,7 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "authority",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -1286,7 +1286,7 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "orderSide",
+            "name": "orderType",
             "type": {
               "defined": "Order"
             }
