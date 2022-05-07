@@ -61,7 +61,7 @@ const FEE_DENOMINATOR = 1_000
 
 const TAKER_ORDER_AMOUNT1 = 1
 const TAKER_ORDER_AMOUNT2 = 10
-const TAKER_ORDER_AMOUNT3 = 3
+const TAKER_ORDER_AMOUNT3 = 2
 
 const MAKER_A_ASK_AMOUNT1 = 41_000 * TAKER_ORDER_AMOUNT1
 const MAKER_A_BID_AMOUNT1 = 39_100 * TAKER_ORDER_AMOUNT1
@@ -292,8 +292,6 @@ describe('RFQ Specification', () => {
     assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT1)
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_A_BID_AMOUNT2 - FEE1)
   })
-
-  return
 
   it('RFQ 2: Taker initializes sell for 10', async () => {
     const orderType = Order.Sell
