@@ -22,8 +22,6 @@ pub struct RfqState {
     pub best_bid_address: Option<Pubkey>,
     /// PDA bump
     pub bump: u8,
-    /// Order side
-    pub order_type: Order,
     /// Confirmed
     pub confirmed: bool,
     /// Expiry time
@@ -36,6 +34,8 @@ pub struct RfqState {
     pub last_look: bool,
     /// Order amount
     pub order_amount: u64,
+    /// Order side
+    pub order_type: Order,
     /// Quote escrow bump
     pub quote_escrow_bump: u8,
     /// Quote mint
@@ -94,12 +94,12 @@ pub struct OrderState {
     pub confirmed_side: Option<Side>,
     // Order id
     pub id: u64,
+    /// Rfq
+    pub rfq: Pubkey,
     /// Settled
     pub settled: bool,
     /// Creation time
     pub unix_timestamp: i64,
-    /// Rfq
-    pub rfq: Pubkey,
 }
 
 impl OrderState {
@@ -120,14 +120,17 @@ pub enum Instrument {
 pub enum Venue {
     Convergence,
     PsyOptions,
+    Sollar,
 }
 
 /// Leg.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Leg {
+    // Instrument
     instrument: Instrument,
+    // Venue
     venue: Venue,
-    side: Side,
+    // Amount
     amount: u64,
 }
 

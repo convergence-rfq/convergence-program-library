@@ -477,12 +477,6 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "orderType",
-            "type": {
-              "defined": "Order"
-            }
-          },
-          {
             "name": "confirmed",
             "type": "bool"
           },
@@ -509,6 +503,12 @@ export type Rfq = {
           {
             "name": "orderAmount",
             "type": "u64"
+          },
+          {
+            "name": "orderType",
+            "type": {
+              "defined": "Order"
+            }
           },
           {
             "name": "quoteEscrowBump",
@@ -615,16 +615,16 @@ export type Rfq = {
             "type": "u64"
           },
           {
+            "name": "rfq",
+            "type": "publicKey"
+          },
+          {
             "name": "settled",
             "type": "bool"
           },
           {
             "name": "unixTimestamp",
             "type": "i64"
-          },
-          {
-            "name": "rfq",
-            "type": "publicKey"
           }
         ]
       }
@@ -646,12 +646,6 @@ export type Rfq = {
             "name": "venue",
             "type": {
               "defined": "Venue"
-            }
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
             }
           },
           {
@@ -691,6 +685,9 @@ export type Rfq = {
           },
           {
             "name": "PsyOptions"
+          },
+          {
+            "name": "Sollar"
           }
         ]
       }
@@ -730,83 +727,83 @@ export type Rfq = {
   "errors": [
     {
       "code": 6000,
-      "name": "ActiveOrUnconfirmed",
-      "msg": "Active or unconfirmed"
-    },
-    {
-      "code": 6001,
       "name": "CollateralReturned",
       "msg": "Collateral returned"
     },
     {
-      "code": 6002,
-      "name": "Expired",
-      "msg": "Expired"
-    },
-    {
-      "code": 6003,
+      "code": 6001,
       "name": "InvalidConfirm",
       "msg": "Invalid confirm"
     },
     {
-      "code": 6004,
+      "code": 6002,
       "name": "InvalidOrder",
       "msg": "Invalid order"
     },
     {
-      "code": 6005,
+      "code": 6003,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6006,
+      "code": 6004,
       "name": "InvalidRfq",
       "msg": "Invalid RFQ"
     },
     {
-      "code": 6007,
+      "code": 6005,
       "name": "InvalidTaker",
       "msg": "Invalid taker"
     },
     {
-      "code": 6008,
+      "code": 6006,
       "name": "InvalidAuthority",
       "msg": "Invalid authority"
     },
     {
-      "code": 6009,
+      "code": 6007,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6010,
+      "code": 6008,
       "name": "InvalidSettle",
       "msg": "Invalid settle"
     },
     {
-      "code": 6011,
+      "code": 6009,
       "name": "LastLookNotSet",
-      "msg": "Last look has not been set"
+      "msg": "Last look not set"
     },
     {
-      "code": 6012,
-      "name": "RfqConfirmed",
-      "msg": "RFQ confirmed"
-    },
-    {
-      "code": 6013,
+      "code": 6010,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6014,
+      "code": 6011,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6015,
+      "code": 6012,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
+    },
+    {
+      "code": 6013,
+      "name": "RfqConfirmed",
+      "msg": "RFQ confirmed"
+    },
+    {
+      "code": 6014,
+      "name": "RfqActiveOrUnconfirmed",
+      "msg": "RFQ active or unconfirmed"
+    },
+    {
+      "code": 6015,
+      "name": "RfqInactive",
+      "msg": "RFQ inactive"
     },
     {
       "code": 6016,
@@ -1295,12 +1292,6 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "orderType",
-            "type": {
-              "defined": "Order"
-            }
-          },
-          {
             "name": "confirmed",
             "type": "bool"
           },
@@ -1327,6 +1318,12 @@ export const IDL: Rfq = {
           {
             "name": "orderAmount",
             "type": "u64"
+          },
+          {
+            "name": "orderType",
+            "type": {
+              "defined": "Order"
+            }
           },
           {
             "name": "quoteEscrowBump",
@@ -1433,16 +1430,16 @@ export const IDL: Rfq = {
             "type": "u64"
           },
           {
+            "name": "rfq",
+            "type": "publicKey"
+          },
+          {
             "name": "settled",
             "type": "bool"
           },
           {
             "name": "unixTimestamp",
             "type": "i64"
-          },
-          {
-            "name": "rfq",
-            "type": "publicKey"
           }
         ]
       }
@@ -1464,12 +1461,6 @@ export const IDL: Rfq = {
             "name": "venue",
             "type": {
               "defined": "Venue"
-            }
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
             }
           },
           {
@@ -1509,6 +1500,9 @@ export const IDL: Rfq = {
           },
           {
             "name": "PsyOptions"
+          },
+          {
+            "name": "Sollar"
           }
         ]
       }
@@ -1548,83 +1542,83 @@ export const IDL: Rfq = {
   "errors": [
     {
       "code": 6000,
-      "name": "ActiveOrUnconfirmed",
-      "msg": "Active or unconfirmed"
-    },
-    {
-      "code": 6001,
       "name": "CollateralReturned",
       "msg": "Collateral returned"
     },
     {
-      "code": 6002,
-      "name": "Expired",
-      "msg": "Expired"
-    },
-    {
-      "code": 6003,
+      "code": 6001,
       "name": "InvalidConfirm",
       "msg": "Invalid confirm"
     },
     {
-      "code": 6004,
+      "code": 6002,
       "name": "InvalidOrder",
       "msg": "Invalid order"
     },
     {
-      "code": 6005,
+      "code": 6003,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6006,
+      "code": 6004,
       "name": "InvalidRfq",
       "msg": "Invalid RFQ"
     },
     {
-      "code": 6007,
+      "code": 6005,
       "name": "InvalidTaker",
       "msg": "Invalid taker"
     },
     {
-      "code": 6008,
+      "code": 6006,
       "name": "InvalidAuthority",
       "msg": "Invalid authority"
     },
     {
-      "code": 6009,
+      "code": 6007,
       "name": "InvalidOrderAmount",
       "msg": "Invalid order amount"
     },
     {
-      "code": 6010,
+      "code": 6008,
       "name": "InvalidSettle",
       "msg": "Invalid settle"
     },
     {
-      "code": 6011,
+      "code": 6009,
       "name": "LastLookNotSet",
-      "msg": "Last look has not been set"
+      "msg": "Last look not set"
     },
     {
-      "code": 6012,
-      "name": "RfqConfirmed",
-      "msg": "RFQ confirmed"
-    },
-    {
-      "code": 6013,
+      "code": 6010,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6014,
+      "code": 6011,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6015,
+      "code": 6012,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
+    },
+    {
+      "code": 6013,
+      "name": "RfqConfirmed",
+      "msg": "RFQ confirmed"
+    },
+    {
+      "code": 6014,
+      "name": "RfqActiveOrUnconfirmed",
+      "msg": "RFQ active or unconfirmed"
+    },
+    {
+      "code": 6015,
+      "name": "RfqInactive",
+      "msg": "RFQ inactive"
     },
     {
       "code": 6016,

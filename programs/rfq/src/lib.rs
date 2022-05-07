@@ -44,6 +44,7 @@ pub mod rfq {
     /// expiry
     /// order_amount
     /// order_type
+    #[access_control(request_access_control(&ctx))]
     pub fn request(
         ctx: Context<Request>,
         expiry: i64,

@@ -1,15 +1,11 @@
-///! Error handling
+//! Error handling
 use anchor_lang::prelude::*;
 
-/// Error handling codes.
+/// Error codes.
 #[error_code]
 pub enum ProtocolError {
-    #[msg("Active or unconfirmed")]
-    ActiveOrUnconfirmed,
     #[msg("Collateral returned")]
     CollateralReturned,
-    #[msg("Expired")]
-    Expired,
     #[msg("Invalid confirm")]
     InvalidConfirm,
     #[msg("Invalid order")]
@@ -26,16 +22,20 @@ pub enum ProtocolError {
     InvalidOrderAmount,
     #[msg("Invalid settle")]
     InvalidSettle,
-    #[msg("Last look has not been set")]
+    #[msg("Last look not set")]
     LastLookNotSet,
-    #[msg("RFQ confirmed")]
-    RfqConfirmed,
     #[msg("Order confirmed")]
     OrderConfirmed,
     #[msg("Order settled")]
     OrderSettled,
     #[msg("Order not approved via last look")]
     OrderNotApproved,
+    #[msg("RFQ confirmed")]
+    RfqConfirmed,
+    #[msg("RFQ active or unconfirmed")]
+    RfqActiveOrUnconfirmed,
+    #[msg("RFQ inactive")]
+    RfqInactive,
     #[msg("RFQ settled")]
     RfqSettled,
 }

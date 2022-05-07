@@ -239,7 +239,7 @@ describe('RFQ Specification', () => {
       await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
       assert.ok(false)
     } catch (err) {
-      assert.strictEqual(err.error.errorCode.code, 'Expired')
+      assert.strictEqual(err.error.errorCode.code, 'RfqInactive')
     }
 
     assetBalance = await getBalance(provider, taker, assetToken.publicKey)

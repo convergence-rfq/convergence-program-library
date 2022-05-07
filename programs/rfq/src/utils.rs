@@ -1,5 +1,6 @@
-///! Utils
+//! Utils
 
+// TODO: Safe math
 pub fn calc_fee(amount: u64, decimals: u8, numerator: u64, denominator: u64) -> u64 {
     // NOTE: When decimals are 0 and the amount is 1, there is no fee
     let ui_amount = amount as f64 / (10u32.pow(decimals as u32) as f64);

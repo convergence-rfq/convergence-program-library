@@ -7,6 +7,9 @@ use crate::contexts::*;
 use crate::states::*;
 use crate::utils::*;
 
+/// Initialize.
+///
+/// Step 1: DAO initializes protocol.
 pub fn initialize(
     ctx: Context<Initialize>,
     fee_denominator: u64,
@@ -23,6 +26,9 @@ pub fn initialize(
     Ok(())
 }
 
+/// Request.
+///
+/// Step 2: Taker request quote.
 pub fn request(
     ctx: Context<Request>,
     expiry: i64,
@@ -60,6 +66,9 @@ pub fn request(
     Ok(())
 }
 
+/// Respond.
+///
+/// Step 3: Maker responds with one or two-way quote.
 pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Result<()> {
     let rfq = &mut ctx.accounts.rfq;
     rfq.response_count += 1;
@@ -67,9 +76,10 @@ pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Res
     let order = &mut ctx.accounts.order;
     order.authority = ctx.accounts.signer.key();
     order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
+    order.confirmed = false;
     order.id = rfq.response_count;
-    order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
     order.rfq = rfq.key();
+    order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
 
     if ask.is_some() {
         anchor_spl::token::transfer(
@@ -118,13 +128,25 @@ pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Res
     Ok(())
 }
 
+/// Last look.
+///
+/// Optional: Maker confirmes if last look is set.
+pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
+    let rfq = &mut ctx.accounts.rfq;
+    rfq.approved = true;
+
+    Ok(())
+}
+
+/// Confirm.
+///
+/// Step 4: Taker confirms maker order.
 pub fn confirm(ctx: Context<Confirm>, side: Side) -> Result<()> {
     let order = &mut ctx.accounts.order;
     order.confirmed = true;
     order.confirmed_side = Some(side);
 
     let rfq = &mut ctx.accounts.rfq;
-    rfq.confirmed = true;
 
     let order_amount;
     let from;
@@ -155,22 +177,17 @@ pub fn confirm(ctx: Context<Confirm>, side: Side) -> Result<()> {
         order_amount,
     )?;
 
-    Ok(())
-}
-
-pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
-    let rfq = &mut ctx.accounts.rfq;
-    rfq.approved = true;
+    rfq.confirmed = true;
 
     Ok(())
 }
 
+/// Return collateral.
+///
+/// Step 5: If order is unconfirmed, return maker collateral.
 pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
-
     let order = &mut ctx.accounts.order;
-    order.collateral_returned = true;
-    order.settled = true;
 
     if order.ask.is_some() {
         anchor_spl::token::transfer(
@@ -224,9 +241,15 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
         )?;
     }
 
+    order.collateral_returned = true;
+    order.settled = true;
+
     Ok(())
 }
 
+// Settle.
+//
+// Step 6: Taker and maker receive asset or quote.
 pub fn settle(ctx: Context<Settle>) -> Result<()> {
     let protocol = &mut ctx.accounts.protocol;
     let order = &mut ctx.accounts.order;
@@ -235,14 +258,6 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
     let authority = ctx.accounts.signer.key();
     let taker = rfq.authority.key();
     let maker = order.authority.key();
-
-    if authority == taker {
-        rfq.settled = true;
-    }
-
-    if authority == maker {
-        order.settled = true;
-    }
 
     let mut quote_amount = 0;
     let mut asset_amount = 0;
@@ -277,6 +292,7 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
         }
     }
 
+    // TODO: IF two-way, make sure maker receives both collateral?
     if asset_amount > 0 {
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
@@ -379,6 +395,14 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                 fee_amount,
             )?;
         }
+    }
+
+    if authority == taker {
+        rfq.settled = true;
+    }
+
+    if authority == maker {
+        order.settled = true;
     }
 
     // TODO: PsyOptions CPI integration if venue if multi-leg

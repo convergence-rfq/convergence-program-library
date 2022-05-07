@@ -5,10 +5,16 @@ use crate::contexts::*;
 use crate::errors::*;
 use crate::states::*;
 
-/// Last look access control. Ensures last look:
+/// Request access control.
+pub fn request_access_control<'info>(_ctx: &Context<Request<'info>>) -> Result<()> {
+    Ok(())
+}
+
+/// Last look access control.
 ///
-/// 1. Last looks is configured for RFQ
-/// 2. Order belongs to authority approving via last look
+/// Ensures:
+/// - Last looks is configured for RFQ
+/// - Order belongs to authority approving via last look
 pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let signer = ctx.accounts.signer.key();
@@ -21,12 +27,60 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
     Ok(())
 }
 
-/// Confirmation access control. Ensures confirmation is:
+/// Response access control.
 ///
-/// 1. RFQ is unconfirmed
-/// 2. Confirmed by taker
-/// 3. Is not already confirmed
-/// 4. RFQ best bid/ask is same as order bid/ask
+/// Ensures:
+/// - RFQ authority is not the same as maker authority
+/// - RFQ is active
+/// - RFQ is unconfirmed
+/// - Response order type matches RFQ order side
+/// - Response bid/ask amount is greater than 0
+pub fn respond_access_control<'info>(
+    ctx: &Context<Respond<'info>>,
+    bid: Option<u64>,
+    ask: Option<u64>,
+) -> Result<()> {
+    let rfq = &ctx.accounts.rfq;
+
+    let signer = &ctx.accounts.signer.key();
+    let authority = &rfq.authority.key();
+
+    require!(authority != signer, ProtocolError::InvalidAuthority);
+    require!(
+        rfq.expiry > Clock::get().unwrap().unix_timestamp,
+        ProtocolError::RfqInactive
+    );
+    require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
+
+    match rfq.order_type {
+        Order::Buy => {
+            require!(ask.is_some() && bid.is_none(), ProtocolError::InvalidQuote);
+            require!(ask.unwrap() > 0, ProtocolError::InvalidQuote);
+        }
+        Order::Sell => {
+            require!(bid.is_some() && ask.is_none(), ProtocolError::InvalidQuote);
+            require!(bid.unwrap() > 0, ProtocolError::InvalidQuote);
+        }
+        Order::TwoWay => {
+            require!(bid.is_some() && ask.is_some(), ProtocolError::InvalidQuote);
+            require!(
+                ask.unwrap() > 0 && bid.unwrap() > 0,
+                ProtocolError::InvalidQuote
+            );
+        }
+    }
+
+    Ok(())
+}
+
+/// Confirmation access control.
+///
+/// Ensures:
+/// - RFQ is unconfirmed
+/// - Confirmed by taker
+/// - Is not already confirmed
+/// - Response belonds to correct RFQ
+/// - RFQ best bid/ask is same as order bid/ask
 pub fn confirm_access_control<'info>(
     ctx: &Context<Confirm<'info>>,
     order_side: Side,
@@ -37,11 +91,11 @@ pub fn confirm_access_control<'info>(
     let taker = rfq.authority.key();
     let signer = ctx.accounts.signer.key();
 
+    require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
+
     require!(taker == signer, ProtocolError::InvalidTaker);
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
     require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
-
-    // TODO: Confirm order belongs to RFQ
 
     match rfq.order_type {
         Order::Buy => {
@@ -70,57 +124,14 @@ pub fn confirm_access_control<'info>(
     Ok(())
 }
 
-/// Response access control. Ensures response satisfies the following conditions:
+/// Return collateral access control.
 ///
-/// 1. RFQ authority is not the same as maker authority
-/// 2. RFQ is not expired
-/// 3. Response bid/ask match request order side
-/// 4. Response bid/ask amount is greater than 0
-/// 5. RFQ is not confirmed
-pub fn respond_access_control<'info>(
-    ctx: &Context<Respond<'info>>,
-    bid: Option<u64>,
-    ask: Option<u64>,
-) -> Result<()> {
-    let rfq = &ctx.accounts.rfq;
-
-    let signer = &ctx.accounts.signer.key();
-    let authority = &rfq.authority.key();
-
-    require!(authority != signer, ProtocolError::InvalidAuthority);
-    require!(
-        rfq.expiry > Clock::get().unwrap().unix_timestamp,
-        ProtocolError::Expired
-    );
-    require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
-
-    match rfq.order_type {
-        Order::Buy => {
-            require!(ask.is_some() && bid.is_none(), ProtocolError::InvalidQuote);
-            require!(ask.unwrap() > 0, ProtocolError::InvalidQuote);
-        }
-        Order::Sell => {
-            require!(bid.is_some() && ask.is_none(), ProtocolError::InvalidQuote);
-            require!(bid.unwrap() > 0, ProtocolError::InvalidQuote);
-        }
-        Order::TwoWay => {
-            require!(bid.is_some() && ask.is_some(), ProtocolError::InvalidQuote);
-            require!(
-                ask.unwrap() > 0 && bid.unwrap() > 0,
-                ProtocolError::InvalidQuote
-            );
-        }
-    }
-
-    Ok(())
-}
-
-/// Return collateral access control. Ensures returning collateral for RFQ that is:
-///
-/// 1. Collateral has not already by returned
-/// 2. Order is not confirmed
-/// 3. If RFQ is not confirmed either expired or order has been confirmed
-/// 4. Signer is order authority
+/// Ensures:
+/// - Order belongs to correct RFQ
+/// - Order authority is signer
+/// - Collateral has not been returned
+/// - Order is not confirmed
+/// - RFQ is confirmed or expired
 pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
@@ -128,43 +139,49 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
     let signer = ctx.accounts.signer.key();
     let authority = order.authority.key();
 
+    require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
+    require!(authority == signer, ProtocolError::InvalidAuthority);
     require!(
         !order.collateral_returned,
         ProtocolError::CollateralReturned
     );
-
     require!(!order.confirmed, ProtocolError::OrderConfirmed);
-
-    if !rfq.confirmed {
-        require!(
-            Clock::get().unwrap().unix_timestamp > rfq.expiry,
-            ProtocolError::ActiveOrUnconfirmed
-        );
-    }
-
-    require!(authority == signer, ProtocolError::InvalidAuthority);
+    require!(
+        rfq.confirmed || Clock::get().unwrap().unix_timestamp > rfq.expiry,
+        ProtocolError::RfqActiveOrUnconfirmed
+    );
 
     Ok(())
 }
 
-/// Settlement access control. Ensures RFQ is:
+/// Settlement access control.
 ///
-/// 1. RFQ has not yet been settled if taker
-/// 2. Order has not yet been settled if maker
-/// 3. If last look is required then RFQ is approved
-/// 4. Order belongs to correct RFQ
+/// Ensures:
+/// - Order belongs to correct RFQ
+/// - RFQ belongs to signer if taker
+/// - RFQ has not been settled if taker
+/// - Order belongs to signer if maker
+/// - Order has not been settled if maker
+/// - RFQ is approvied if last look is set
+/// - RFQ has been confirmed
+/// - Order has been confirmed
 pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
 
-    let authority = ctx.accounts.signer.key();
+    let signer = ctx.accounts.signer.key();
     let taker = rfq.authority.key();
     let maker = order.authority.key();
 
-    if authority == taker {
+    require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
+
+    if signer == taker {
+        require!(rfq.authority == signer, ProtocolError::InvalidAuthority);
         require!(!rfq.settled, ProtocolError::RfqSettled);
     }
-    if authority == maker {
+
+    if signer == maker {
+        require!(order.authority == signer, ProtocolError::InvalidAuthority);
         require!(!order.settled, ProtocolError::OrderSettled);
     }
 
@@ -173,7 +190,7 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     }
 
     require!(rfq.confirmed, ProtocolError::InvalidConfirm);
-    require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
+    require!(order.confirmed, ProtocolError::InvalidConfirm);
 
     Ok(())
 }
