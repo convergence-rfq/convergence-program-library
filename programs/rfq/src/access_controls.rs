@@ -8,7 +8,7 @@ use crate::states::*;
 /// Initialzie access control.
 ///
 /// Ensures:
-/// - Signer is convergence DAO wallet
+/// - Signer is Convergence DAO
 /// - Fee numerator is greater than 0
 /// - Fee denominator is greater than 0
 pub fn initialize_access_control<'info>(
@@ -31,11 +31,49 @@ pub fn initialize_access_control<'info>(
     Ok(())
 }
 
-/// Request access control.
-pub fn request_access_control<'info>(_ctx: &Context<Request<'info>>) -> Result<()> {
+/// Set fee access control.
+///
+/// Ensures:
+/// - Signer is Convergence DAO
+/// - Fee numerator is greater than 0
+/// - Fee denominator is greater than 0
+pub fn set_fee_access_control<'info>(
+    ctx: &Context<Request<'info>>,
+    fee_denominator: u64,
+    fee_numerator: u64,
+) -> Result<()> {
+    #[allow(dead_code)]
+    let signer = ctx.accounts.signer.key();
+    #[allow(dead_code)]
+    let dao: Pubkey = "9sZmY1J1L31d6Pw2yUF3p99sob7dbSJDNpYCxUGx3AsU"
+        .parse()
+        .unwrap();
+    #[cfg(feature = "devnet")]
+    require!(signer == dao, ProtocolError::InvalidAuthority);
+
+    require!(fee_numerator > 0, ProtocolError::InvalidFee);
+    require!(fee_denominator > 0, ProtocolError::InvalidFee);
     Ok(())
 }
 
+/// Request access control.
+///
+/// Ensures:
+/// - Order amount is greater than 0
+/// - Expiry is greater than now
+pub fn request_access_control<'info>(
+    _ctx: &Context<Request<'info>>,
+    expiry: i64,
+    order_amount: u64,
+) -> Result<()> {
+    require!(order_amount > 0, ProtocolError::InvalidRequest);
+    require!(
+        Clock::get().unwrap().unix_timestamp < expiry,
+        ProtocolError::InvalidRequest
+    );
+    // TODO: Verify legs?
+    Ok(())
+}
 /// Response access control.
 ///
 /// Ensures:

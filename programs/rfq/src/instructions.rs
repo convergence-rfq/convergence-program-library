@@ -44,7 +44,7 @@ pub fn initialize(
 /// expiry
 /// order_amount
 /// order_type
-#[access_control(request_access_control(&ctx))]
+#[access_control(request_access_control(&ctx, expiry, order_amount))]
 pub fn request(
     ctx: Context<Request>,
     expiry: i64,

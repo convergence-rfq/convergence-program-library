@@ -22,6 +22,8 @@ pub enum ProtocolError {
     InvalidAuthority,
     #[msg("Invalid order amount")]
     InvalidOrderAmount,
+    #[msg("Invalid request")]
+    InvalidRequest,
     #[msg("Invalid settle")]
     InvalidSettle,
     #[msg("Last look not set")]
