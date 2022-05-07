@@ -34,7 +34,8 @@ pub struct SetFee<'info> {
     #[account(
         mut,
         seeds = [PROTOCOL_SEED.as_bytes()],
-        bump = protocol.bump
+        bump = protocol.bump,
+        constraint = protocol.to_account_info().owner == program_id,
     )]
     pub protocol: Account<'info, ProtocolState>,
 }
@@ -125,7 +126,8 @@ pub struct Respond<'info> {
     #[account(
         mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.bump
+        bump = rfq.bump,
+        constraint = rfq.to_account_info().owner == program_id,
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     /// Asset wallet
@@ -168,7 +170,8 @@ pub struct Confirm<'info> {
     #[account(
         mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.bump
+        bump = rfq.bump,
+        constraint = rfq.to_account_info().owner == program_id,
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     #[account(mut)]
@@ -187,7 +190,8 @@ pub struct Confirm<'info> {
             rfq.id.to_string().as_bytes(),
             order.id.to_string().as_bytes(),
         ],
-        bump = order.bump
+        bump = order.bump,
+        constraint = order.to_account_info().owner == program_id,
     )]
     pub order: Box<Account<'info, OrderState>>,
     #[account(
@@ -216,13 +220,15 @@ pub struct LastLook<'info> {
             rfq.id.to_string().as_bytes(),
             order.id.to_string().as_bytes()
         ],
-        bump = order.bump
+        bump = order.bump,
+        constraint = order.to_account_info().owner == program_id,
     )]
     pub order: Box<Account<'info, OrderState>>,
     #[account(
         mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.bump
+        bump = rfq.bump,
+        constraint = rfq.to_account_info().owner == program_id,
     )]
     pub rfq: Box<Account<'info, RfqState>>,
 }
@@ -250,7 +256,8 @@ pub struct ReturnCollateral<'info> {
             rfq.id.to_string().as_bytes(),
             order.id.to_string().as_bytes()
         ],
-        bump = order.bump
+        bump = order.bump,
+        constraint = order.to_account_info().owner == program_id,
     )]
     pub order: Box<Account<'info, OrderState>>,
     pub quote_mint: Box<Account<'info, Mint>>,
@@ -292,19 +299,22 @@ pub struct Settle<'info> {
             rfq.id.to_string().as_bytes(),
             order.id.to_string().as_bytes()
         ],
-        bump = order.bump
+        bump = order.bump,
+        constraint = order.to_account_info().owner == program_id,
     )]
     pub order: Box<Account<'info, OrderState>>,
     #[account(
         mut,
         seeds = [PROTOCOL_SEED.as_bytes()],
-        bump = protocol.bump
+        bump = protocol.bump,
+        constraint = protocol.to_account_info().owner == program_id,
     )]
     pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(
         mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.bump
+        bump = rfq.bump,
+        constraint = rfq.to_account_info().owner == program_id,
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     #[account(mut)]
