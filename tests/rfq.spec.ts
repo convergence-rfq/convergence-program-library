@@ -53,7 +53,7 @@ let quoteToken: Token
 
 const MINT_AIRDROP = 1_000_000
 
-const ASSET_DECIMALS = 3
+const ASSET_DECIMALS = 6
 const QUOTE_DECIMALS = 3
 
 const FEE_NUMERATOR = 1
@@ -318,8 +318,7 @@ describe('RFQ Specification', () => {
     assert.deepEqual(rfqState.orderType, orderType)
     assert.equal(rfqState.orderAmount.toString(), TAKER_ORDER_AMOUNT2.toString())
     assert.equal(protocolState.rfqCount.toNumber(), 2)
-    // TODO: Fix
-    //assert.equal(rfqState.expiry.toString(), expiry.toString())
+    assert.equal(rfqState.expiry.toString(), Math.floor(expiry).toString())
   })
 
   it('RFQ 2: Maker B and C respond', async () => {
