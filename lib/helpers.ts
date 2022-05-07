@@ -53,6 +53,9 @@ export const Venue = {
   },
   PsyOptions: {
     psyOptions: {}
+  },
+  Sollar: {
+    sollar: {}
   }
 }
 
@@ -63,9 +66,6 @@ export const Leg = {
   },
   Venue: {
     venue: {}
-  },
-  Side: {
-    side: {}
   },
   Amount: {
     amount: {}
@@ -569,5 +569,7 @@ export const calcFee = (amount: number, decimals: number, numerator: number, den
   let uiAmount = amount / (10 ** decimals)
   let uiFeeAmount = uiAmount * (numerator / denominator)
   let feeAmount = uiFeeAmount * (10 ** decimals)
-  return parseInt(feeAmount.toString(), 10)
+  console.log(Math.ceil(feeAmount))
+  // Round fees up
+  return Math.ceil(feeAmount)
 }

@@ -1,22 +1,22 @@
 /** 
   * RFQ Specification
   * 
-  * Request:
+  * Step 1: Requests:
   * - Taker wants an asset quote for one or two-way market
   * 
-  * Respond:
+  * Step 2: Responds:
   * - Maker submits one or two-way order and deposits collateral
   * 
-  * Confirm:
+  * Step 3: Confirms:
   * - Taker confirms response by depositing collateral
   * 
-  * Last look:
+  * Optional: Last look:
   * - Set to false
   * 
-  * Return collateral:
+  * Step 4: Returns collateral:
   * - Unconfirmed maker orders get collateral returned
   * 
-  * Settle:
+  * Step 5: Settle:
   * - Taker receives quote
   * - Maker receives asset
   */
@@ -54,7 +54,7 @@ let quoteToken: Token
 const MINT_AIRDROP = 1_000_000
 
 const ASSET_DECIMALS = 6
-const QUOTE_DECIMALS = 3
+const QUOTE_DECIMALS = 2
 
 const FEE_NUMERATOR = 1
 const FEE_DENOMINATOR = 1_000
@@ -62,26 +62,27 @@ const FEE_DENOMINATOR = 1_000
 const TAKER_ORDER_AMOUNT1 = 1
 const TAKER_ORDER_AMOUNT2 = 10
 const TAKER_ORDER_AMOUNT3 = 3
-const MAKER_A_ASK_AMOUNT1 = 41_000
-const MAKER_A_BID_AMOUNT1 = 39_100
-const MAKER_A_ASK_AMOUNT2 = 41_100
-const MAKER_A_BID_AMOUNT2 = 39_200 // Sell winner
+
+const MAKER_A_ASK_AMOUNT1 = 41_000 * TAKER_ORDER_AMOUNT1
+const MAKER_A_BID_AMOUNT1 = 39_100 * TAKER_ORDER_AMOUNT1
+const MAKER_A_ASK_AMOUNT2 = 41_100 * TAKER_ORDER_AMOUNT1
+const MAKER_A_BID_AMOUNT2 = 39_200 * TAKER_ORDER_AMOUNT1 // Sell winner
 const MAKER_B_ASK_AMOUNT1 = null
-const MAKER_B_BID_AMOUNT1 = 400_000
-const MAKER_B_ASK_AMOUNT2 = 420_000
-const MAKER_B_BID_AMOUNT2 = 410_000 // Invalid
+const MAKER_B_BID_AMOUNT1 = 40_000 * TAKER_ORDER_AMOUNT2
+const MAKER_B_ASK_AMOUNT2 = 42_000 * TAKER_ORDER_AMOUNT2
+const MAKER_B_BID_AMOUNT2 = 41_000 * TAKER_ORDER_AMOUNT2 // Invalid
 const MAKER_C_ASK_AMOUNT1 = null
-const MAKER_C_BID_AMOUNT1 = 411_000 // Sell winner
+const MAKER_C_BID_AMOUNT1 = 41_100 * TAKER_ORDER_AMOUNT2 // Sell winner
 const MAKER_C_ASK_AMOUNT2 = null
-const MAKER_C_BID_AMOUNT2 = 390_000
-const MAKER_D_ASK_AMOUNT1 = 395_000
+const MAKER_C_BID_AMOUNT2 = 39_000 * TAKER_ORDER_AMOUNT2
+const MAKER_D_ASK_AMOUNT1 = 39_500 * TAKER_ORDER_AMOUNT2
 const MAKER_D_BID_AMOUNT1 = null
-const MAKER_D_ASK_AMOUNT2 = 390_000 // Buy winner
+const MAKER_D_ASK_AMOUNT2 = 39_000 * TAKER_ORDER_AMOUNT3 // Buy winner
 const MAKER_D_BID_AMOUNT2 = null
 
 const FEE1 = calcFee(MAKER_A_BID_AMOUNT1, QUOTE_DECIMALS, FEE_NUMERATOR, FEE_DENOMINATOR)
 const FEE2 = calcFee(MAKER_C_BID_AMOUNT1, QUOTE_DECIMALS, FEE_NUMERATOR, FEE_DENOMINATOR)
-const FEE3 = calcFee(MAKER_D_ASK_AMOUNT2, QUOTE_DECIMALS, FEE_NUMERATOR, FEE_DENOMINATOR)
+const FEE3 = calcFee(MAKER_D_ASK_AMOUNT2, ASSET_DECIMALS, FEE_NUMERATOR, FEE_DENOMINATOR)
 
 let daoAssetATA: PublicKey
 let daoQuoteATA: PublicKey
@@ -199,7 +200,6 @@ describe('RFQ Specification', () => {
     const legs = [{
       amount: new anchor.BN(TAKER_ORDER_AMOUNT1),
       instrument: Instrument.Spot,
-      side: Side.Sell,
       venue: Venue.Convergence,
     }]
 
@@ -293,6 +293,8 @@ describe('RFQ Specification', () => {
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_A_BID_AMOUNT2 - FEE1)
   })
 
+  return
+
   it('RFQ 2: Taker initializes sell for 10', async () => {
     const orderType = Order.Sell
     const now = (new Date()).getTime() / 1_000
@@ -300,7 +302,6 @@ describe('RFQ Specification', () => {
     const orderAmount = TAKER_ORDER_AMOUNT2
     const legs = [{
       venue: Venue.Convergence,
-      side: Side.Sell,
       amount: new anchor.BN(TAKER_ORDER_AMOUNT2),
       instrument: Instrument.Spot,
     }]
@@ -487,14 +488,14 @@ describe('RFQ Specification', () => {
 
   it('RFQ 3: Sell 10', async () => {
     const rfqId = 3
+
     const requestOrder = Order.Buy
     const now = (new Date()).getTime() / 1_000
     const expiry = now + 1.5
     const legs = [{
       amount: new anchor.BN(TAKER_ORDER_AMOUNT3),
       instrument: Instrument.Spot,
-      side: Side.Buy,
-      venue: Venue.Convergence,
+      venue: Venue.Convergence
     }]
 
     await request(assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT3, provider, quoteToken.publicKey, requestOrder)
@@ -509,7 +510,7 @@ describe('RFQ Specification', () => {
     let quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
-
+    // TODO: Fee?
     assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3)
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_A_BID_AMOUNT2 - FEE1 + MAKER_C_BID_AMOUNT1 - FEE2 - MAKER_D_ASK_AMOUNT2)
 
@@ -521,7 +522,7 @@ describe('RFQ Specification', () => {
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_D_ASK_AMOUNT2)
   })
 
-  it('View all RFQs and responses', async () => {
+  it('Bot views all RFQs and responses', async () => {
     const rfqs = await getRFQs(provider, 1, 10)
     const responses = await getResponses(provider, rfqs)
     assert.equal(rfqs.length, 3)

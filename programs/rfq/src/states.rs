@@ -135,7 +135,7 @@ pub struct Leg {
 }
 
 impl Leg {
-    pub const LEN: usize = (1 + (1 * 4)) + (1 + (1 * 2)) + (1 + (1 * 2)) + (8 * 1);
+    pub const LEN: usize = 8 + (1 + (1 * 4)) + (1 + (1 * 3)) + (1 + (1 * 3));
 }
 
 /// Order side.
