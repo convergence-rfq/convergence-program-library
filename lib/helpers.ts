@@ -366,9 +366,11 @@ export async function confirm(
     })
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
+  const orderState = await program.account.orderState.fetch(orderPda)
 
   return {
     tx,
+    orderState,
     rfqState
   }
 }
@@ -561,4 +563,11 @@ export async function getBalance(
   } catch (error) {
     console.log('No mints found for wallet')
   }
+}
+
+export const calcFee = (amount: number, decimals: number, numerator: number, denominator: number): number => {
+  let uiAmount = amount / (10 ** decimals)
+  let uiFeeAmount = uiAmount * (numerator / denominator)
+  let feeAmount = uiFeeAmount * (10 ** decimals)
+  return parseInt(feeAmount.toString(), 10)
 }

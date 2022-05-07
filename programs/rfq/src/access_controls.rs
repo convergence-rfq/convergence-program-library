@@ -112,13 +112,20 @@ pub fn confirm_access_control<'info>(
                 ProtocolError::InvalidConfirm
             )
         }
-        Order::TwoWay => {
-            require!(
-                rfq.best_ask_amount.unwrap() == order.ask.unwrap()
-                    || rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
-                ProtocolError::InvalidConfirm
-            )
-        }
+        Order::TwoWay => match order_side {
+            Side::Buy => {
+                require!(
+                    rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
+                    ProtocolError::InvalidConfirm
+                );
+            }
+            Side::Sell => {
+                require!(
+                    rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
+                    ProtocolError::InvalidConfirm
+                )
+            }
+        },
     }
 
     Ok(())

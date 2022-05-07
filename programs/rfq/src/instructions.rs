@@ -208,7 +208,7 @@ pub fn confirm(ctx: Context<Confirm>, order_side: Side) -> Result<()> {
     Ok(())
 }
 
-/// Return quote collateral.
+/// Return quote.
 ///
 /// Step 5: If order is unconfirmed, return maker collateral.
 ///
@@ -287,7 +287,7 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
     let order = &mut ctx.accounts.order;
     let rfq = &mut ctx.accounts.rfq;
 
-    let authority = ctx.accounts.signer.key();
+    let signer = ctx.accounts.signer.key();
     let taker = rfq.authority.key();
     let maker = order.authority.key();
 
@@ -297,7 +297,7 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
 
     match order.confirmed_side.unwrap() {
         Side::Buy => {
-            if authority == taker {
+            if signer == taker {
                 fee_amount = calc_fee(
                     rfq.order_amount,
                     ctx.accounts.asset_mint.decimals,
@@ -306,11 +306,15 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                 );
                 asset_amount = rfq.order_amount - fee_amount;
             } else {
-                quote_amount = rfq.best_ask_amount.unwrap();
+                // If two-way order maker receives response collateral
+                quote_amount = match rfq.order_type {
+                    Order::TwoWay => rfq.best_ask_amount.unwrap() + rfq.best_ask_amount.unwrap(),
+                    _ => rfq.best_ask_amount.unwrap(),
+                };
             }
         }
         Side::Sell => {
-            if authority == taker {
+            if signer == taker {
                 fee_amount = calc_fee(
                     rfq.best_bid_amount.unwrap(),
                     ctx.accounts.quote_mint.decimals,
@@ -319,12 +323,15 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                 );
                 quote_amount = rfq.best_bid_amount.unwrap() - fee_amount;
             } else {
-                asset_amount = rfq.order_amount;
+                // If two-way order maker receives response collateral
+                asset_amount = match rfq.order_type {
+                    Order::TwoWay => rfq.order_amount + rfq.order_amount,
+                    _ => rfq.order_amount,
+                };
             }
         }
     }
 
-    // TODO: IF two-way, make sure maker receives both collateral?
     if asset_amount > 0 {
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
@@ -429,11 +436,11 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
         }
     }
 
-    if authority == taker {
+    if signer == taker {
         rfq.settled = true;
     }
 
-    if authority == maker {
+    if signer == maker {
         order.settled = true;
     }
 
