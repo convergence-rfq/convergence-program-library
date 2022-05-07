@@ -16,7 +16,7 @@ use crate::utils::*;
 /// ctx Accounts context
 /// fee_denominator Fee denominator
 /// fee_numerator Fee numerator
-#[access_control(initialize_access_control(&ctx, fee_denominator, fee_numerator))]
+#[access_control(initialize_access_control(&ctx, fee_denominator))]
 pub fn initialize(
     ctx: Context<Initialize>,
     fee_denominator: u64,
@@ -33,6 +33,21 @@ pub fn initialize(
     Ok(())
 }
 
+/// Sets fee.
+///
+/// Optional: DAO sets fee.
+///
+/// ctx Accounts context
+/// fee_denominator Fee denominator
+/// fee_numerator Fee numerator
+#[access_control(set_fee_access_control(&ctx, fee_denominator))]
+pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -> Result<()> {
+    let protocol = &mut ctx.accounts.protocol;
+    protocol.fee_denominator = fee_denominator;
+    protocol.fee_numerator = fee_numerator;
+
+    Ok(())
+}
 /// Requests quote (RFQ).
 ///
 /// Step 2: Taker request quote.

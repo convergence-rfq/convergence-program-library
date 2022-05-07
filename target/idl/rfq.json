@@ -33,6 +33,31 @@
       ]
     },
     {
+      "name": "setFee",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "protocol",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeDenominator",
+          "type": "u64"
+        },
+        {
+          "name": "feeNumerator",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "request",
       "accounts": [
         {
@@ -772,51 +797,56 @@
     },
     {
       "code": 6009,
+      "name": "InvalidRequest",
+      "msg": "Invalid request"
+    },
+    {
+      "code": 6010,
       "name": "InvalidSettle",
       "msg": "Invalid settle"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "LastLookNotSet",
       "msg": "Last look not set"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "Math",
       "msg": "Math"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "RfqActiveOrUnconfirmed",
       "msg": "RFQ active or unconfirmed"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }

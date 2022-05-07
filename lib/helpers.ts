@@ -535,6 +535,32 @@ export async function initializeProtocol(
   return { tx, protocolState }
 }
 
+export async function setFee(
+  provider: Provider,
+  signer: Wallet,
+  feeDenominator: number,
+  feeNumerator: number
+): Promise<any> {
+  const program = await getProgram(provider)
+  const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
+    [Buffer.from(PROTOCOL_SEED)],
+    program.programId
+  )
+  const tx = await program.rpc.setFee(
+    new anchor.BN(feeDenominator),
+    new anchor.BN(feeNumerator),
+    {
+      accounts: {
+        signer: signer.publicKey,
+        protocol: protocolPda,
+        systemProgram: SystemProgram.programId
+      },
+      signers: [signer.payer],
+    })
+  const protocolState = await program.account.protocolState.fetch(protocolPda)
+  return { tx, protocolState }
+}
+
 export async function getProgram(provider: Provider): Promise<Program> {
   const programId = new PublicKey(idl.metadata.address)
   return new anchor.Program(idl as Idl, programId, provider)

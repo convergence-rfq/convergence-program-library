@@ -24,6 +24,21 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
+/// Sets fee.
+#[derive(Accounts)]
+pub struct SetFee<'info> {
+    /// Signer
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    /// Protocol state
+    #[account(
+        mut,
+        seeds = [PROTOCOL_SEED.as_bytes()],
+        bump = protocol.bump
+    )]
+    pub protocol: Account<'info, ProtocolState>,
+}
+
 /// Requests quote (RFQ).
 #[derive(Accounts)]
 pub struct Request<'info> {

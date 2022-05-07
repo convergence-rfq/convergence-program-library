@@ -30,21 +30,22 @@ import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import {
   Instrument,
   Order,
+  Side,
+  Venue,
   confirm,
   getBalance,
+  calcFee,
   getRFQs,
+  getProgram,
+  getResponses,
   initializeProtocol,
   lastLook,
   respond,
   returnCollateral,
   request,
   requestAirdrop,
+  setFee,
   settle,
-  Venue,
-  Side,
-  getProgram,
-  getResponses,
-  calcFee
 } from '../lib/helpers'
 import { Program } from '@project-serum/anchor'
 
@@ -185,8 +186,16 @@ describe('RFQ Specification', () => {
     await quoteToken.mintTo(makerDQuoteATA, mintAuthority.publicKey, [], MINT_AIRDROP)
   })
 
-  it('DAO initializes protocol with a 1bps fee', async () => {
-    const { protocolState } = await initializeProtocol(provider, dao, FEE_DENOMINATOR, FEE_NUMERATOR)
+  it('DAO initializes protocol with a 0bps fee', async () => {
+    const { protocolState } = await initializeProtocol(provider, dao, FEE_DENOMINATOR, 0)
+    assert.ok(protocolState.feeDenominator.eq(new anchor.BN(FEE_DENOMINATOR)))
+    assert.ok(protocolState.feeNumerator.eq(new anchor.BN(0)))
+    assert.ok(protocolState.rfqCount.eq(new anchor.BN(0)))
+    assert.ok(protocolState.accessManagerCount.eq(new anchor.BN(0)))
+  })
+
+  it(`DAO sets ${FEE_NUMERATOR}bps protocol fee`, async () => {
+    const { protocolState } = await setFee(provider, dao, FEE_DENOMINATOR, FEE_NUMERATOR)
     assert.ok(protocolState.feeDenominator.eq(new anchor.BN(FEE_DENOMINATOR)))
     assert.ok(protocolState.feeNumerator.eq(new anchor.BN(FEE_NUMERATOR)))
     assert.ok(protocolState.rfqCount.eq(new anchor.BN(0)))

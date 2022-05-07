@@ -31,6 +31,11 @@ pub mod rfq {
         instructions::initialize(ctx, fee_denominator, fee_numerator)
     }
 
+    /// Sets fee.
+    pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -> Result<()> {
+        instructions::set_fee(ctx, fee_denominator, fee_numerator)
+    }
+
     /// Requests quote (RFQ).
     pub fn request(
         ctx: Context<Request>,
