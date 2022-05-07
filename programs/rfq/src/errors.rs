@@ -10,6 +10,8 @@ pub enum ProtocolError {
     InvalidConfirm,
     #[msg("Invalid order")]
     InvalidOrder,
+    #[msg("Invalid fee")]
+    InvalidFee,
     #[msg("Invalid quote")]
     InvalidQuote,
     #[msg("Invalid RFQ")]
@@ -24,6 +26,8 @@ pub enum ProtocolError {
     InvalidSettle,
     #[msg("Last look not set")]
     LastLookNotSet,
+    #[msg("Math")]
+    Math,
     #[msg("Order confirmed")]
     OrderConfirmed,
     #[msg("Order settled")]

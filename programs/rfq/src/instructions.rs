@@ -5,6 +5,7 @@ use solana_program::sysvar::clock::Clock;
 use crate::access_controls::*;
 use crate::constants::*;
 use crate::contexts::*;
+use crate::errors::*;
 use crate::states::*;
 use crate::utils::*;
 
@@ -15,6 +16,7 @@ use crate::utils::*;
 /// ctx Accounts context
 /// fee_denominator Fee denominator
 /// fee_numerator Fee numerator
+#[access_control(initialize_access_control(&ctx, fee_denominator, fee_numerator))]
 pub fn initialize(
     ctx: Context<Initialize>,
     fee_denominator: u64,
@@ -298,12 +300,14 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
     match order.confirmed_side.unwrap() {
         Side::Buy => {
             if signer == taker {
-                fee_amount = calc_fee(
+                fee_amount = match calc_fee(
                     rfq.order_amount,
-                    ctx.accounts.asset_mint.decimals,
                     protocol.fee_numerator,
                     protocol.fee_denominator,
-                );
+                ) {
+                    Some(amount) => amount,
+                    None => return Err(error!(ProtocolError::Math)),
+                };
                 asset_amount = rfq.order_amount - fee_amount;
             } else {
                 // If two-way order maker receives response collateral
@@ -315,12 +319,14 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
         }
         Side::Sell => {
             if signer == taker {
-                fee_amount = calc_fee(
+                fee_amount = match calc_fee(
                     rfq.best_bid_amount.unwrap(),
-                    ctx.accounts.quote_mint.decimals,
                     protocol.fee_numerator,
                     protocol.fee_denominator,
-                );
+                ) {
+                    Some(amount) => amount,
+                    None => return Err(error!(ProtocolError::Math)),
+                };
                 quote_amount = rfq.best_bid_amount.unwrap() - fee_amount;
             } else {
                 // If two-way order maker receives response collateral

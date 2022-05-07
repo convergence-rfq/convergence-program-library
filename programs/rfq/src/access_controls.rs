@@ -5,6 +5,32 @@ use crate::contexts::*;
 use crate::errors::*;
 use crate::states::*;
 
+/// Initialzie access control.
+///
+/// Ensures:
+/// - Signer is convergence DAO wallet
+/// - Fee numerator is greater than 0
+/// - Fee denominator is greater than 0
+pub fn initialize_access_control<'info>(
+    ctx: &Context<Initialize<'info>>,
+    fee_denominator: u64,
+    fee_numerator: u64,
+) -> Result<()> {
+    #[allow(dead_code)]
+    let signer = ctx.accounts.signer.key();
+    #[allow(dead_code)]
+    let dao: Pubkey = "9sZmY1J1L31d6Pw2yUF3p99sob7dbSJDNpYCxUGx3AsU"
+        .parse()
+        .unwrap();
+    #[cfg(feature = "devnet")]
+    require!(signer == dao, ProtocolError::InvalidAuthority);
+
+    require!(fee_numerator > 0, ProtocolError::InvalidFee);
+    require!(fee_denominator > 0, ProtocolError::InvalidFee);
+
+    Ok(())
+}
+
 /// Request access control.
 pub fn request_access_control<'info>(_ctx: &Context<Request<'info>>) -> Result<()> {
     Ok(())
