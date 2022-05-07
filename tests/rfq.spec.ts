@@ -319,7 +319,7 @@ describe('RFQ Specification', () => {
     assert.equal(rfqState.orderAmount.toString(), TAKER_ORDER_AMOUNT2.toString())
     assert.equal(protocolState.rfqCount.toNumber(), 2)
     // TODO: Fix
-    //assert.equal(rfqState.expiry.toString(), expiry.toString())
+    assert.equal(rfqState.expiry.toString(), expiry.toString())
   })
 
   it('RFQ 2: Maker B and C respond', async () => {
