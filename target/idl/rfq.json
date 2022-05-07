@@ -195,6 +195,27 @@
       ]
     },
     {
+      "name": "lastLook",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "order",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "confirm",
       "accounts": [
         {
@@ -266,27 +287,6 @@
           }
         }
       ]
-    },
-    {
-      "name": "lastLook",
-      "accounts": [
-        {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "order",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "rfq",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": []
     },
     {
       "name": "returnCollateral",

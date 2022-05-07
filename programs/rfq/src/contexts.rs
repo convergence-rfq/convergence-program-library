@@ -67,7 +67,7 @@ pub struct Request<'info> {
     pub quote_escrow: Account<'info, TokenAccount>,
     /// Quote mint
     pub quote_mint: Box<Account<'info, Mint>>,
-    /// TODO: Decide what to do about this
+    /// Rent
     pub rent: Sysvar<'info, Rent>,
     /// RFQ state
     #[account(

@@ -195,6 +195,27 @@ export type Rfq = {
       ]
     },
     {
+      "name": "lastLook",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "order",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "confirm",
       "accounts": [
         {
@@ -266,27 +287,6 @@ export type Rfq = {
           }
         }
       ]
-    },
-    {
-      "name": "lastLook",
-      "accounts": [
-        {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "order",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "rfq",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": []
     },
     {
       "name": "returnCollateral",
@@ -1010,6 +1010,27 @@ export const IDL: Rfq = {
       ]
     },
     {
+      "name": "lastLook",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "order",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "confirm",
       "accounts": [
         {
@@ -1081,27 +1102,6 @@ export const IDL: Rfq = {
           }
         }
       ]
-    },
-    {
-      "name": "lastLook",
-      "accounts": [
-        {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "order",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "rfq",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": []
     },
     {
       "name": "returnCollateral",

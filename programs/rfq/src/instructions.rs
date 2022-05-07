@@ -2,14 +2,19 @@
 use anchor_lang::prelude::*;
 use solana_program::sysvar::clock::Clock;
 
+use crate::access_controls::*;
 use crate::constants::*;
 use crate::contexts::*;
 use crate::states::*;
 use crate::utils::*;
 
-/// Initialize.
+/// Initializes.
 ///
 /// Step 1: DAO initializes protocol.
+///
+/// ctx Accounts context
+/// fee_denominator Fee denominator
+/// fee_numerator Fee numerator
 pub fn initialize(
     ctx: Context<Initialize>,
     fee_denominator: u64,
@@ -26,9 +31,18 @@ pub fn initialize(
     Ok(())
 }
 
-/// Request.
+/// Requests quote (RFQ).
 ///
 /// Step 2: Taker request quote.
+///
+/// ctx Accounts context
+/// expiry
+/// last_look
+/// legs
+/// expiry
+/// order_amount
+/// order_type
+#[access_control(request_access_control(&ctx))]
 pub fn request(
     ctx: Context<Request>,
     expiry: i64,
@@ -66,9 +80,14 @@ pub fn request(
     Ok(())
 }
 
-/// Respond.
+/// Responds to RFQ.
 ///
 /// Step 3: Maker responds with one or two-way quote.
+///
+/// ctx Accounts context
+/// bid
+/// ask
+#[access_control(respond_access_control(&ctx, bid, ask))]
 pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Result<()> {
     let rfq = &mut ctx.accounts.rfq;
     rfq.response_count += 1;
@@ -128,9 +147,12 @@ pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Res
     Ok(())
 }
 
-/// Last look.
+/// Quote last look.
 ///
 /// Optional: Maker confirmes if last look is set.
+///
+/// ctx Accounts context
+#[access_control(last_look_access_control(&ctx))]
 pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
     let rfq = &mut ctx.accounts.rfq;
     rfq.approved = true;
@@ -138,13 +160,17 @@ pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
     Ok(())
 }
 
-/// Confirm.
+/// Confirms quote.
 ///
 /// Step 4: Taker confirms maker order.
-pub fn confirm(ctx: Context<Confirm>, side: Side) -> Result<()> {
+///
+/// ctx
+/// order_side
+#[access_control(confirm_access_control(&ctx, order_side))]
+pub fn confirm(ctx: Context<Confirm>, order_side: Side) -> Result<()> {
     let order = &mut ctx.accounts.order;
     order.confirmed = true;
-    order.confirmed_side = Some(side);
+    order.confirmed_side = Some(order_side);
 
     let rfq = &mut ctx.accounts.rfq;
 
@@ -152,7 +178,7 @@ pub fn confirm(ctx: Context<Confirm>, side: Side) -> Result<()> {
     let from;
     let to;
 
-    match side {
+    match order_side {
         Side::Buy => {
             from = ctx.accounts.quote_wallet.to_account_info();
             to = ctx.accounts.quote_escrow.to_account_info();
@@ -182,9 +208,12 @@ pub fn confirm(ctx: Context<Confirm>, side: Side) -> Result<()> {
     Ok(())
 }
 
-/// Return collateral.
+/// Return quote collateral.
 ///
 /// Step 5: If order is unconfirmed, return maker collateral.
+///
+/// ctx
+#[access_control(return_collateral_access_control(&ctx))]
 pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &mut ctx.accounts.order;
@@ -247,9 +276,12 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
     Ok(())
 }
 
-// Settle.
+// Settles RFQ.
 //
 // Step 6: Taker and maker receive asset or quote.
+///
+/// ctx
+#[access_control(settle_access_control(&ctx))]
 pub fn settle(ctx: Context<Settle>) -> Result<()> {
     let protocol = &mut ctx.accounts.protocol;
     let order = &mut ctx.accounts.order;

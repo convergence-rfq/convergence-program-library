@@ -10,23 +10,6 @@ pub fn request_access_control<'info>(_ctx: &Context<Request<'info>>) -> Result<(
     Ok(())
 }
 
-/// Last look access control.
-///
-/// Ensures:
-/// - Last looks is configured for RFQ
-/// - Order belongs to authority approving via last look
-pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result<()> {
-    let rfq = &ctx.accounts.rfq;
-    let signer = ctx.accounts.signer.key();
-
-    let authority = ctx.accounts.order.authority.key();
-
-    require!(rfq.last_look, ProtocolError::LastLookNotSet);
-    require!(authority == signer, ProtocolError::InvalidAuthority);
-
-    Ok(())
-}
-
 /// Response access control.
 ///
 /// Ensures:
@@ -69,6 +52,23 @@ pub fn respond_access_control<'info>(
             );
         }
     }
+
+    Ok(())
+}
+
+/// Last look access control.
+///
+/// Ensures:
+/// - Last looks is configured for RFQ
+/// - Order belongs to authority approving via last look
+pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result<()> {
+    let rfq = &ctx.accounts.rfq;
+    let signer = ctx.accounts.signer.key();
+
+    let authority = ctx.accounts.order.authority.key();
+
+    require!(rfq.last_look, ProtocolError::LastLookNotSet);
+    require!(authority == signer, ProtocolError::InvalidAuthority);
 
     Ok(())
 }
