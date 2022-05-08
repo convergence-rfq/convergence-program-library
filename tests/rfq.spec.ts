@@ -60,6 +60,7 @@ const QUOTE_DECIMALS = 2
 const FEE_NUMERATOR = 1
 const FEE_DENOMINATOR = 1_000
 
+// TODO: Fix error when these numbers are 10x
 const TAKER_ORDER_AMOUNT1 = 1
 const TAKER_ORDER_AMOUNT2 = 10
 const TAKER_ORDER_AMOUNT3 = 2
@@ -543,7 +544,7 @@ describe('RFQ Specification', () => {
 
     const requestOrder = Order.TwoWay
     const now = (new Date()).getTime() / 1_000
-    const expiry = now + 1
+    const expiry = now + 2
     const legs = [{
       amount: new anchor.BN(TAKER_ORDER_AMOUNT4),
       instrument: Instrument.Spot,
@@ -564,7 +565,7 @@ describe('RFQ Specification', () => {
     console.log('Order ask:', res1.orderState.ask.toNumber())
 
     console.log('Sleeping for 2s...')
-    await sleep(2_000)
+    await sleep(3_000)
 
     try {
       await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT3, MAKER_D_ASK_AMOUNT3, makerDAssetATA, makerDQuoteATA)
