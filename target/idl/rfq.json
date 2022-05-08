@@ -306,9 +306,9 @@
       ],
       "args": [
         {
-          "name": "orderSide",
+          "name": "quote",
           "type": {
-            "defined": "Side"
+            "defined": "Quote"
           }
         }
       ]
@@ -635,7 +635,7 @@
             "name": "confirmedSide",
             "type": {
               "option": {
-                "defined": "Side"
+                "defined": "Quote"
               }
             }
           },
@@ -722,15 +722,15 @@
       }
     },
     {
-      "name": "Side",
+      "name": "Quote",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Buy"
+            "name": "Bid"
           },
           {
-            "name": "Sell"
+            "name": "Ask"
           }
         ]
       }

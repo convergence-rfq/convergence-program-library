@@ -93,7 +93,7 @@ pub struct OrderState {
     /// Collateral returned
     pub collateral_returned: bool,
     // Confirmed side
-    pub confirmed_side: Option<Side>,
+    pub confirmed_side: Option<Quote>,
     // Order id
     pub id: u64,
     /// Rfq
@@ -142,9 +142,9 @@ impl Leg {
 
 /// Order side.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Side {
-    Buy,
-    Sell,
+pub enum Quote {
+    Bid,
+    Ask,
 }
 
 /// Order.

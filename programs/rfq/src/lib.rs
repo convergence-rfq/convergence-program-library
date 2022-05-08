@@ -58,8 +58,8 @@ pub mod rfq {
     }
 
     /// Confirms quote.
-    pub fn confirm(ctx: Context<Confirm>, order_side: Side) -> Result<()> {
-        instructions::confirm(ctx, order_side)
+    pub fn confirm(ctx: Context<Confirm>, quote: Quote) -> Result<()> {
+        instructions::confirm(ctx, quote)
     }
 
     /// Returns quote collateral.

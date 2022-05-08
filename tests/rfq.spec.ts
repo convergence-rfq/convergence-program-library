@@ -30,7 +30,7 @@ import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import {
   Instrument,
   Order,
-  Side,
+  Quote,
   Venue,
   confirm,
   getBalance,
@@ -186,7 +186,7 @@ describe('RFQ Specification', () => {
     await quoteToken.mintTo(makerDQuoteATA, mintAuthority.publicKey, [], MINT_AIRDROP)
   })
 
-  it('DAO initializes protocol with a 0bps fee', async () => {
+  it('DAO initializes protocol with 0bps fee', async () => {
     const { protocolState } = await initializeProtocol(provider, dao, FEE_DENOMINATOR, 0)
     assert.ok(protocolState.feeDenominator.eq(new anchor.BN(FEE_DENOMINATOR)))
     assert.ok(protocolState.feeNumerator.eq(new anchor.BN(0)))
@@ -218,7 +218,7 @@ describe('RFQ Specification', () => {
     assert.ok(res.protocolState.rfqCount.eq(new anchor.BN(1)))
   })
 
-  it('RFQ 1: Maker A responds to two-way request then taker confirms sell for best bid', async () => {
+  it('RFQ 1: Maker A responds to two-way request then Taker confirms best bid', async () => {
     const rfqId = 1
 
     await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
@@ -230,18 +230,18 @@ describe('RFQ Specification', () => {
     console.log('Taker quote balance:', quoteBalance)
 
     try {
-      await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Side.Sell)
+      await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'InvalidConfirm')
     }
 
-    const { rfqState, orderState } = await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, Side.Sell)
+    const { rfqState, orderState } = await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
     console.log('Order confirmed side:', orderState.confirmedSide)
     console.log('Best ask:', rfqState.bestAskAmount?.toNumber())
     console.log('Best bid:', rfqState.bestBidAmount?.toNumber())
 
     try {
-      await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Side.Sell)
+      await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
       assert.ok(false)
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'RfqConfirmed')
@@ -367,24 +367,24 @@ describe('RFQ Specification', () => {
     assert.equal(res3.rfqState.bestBidAmount?.toString(), MAKER_C_BID_AMOUNT1.toString())
   })
 
-  it('RFQ 2: Confirms Maker B sell for 410,000', async () => {
+  it('RFQ 2: Taker confirms Maker B bid for 410,000', async () => {
     const rfqId = 2
 
     try {
-      await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Side.Sell)
+      await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
       assert.ok(false)
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'InvalidConfirm')
     }
 
     try {
-      await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, Side.Buy)
+      await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, Quote.Ask)
       assert.ok(false)
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'InvalidConfirm')
     }
 
-    const { rfqState } = await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, Side.Sell)
+    const { rfqState } = await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
     console.log('Best ask:', rfqState.bestAskAmount?.toNumber())
     console.log('Best bid:', rfqState.bestBidAmount?.toNumber())
 
@@ -411,7 +411,7 @@ describe('RFQ Specification', () => {
     assert.equal(res1.rfqState.approved, true)
   })
 
-  it('RFQ 2: Returns Maker B and C collateral', async () => {
+  it('RFQ 2: Maker B and C return collateral', async () => {
     const rfqId = 2
 
     await returnCollateral(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
@@ -452,7 +452,7 @@ describe('RFQ Specification', () => {
     console.log('Maker C quote balance:', quoteBalance)
   })
 
-  it('RFQ 2: Settles', async () => {
+  it('RFQ 2: Taker and Maker B settle', async () => {
     const rfqId = 2
 
     await settle(provider, taker, rfqId, 2, takerAssetATA, takerQuoteATA)
@@ -502,7 +502,7 @@ describe('RFQ Specification', () => {
     assert.equal(quoteBalance, MINT_AIRDROP - MAKER_C_BID_AMOUNT1)
   })
 
-  it('RFQ 3: Sell 10', async () => {
+  it(`RFQ 3: Taker requests sell for ${TAKER_ORDER_AMOUNT3}`, async () => {
     const rfqId = 3
 
     const requestOrder = Order.Buy
@@ -517,7 +517,7 @@ describe('RFQ Specification', () => {
     await request(assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT3, provider, quoteToken.publicKey, requestOrder)
     await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT1, MAKER_D_ASK_AMOUNT1, makerDAssetATA, makerDQuoteATA)
     await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT2, MAKER_D_ASK_AMOUNT2, makerDAssetATA, makerDQuoteATA)
-    await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, requestOrder)
+    await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, Quote.Ask)
     await returnCollateral(provider, makerD, rfqId, 1, makerDAssetATA, makerDQuoteATA)
     await settle(provider, taker, rfqId, 2, takerAssetATA, takerQuoteATA)
     await settle(provider, makerD, rfqId, 2, makerDAssetATA, makerDQuoteATA)
@@ -538,7 +538,7 @@ describe('RFQ Specification', () => {
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_D_ASK_AMOUNT2)
   })
 
-  it('Bot views all RFQs and responses', async () => {
+  it('DAO views all RFQs and responses', async () => {
     const rfqs = await getRFQs(provider, 1, 10)
     const responses = await getResponses(provider, rfqs)
     assert.equal(rfqs.length, 3)

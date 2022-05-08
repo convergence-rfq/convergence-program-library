@@ -40,12 +40,12 @@ export const Instrument = {
   }
 }
 
-export const Side = {
-  Buy: {
-    buy: {}
+export const Quote = {
+  Bid: {
+    bid: {}
   },
-  Sell: {
-    sell: {}
+  Ask: {
+    ask: {}
   }
 }
 
@@ -449,7 +449,7 @@ export async function settle(
 
   const orderState = await program.account.orderState.fetch(orderPda)
   let treasuryWallet: PublicKey
-  if (orderState.confirmedSide == Side.Buy) {
+  if (orderState.confirmedSide == Quote.Ask) {
     treasuryWallet = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,

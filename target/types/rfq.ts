@@ -306,9 +306,9 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "orderSide",
+          "name": "quote",
           "type": {
-            "defined": "Side"
+            "defined": "Quote"
           }
         }
       ]
@@ -635,7 +635,7 @@ export type Rfq = {
             "name": "confirmedSide",
             "type": {
               "option": {
-                "defined": "Side"
+                "defined": "Quote"
               }
             }
           },
@@ -722,15 +722,15 @@ export type Rfq = {
       }
     },
     {
-      "name": "Side",
+      "name": "Quote",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Buy"
+            "name": "Bid"
           },
           {
-            "name": "Sell"
+            "name": "Ask"
           }
         ]
       }
@@ -1165,9 +1165,9 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "orderSide",
+          "name": "quote",
           "type": {
-            "defined": "Side"
+            "defined": "Quote"
           }
         }
       ]
@@ -1494,7 +1494,7 @@ export const IDL: Rfq = {
             "name": "confirmedSide",
             "type": {
               "option": {
-                "defined": "Side"
+                "defined": "Quote"
               }
             }
           },
@@ -1581,15 +1581,15 @@ export const IDL: Rfq = {
       }
     },
     {
-      "name": "Side",
+      "name": "Quote",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Buy"
+            "name": "Bid"
           },
           {
-            "name": "Sell"
+            "name": "Ask"
           }
         ]
       }

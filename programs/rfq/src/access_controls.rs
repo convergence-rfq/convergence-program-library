@@ -142,7 +142,7 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 /// - RFQ best bid/ask is same as order bid/ask
 pub fn confirm_access_control<'info>(
     ctx: &Context<Confirm<'info>>,
-    order_side: Side,
+    order_side: Quote,
 ) -> Result<()> {
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
@@ -155,20 +155,20 @@ pub fn confirm_access_control<'info>(
     require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
 
     match rfq.order_type {
-        Order::Buy => require!(order_side == Side::Buy, ProtocolError::InvalidConfirm),
-        Order::Sell => require!(order_side == Side::Sell, ProtocolError::InvalidConfirm),
+        Order::Buy => require!(order_side == Quote::Ask, ProtocolError::InvalidConfirm),
+        Order::Sell => require!(order_side == Quote::Bid, ProtocolError::InvalidConfirm),
         _ => (),
     }
 
     match order_side {
-        Side::Buy => {
+        Quote::Ask => {
             require!(!order.ask_confirmed, ProtocolError::OrderConfirmed);
             require!(
                 rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
                 ProtocolError::InvalidConfirm
             );
         }
-        Side::Sell => {
+        Quote::Bid => {
             require!(!order.bid_confirmed, ProtocolError::OrderConfirmed);
             require!(
                 rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
@@ -251,8 +251,8 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     require!(rfq.confirmed, ProtocolError::InvalidConfirm);
 
     match order.confirmed_side {
-        Some(Side::Buy) => require!(order.ask_confirmed, ProtocolError::OrderConfirmed),
-        Some(Side::Sell) => require!(order.bid_confirmed, ProtocolError::OrderConfirmed),
+        Some(Quote::Ask) => require!(order.ask_confirmed, ProtocolError::OrderConfirmed),
+        Some(Quote::Bid) => require!(order.bid_confirmed, ProtocolError::OrderConfirmed),
         None => return Err(error!(ProtocolError::InvalidConfirm)),
     }
 

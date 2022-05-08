@@ -188,12 +188,12 @@ pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
 ///
 /// Step 4: Taker confirms maker order.
 ///
-/// ctx
+/// ctx Accounts context
 /// order_side
-#[access_control(confirm_access_control(&ctx, order_side))]
-pub fn confirm(ctx: Context<Confirm>, order_side: Side) -> Result<()> {
+#[access_control(confirm_access_control(&ctx, quote))]
+pub fn confirm(ctx: Context<Confirm>, quote: Quote) -> Result<()> {
     let order = &mut ctx.accounts.order;
-    order.confirmed_side = Some(order_side);
+    order.confirmed_side = Some(quote);
 
     let rfq = &mut ctx.accounts.rfq;
 
@@ -201,14 +201,14 @@ pub fn confirm(ctx: Context<Confirm>, order_side: Side) -> Result<()> {
     let from;
     let to;
 
-    match order_side {
-        Side::Buy => {
+    match quote {
+        Quote::Ask => {
             order.ask_confirmed = true;
             from = ctx.accounts.quote_wallet.to_account_info();
             to = ctx.accounts.quote_escrow.to_account_info();
             order_amount = rfq.best_ask_amount.unwrap();
         }
-        Side::Sell => {
+        Quote::Bid => {
             order.bid_confirmed = true;
             from = ctx.accounts.asset_wallet.to_account_info();
             to = ctx.accounts.asset_escrow.to_account_info();
@@ -237,7 +237,7 @@ pub fn confirm(ctx: Context<Confirm>, order_side: Side) -> Result<()> {
 ///
 /// Step 5: If order is unconfirmed, return maker collateral.
 ///
-/// ctx
+/// ctx Accounts context
 #[access_control(return_collateral_access_control(&ctx))]
 pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
@@ -304,7 +304,7 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
 //
 // Step 6: Taker and maker receive asset or quote.
 ///
-/// ctx
+/// ctx Accounts context
 #[access_control(settle_access_control(&ctx))]
 pub fn settle(ctx: Context<Settle>) -> Result<()> {
     let protocol = &mut ctx.accounts.protocol;
@@ -320,7 +320,7 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
     let mut fee_amount = 0;
 
     match order.confirmed_side.unwrap() {
-        Side::Buy => {
+        Quote::Ask => {
             if signer == taker {
                 fee_amount = (rfq.order_amount as u128)
                     .checked_div(protocol.fee_denominator as u128)
@@ -337,7 +337,7 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                 quote_amount = rfq.best_ask_amount.unwrap();
             }
         }
-        Side::Sell => {
+        Quote::Bid => {
             if signer == taker {
                 fee_amount = (rfq.best_bid_amount.unwrap() as u128)
                     .checked_div(protocol.fee_denominator as u128)
