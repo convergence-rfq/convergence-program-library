@@ -218,7 +218,7 @@ describe('RFQ Specification', () => {
     assert.ok(res.protocolState.rfqCount.eq(new anchor.BN(1)))
   })
 
-  it('RFQ 1: Maker A responds to two-way and taker confirms sell with best bid', async () => {
+  it('RFQ 1: Maker A responds to two-way request then taker confirms sell for best bid', async () => {
     const rfqId = 1
 
     await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
@@ -274,15 +274,16 @@ describe('RFQ Specification', () => {
     assert.equal(rfqState.confirmed, true)
   })
 
-  it('RFQ 1: Return collateral and settle', async () => {
+  it('RFQ 1: Taker and Maker A return collateral then settle', async () => {
     const rfqId = 1
 
     await returnCollateral(provider, makerA, rfqId, 1, makerAAssetATA, makerAQuoteATA)
+    await returnCollateral(provider, makerA, rfqId, 2, makerAAssetATA, makerAQuoteATA)
     let assetBalance = await getBalance(provider, makerA, assetToken.publicKey)
     let quoteBalance = await getBalance(provider, makerA, quoteToken.publicKey)
     console.log('Maker A asset balance:', assetBalance)
     console.log('Maker A quote balance:', quoteBalance)
-    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT1)
+    assert.equal(assetBalance, MINT_AIRDROP)
     assert.equal(quoteBalance, MINT_AIRDROP - MAKER_A_BID_AMOUNT2)
 
     await settle(provider, makerA, rfqId, 2, makerAAssetATA, makerAQuoteATA)
@@ -329,7 +330,7 @@ describe('RFQ Specification', () => {
     assert.equal(rfqState.expiry.toString(), Math.floor(expiry).toString())
   })
 
-  it('RFQ 2: Maker B and C respond', async () => {
+  it('RFQ 2: Maker B and C responds', async () => {
     const rfqId = 2
 
     const res1 = await respond(provider, makerB, rfqId, MAKER_B_BID_AMOUNT1, MAKER_B_ASK_AMOUNT1, makerBAssetATA, makerBQuoteATA)
@@ -366,7 +367,7 @@ describe('RFQ Specification', () => {
     assert.equal(res3.rfqState.bestBidAmount?.toString(), MAKER_C_BID_AMOUNT1.toString())
   })
 
-  it('RFQ 2: Confirm sell for 410,000', async () => {
+  it('RFQ 2: Confirms Maker B sell for 410,000', async () => {
     const rfqId = 2
 
     try {
@@ -397,7 +398,7 @@ describe('RFQ Specification', () => {
     assert.equal(rfqState.confirmed, true)
   })
 
-  it('RFQ 2: Maker B and C last look', async () => {
+  it('RFQ 2: Maker B and C last looks', async () => {
     const rfqId = 2
 
     const res1 = await lastLook(provider, makerB, rfqId, 1)
@@ -410,7 +411,7 @@ describe('RFQ Specification', () => {
     assert.equal(res1.rfqState.approved, true)
   })
 
-  it('RFQ 2: Return maker B and C collateral', async () => {
+  it('RFQ 2: Returns Maker B and C collateral', async () => {
     const rfqId = 2
 
     await returnCollateral(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
@@ -451,14 +452,22 @@ describe('RFQ Specification', () => {
     console.log('Maker C quote balance:', quoteBalance)
   })
 
-  it('RFQ 2: Settle', async () => {
+  it('RFQ 2: Settles', async () => {
     const rfqId = 2
 
     await settle(provider, taker, rfqId, 2, takerAssetATA, takerQuoteATA)
-    await settle(provider, makerB, rfqId, 2, makerBAssetATA, makerBQuoteATA)
 
     try {
-      await settle(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
+      await settle(provider, makerB, rfqId, 2, makerBAssetATA, makerBQuoteATA)
+      assert.ok(false)
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'InvalidAuthority')
+    }
+
+    await settle(provider, makerC, rfqId, 2, makerCAssetATA, makerCQuoteATA)
+
+    try {
+      await settle(provider, makerC, rfqId, 2, makerCAssetATA, makerCQuoteATA)
       assert.ok(false)
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'OrderSettled')
@@ -482,14 +491,14 @@ describe('RFQ Specification', () => {
     quoteBalance = await getBalance(provider, makerB, quoteToken.publicKey)
     console.log('Maker B asset balance:', assetBalance)
     console.log('Maker B quote balance:', quoteBalance)
-    assert.equal(assetBalance, MINT_AIRDROP + TAKER_ORDER_AMOUNT2)
+    assert.equal(assetBalance, MINT_AIRDROP)
     assert.equal(quoteBalance, MINT_AIRDROP)
 
     assetBalance = await getBalance(provider, makerC, assetToken.publicKey)
     quoteBalance = await getBalance(provider, makerC, quoteToken.publicKey)
     console.log('Maker C asset balance:', assetBalance)
     console.log('Maker C quote balance:', quoteBalance)
-    assert.equal(assetBalance, MINT_AIRDROP)
+    assert.equal(assetBalance, MINT_AIRDROP + TAKER_ORDER_AMOUNT2)
     assert.equal(quoteBalance, MINT_AIRDROP - MAKER_C_BID_AMOUNT1)
   })
 

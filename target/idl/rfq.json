@@ -606,6 +606,10 @@
             }
           },
           {
+            "name": "askConfirmed",
+            "type": "bool"
+          },
+          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -616,15 +620,15 @@
             }
           },
           {
+            "name": "bidConfirmed",
+            "type": "bool"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
           {
             "name": "collateralReturned",
-            "type": "bool"
-          },
-          {
-            "name": "confirmed",
             "type": "bool"
           },
           {

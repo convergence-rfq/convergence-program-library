@@ -151,40 +151,30 @@ pub fn confirm_access_control<'info>(
     let signer = ctx.accounts.signer.key();
 
     require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
-
     require!(taker == signer, ProtocolError::InvalidTaker);
-    require!(!order.confirmed, ProtocolError::OrderConfirmed);
     require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
 
     match rfq.order_type {
-        Order::Buy => {
-            require!(order_side == Side::Buy, ProtocolError::InvalidConfirm);
+        Order::Buy => require!(order_side == Side::Buy, ProtocolError::InvalidConfirm),
+        Order::Sell => require!(order_side == Side::Sell, ProtocolError::InvalidConfirm),
+        _ => (),
+    }
+
+    match order_side {
+        Side::Buy => {
+            require!(!order.ask_confirmed, ProtocolError::OrderConfirmed);
             require!(
                 rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
                 ProtocolError::InvalidConfirm
             );
         }
-        Order::Sell => {
-            require!(order_side == Side::Sell, ProtocolError::InvalidConfirm);
+        Side::Sell => {
+            require!(!order.bid_confirmed, ProtocolError::OrderConfirmed);
             require!(
                 rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
                 ProtocolError::InvalidConfirm
             )
         }
-        Order::TwoWay => match order_side {
-            Side::Buy => {
-                require!(
-                    rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
-                    ProtocolError::InvalidConfirm
-                );
-            }
-            Side::Sell => {
-                require!(
-                    rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
-                    ProtocolError::InvalidConfirm
-                )
-            }
-        },
     }
 
     Ok(())
@@ -195,9 +185,9 @@ pub fn confirm_access_control<'info>(
 /// Ensures:
 /// - Order belongs to correct RFQ
 /// - Order authority is signer
-/// - Collateral has not been returned
-/// - Order is not confirmed
 /// - RFQ is confirmed or expired
+/// - Collateral has not been returned
+/// - Order ask/bid is not confirmed
 pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &ctx.accounts.order;
@@ -208,14 +198,19 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
     require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
     require!(authority == signer, ProtocolError::InvalidAuthority);
     require!(
-        !order.collateral_returned,
-        ProtocolError::CollateralReturned
-    );
-    require!(!order.confirmed, ProtocolError::OrderConfirmed);
-    require!(
         rfq.confirmed || Clock::get().unwrap().unix_timestamp > rfq.expiry,
         ProtocolError::RfqActiveOrUnconfirmed
     );
+    require!(
+        !order.collateral_returned,
+        ProtocolError::CollateralReturned
+    );
+
+    match rfq.order_type {
+        Order::Buy => require!(!order.ask_confirmed, ProtocolError::OrderConfirmed),
+        Order::Sell => require!(!order.bid_confirmed, ProtocolError::OrderConfirmed),
+        _ => (),
+    }
 
     Ok(())
 }
@@ -242,13 +237,11 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
 
     if signer == taker {
-        require!(rfq.authority == signer, ProtocolError::InvalidAuthority);
         require!(!rfq.settled, ProtocolError::RfqSettled);
-    }
-
-    if signer == maker {
-        require!(order.authority == signer, ProtocolError::InvalidAuthority);
+    } else if signer == maker {
         require!(!order.settled, ProtocolError::OrderSettled);
+    } else {
+        return Err(error!(ProtocolError::InvalidAuthority));
     }
 
     if rfq.last_look {
@@ -256,7 +249,12 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     }
 
     require!(rfq.confirmed, ProtocolError::InvalidConfirm);
-    require!(order.confirmed, ProtocolError::InvalidConfirm);
+
+    match order.confirmed_side {
+        Some(Side::Buy) => require!(order.ask_confirmed, ProtocolError::OrderConfirmed),
+        Some(Side::Sell) => require!(order.bid_confirmed, ProtocolError::OrderConfirmed),
+        None => return Err(error!(ProtocolError::InvalidConfirm)),
+    }
 
     Ok(())
 }

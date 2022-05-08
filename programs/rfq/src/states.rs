@@ -80,16 +80,18 @@ impl ProtocolState {
 pub struct OrderState {
     // Optional ask
     pub ask: Option<u64>,
+    // Order ask confirmed
+    pub ask_confirmed: bool,
     // Order athority
     pub authority: Pubkey,
     // Optional bid
     pub bid: Option<u64>,
+    // Order bid confirmed
+    pub bid_confirmed: bool,
     // PDA bump
     pub bump: u8,
     /// Collateral returned
     pub collateral_returned: bool,
-    // Order has been confirmed
-    pub confirmed: bool,
     // Confirmed side
     pub confirmed_side: Option<Side>,
     // Order id
@@ -103,7 +105,7 @@ pub struct OrderState {
 }
 
 impl OrderState {
-    pub const LEN: usize = 8 + (32 * 2) + (8 * 4) + (1 * 2) + (1 * 3) + (1 + 4) + (1 * 1);
+    pub const LEN: usize = 8 + (32 * 2) + ((1 + 8) * 2) + (1 * 5) + (2 * 8) + ((1 + 4) * 1);
 }
 
 /// Instrument.

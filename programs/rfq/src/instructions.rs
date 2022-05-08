@@ -116,9 +116,10 @@ pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Res
         .ok_or(ProtocolError::Math)?;
 
     let order = &mut ctx.accounts.order;
+    order.ask_confirmed = false;
     order.authority = ctx.accounts.signer.key();
+    order.bid_confirmed = false;
     order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
-    order.confirmed = false;
     order.id = rfq.response_count;
     order.rfq = rfq.key();
     order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
@@ -192,7 +193,6 @@ pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
 #[access_control(confirm_access_control(&ctx, order_side))]
 pub fn confirm(ctx: Context<Confirm>, order_side: Side) -> Result<()> {
     let order = &mut ctx.accounts.order;
-    order.confirmed = true;
     order.confirmed_side = Some(order_side);
 
     let rfq = &mut ctx.accounts.rfq;
@@ -203,11 +203,13 @@ pub fn confirm(ctx: Context<Confirm>, order_side: Side) -> Result<()> {
 
     match order_side {
         Side::Buy => {
+            order.ask_confirmed = true;
             from = ctx.accounts.quote_wallet.to_account_info();
             to = ctx.accounts.quote_escrow.to_account_info();
             order_amount = rfq.best_ask_amount.unwrap();
         }
         Side::Sell => {
+            order.bid_confirmed = true;
             from = ctx.accounts.asset_wallet.to_account_info();
             to = ctx.accounts.asset_escrow.to_account_info();
             order_amount = rfq.order_amount;
@@ -241,7 +243,7 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &mut ctx.accounts.order;
 
-    if order.ask.is_some() {
+    if order.ask.is_some() && !order.ask_confirmed {
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -267,7 +269,7 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
         )?;
     }
 
-    if order.bid.is_some() {
+    if order.bid.is_some() && !order.bid_confirmed {
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -294,7 +296,6 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
     }
 
     order.collateral_returned = true;
-    order.settled = true;
 
     Ok(())
 }
@@ -333,15 +334,7 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     .checked_sub(fee_amount)
                     .ok_or(ProtocolError::Math)?;
             } else {
-                // If two-way order maker receives response collateral
-                quote_amount = match rfq.order_type {
-                    Order::TwoWay => rfq
-                        .best_ask_amount
-                        .unwrap()
-                        .checked_add(rfq.best_ask_amount.unwrap())
-                        .ok_or(ProtocolError::Math)?,
-                    _ => rfq.best_ask_amount.unwrap(),
-                };
+                quote_amount = rfq.best_ask_amount.unwrap();
             }
         }
         Side::Sell => {
@@ -355,14 +348,7 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     .ok_or(ProtocolError::Math)?;
                 quote_amount = rfq.best_bid_amount.unwrap() - fee_amount;
             } else {
-                // If two-way order maker receives response collateral
-                asset_amount = match rfq.order_type {
-                    Order::TwoWay => rfq
-                        .order_amount
-                        .checked_add(rfq.order_amount)
-                        .ok_or(ProtocolError::Math)?,
-                    _ => rfq.order_amount,
-                };
+                asset_amount = rfq.order_amount;
             }
         }
     }

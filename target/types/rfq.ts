@@ -606,6 +606,10 @@ export type Rfq = {
             }
           },
           {
+            "name": "askConfirmed",
+            "type": "bool"
+          },
+          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -616,15 +620,15 @@ export type Rfq = {
             }
           },
           {
+            "name": "bidConfirmed",
+            "type": "bool"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
           {
             "name": "collateralReturned",
-            "type": "bool"
-          },
-          {
-            "name": "confirmed",
             "type": "bool"
           },
           {
@@ -1461,6 +1465,10 @@ export const IDL: Rfq = {
             }
           },
           {
+            "name": "askConfirmed",
+            "type": "bool"
+          },
+          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -1471,15 +1479,15 @@ export const IDL: Rfq = {
             }
           },
           {
+            "name": "bidConfirmed",
+            "type": "bool"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
           {
             "name": "collateralReturned",
-            "type": "bool"
-          },
-          {
-            "name": "confirmed",
             "type": "bool"
           },
           {
