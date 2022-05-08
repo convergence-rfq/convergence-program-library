@@ -11,11 +11,11 @@ use crate::states::*;
 /// - Signer is Convergence DAO
 /// - Fee denominator is greater than 0
 pub fn initialize_access_control<'info>(
-    ctx: &Context<Initialize<'info>>,
+    _ctx: &Context<Initialize<'info>>,
     fee_denominator: u64,
 ) -> Result<()> {
     #[cfg(feature = "mainnet")]
-    let signer = ctx.accounts.signer.key();
+    let signer = _ctx.accounts.signer.key();
     #[cfg(feature = "mainnet")]
     let dao: Pubkey = "9sZmY1J1L31d6Pw2yUF3p99sob7dbSJDNpYCxUGx3AsU"
         .parse()
@@ -34,11 +34,11 @@ pub fn initialize_access_control<'info>(
 /// - Signer is Convergence DAO
 /// - Fee denominator is greater than 0
 pub fn set_fee_access_control<'info>(
-    ctx: &Context<SetFee<'info>>,
+    _ctx: &Context<SetFee<'info>>,
     fee_denominator: u64,
 ) -> Result<()> {
     #[cfg(feature = "mainnet")]
-    let signer = ctx.accounts.signer.key();
+    let signer = _ctx.accounts.signer.key();
     #[cfg(feature = "mainnet")]
     let dao: Pubkey = "9sZmY1J1L31d6Pw2yUF3p99sob7dbSJDNpYCxUGx3AsU"
         .parse()
@@ -142,10 +142,7 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 /// - Order type matches quote
 /// - RFQ best bid/ask is unconfirmed
 /// - RFQ best bid/ask is same as quote
-pub fn confirm_access_control<'info>(
-    ctx: &Context<Confirm<'info>>,
-    quote: Quote,
-) -> Result<()> {
+pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>, quote: Quote) -> Result<()> {
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
 
