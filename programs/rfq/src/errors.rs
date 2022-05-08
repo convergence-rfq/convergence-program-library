@@ -8,8 +8,6 @@ pub enum ProtocolError {
     CollateralReturned,
     #[msg("Invalid confirm")]
     InvalidConfirm,
-    #[msg("Invalid order")]
-    InvalidOrder,
     #[msg("Invalid fee")]
     InvalidFee,
     #[msg("Invalid quote")]
@@ -20,30 +18,24 @@ pub enum ProtocolError {
     InvalidTaker,
     #[msg("Invalid authority")]
     InvalidAuthority,
-    #[msg("Invalid order amount")]
-    InvalidOrderAmount,
     #[msg("Invalid request")]
     InvalidRequest,
-    #[msg("Invalid settle")]
-    InvalidSettle,
     #[msg("Last look not set")]
     LastLookNotSet,
     #[msg("Math")]
     Math,
     #[msg("Order confirmed")]
     OrderConfirmed,
-    #[msg("Order settled")]
-    OrderSettled,
     #[msg("Order not approved via last look")]
     OrderNotApproved,
+    #[msg("Order settled")]
+    OrderSettled,
     #[msg("RFQ confirmed")]
     RfqConfirmed,
     #[msg("RFQ active or unconfirmed")]
     RfqActiveOrUnconfirmed,
     #[msg("RFQ inactive or confirmed")]
     RfqInactiveOrConfirmed,
-    #[msg("RFQ inactive")]
-    RfqInactive,
     #[msg("RFQ settled")]
     RfqSettled,
 }
