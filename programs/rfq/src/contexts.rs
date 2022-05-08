@@ -128,7 +128,7 @@ pub struct Respond<'info> {
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump = rfq.asset_escrow_bump,
-        //constraint = asset_escrow.owner.key() == rfq.key(),
+        constraint = asset_escrow.owner.key() == rfq.key(),
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     /// Quote escrow
