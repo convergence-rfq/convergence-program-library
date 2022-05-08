@@ -49,10 +49,7 @@ pub struct Request<'info> {
         payer = signer,
         token::mint = asset_mint,
         token::authority = rfq,
-        seeds = [
-            ASSET_ESCROW_SEED.as_bytes(),
-            (protocol.rfq_count + 1).to_string().as_bytes()
-        ],
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), (protocol.rfq_count + 1).to_string().as_bytes()],
         bump
     )]
     pub asset_escrow: Account<'info, TokenAccount>,
@@ -74,10 +71,7 @@ pub struct Request<'info> {
         payer = signer,
         token::mint = quote_mint,
         token::authority = rfq,
-        seeds = [
-            QUOTE_ESCROW_SEED.as_bytes(),
-            (protocol.rfq_count + 1).to_string().as_bytes()
-        ],
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), (protocol.rfq_count + 1).to_string().as_bytes()],
         bump
     )]
     pub quote_escrow: Account<'info, TokenAccount>,
@@ -89,10 +83,7 @@ pub struct Request<'info> {
     #[account(
         init,
         payer = signer,
-        seeds = [
-            RFQ_SEED.as_bytes(),
-            (protocol.rfq_count + 1).to_string().as_bytes()
-        ],
+        seeds = [RFQ_SEED.as_bytes(), (protocol.rfq_count + 1).to_string().as_bytes()],
         space = RfqState::LEN,
         bump
     )]
@@ -113,11 +104,7 @@ pub struct Respond<'info> {
     #[account(
         init,
         payer = signer,
-        seeds = [
-            ORDER_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            (rfq.response_count + 1).to_string().as_bytes()
-        ],
+        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), (rfq.response_count + 1).to_string().as_bytes()],
         space = OrderState::LEN,
         bump
     )]
@@ -140,7 +127,8 @@ pub struct Respond<'info> {
     #[account(
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.asset_escrow_bump
+        bump = rfq.asset_escrow_bump,
+        //constraint = asset_escrow.owner.key() == rfq.key(),
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     /// Quote escrow
@@ -185,11 +173,7 @@ pub struct Confirm<'info> {
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [
-            ORDER_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            order.id.to_string().as_bytes(),
-        ],
+        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), order.id.to_string().as_bytes()],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id,
     )]
@@ -215,11 +199,7 @@ pub struct LastLook<'info> {
     pub signer: Signer<'info>,
     #[account(
         mut,
-        seeds = [
-            ORDER_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            order.id.to_string().as_bytes()
-        ],
+        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), order.id.to_string().as_bytes()],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id,
     )]
@@ -251,11 +231,7 @@ pub struct ReturnCollateral<'info> {
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [
-            ORDER_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            order.id.to_string().as_bytes()
-        ],
+        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), order.id.to_string().as_bytes()],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id,
     )]
@@ -294,11 +270,7 @@ pub struct Settle<'info> {
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [
-            ORDER_SEED.as_bytes(),
-            rfq.id.to_string().as_bytes(),
-            order.id.to_string().as_bytes()
-        ],
+        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), order.id.to_string().as_bytes()],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id,
     )]
