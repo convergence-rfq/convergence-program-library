@@ -48,10 +48,6 @@ pub struct RfqState {
     pub unix_timestamp: i64,
 }
 
-impl RfqState {
-    pub const LEN: usize = 8 + (32 * 5) + (Leg::LEN * 10 + 1) + (8 * 7) + (1 * 14);
-}
-
 /// Protocol state.
 #[account]
 pub struct ProtocolState {
@@ -69,10 +65,6 @@ pub struct ProtocolState {
     pub rfq_count: u64,
     // Treasury wallet
     pub treasury_wallet: Pubkey,
-}
-
-impl ProtocolState {
-    pub const LEN: usize = 8 + (32 * 2) + (8 * 4) + (1 * 1);
 }
 
 /// Order state.
@@ -104,10 +96,6 @@ pub struct OrderState {
     pub unix_timestamp: i64,
 }
 
-impl OrderState {
-    pub const LEN: usize = 8 + (32 * 2) + ((1 + 8) * 2) + (1 * 5) + (2 * 8) + ((1 + 4) * 1);
-}
-
 /// Instrument.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instrument {
@@ -134,10 +122,6 @@ pub struct Leg {
     venue: Venue,
     // Amount
     amount: u64,
-}
-
-impl Leg {
-    pub const LEN: usize = 8 + (1 + (1 * 4)) + (1 + (1 * 3)) + (1 + (1 * 3));
 }
 
 /// Quote.

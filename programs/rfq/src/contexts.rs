@@ -1,4 +1,5 @@
 ///! Contexts
+use std::mem;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
@@ -16,7 +17,7 @@ pub struct Initialize<'info> {
         init,
         payer = signer,
         seeds = [PROTOCOL_SEED.as_bytes()],
-        space = ProtocolState::LEN,
+        space = 8 + mem::size_of::<ProtocolState>(),
         bump
     )]
     pub protocol: Account<'info, ProtocolState>,
@@ -84,7 +85,7 @@ pub struct Request<'info> {
         init,
         payer = signer,
         seeds = [RFQ_SEED.as_bytes(), (protocol.rfq_count + 1).to_string().as_bytes()],
-        space = RfqState::LEN,
+        space = 8 + mem::size_of::<RfqState>(),
         bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
@@ -105,7 +106,7 @@ pub struct Respond<'info> {
         init,
         payer = signer,
         seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), (rfq.response_count + 1).to_string().as_bytes()],
-        space = OrderState::LEN,
+        space = 8 + mem::size_of::<OrderState>(),
         bump
     )]
     pub order: Box<Account<'info, OrderState>>,

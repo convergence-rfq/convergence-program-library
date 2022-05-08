@@ -40,6 +40,8 @@ pub enum ProtocolError {
     RfqConfirmed,
     #[msg("RFQ active or unconfirmed")]
     RfqActiveOrUnconfirmed,
+    #[msg("RFQ inactive or confirmed")]
+    RfqInactiveOrConfirmed,
     #[msg("RFQ inactive")]
     RfqInactive,
     #[msg("RFQ settled")]

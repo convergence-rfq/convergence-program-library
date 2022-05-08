@@ -66,15 +66,14 @@ pub fn request_access_control<'info>(
         Clock::get().unwrap().unix_timestamp < expiry,
         ProtocolError::InvalidRequest
     );
-    // TODO: Verify legs?
+
     Ok(())
 }
 /// Response access control.
 ///
 /// Ensures:
-/// - RFQ authority is not the same as maker authority
-/// - RFQ is active
-/// - RFQ is unconfirmed
+/// - Signer is not RFQ authority
+/// - RFQ is active and unconfirmed
 /// - Response quote matches RFQ order type
 /// - Response bid/ask amount is greater than 0
 pub fn respond_access_control<'info>(
@@ -89,10 +88,9 @@ pub fn respond_access_control<'info>(
 
     require!(authority != signer, ProtocolError::InvalidAuthority);
     require!(
-        rfq.expiry > Clock::get().unwrap().unix_timestamp,
-        ProtocolError::RfqInactive
+        rfq.expiry > Clock::get().unwrap().unix_timestamp && !rfq.confirmed,
+        ProtocolError::RfqInactiveOrConfirmed
     );
-    require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
 
     match rfq.order_type {
         Order::Buy => {
@@ -118,16 +116,19 @@ pub fn respond_access_control<'info>(
 /// Last look access control.
 ///
 /// Ensures:
-/// - Last looks is configured for RFQ
-/// - Order belongs to authority approving via last look
+/// - Order belongs to RFQ
+/// - Signer is authority
+/// - Last looks is set for RFQ
 pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
-    let signer = ctx.accounts.signer.key();
+    let order = &ctx.accounts.order;
 
+    let signer = ctx.accounts.signer.key();
     let authority = ctx.accounts.order.authority.key();
 
-    require!(rfq.last_look, ProtocolError::LastLookNotSet);
+    require!(rfq.key() == order.rfq.key(), ProtocolError::LastLookNotSet);
     require!(authority == signer, ProtocolError::InvalidAuthority);
+    require!(rfq.last_look, ProtocolError::LastLookNotSet);
 
     Ok(())
 }
@@ -135,11 +136,12 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 /// Confirmation access control.
 ///
 /// Ensures:
-/// - RFQ is unconfirmed
-/// - Confirmed by taker
-/// - Is not already confirmed
-/// - Response belonds to correct RFQ
-/// - RFQ best bid/ask is same as order bid/ask
+/// - Order belongs to RFQ
+/// - Signer is taker
+/// - RFQ is not confirmed
+/// - Order type matches quote
+/// - RFQ best bid/ask is unconfirmed
+/// - RFQ best bid/ask is same as quote
 pub fn confirm_access_control<'info>(
     ctx: &Context<Confirm<'info>>,
     quote: Quote,
@@ -219,10 +221,9 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
 ///
 /// Ensures:
 /// - Order belongs to correct RFQ
-/// - RFQ belongs to signer if taker
-/// - RFQ has not been settled if taker
-/// - Order belongs to signer if maker
-/// - Order has not been settled if maker
+/// - If signer is taker RFQ is not settled
+/// - If signer is maker order is not settled
+/// - Signer is taker or maker
 /// - RFQ is approvied if last look is set
 /// - RFQ has been confirmed
 /// - Order has been confirmed

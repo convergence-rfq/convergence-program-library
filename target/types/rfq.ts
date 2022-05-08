@@ -846,11 +846,16 @@ export type Rfq = {
     },
     {
       "code": 6018,
+      "name": "RfqInactiveOrConfirmed",
+      "msg": "RFQ inactive or confirmed"
+    },
+    {
+      "code": 6019,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }
@@ -1705,11 +1710,16 @@ export const IDL: Rfq = {
     },
     {
       "code": 6018,
+      "name": "RfqInactiveOrConfirmed",
+      "msg": "RFQ inactive or confirmed"
+    },
+    {
+      "code": 6019,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }
