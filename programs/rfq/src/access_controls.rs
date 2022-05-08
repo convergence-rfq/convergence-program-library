@@ -14,9 +14,9 @@ pub fn initialize_access_control<'info>(
     ctx: &Context<Initialize<'info>>,
     fee_denominator: u64,
 ) -> Result<()> {
-    #[cfg(feature = "devnet")]
+    #[cfg(feature = "mainnet")]
     let signer = ctx.accounts.signer.key();
-    #[cfg(feature = "devnet")]
+    #[cfg(feature = "mainnet")]
     let dao: Pubkey = "9sZmY1J1L31d6Pw2yUF3p99sob7dbSJDNpYCxUGx3AsU"
         .parse()
         .unwrap();
@@ -37,9 +37,9 @@ pub fn set_fee_access_control<'info>(
     ctx: &Context<SetFee<'info>>,
     fee_denominator: u64,
 ) -> Result<()> {
-    #[cfg(feature = "devnet")]
+    #[cfg(feature = "mainnet")]
     let signer = ctx.accounts.signer.key();
-    #[cfg(feature = "devnet")]
+    #[cfg(feature = "mainnet")]
     let dao: Pubkey = "9sZmY1J1L31d6Pw2yUF3p99sob7dbSJDNpYCxUGx3AsU"
         .parse()
         .unwrap();
@@ -155,6 +155,10 @@ pub fn confirm_access_control<'info>(
     require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
     require!(taker == signer, ProtocolError::InvalidTaker);
     require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
+    require!(
+        rfq.expiry > Clock::get().unwrap().unix_timestamp,
+        ProtocolError::RfqInactive
+    );
 
     match rfq.order_type {
         Order::Buy => require!(quote == Quote::Ask, ProtocolError::InvalidConfirm),

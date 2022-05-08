@@ -240,10 +240,12 @@ export async function respond(
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
+  const orderState = await program.account.orderState.fetch(orderPda)
 
   return {
-    tx,
-    rfqState
+    orderState,
+    rfqState,
+    tx
   }
 }
 
@@ -400,10 +402,12 @@ export async function returnCollateral(
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
+  const orderState = await program.account.orderState.fetch(orderPda)
 
   return {
-    tx,
-    rfqState
+    orderState,
+    rfqState,
+    tx
   }
 }
 

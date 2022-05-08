@@ -30,6 +30,8 @@ pub enum ProtocolError {
     OrderNotApproved,
     #[msg("Order settled")]
     OrderSettled,
+    #[msg("RFQ inactive")]
+    RfqInactive,
     #[msg("RFQ confirmed")]
     RfqConfirmed,
     #[msg("RFQ active or unconfirmed")]

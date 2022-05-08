@@ -63,6 +63,7 @@ const FEE_DENOMINATOR = 1_000
 const TAKER_ORDER_AMOUNT1 = 1
 const TAKER_ORDER_AMOUNT2 = 10
 const TAKER_ORDER_AMOUNT3 = 2
+const TAKER_ORDER_AMOUNT4 = 12
 
 const MAKER_A_ASK_AMOUNT1 = 41_000 * TAKER_ORDER_AMOUNT1
 const MAKER_A_BID_AMOUNT1 = 39_100 * TAKER_ORDER_AMOUNT1
@@ -80,6 +81,8 @@ const MAKER_D_ASK_AMOUNT1 = 39_500 * TAKER_ORDER_AMOUNT2
 const MAKER_D_BID_AMOUNT1 = null
 const MAKER_D_ASK_AMOUNT2 = 39_000 * TAKER_ORDER_AMOUNT3 // Buy winner
 const MAKER_D_BID_AMOUNT2 = null
+const MAKER_D_ASK_AMOUNT3 = 39_100 * TAKER_ORDER_AMOUNT4 // Expires
+const MAKER_D_BID_AMOUNT3 = 39_010 * TAKER_ORDER_AMOUNT4
 
 const FEE1 = calcFee(MAKER_A_BID_AMOUNT1, QUOTE_DECIMALS, FEE_NUMERATOR, FEE_DENOMINATOR)
 const FEE2 = calcFee(MAKER_C_BID_AMOUNT1, QUOTE_DECIMALS, FEE_NUMERATOR, FEE_DENOMINATOR)
@@ -205,7 +208,7 @@ describe('RFQ Specification', () => {
   it(`RFQ 1: Taker requests two-way asset quote for ${TAKER_ORDER_AMOUNT1}`, async () => {
     const requestOrder = Order.TwoWay
     const now = (new Date()).getTime() / 1_000
-    const expiry = now + 1.5 // Expires in 1.5 seconds
+    const expiry = now + 2 // Expires in 2 seconds
     const legs = [{
       amount: new anchor.BN(TAKER_ORDER_AMOUNT1),
       instrument: Instrument.Spot,
@@ -246,9 +249,6 @@ describe('RFQ Specification', () => {
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, 'RfqConfirmed')
     }
-
-    console.log('Sleeping 1.5s...')
-    await sleep(1_500)
 
     try {
       await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
@@ -507,7 +507,7 @@ describe('RFQ Specification', () => {
 
     const requestOrder = Order.Buy
     const now = (new Date()).getTime() / 1_000
-    const expiry = now + 1.5
+    const expiry = now + 3
     const legs = [{
       amount: new anchor.BN(TAKER_ORDER_AMOUNT3),
       instrument: Instrument.Spot,
@@ -532,16 +532,93 @@ describe('RFQ Specification', () => {
 
     assetBalance = await getBalance(provider, makerD, assetToken.publicKey)
     quoteBalance = await getBalance(provider, makerD, quoteToken.publicKey)
-    console.log('Maker C asset balance:', assetBalance)
-    console.log('Maker C quote balance:', quoteBalance)
+    console.log('Maker D asset balance:', assetBalance)
+    console.log('Maker D quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT3)
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_D_ASK_AMOUNT2)
+  })
+
+  it(`RFQ 4: Taker requests two-way for ${TAKER_ORDER_AMOUNT4} but response expires and collateral is returned`, async () => {
+    const rfqId = 4
+
+    const requestOrder = Order.TwoWay
+    const now = (new Date()).getTime() / 1_000
+    const expiry = now + 1
+    const legs = [{
+      amount: new anchor.BN(TAKER_ORDER_AMOUNT4),
+      instrument: Instrument.Spot,
+      venue: Venue.Convergence
+    }]
+
+    await request(assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT4, provider, quoteToken.publicKey, requestOrder)
+
+    let assetBalance = await getBalance(provider, makerD, assetToken.publicKey)
+    let quoteBalance = await getBalance(provider, makerD, quoteToken.publicKey)
+    console.log('Maker D asset balance:', assetBalance)
+    console.log('Maker D quote balance:', quoteBalance)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT3)
+    assert.equal(quoteBalance, MINT_AIRDROP + MAKER_D_ASK_AMOUNT2)
+
+    const res1 = await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT3, MAKER_D_ASK_AMOUNT3, makerDAssetATA, makerDQuoteATA)
+    console.log('Order bid:', res1.orderState.bid.toNumber())
+    console.log('Order ask:', res1.orderState.ask.toNumber())
+
+    console.log('Sleeping for 2s...')
+    await sleep(2_000)
+
+    try {
+      await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT3, MAKER_D_ASK_AMOUNT3, makerDAssetATA, makerDQuoteATA)
+      assert.ok(false)
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'RfqInactiveOrConfirmed')
+    }
+
+    try {
+      await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Ask)
+      assert.ok(false)
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'RfqInactive')
+    }
+
+    try {
+      await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
+      assert.ok(false)
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'InvalidConfirm')
+    }
+
+    assetBalance = await getBalance(provider, makerD, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerD, quoteToken.publicKey)
+    console.log('Maker D asset balance:', assetBalance)
+    console.log('Maker D quote balance:', quoteBalance)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT3 - TAKER_ORDER_AMOUNT4)
+    assert.equal(quoteBalance, MINT_AIRDROP + MAKER_D_ASK_AMOUNT2 - MAKER_D_BID_AMOUNT3)
+
+    const res2 = await returnCollateral(provider, makerD, rfqId, 1, makerDAssetATA, makerDQuoteATA)
+    console.log('Bid confirmed:', res2.orderState.bidConfirmed)
+    console.log('Ask confirmed:', res2.orderState.askConfirmed)
+    assert.ok(!res2.orderState.askConfirmed)
+    assert.ok(!res2.orderState.bidConfirmed)
+
+    assetBalance = await getBalance(provider, makerD, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerD, quoteToken.publicKey)
+    console.log('Maker D asset balance:', assetBalance)
+    console.log('Maker D quote balance:', quoteBalance)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT3)
+    assert.equal(quoteBalance, MINT_AIRDROP + MAKER_D_ASK_AMOUNT2)
+
+    assetBalance = await getBalance(provider, taker, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    console.log('Taker asset balance:', assetBalance)
+    console.log('Taker quote balance:', quoteBalance)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3)
+    assert.equal(quoteBalance, MINT_AIRDROP + MAKER_A_BID_AMOUNT2 - FEE1 + MAKER_C_BID_AMOUNT1 - FEE2 - MAKER_D_ASK_AMOUNT2)
   })
 
   it('DAO views all RFQs and responses', async () => {
     const rfqs = await getRFQs(provider, 1, 10)
     const responses = await getResponses(provider, rfqs)
-    assert.equal(rfqs.length, 3)
-    assert.equal(responses.length, 7)
+    assert.equal(rfqs.length, 4)
+    assert.equal(responses.length, 8)
   })
 })
