@@ -135,7 +135,8 @@ pub struct Respond<'info> {
     #[account(
         mut,
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.quote_escrow_bump
+        bump = rfq.quote_escrow_bump,
+        constraint = quote_escrow.owner.key() == rfq.key(),
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     /// Asset mint
@@ -169,6 +170,7 @@ pub struct Confirm<'info> {
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
         bump = rfq.asset_escrow_bump,
+        constraint = asset_escrow.owner.key() == rfq.key(),
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
@@ -181,7 +183,8 @@ pub struct Confirm<'info> {
     #[account(
         mut,
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.quote_escrow_bump
+        bump = rfq.quote_escrow_bump,
+        constraint = quote_escrow.owner.key() == rfq.key(),
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     pub quote_mint: Box<Account<'info, Mint>>,
@@ -226,7 +229,8 @@ pub struct ReturnCollateral<'info> {
     #[account(
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.asset_escrow_bump
+        bump = rfq.asset_escrow_bump,
+        constraint = asset_escrow.owner.key() == rfq.key(),
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
@@ -240,7 +244,8 @@ pub struct ReturnCollateral<'info> {
     #[account(
         mut,
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.quote_escrow_bump
+        bump = rfq.quote_escrow_bump,
+        constraint = quote_escrow.owner.key() == rfq.key(),
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     pub rfq: Box<Account<'info, RfqState>>,
@@ -259,13 +264,15 @@ pub struct Settle<'info> {
     #[account(
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.asset_escrow_bump
+        bump = rfq.asset_escrow_bump,
+        constraint = asset_escrow.owner.key() == rfq.key(),
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.quote_escrow_bump
+        bump = rfq.quote_escrow_bump,
+        constraint = quote_escrow.owner.key() == rfq.key(),
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
@@ -295,6 +302,7 @@ pub struct Settle<'info> {
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+    // TODO: Seed check?
     #[account(mut)]
     pub treasury_wallet: Box<Account<'info, TokenAccount>>,
 }
