@@ -569,11 +569,8 @@ export async function getBalance(
   }
 }
 
-export const calcFee = (amount: number, decimals: number, numerator: number, denominator: number): number => {
-  let uiAmount = amount / (10 ** decimals)
-  let uiFeeAmount = uiAmount * (numerator / denominator)
-  let feeAmount = uiFeeAmount * (10 ** decimals)
-  return parseInt(feeAmount.toFixed(0), 10)
+export const calcFee = (amount: number, numerator: number, denominator: number): number => {
+  return parseInt((amount / denominator * numerator).toString(), 10)
 }
 
 /// Testing
