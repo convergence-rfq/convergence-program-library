@@ -34,7 +34,7 @@ pub struct RfqState {
     pub last_look: bool,
     /// Order amount
     pub order_amount: u64,
-    /// Order side
+    /// Order type
     pub order_type: Order,
     /// Quote escrow bump
     pub quote_escrow_bump: u8,
@@ -92,8 +92,8 @@ pub struct OrderState {
     pub bump: u8,
     /// Collateral returned
     pub collateral_returned: bool,
-    // Confirmed side
-    pub confirmed_side: Option<Quote>,
+    // Confirmed quote
+    pub confirmed_quote: Option<Quote>,
     // Order id
     pub id: u64,
     /// Rfq
@@ -140,7 +140,7 @@ impl Leg {
     pub const LEN: usize = 8 + (1 + (1 * 4)) + (1 + (1 * 3)) + (1 + (1 * 3));
 }
 
-/// Order side.
+/// Quote.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Quote {
     Bid,

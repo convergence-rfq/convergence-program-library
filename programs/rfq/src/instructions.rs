@@ -189,11 +189,11 @@ pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
 /// Step 4: Taker confirms maker order.
 ///
 /// ctx Accounts context
-/// order_side
+/// quote
 #[access_control(confirm_access_control(&ctx, quote))]
 pub fn confirm(ctx: Context<Confirm>, quote: Quote) -> Result<()> {
     let order = &mut ctx.accounts.order;
-    order.confirmed_side = Some(quote);
+    order.confirmed_quote = Some(quote);
 
     let rfq = &mut ctx.accounts.rfq;
 
@@ -319,7 +319,7 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
     let mut asset_amount = 0;
     let mut fee_amount = 0;
 
-    match order.confirmed_side.unwrap() {
+    match order.confirmed_quote.unwrap() {
         Quote::Ask => {
             if signer == taker {
                 fee_amount = (rfq.order_amount as u128)

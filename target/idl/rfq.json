@@ -632,7 +632,7 @@
             "type": "bool"
           },
           {
-            "name": "confirmedSide",
+            "name": "confirmedQuote",
             "type": {
               "option": {
                 "defined": "Quote"

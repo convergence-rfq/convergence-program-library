@@ -236,7 +236,7 @@ describe('RFQ Specification', () => {
     }
 
     const { rfqState, orderState } = await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
-    console.log('Order confirmed side:', orderState.confirmedSide)
+    console.log('Order confirmed quote:', orderState.confirmedQuote)
     console.log('Best ask:', rfqState.bestAskAmount?.toNumber())
     console.log('Best bid:', rfqState.bestBidAmount?.toNumber())
 
@@ -315,7 +315,7 @@ describe('RFQ Specification', () => {
     }]
 
     const { rfqState, protocolState } = await request(assetToken.publicKey, taker, expiry, true, legs, orderAmount, provider, quoteToken.publicKey, orderType)
-    console.log('Order side:', rfqState.orderType)
+    console.log('Order type:', rfqState.orderType)
     console.log('Order amount:', rfqState.orderAmount.toNumber())
 
     const assetBalance = await getBalance(provider, taker, assetToken.publicKey)
@@ -405,7 +405,7 @@ describe('RFQ Specification', () => {
     const res2 = await lastLook(provider, makerC, rfqId, 2)
     const res3 = await lastLook(provider, makerC, rfqId, 3)
 
-    console.log('Order side:', res2.rfqState.orderType)
+    console.log('Order type:', res2.rfqState.orderType)
     console.log('Last look:', res3.rfqState.lastLook)
 
     assert.equal(res1.rfqState.approved, true)

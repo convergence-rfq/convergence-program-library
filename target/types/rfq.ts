@@ -632,7 +632,7 @@ export type Rfq = {
             "type": "bool"
           },
           {
-            "name": "confirmedSide",
+            "name": "confirmedQuote",
             "type": {
               "option": {
                 "defined": "Quote"
@@ -1491,7 +1491,7 @@ export const IDL: Rfq = {
             "type": "bool"
           },
           {
-            "name": "confirmedSide",
+            "name": "confirmedQuote",
             "type": {
               "option": {
                 "defined": "Quote"

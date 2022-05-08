@@ -75,7 +75,7 @@ pub fn request_access_control<'info>(
 /// - RFQ authority is not the same as maker authority
 /// - RFQ is active
 /// - RFQ is unconfirmed
-/// - Response order type matches RFQ order side
+/// - Response quote matches RFQ order type
 /// - Response bid/ask amount is greater than 0
 pub fn respond_access_control<'info>(
     ctx: &Context<Respond<'info>>,
@@ -142,7 +142,7 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
 /// - RFQ best bid/ask is same as order bid/ask
 pub fn confirm_access_control<'info>(
     ctx: &Context<Confirm<'info>>,
-    order_side: Quote,
+    quote: Quote,
 ) -> Result<()> {
     let order = &ctx.accounts.order;
     let rfq = &ctx.accounts.rfq;
@@ -155,12 +155,12 @@ pub fn confirm_access_control<'info>(
     require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
 
     match rfq.order_type {
-        Order::Buy => require!(order_side == Quote::Ask, ProtocolError::InvalidConfirm),
-        Order::Sell => require!(order_side == Quote::Bid, ProtocolError::InvalidConfirm),
+        Order::Buy => require!(quote == Quote::Ask, ProtocolError::InvalidConfirm),
+        Order::Sell => require!(quote == Quote::Bid, ProtocolError::InvalidConfirm),
         _ => (),
     }
 
-    match order_side {
+    match quote {
         Quote::Ask => {
             require!(!order.ask_confirmed, ProtocolError::OrderConfirmed);
             require!(
@@ -250,7 +250,7 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
 
     require!(rfq.confirmed, ProtocolError::InvalidConfirm);
 
-    match order.confirmed_side {
+    match order.confirmed_quote {
         Some(Quote::Ask) => require!(order.ask_confirmed, ProtocolError::OrderConfirmed),
         Some(Quote::Bid) => require!(order.bid_confirmed, ProtocolError::OrderConfirmed),
         None => return Err(error!(ProtocolError::InvalidConfirm)),
