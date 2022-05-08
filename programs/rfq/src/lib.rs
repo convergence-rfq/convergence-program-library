@@ -10,7 +10,6 @@ pub mod contexts;
 pub mod errors;
 pub mod instructions;
 pub mod states;
-pub mod utils;
 
 use contexts::*;
 use states::*;

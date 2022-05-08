@@ -1,5 +1,6 @@
 //! Private module for program instructions.
 use anchor_lang::prelude::*;
+use num_traits::ToPrimitive;
 use solana_program::sysvar::clock::Clock;
 
 use crate::access_controls::*;
@@ -7,7 +8,6 @@ use crate::constants::*;
 use crate::contexts::*;
 use crate::errors::*;
 use crate::states::*;
-use crate::utils::*;
 
 /// Initializes.
 ///
@@ -69,7 +69,10 @@ pub fn request(
     order_type: Order,
 ) -> Result<()> {
     let protocol = &mut ctx.accounts.protocol;
-    protocol.rfq_count += 1;
+    protocol.rfq_count = protocol
+        .rfq_count
+        .checked_add(1)
+        .ok_or(ProtocolError::Math)?;
 
     let rfq = &mut ctx.accounts.rfq;
     rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
@@ -107,7 +110,10 @@ pub fn request(
 #[access_control(respond_access_control(&ctx, bid, ask))]
 pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Result<()> {
     let rfq = &mut ctx.accounts.rfq;
-    rfq.response_count += 1;
+    rfq.response_count = rfq
+        .response_count
+        .checked_add(1)
+        .ok_or(ProtocolError::Math)?;
 
     let order = &mut ctx.accounts.order;
     order.authority = ctx.accounts.signer.key();
@@ -315,38 +321,46 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
     match order.confirmed_side.unwrap() {
         Side::Buy => {
             if signer == taker {
-                fee_amount = match calc_fee(
-                    rfq.order_amount,
-                    protocol.fee_numerator,
-                    protocol.fee_denominator,
-                ) {
-                    Some(amount) => amount,
-                    None => return Err(error!(ProtocolError::Math)),
-                };
-                asset_amount = rfq.order_amount - fee_amount;
+                fee_amount = (rfq.order_amount as u128)
+                    .checked_div(protocol.fee_denominator as u128)
+                    .ok_or(ProtocolError::Math)?
+                    .checked_mul(protocol.fee_numerator as u128)
+                    .ok_or(ProtocolError::Math)?
+                    .to_u64()
+                    .ok_or(ProtocolError::Math)?;
+                asset_amount = rfq
+                    .order_amount
+                    .checked_sub(fee_amount)
+                    .ok_or(ProtocolError::Math)?;
             } else {
                 // If two-way order maker receives response collateral
                 quote_amount = match rfq.order_type {
-                    Order::TwoWay => rfq.best_ask_amount.unwrap() + rfq.best_ask_amount.unwrap(),
+                    Order::TwoWay => rfq
+                        .best_ask_amount
+                        .unwrap()
+                        .checked_add(rfq.best_ask_amount.unwrap())
+                        .ok_or(ProtocolError::Math)?,
                     _ => rfq.best_ask_amount.unwrap(),
                 };
             }
         }
         Side::Sell => {
             if signer == taker {
-                fee_amount = match calc_fee(
-                    rfq.best_bid_amount.unwrap(),
-                    protocol.fee_numerator,
-                    protocol.fee_denominator,
-                ) {
-                    Some(amount) => amount,
-                    None => return Err(error!(ProtocolError::Math)),
-                };
+                fee_amount = (rfq.best_bid_amount.unwrap() as u128)
+                    .checked_div(protocol.fee_denominator as u128)
+                    .ok_or(ProtocolError::Math)?
+                    .checked_mul(protocol.fee_numerator as u128)
+                    .ok_or(ProtocolError::Math)?
+                    .to_u64()
+                    .ok_or(ProtocolError::Math)?;
                 quote_amount = rfq.best_bid_amount.unwrap() - fee_amount;
             } else {
                 // If two-way order maker receives response collateral
                 asset_amount = match rfq.order_type {
-                    Order::TwoWay => rfq.order_amount + rfq.order_amount,
+                    Order::TwoWay => rfq
+                        .order_amount
+                        .checked_add(rfq.order_amount)
+                        .ok_or(ProtocolError::Math)?,
                     _ => rfq.order_amount,
                 };
             }
