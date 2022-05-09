@@ -180,12 +180,12 @@ export type Rfq = {
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -260,7 +260,7 @@ export type Rfq = {
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -280,7 +280,7 @@ export type Rfq = {
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -323,7 +323,7 @@ export type Rfq = {
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -348,7 +348,7 @@ export type Rfq = {
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1029,12 +1029,12 @@ export const IDL: Rfq = {
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1109,7 +1109,7 @@ export const IDL: Rfq = {
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1129,7 +1129,7 @@ export const IDL: Rfq = {
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1172,7 +1172,7 @@ export const IDL: Rfq = {
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1197,7 +1197,7 @@ export const IDL: Rfq = {
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

@@ -180,12 +180,12 @@
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -260,7 +260,7 @@
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -280,7 +280,7 @@
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -323,7 +323,7 @@
         },
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -348,7 +348,7 @@
         },
         {
           "name": "quoteMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
