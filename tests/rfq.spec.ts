@@ -90,7 +90,7 @@ const MAKER_D_BID_AMOUNT3 = 39_010 * TAKER_ORDER_AMOUNT4
 
 const FEE1 = calcFee(MAKER_A_BID_AMOUNT2, FEE_NUMERATOR, FEE_DENOMINATOR)
 const FEE2 = calcFee(MAKER_C_BID_AMOUNT1, FEE_NUMERATOR, FEE_DENOMINATOR)
-const FEE3 = calcFee(MAKER_D_ASK_AMOUNT2, FEE_NUMERATOR, FEE_DENOMINATOR)
+const FEE3 = calcFee(TAKER_ORDER_AMOUNT3, FEE_NUMERATOR, FEE_DENOMINATOR)
 
 let daoAssetATA: PublicKey
 let daoQuoteATA: PublicKey
@@ -506,7 +506,7 @@ describe('RFQ Specification', () => {
     assert.equal(quoteBalance, MINT_AIRDROP - MAKER_C_BID_AMOUNT1)
   })
 
-  it(`RFQ 3: Taker requests sell for ${TAKER_ORDER_AMOUNT3}`, async () => {
+  it(`RFQ 3: Taker requests buy order for ${TAKER_ORDER_AMOUNT3}, Maker D responds, Taker confirms, both settle`, async () => {
     const rfqId = 3
 
     const requestOrder = Order.Buy
@@ -531,7 +531,7 @@ describe('RFQ Specification', () => {
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
     // TODO: Fee?
-    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3)
+    assert.equal(assetBalance, MINT_AIRDROP - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3 - FEE3)
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_A_BID_AMOUNT2 - FEE1 + MAKER_C_BID_AMOUNT1 - FEE2 - MAKER_D_ASK_AMOUNT2)
 
     assetBalance = await getBalance(provider, makerD, assetToken.publicKey)

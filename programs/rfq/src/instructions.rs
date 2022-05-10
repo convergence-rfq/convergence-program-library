@@ -352,8 +352,10 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     .order_amount
                     .checked_sub(fee_amount)
                     .ok_or(ProtocolError::Math)?;
-            } else {
+            } else if signer == maker {
                 quote_amount = rfq.best_ask_amount.unwrap();
+            } else {
+                return Err(error!(ProtocolError::InvalidAuthority));
             }
         }
         Quote::Bid => {
@@ -370,8 +372,10 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     .unwrap()
                     .checked_sub(fee_amount)
                     .ok_or(ProtocolError::Math)?;
-            } else {
+            } else if signer == maker {
                 asset_amount = rfq.order_amount;
+            } else {
+                return Err(error!(ProtocolError::InvalidAuthority));
             }
         }
     }
