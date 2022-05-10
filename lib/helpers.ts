@@ -184,6 +184,32 @@ export async function request(
   }
 }
 
+export async function cancel(
+  provider: Provider,
+  signer: Wallet,
+  rfqId: number
+): Promise<any> {
+  const program = await getProgram(provider)
+  const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
+    [Buffer.from(PROTOCOL_SEED)],
+    program.programId
+  )
+  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
+    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
+    program.programId
+  )
+  const tx = await program.methods.cancel()
+    .accounts({
+      signer: signer.publicKey,
+      protocol: protocolPda,
+      rfq: rfqPda
+    })
+    .signers([signer.payer])
+    .rpc()
+  const rfqState = await program.account.rfqState.fetch(rfqPda)
+  return { tx, rfqState }
+}
+
 export async function respond(
   provider: Provider,
   signer: Wallet,

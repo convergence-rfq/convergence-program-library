@@ -32,9 +32,10 @@ import {
   Order,
   Quote,
   Venue,
+  calcFee,
+  cancel,
   confirm,
   getBalance,
-  calcFee,
   getRFQs,
   getProgram,
   getResponses,
@@ -254,7 +255,7 @@ describe('RFQ Specification', () => {
       await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
       assert.ok(false)
     } catch (err) {
-      assert.strictEqual(err.error.errorCode.code, 'RfqInactiveOrConfirmed')
+      assert.strictEqual(err.error.errorCode.code, 'RfqConfirmed')
     }
 
     assetBalance = await getBalance(provider, taker, assetToken.publicKey)
@@ -570,7 +571,7 @@ describe('RFQ Specification', () => {
       await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT3, MAKER_D_ASK_AMOUNT3, makerDAssetATA, makerDQuoteATA)
       assert.ok(false)
     } catch (err) {
-      assert.strictEqual(err.error.errorCode.code, 'RfqInactiveOrConfirmed')
+      assert.strictEqual(err.error.errorCode.code, 'RfqInactive')
     }
 
     try {
@@ -616,10 +617,36 @@ describe('RFQ Specification', () => {
     assert.equal(quoteBalance, MINT_AIRDROP + MAKER_A_BID_AMOUNT2 - FEE1 + MAKER_C_BID_AMOUNT1 - FEE2 - MAKER_D_ASK_AMOUNT2)
   })
 
+  it(`RFQ 5: Taker requests buy for ${TAKER_ORDER_AMOUNT2} but cancels`, async () => {
+    const rfqId = 5
+
+    const requestOrder = Order.Buy
+    const now = (new Date()).getTime() / 1_000
+    const expiry = now + 2
+    const legs = [{
+      amount: new anchor.BN(TAKER_ORDER_AMOUNT2),
+      instrument: Instrument.Spot,
+      venue: Venue.Convergence
+    }]
+
+    const res1 = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT2, provider, quoteToken.publicKey, requestOrder)
+    assert.ok(!res1.rfqState.canceled)
+
+    const res2 = await cancel(provider, taker, rfqId)
+    assert.ok(res2.rfqState.canceled)
+
+    try {
+      await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT3, MAKER_D_ASK_AMOUNT3, makerDAssetATA, makerDQuoteATA)
+      assert.ok(false)
+    } catch (err) {
+      assert.strictEqual(err.error.errorCode.code, 'RfqCanceled')
+    }
+  })
+
   it('DAO views all RFQs and responses', async () => {
     const rfqs = await getRFQs(provider, 1, 10)
     const responses = await getResponses(provider, rfqs)
-    assert.equal(rfqs.length, 4)
+    assert.equal(rfqs.length, 5)
     assert.equal(responses.length, 8)
   })
 })

@@ -6,6 +6,8 @@ use anchor_lang::prelude::*;
 pub enum ProtocolError {
     #[msg("Collateral returned")]
     CollateralReturned,
+    #[msg("Invalid cancel")]
+    InvalidCancel,
     #[msg("Invalid confirm")]
     InvalidConfirm,
     #[msg("Invalid fee")]
@@ -30,14 +32,16 @@ pub enum ProtocolError {
     OrderNotApproved,
     #[msg("Order settled")]
     OrderSettled,
+    #[msg("RFQ active")]
+    RfqActive,
     #[msg("RFQ inactive")]
     RfqInactive,
     #[msg("RFQ confirmed")]
     RfqConfirmed,
-    #[msg("RFQ active or unconfirmed")]
-    RfqActiveOrUnconfirmed,
-    #[msg("RFQ inactive or confirmed")]
-    RfqInactiveOrConfirmed,
+    #[msg("RFQ unconfirmed")]
+    RfqUnconfirmed,
+    #[msg("RFQ canceled")]
+    RfqCanceled,
     #[msg("RFQ settled")]
     RfqSettled,
 }

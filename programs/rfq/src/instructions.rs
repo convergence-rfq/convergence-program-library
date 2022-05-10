@@ -48,6 +48,7 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
 
     Ok(())
 }
+
 /// Requests quote (RFQ).
 ///
 /// Step 2: Taker request quote.
@@ -101,6 +102,19 @@ pub fn request(
     if rfq.last_look {
         rfq.approved = Some(false);
     }
+
+    Ok(())
+}
+
+/// Cancels.
+///
+/// Optional: Taker cancels RFQ.
+///
+/// ctx Accounts context
+#[access_control(cancel_access_control(&ctx))]
+pub fn cancel(ctx: Context<Cancel>) -> Result<()> {
+    let rfq = &mut ctx.accounts.rfq;
+    rfq.canceled = true;
 
     Ok(())
 }

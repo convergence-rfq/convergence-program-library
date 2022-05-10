@@ -69,11 +69,37 @@ pub fn request_access_control<'info>(
 
     Ok(())
 }
+
+/// Cancel access control.
+///
+/// Ensures:
+/// - RFQ belongs to signer
+/// - RFQ not canceled
+/// - RFQ not expired
+/// - RFQ has no responses
+pub fn cancel_access_control<'info>(ctx: &Context<Cancel<'info>>) -> Result<()> {
+    let signer = ctx.accounts.signer.key();
+    let rfq = &ctx.accounts.rfq;
+
+    let authority = rfq.authority.key();
+
+    require!(authority == signer, ProtocolError::InvalidAuthority);
+    require!(!rfq.canceled, ProtocolError::InvalidCancel);
+    require!(
+        Clock::get().unwrap().unix_timestamp < rfq.expiry,
+        ProtocolError::RfqInactive
+    );
+
+    Ok(())
+}
+
 /// Response access control.
 ///
 /// Ensures:
 /// - Signer is not RFQ authority
-/// - RFQ is active and unconfirmed
+/// - RFQ is not iactive
+/// - RFQ is not confirmed
+/// - RFQ is not canceled
 /// - Response quote matches RFQ order type
 /// - Response bid/ask amount is greater than 0
 pub fn respond_access_control<'info>(
@@ -87,10 +113,17 @@ pub fn respond_access_control<'info>(
     let authority = &rfq.authority.key();
 
     require!(authority != signer, ProtocolError::InvalidAuthority);
-    require!(
-        rfq.expiry > Clock::get().unwrap().unix_timestamp && !rfq.confirmed,
-        ProtocolError::RfqInactiveOrConfirmed
-    );
+    if rfq.expiry < Clock::get().unwrap().unix_timestamp {
+        return Err(error!(ProtocolError::RfqInactive));
+    }
+
+    if rfq.confirmed {
+        return Err(error!(ProtocolError::RfqConfirmed));
+    }
+
+    if rfq.canceled {
+        return Err(error!(ProtocolError::RfqCanceled));
+    }
 
     match rfq.order_type {
         Order::Buy => {
@@ -200,10 +233,16 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
 
     require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
     require!(authority == signer, ProtocolError::InvalidAuthority);
-    require!(
-        rfq.confirmed || Clock::get().unwrap().unix_timestamp > rfq.expiry,
-        ProtocolError::RfqActiveOrUnconfirmed
-    );
+
+    if !(rfq.confirmed || Clock::get().unwrap().unix_timestamp > rfq.expiry) {
+        if !rfq.confirmed {
+            return Err(error!(ProtocolError::RfqUnconfirmed));
+        }
+        if Clock::get().unwrap().unix_timestamp < rfq.expiry {
+            return Err(error!(ProtocolError::RfqActive));
+        }
+    }
+
     require!(
         !order.collateral_returned,
         ProtocolError::CollateralReturned

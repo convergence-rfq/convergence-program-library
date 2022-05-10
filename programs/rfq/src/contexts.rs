@@ -98,6 +98,28 @@ pub struct Request<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+/// Cancels RFQ.
+#[derive(Accounts)]
+pub struct Cancel<'info> {
+    /// Protocol
+    #[account(
+        seeds = [PROTOCOL_SEED.as_bytes()],
+        bump = protocol.bump,
+        constraint = protocol.to_account_info().owner == program_id
+    )]
+    pub protocol: Account<'info, ProtocolState>,
+    /// RFQ
+    #[account(
+        mut,
+        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.bump
+    )]
+    pub rfq: Box<Account<'info, RfqState>>,
+    /// Signer
+    #[account(mut)]
+    pub signer: Signer<'info>,
+}
+
 /// Responds to quote.
 #[derive(Accounts)]
 pub struct Respond<'info> {

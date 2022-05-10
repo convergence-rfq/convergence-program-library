@@ -226,6 +226,27 @@ export type Rfq = {
       ]
     },
     {
+      "name": "cancel",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "lastLook",
       "accounts": [
         {
@@ -804,86 +825,96 @@ export type Rfq = {
     },
     {
       "code": 6001,
+      "name": "InvalidCancel",
+      "msg": "Invalid cancel"
+    },
+    {
+      "code": 6002,
       "name": "InvalidConfirm",
       "msg": "Invalid confirm"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "InvalidFee",
       "msg": "Invalid fee"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidRfq",
       "msg": "Invalid RFQ"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "InvalidTaker",
       "msg": "Invalid taker"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "InvalidAuthority",
       "msg": "Invalid authority"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidRequest",
       "msg": "Invalid request"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "LastLookNotSet",
       "msg": "Last look not set"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "Math",
       "msg": "Math"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6013,
+      "code": 6014,
+      "name": "RfqActive",
+      "msg": "RFQ active"
+    },
+    {
+      "code": 6015,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6014,
+      "code": 6016,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6015,
-      "name": "RfqActiveOrUnconfirmed",
-      "msg": "RFQ active or unconfirmed"
-    },
-    {
-      "code": 6016,
-      "name": "RfqInactiveOrConfirmed",
-      "msg": "RFQ inactive or confirmed"
-    },
-    {
       "code": 6017,
+      "name": "RfqUnconfirmed",
+      "msg": "RFQ unconfirmed"
+    },
+    {
+      "code": 6018,
+      "name": "RfqCanceled",
+      "msg": "RFQ canceled"
+    },
+    {
+      "code": 6019,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }
@@ -1118,6 +1149,27 @@ export const IDL: Rfq = {
       ]
     },
     {
+      "name": "cancel",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "lastLook",
       "accounts": [
         {
@@ -1696,86 +1748,96 @@ export const IDL: Rfq = {
     },
     {
       "code": 6001,
+      "name": "InvalidCancel",
+      "msg": "Invalid cancel"
+    },
+    {
+      "code": 6002,
       "name": "InvalidConfirm",
       "msg": "Invalid confirm"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "InvalidFee",
       "msg": "Invalid fee"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidRfq",
       "msg": "Invalid RFQ"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "InvalidTaker",
       "msg": "Invalid taker"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "InvalidAuthority",
       "msg": "Invalid authority"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidRequest",
       "msg": "Invalid request"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "LastLookNotSet",
       "msg": "Last look not set"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "Math",
       "msg": "Math"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6013,
+      "code": 6014,
+      "name": "RfqActive",
+      "msg": "RFQ active"
+    },
+    {
+      "code": 6015,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6014,
+      "code": 6016,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6015,
-      "name": "RfqActiveOrUnconfirmed",
-      "msg": "RFQ active or unconfirmed"
-    },
-    {
-      "code": 6016,
-      "name": "RfqInactiveOrConfirmed",
-      "msg": "RFQ inactive or confirmed"
-    },
-    {
       "code": 6017,
+      "name": "RfqUnconfirmed",
+      "msg": "RFQ unconfirmed"
+    },
+    {
+      "code": 6018,
+      "name": "RfqCanceled",
+      "msg": "RFQ canceled"
+    },
+    {
+      "code": 6019,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }

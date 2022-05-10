@@ -61,6 +61,11 @@ pub mod rfq {
         instructions::respond(ctx, bid, ask)
     }
 
+    /// Cancels RFQ.
+    pub fn cancel(ctx: Context<Cancel>) -> Result<()> {
+        instructions::cancel(ctx)
+    }
+
     /// Quote last look.
     pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
         instructions::last_look(ctx)
