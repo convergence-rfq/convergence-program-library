@@ -543,7 +543,7 @@ describe('RFQ Specification', () => {
 
     const requestOrder = Order.TwoWay
     const now = (new Date()).getTime() / 1_000
-    const expiry = now + 2
+    const expiry = now + 1
     const legs = [{
       amount: new anchor.BN(TAKER_ORDER_AMOUNT4),
       instrument: Instrument.Spot,
@@ -563,7 +563,7 @@ describe('RFQ Specification', () => {
     console.log('Order bid:', res1.orderState.bid.toNumber())
     console.log('Order ask:', res1.orderState.ask.toNumber())
 
-    console.log('Sleeping for 2s...')
+    console.log('Sleeping for 3s...')
     await sleep(3_000)
 
     try {
@@ -597,6 +597,7 @@ describe('RFQ Specification', () => {
     const res2 = await returnCollateral(provider, makerD, rfqId, 1, makerDAssetATA, makerDQuoteATA)
     console.log('Bid confirmed:', res2.orderState.bidConfirmed)
     console.log('Ask confirmed:', res2.orderState.askConfirmed)
+    assert.ok(!res2.rfqState.confirmed)
     assert.ok(!res2.orderState.askConfirmed)
     assert.ok(!res2.orderState.bidConfirmed)
 
