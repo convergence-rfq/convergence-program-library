@@ -87,7 +87,7 @@ pub fn request(
     rfq.expiry = expiry;
     rfq.id = ctx.accounts.protocol.rfq_count;
     rfq.last_look = last_look;
-    rfq.legs = vec![];
+    rfq.legs = legs;
     rfq.order_amount = order_amount;
     rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
     rfq.quote_mint = ctx.accounts.quote_mint.key();
@@ -95,7 +95,6 @@ pub fn request(
     rfq.response_count = 0;
     rfq.settled = false;
     rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
-    rfq.legs = legs;
 
     Ok(())
 }

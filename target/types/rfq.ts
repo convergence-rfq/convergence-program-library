@@ -71,11 +71,6 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
           "name": "protocol",
           "isMut": true,
           "isSigner": false
@@ -99,6 +94,11 @@ export type Rfq = {
           "name": "rfq",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "systemProgram",
@@ -223,11 +223,6 @@ export type Rfq = {
       "name": "lastLook",
       "accounts": [
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
           "name": "order",
           "isMut": true,
           "isSigner": false
@@ -236,6 +231,11 @@ export type Rfq = {
           "name": "rfq",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         }
       ],
       "args": []
@@ -244,17 +244,7 @@ export type Rfq = {
       "name": "confirm",
       "accounts": [
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "rfq",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetWallet",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -264,7 +254,7 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetEscrow",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -289,17 +279,27 @@ export type Rfq = {
           "isSigner": false
         },
         {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -317,9 +317,9 @@ export type Rfq = {
       "name": "returnCollateral",
       "accounts": [
         {
-          "name": "signer",
+          "name": "assetEscrow",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "assetMint",
@@ -332,22 +332,7 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteWallet",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "order",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "quoteMint",
           "isMut": true,
           "isSigner": false
         },
@@ -357,17 +342,32 @@ export type Rfq = {
           "isSigner": false
         },
         {
+          "name": "quoteMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteWallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "rfq",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "rent",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -379,7 +379,7 @@ export type Rfq = {
       "accounts": [
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -388,17 +388,7 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
           "name": "assetEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -413,7 +403,12 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "rfq",
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
           "isMut": true,
           "isSigner": false
         },
@@ -423,14 +418,19 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteMint",
-          "isMut": false,
+          "name": "rfq",
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "systemProgram",
@@ -920,11 +920,6 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
           "name": "protocol",
           "isMut": true,
           "isSigner": false
@@ -948,6 +943,11 @@ export const IDL: Rfq = {
           "name": "rfq",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "systemProgram",
@@ -1072,11 +1072,6 @@ export const IDL: Rfq = {
       "name": "lastLook",
       "accounts": [
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
           "name": "order",
           "isMut": true,
           "isSigner": false
@@ -1085,6 +1080,11 @@ export const IDL: Rfq = {
           "name": "rfq",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         }
       ],
       "args": []
@@ -1093,17 +1093,7 @@ export const IDL: Rfq = {
       "name": "confirm",
       "accounts": [
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "rfq",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetWallet",
+          "name": "assetEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -1113,7 +1103,7 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetEscrow",
+          "name": "assetWallet",
           "isMut": true,
           "isSigner": false
         },
@@ -1138,17 +1128,27 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -1166,9 +1166,9 @@ export const IDL: Rfq = {
       "name": "returnCollateral",
       "accounts": [
         {
-          "name": "signer",
+          "name": "assetEscrow",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "assetMint",
@@ -1181,22 +1181,7 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteWallet",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "assetEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "order",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "quoteMint",
           "isMut": true,
           "isSigner": false
         },
@@ -1206,17 +1191,32 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
+          "name": "quoteMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteWallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "rfq",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "rent",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1228,7 +1228,7 @@ export const IDL: Rfq = {
       "accounts": [
         {
           "name": "assetMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1237,17 +1237,7 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
           "name": "assetEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "quoteEscrow",
           "isMut": true,
           "isSigner": false
         },
@@ -1262,7 +1252,12 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "rfq",
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
           "isMut": true,
           "isSigner": false
         },
@@ -1272,14 +1267,19 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "quoteMint",
-          "isMut": false,
+          "name": "rfq",
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "systemProgram",
