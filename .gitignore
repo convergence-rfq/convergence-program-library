@@ -10,3 +10,4 @@ target/rls
 programs/target/rls
 programs/rfq/target/rls
 target/debug
+.coderrect
