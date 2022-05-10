@@ -1,7 +1,7 @@
-///! Contexts
-use std::mem;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+///! Contexts
+use std::mem;
 
 use crate::constants::*;
 use crate::states::*;
@@ -55,7 +55,7 @@ pub struct Request<'info> {
     )]
     pub asset_escrow: Account<'info, TokenAccount>,
     /// Asset mint
-    #[account(constraint = asset_mint.key() == asset_escrow.mint.key())]
+    #[account(constraint = asset_mint.key() == asset_escrow.mint.key(), constraint = asset_mint.key() != quote_mint.key())]
     pub asset_mint: Box<Account<'info, Mint>>,
     /// Protocol
     #[account(
@@ -76,7 +76,7 @@ pub struct Request<'info> {
     )]
     pub quote_escrow: Account<'info, TokenAccount>,
     /// Quote mint
-    #[account(constraint = quote_mint.key() == quote_escrow.mint.key())]
+    #[account(constraint = quote_mint.key() == quote_escrow.mint.key(), constraint = asset_mint.key() != quote_mint.key())]
     pub quote_mint: Box<Account<'info, Mint>>,
     /// Rent
     pub rent: Sysvar<'info, Rent>,
@@ -113,7 +113,7 @@ pub struct Respond<'info> {
         bump
     )]
     pub order: Box<Account<'info, OrderState>>,
-    /// RFQ 
+    /// RFQ
     #[account(
         mut,
         seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
@@ -366,6 +366,6 @@ pub struct Settle<'info> {
     /// Solana token program
     pub token_program: Program<'info, Token>,
     // Treasury wallet
-    #[account(mut)]
+    #[account(mut, constraint = treasury_wallet.mint == rfq.quote_mint)]
     pub treasury_wallet: Box<Account<'info, TokenAccount>>,
 }
