@@ -345,7 +345,11 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     .ok_or(ProtocolError::Math)?
                     .to_u64()
                     .ok_or(ProtocolError::Math)?;
-                quote_amount = rfq.best_bid_amount.unwrap() - fee_amount;
+                quote_amount = rfq
+                    .best_bid_amount
+                    .unwrap()
+                    .checked_sub(fee_amount)
+                    .ok_or(ProtocolError::Math)?;
             } else {
                 asset_amount = rfq.order_amount;
             }
