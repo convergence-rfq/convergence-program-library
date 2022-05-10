@@ -247,7 +247,10 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
     }
 
     if rfq.last_look {
-        require!(rfq.approved, ProtocolError::OrderNotApproved);
+        match rfq.approved {
+            Some(approved) => require!(approved, ProtocolError::OrderNotApproved),
+            None => require!(false, ProtocolError::OrderNotApproved),
+        }
     }
 
     require!(rfq.confirmed, ProtocolError::InvalidConfirm);

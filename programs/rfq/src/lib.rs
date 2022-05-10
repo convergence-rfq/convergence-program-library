@@ -38,13 +38,22 @@ pub mod rfq {
     /// Requests quote (RFQ).
     pub fn request(
         ctx: Context<Request>,
+        access_manager: Option<Pubkey>,
         expiry: i64,
         last_look: bool,
         legs: Vec<Leg>,
         order_amount: u64,
         order_type: Order,
     ) -> Result<()> {
-        instructions::request(ctx, expiry, last_look, legs, order_amount, order_type)
+        instructions::request(
+            ctx,
+            access_manager,
+            expiry,
+            last_look,
+            legs,
+            order_amount,
+            order_type,
+        )
     }
 
     /// Responds to RFQ.

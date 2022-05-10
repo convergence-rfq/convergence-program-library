@@ -1,11 +1,24 @@
 //! State
 use anchor_lang::prelude::*;
 
+/// Access manager state.
+#[account]
+pub struct AccessManagerState {
+    // Authority
+    pub authority: Pubkey,
+    // Id
+    pub id: u64,
+    // Wallets
+    pub wallets: [Pubkey; 25],
+}
+
 /// RFQ state.
 #[account]
 pub struct RfqState {
-    /// If approved by authority
-    pub approved: bool,
+    /// Optional access manager
+    pub access_manager: Option<Pubkey>,
+    /// Last look approved
+    pub approved: Option<bool>,
     /// Asset escrow bump
     pub asset_escrow_bump: u8,
     /// Asset mint
@@ -22,6 +35,8 @@ pub struct RfqState {
     pub best_bid_address: Option<Pubkey>,
     /// PDA bump
     pub bump: u8,
+    /// Canceled
+    pub canceled: bool,
     /// Confirmed
     pub confirmed: bool,
     /// Expiry time

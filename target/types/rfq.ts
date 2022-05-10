@@ -113,6 +113,12 @@ export type Rfq = {
       ],
       "args": [
         {
+          "name": "accessManager",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
           "name": "expiry",
           "type": "i64"
         },
@@ -453,13 +459,46 @@ export type Rfq = {
   ],
   "accounts": [
     {
+      "name": "accessManagerState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "wallets",
+            "type": {
+              "array": [
+                "publicKey",
+                25
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "rfqState",
       "type": {
         "kind": "struct",
         "fields": [
           {
+            "name": "accessManager",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
             "name": "approved",
-            "type": "bool"
+            "type": {
+              "option": "bool"
+            }
           },
           {
             "name": "assetEscrowBump",
@@ -500,6 +539,10 @@ export type Rfq = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "canceled",
+            "type": "bool"
           },
           {
             "name": "confirmed",
@@ -962,6 +1005,12 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
+          "name": "accessManager",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
           "name": "expiry",
           "type": "i64"
         },
@@ -1302,13 +1351,46 @@ export const IDL: Rfq = {
   ],
   "accounts": [
     {
+      "name": "accessManagerState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "wallets",
+            "type": {
+              "array": [
+                "publicKey",
+                25
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "rfqState",
       "type": {
         "kind": "struct",
         "fields": [
           {
+            "name": "accessManager",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
             "name": "approved",
-            "type": "bool"
+            "type": {
+              "option": "bool"
+            }
           },
           {
             "name": "assetEscrowBump",
@@ -1349,6 +1431,10 @@ export const IDL: Rfq = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "canceled",
+            "type": "bool"
           },
           {
             "name": "confirmed",

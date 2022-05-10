@@ -62,6 +62,7 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
 #[access_control(request_access_control(&ctx, expiry, order_amount))]
 pub fn request(
     ctx: Context<Request>,
+    access_manager: Option<Pubkey>,
     expiry: i64,
     last_look: bool,
     legs: Vec<Leg>,
@@ -75,10 +76,11 @@ pub fn request(
         .ok_or(ProtocolError::Math)?;
 
     let rfq = &mut ctx.accounts.rfq;
+    rfq.access_manager = access_manager;
     rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
     rfq.asset_mint = ctx.accounts.asset_mint.key();
     rfq.authority = ctx.accounts.signer.key();
-    rfq.approved = false;
+    rfq.canceled = false;
     rfq.best_ask_address = None;
     rfq.best_ask_amount = None;
     rfq.best_bid_address = None;
@@ -95,6 +97,10 @@ pub fn request(
     rfq.response_count = 0;
     rfq.settled = false;
     rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
+
+    if rfq.last_look {
+        rfq.approved = Some(false);
+    }
 
     Ok(())
 }
@@ -178,7 +184,7 @@ pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Res
 #[access_control(last_look_access_control(&ctx))]
 pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
     let rfq = &mut ctx.accounts.rfq;
-    rfq.approved = true;
+    rfq.approved = Some(true);
 
     Ok(())
 }

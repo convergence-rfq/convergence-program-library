@@ -215,7 +215,7 @@ describe('RFQ Specification', () => {
       venue: Venue.Convergence,
     }]
 
-    const res = await request(assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT1, provider, quoteToken.publicKey, requestOrder)
+    const res = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT1, provider, quoteToken.publicKey, requestOrder)
     assert.ok(res.rfqState.id.eq(new anchor.BN(1)))
     assert.ok(res.rfqState.authority.toString() === taker.publicKey.toString())
     assert.ok(res.protocolState.rfqCount.eq(new anchor.BN(1)))
@@ -314,7 +314,7 @@ describe('RFQ Specification', () => {
       instrument: Instrument.Spot,
     }]
 
-    const { rfqState, protocolState } = await request(assetToken.publicKey, taker, expiry, true, legs, orderAmount, provider, quoteToken.publicKey, orderType)
+    const { rfqState, protocolState } = await request(null, assetToken.publicKey, taker, expiry, true, legs, orderAmount, provider, quoteToken.publicKey, orderType)
     console.log('Order type:', rfqState.orderType)
     console.log('Order amount:', rfqState.orderAmount.toNumber())
 
@@ -514,7 +514,7 @@ describe('RFQ Specification', () => {
       venue: Venue.Convergence
     }]
 
-    await request(assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT3, provider, quoteToken.publicKey, requestOrder)
+    await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT3, provider, quoteToken.publicKey, requestOrder)
     await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT1, MAKER_D_ASK_AMOUNT1, makerDAssetATA, makerDQuoteATA)
     await respond(provider, makerD, rfqId, MAKER_D_BID_AMOUNT2, MAKER_D_ASK_AMOUNT2, makerDAssetATA, makerDQuoteATA)
     await confirm(provider, rfqId, 2, taker, takerAssetATA, takerQuoteATA, Quote.Ask)
@@ -550,7 +550,7 @@ describe('RFQ Specification', () => {
       venue: Venue.Convergence
     }]
 
-    await request(assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT4, provider, quoteToken.publicKey, requestOrder)
+    await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT4, provider, quoteToken.publicKey, requestOrder)
 
     let assetBalance = await getBalance(provider, makerD, assetToken.publicKey)
     let quoteBalance = await getBalance(provider, makerD, quoteToken.publicKey)

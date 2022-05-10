@@ -113,6 +113,12 @@
       ],
       "args": [
         {
+          "name": "accessManager",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
           "name": "expiry",
           "type": "i64"
         },
@@ -453,13 +459,46 @@
   ],
   "accounts": [
     {
+      "name": "AccessManagerState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "wallets",
+            "type": {
+              "array": [
+                "publicKey",
+                25
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "RfqState",
       "type": {
         "kind": "struct",
         "fields": [
           {
+            "name": "accessManager",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
             "name": "approved",
-            "type": "bool"
+            "type": {
+              "option": "bool"
+            }
           },
           {
             "name": "assetEscrowBump",
@@ -500,6 +539,10 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "canceled",
+            "type": "bool"
           },
           {
             "name": "confirmed",

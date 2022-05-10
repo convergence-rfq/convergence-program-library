@@ -123,6 +123,7 @@ export async function setFee(
 }
 
 export async function request(
+  accessManager: number | null,
   assetMint: PublicKey,
   signer: Wallet,
   expiry: number,
@@ -157,7 +158,7 @@ export async function request(
     program.programId
   )
 
-  const tx = await program.methods.request(new anchor.BN(expiry), lastLook, legs, new anchor.BN(orderAmount), requestOrder)
+  const tx = await program.methods.request(accessManager, new anchor.BN(expiry), lastLook, legs, new anchor.BN(orderAmount), requestOrder)
     .accounts({
       assetEscrow: assetEscrowPda,
       assetMint,
