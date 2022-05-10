@@ -570,7 +570,7 @@ export async function getBalance(
 }
 
 export const calcFee = (amount: number, numerator: number, denominator: number): number => {
-  return parseInt((amount / denominator * numerator).toString(), 10)
+  return parseInt((amount * (numerator / denominator)).toString(), 10)
 }
 
 /// Testing

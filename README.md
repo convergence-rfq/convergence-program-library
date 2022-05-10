@@ -2,15 +2,24 @@
 
 **Setup**
 
-Building and deploying.
+Build, test and deploy.
 
 ```bash
 anchor build
+anchor test
 anchor deploy
 ```
 
-Initializing the protocol.
+**CLI**
+
+Initialize the protocol.
 
 ```bash
 ./bin/init.ts
+```
+
+List RFQs and responses.
+
+```bash
+./bin/list.ts
 ```
