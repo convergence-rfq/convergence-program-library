@@ -1,22 +1,25 @@
 /** 
   * RFQ Specification
   * 
-  * Step 1: Requests:
+  * Step 1 - Requests:
   * - Taker wants an asset quote for one or two-way market
+  * 
+  * Optional - Cancels:
+  * - Taker cancels RFQ
   * 
   * Step 2: Responds:
   * - Maker submits one or two-way order and deposits collateral
   * 
-  * Step 3: Confirms:
+  * Step 3 - Confirms:
   * - Taker confirms response by depositing collateral
   * 
-  * Optional: Last look:
+  * Optional - Last look:
   * - Set to false
   * 
-  * Step 4: Returns collateral:
+  * Step 4 - Returns collateral:
   * - Unconfirmed maker orders get collateral returned
   * 
-  * Step 5: Settle:
+  * Step 5 - Settles:
   * - Taker receives quote
   * - Maker receives asset
   */
