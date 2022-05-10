@@ -277,13 +277,18 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
 
     require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
 
+    if signer == maker {
+        require!(!order.settled, ProtocolError::OrderSettled);
+    }
+
     if signer == taker {
         require!(!rfq.settled, ProtocolError::RfqSettled);
-    } else if signer == maker {
-        require!(!order.settled, ProtocolError::OrderSettled);
-    } else {
-        return Err(error!(ProtocolError::InvalidAuthority));
     }
+
+    require!(
+        signer == taker || signer == maker,
+        ProtocolError::InvalidAuthority
+    );
 
     if rfq.last_look {
         match rfq.approved {
@@ -292,7 +297,13 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
         }
     }
 
-    require!(rfq.confirmed, ProtocolError::InvalidConfirm);
+    require!(rfq.confirmed, ProtocolError::RfqUnconfirmed);
+    require!(!rfq.canceled, ProtocolError::RfqCanceled);
+    if rfq.id == 4 as u64 {
+        msg!("{}", rfq.confirmed);
+        msg!("{}", rfq.canceled);
+        assert!(false);
+    }
 
     match order.confirmed_quote {
         Some(Quote::Ask) => require!(order.ask_confirmed, ProtocolError::OrderConfirmed),

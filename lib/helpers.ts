@@ -480,7 +480,7 @@ export async function settle(
 
   const orderState = await program.account.orderState.fetch(orderPda)
   let treasuryWallet: PublicKey
-  if (orderState.confirmedSide == Quote.Ask) {
+  if (orderState?.confirmedQuote?.hasOwnProperty('ask')) {
     treasuryWallet = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,

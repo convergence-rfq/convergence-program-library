@@ -388,6 +388,6 @@ pub struct Settle<'info> {
     /// Solana token program
     pub token_program: Program<'info, Token>,
     // Treasury wallet
-    #[account(mut, constraint = treasury_wallet.mint == rfq.quote_mint)]
+    #[account(mut, constraint = treasury_wallet.owner.key() == protocol.authority.key())]
     pub treasury_wallet: Box<Account<'info, TokenAccount>>,
 }
