@@ -108,7 +108,7 @@ pub mod rfq {
 #[account]
 pub struct RfqState {
     /// If approved by authority
-    pub approved: bool,
+    pub approved: bool,  // uwe: are we setting this flag to false during cancellatins?
     /// Asset escrow bump
     pub asset_escrow_bump: u8,
     /// Asset mint
@@ -147,6 +147,10 @@ pub struct RfqState {
     pub response_count: u64,
     /// Settled
     pub settled: bool,
+
+    //option
+    // pub option:  Account<'info, AmericanOptionCtx>,
+
     /// Creation time
     pub unix_timestamp: i64,
 }
@@ -199,6 +203,7 @@ pub struct OrderState {
 impl OrderState {
     pub const LEN: usize = 8 + (32 * 1) + (8 * 4) + (1 * 2) + (1 * 3) + (1 + 4) + (1 * 1);
 }
+
 
 // Contexts
 
@@ -493,16 +498,16 @@ pub struct Settle<'info> {
 
 
 #[derive(Accounts)]
-pub struct MintCtx<'info> {
+pub struct AmericanOptionCtx<'info> {
     #[account(mut, signer)]
     pub authority: AccountInfo<'info>,
     pub psy_american_program: AccountInfo<'info>,
     /// The vault where the underlying assets are held. This is the PsyAmerican 
     /// `underlying_asset_src`
     #[account(mut)]
-    pub vault: Box<Account<'info, TokenAccount>>,
+    pub pool: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub vault_authority: AccountInfo<'info>,
+    pub pool_authority: AccountInfo<'info>,
 
     /// Mint CPI acounts
     pub underlying_asset_mint: AccountInfo<'info>,
@@ -551,8 +556,6 @@ pub enum Venue {
 pub struct Leg {
     instrument: Instrument,
     venue: Venue,
-    side: Side,
-    amount: u64,
 }
 
 impl Leg {
@@ -565,6 +568,8 @@ pub enum Side {
     Buy,
     Sell,
 }
+
+// uwe: what's the difference between order and side?
 
 /// Order.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
@@ -1096,7 +1101,16 @@ mod instructions {
                     // TODO: Finish @uwecerron
                     //
                     // Add instructions for PsyOptions
-                    //
+
+                    //retrieve how many legs to mint
+                    let mint_leg_amount = 1;
+                    
+                    // Mint the options
+                    if mint_leg_amount > 0 {
+                        mint( ctx  ,mint_leg_amount, rfq.asset_escrow_bump);
+                    }
+
+
                     // Create_Portfolio
                     // Deposit
                     // Place_Orders
@@ -1108,18 +1122,18 @@ mod instructions {
         Ok(())
     }
 
-    pub fn mint<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, MintCtx<'info>>, size: u64, vault_authority_bump: u8) -> Result<()> {
+    pub fn mint<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, AmericanOptionCtx<'info>>, size: u64, vault_authority_bump: u8) -> Result<()> {
         let cpi_program = ctx.accounts.psy_american_program.clone();
         let cpi_accounts = MintOptionV2 {
             // The authority that has control over the underlying assets. In this case it's the 
             // vault authority set in _init_mint_vault_
-            user_authority: ctx.accounts.vault_authority.to_account_info(),
+            user_authority: ctx.accounts.pool_authority.to_account_info(),
             // The Mint of the underlying asset for the contracts. Also the mint that is in the vault.
             underlying_asset_mint: ctx.accounts.underlying_asset_mint.to_account_info(),
             // The underlying asset pool for the OptionMarket
             underlying_asset_pool: ctx.accounts.underlying_asset_pool.to_account_info(),
             // The source account where the underlying assets are coming from. In this case it's the vault.
-            underlying_asset_src: ctx.accounts.vault.to_account_info(),
+            underlying_asset_src: ctx.accounts.pool.to_account_info(),
             // The mint of the option
             option_mint: ctx.accounts.option_mint.to_account_info(),
             // The destination for the minted options
@@ -1146,3 +1160,5 @@ mod instructions {
     }
     
 }
+
+
