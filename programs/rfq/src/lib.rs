@@ -147,10 +147,6 @@ pub struct RfqState {
     pub response_count: u64,
     /// Settled
     pub settled: bool,
-
-    //option
-    // pub option:  Account<'info, AmericanOptionCtx>,
-
     /// Creation time
     pub unix_timestamp: i64,
 }
@@ -524,6 +520,14 @@ pub struct AmericanOptionCtx<'info> {
     pub option_market: Box<Account<'info, OptionMarket>>,
     #[account(mut)]
     pub fee_owner: AccountInfo<'info>,
+
+    /// RFQ
+    #[account(
+        mut,
+        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.bump
+    )]
+    pub rfq: Box<Account<'info, RfqState>>,
 
 
     pub token_program: AccountInfo<'info>,
@@ -1098,17 +1102,8 @@ mod instructions {
         for leg in rfq.legs.iter() {
             match leg.venue {
                 Venue::PsyOptions => {
-                    // TODO: Finish @uwecerron
-                    //
-                    // Add instructions for PsyOptions
+                    mint( ctx.accounts.rfq.options  ,mint_leg_amount, rfq.asset_escrow_bump);
 
-                    //retrieve how many legs to mint
-                    let mint_leg_amount = 1;
-                    
-                    // Mint the options
-                    if mint_leg_amount > 0 {
-                        mint( ctx  ,mint_leg_amount, rfq.asset_escrow_bump);
-                    }
 
 
                     // Create_Portfolio
