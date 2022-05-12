@@ -749,6 +749,74 @@ export type Rfq = {
       }
     },
     {
+      "name": "ProtocolError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CollateralReturned"
+          },
+          {
+            "name": "InvalidCancel"
+          },
+          {
+            "name": "InvalidConfirm"
+          },
+          {
+            "name": "InvalidFee"
+          },
+          {
+            "name": "InvalidQuote"
+          },
+          {
+            "name": "InvalidRfq"
+          },
+          {
+            "name": "InvalidTaker"
+          },
+          {
+            "name": "InvalidAuthority"
+          },
+          {
+            "name": "InvalidRequest"
+          },
+          {
+            "name": "LastLookNotSet"
+          },
+          {
+            "name": "Math"
+          },
+          {
+            "name": "OrderConfirmed"
+          },
+          {
+            "name": "OrderNotApproved"
+          },
+          {
+            "name": "OrderSettled"
+          },
+          {
+            "name": "RfqActive"
+          },
+          {
+            "name": "RfqInactive"
+          },
+          {
+            "name": "RfqConfirmed"
+          },
+          {
+            "name": "RfqUnconfirmed"
+          },
+          {
+            "name": "RfqCanceled"
+          },
+          {
+            "name": "RfqSettled"
+          }
+        ]
+      }
+    },
+    {
       "name": "Instrument",
       "type": {
         "kind": "enum",
@@ -815,108 +883,6 @@ export type Rfq = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "CollateralReturned",
-      "msg": "Collateral returned"
-    },
-    {
-      "code": 6001,
-      "name": "InvalidCancel",
-      "msg": "Invalid cancel"
-    },
-    {
-      "code": 6002,
-      "name": "InvalidConfirm",
-      "msg": "Invalid confirm"
-    },
-    {
-      "code": 6003,
-      "name": "InvalidFee",
-      "msg": "Invalid fee"
-    },
-    {
-      "code": 6004,
-      "name": "InvalidQuote",
-      "msg": "Invalid quote"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidRfq",
-      "msg": "Invalid RFQ"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidTaker",
-      "msg": "Invalid taker"
-    },
-    {
-      "code": 6007,
-      "name": "InvalidAuthority",
-      "msg": "Invalid authority"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidRequest",
-      "msg": "Invalid request"
-    },
-    {
-      "code": 6009,
-      "name": "LastLookNotSet",
-      "msg": "Last look not set"
-    },
-    {
-      "code": 6010,
-      "name": "Math",
-      "msg": "Math"
-    },
-    {
-      "code": 6011,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
-    },
-    {
-      "code": 6012,
-      "name": "OrderNotApproved",
-      "msg": "Order not approved via last look"
-    },
-    {
-      "code": 6013,
-      "name": "OrderSettled",
-      "msg": "Order settled"
-    },
-    {
-      "code": 6014,
-      "name": "RfqActive",
-      "msg": "RFQ active"
-    },
-    {
-      "code": 6015,
-      "name": "RfqInactive",
-      "msg": "RFQ inactive"
-    },
-    {
-      "code": 6016,
-      "name": "RfqConfirmed",
-      "msg": "RFQ confirmed"
-    },
-    {
-      "code": 6017,
-      "name": "RfqUnconfirmed",
-      "msg": "RFQ unconfirmed"
-    },
-    {
-      "code": 6018,
-      "name": "RfqCanceled",
-      "msg": "RFQ canceled"
-    },
-    {
-      "code": 6019,
-      "name": "RfqSettled",
-      "msg": "RFQ settled"
     }
   ]
 };
@@ -1672,6 +1638,74 @@ export const IDL: Rfq = {
       }
     },
     {
+      "name": "ProtocolError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CollateralReturned"
+          },
+          {
+            "name": "InvalidCancel"
+          },
+          {
+            "name": "InvalidConfirm"
+          },
+          {
+            "name": "InvalidFee"
+          },
+          {
+            "name": "InvalidQuote"
+          },
+          {
+            "name": "InvalidRfq"
+          },
+          {
+            "name": "InvalidTaker"
+          },
+          {
+            "name": "InvalidAuthority"
+          },
+          {
+            "name": "InvalidRequest"
+          },
+          {
+            "name": "LastLookNotSet"
+          },
+          {
+            "name": "Math"
+          },
+          {
+            "name": "OrderConfirmed"
+          },
+          {
+            "name": "OrderNotApproved"
+          },
+          {
+            "name": "OrderSettled"
+          },
+          {
+            "name": "RfqActive"
+          },
+          {
+            "name": "RfqInactive"
+          },
+          {
+            "name": "RfqConfirmed"
+          },
+          {
+            "name": "RfqUnconfirmed"
+          },
+          {
+            "name": "RfqCanceled"
+          },
+          {
+            "name": "RfqSettled"
+          }
+        ]
+      }
+    },
+    {
       "name": "Instrument",
       "type": {
         "kind": "enum",
@@ -1738,108 +1772,6 @@ export const IDL: Rfq = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "CollateralReturned",
-      "msg": "Collateral returned"
-    },
-    {
-      "code": 6001,
-      "name": "InvalidCancel",
-      "msg": "Invalid cancel"
-    },
-    {
-      "code": 6002,
-      "name": "InvalidConfirm",
-      "msg": "Invalid confirm"
-    },
-    {
-      "code": 6003,
-      "name": "InvalidFee",
-      "msg": "Invalid fee"
-    },
-    {
-      "code": 6004,
-      "name": "InvalidQuote",
-      "msg": "Invalid quote"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidRfq",
-      "msg": "Invalid RFQ"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidTaker",
-      "msg": "Invalid taker"
-    },
-    {
-      "code": 6007,
-      "name": "InvalidAuthority",
-      "msg": "Invalid authority"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidRequest",
-      "msg": "Invalid request"
-    },
-    {
-      "code": 6009,
-      "name": "LastLookNotSet",
-      "msg": "Last look not set"
-    },
-    {
-      "code": 6010,
-      "name": "Math",
-      "msg": "Math"
-    },
-    {
-      "code": 6011,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
-    },
-    {
-      "code": 6012,
-      "name": "OrderNotApproved",
-      "msg": "Order not approved via last look"
-    },
-    {
-      "code": 6013,
-      "name": "OrderSettled",
-      "msg": "Order settled"
-    },
-    {
-      "code": 6014,
-      "name": "RfqActive",
-      "msg": "RFQ active"
-    },
-    {
-      "code": 6015,
-      "name": "RfqInactive",
-      "msg": "RFQ inactive"
-    },
-    {
-      "code": 6016,
-      "name": "RfqConfirmed",
-      "msg": "RFQ confirmed"
-    },
-    {
-      "code": 6017,
-      "name": "RfqUnconfirmed",
-      "msg": "RFQ unconfirmed"
-    },
-    {
-      "code": 6018,
-      "name": "RfqCanceled",
-      "msg": "RFQ canceled"
-    },
-    {
-      "code": 6019,
-      "name": "RfqSettled",
-      "msg": "RFQ settled"
     }
   ]
 };
