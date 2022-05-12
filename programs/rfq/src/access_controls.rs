@@ -14,10 +14,10 @@ pub fn initialize_access_control<'info>(
     _ctx: &Context<Initialize<'info>>,
     fee_denominator: u64,
 ) -> Result<()> {
-    #[cfg(feature = "mainnet")]
+    #[cfg(feature = "devnet")]
     let signer = _ctx.accounts.signer.key();
-    #[cfg(feature = "mainnet")]
-    let dao: Pubkey = "9sZmY1J1L31d6Pw2yUF3p99sob7dbSJDNpYCxUGx3AsU"
+    #[cfg(feature = "devnet")]
+    let dao: Pubkey = "9XDtzeAwdc8sinFAR887UijxxnjB3rXztTeQjcFUtU5y"
         .parse()
         .unwrap();
     #[cfg(feature = "devnet")]
