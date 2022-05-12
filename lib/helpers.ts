@@ -478,7 +478,7 @@ export async function settle(
     program.programId
   )
 
-  const orderState = await program.account.orderState.fetch(orderPda)
+  const orderState: any = await program.account.orderState.fetch(orderPda)
   let treasuryWallet: PublicKey
   if (orderState?.confirmedQuote?.hasOwnProperty('ask')) {
     treasuryWallet = await Token.getAssociatedTokenAddress(

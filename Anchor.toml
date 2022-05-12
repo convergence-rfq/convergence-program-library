@@ -1,18 +1,18 @@
 [programs.localnet]
-rfq = "669TjP6JkroCT5czWue2TGEPfcuFN8cz99Z1QMcNCWv7"
+rfq = "9XDtzeAwdc8sinFAR887UijxxnjB3rXztTeQjcFUtU5y"
        
 [programs.devnet]
-rfq = "669TjP6JkroCT5czWue2TGEPfcuFN8cz99Z1QMcNCWv7"
+rfq = "9XDtzeAwdc8sinFAR887UijxxnjB3rXztTeQjcFUtU5y"
 
 [programs.mainnet]
-rfq = "669TjP6JkroCT5czWue2TGEPfcuFN8cz99Z1QMcNCWv7"
+rfq = "9XDtzeAwdc8sinFAR887UijxxnjB3rXztTeQjcFUtU5y"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "mainnet"
-wallet = "/Users/pindaroso/.config/solana/id.json"
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

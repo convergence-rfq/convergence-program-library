@@ -918,5 +918,8 @@
       "name": "RfqSettled",
       "msg": "RFQ settled"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "9XDtzeAwdc8sinFAR887UijxxnjB3rXztTeQjcFUtU5y"
+  }
 }

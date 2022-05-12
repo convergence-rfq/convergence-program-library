@@ -1,5 +1,13 @@
 # RFQ
 
+## Program Deployments
+
+| Program | Devnet | Mainnet Beta |
+| - | - | - |
+| [RFQ](/programs/rfq/) | `569TjP6JkroCT5czWue2TGEPfcuFN8cz99Z1QMcNCWv7` | Coming soon |
+
+## Development
+
 **Setup**
 
 Build and test.
@@ -7,7 +15,6 @@ Build and test.
 ```bash
 anchor build
 anchor test
-anchor deploy
 ```
 
 **Deploy**
