@@ -74,6 +74,11 @@ export const Leg = {
   }
 }
 
+export async function getProgram(provider: Provider): Promise<Program> {
+  const programId = new PublicKey(idl.metadata.address)
+  return new anchor.Program(idl as Idl, programId, provider)
+}
+
 /// Protocol methods
 
 export async function initializeProtocol(
@@ -141,8 +146,7 @@ export async function request(
     program.programId
   )
 
-  let protocolState = await program.account.protocolState.fetch(protocolPda)
-  // @ts-ignore
+  let protocolState: any = await program.account.protocolState.fetch(protocolPda)
   const rfqId = protocolState.rfqCount.toNumber() + 1
 
   const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
@@ -226,13 +230,10 @@ export async function respond(
     program.programId
   )
 
-  let rfqState = await program.account.rfqState.fetch(rfqPda)
-  // @ts-ignore
+  let rfqState: any = await program.account.rfqState.fetch(rfqPda)
   const responseId = rfqState.responseCount.toNumber() + 1
 
-  // @ts-ignore
   const assetMint = new PublicKey(rfqState.assetMint.toString())
-  // @ts-ignore
   const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
@@ -292,10 +293,8 @@ export async function confirm(
     program.programId
   )
 
-  let rfqState = await program.account.rfqState.fetch(rfqPda)
-  // @ts-ignore
+  let rfqState: any = await program.account.rfqState.fetch(rfqPda)
   const assetMint = new PublicKey(rfqState.assetMint.toString())
-  // @ts-ignore
   const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
@@ -390,11 +389,9 @@ export async function returnCollateral(
     program.programId
   )
 
-  let rfqState = await program.account.rfqState.fetch(rfqPda)
+  let rfqState: any = await program.account.rfqState.fetch(rfqPda)
 
-  // @ts-ignore
   const assetMint = new PublicKey(rfqState.assetMint.toString())
-  // @ts-ignore
   const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
@@ -457,12 +454,10 @@ export async function settle(
     program.programId
   )
 
-  const protocolState = await program.account.protocolState.fetch(protocolPda)
-  let rfqState = await program.account.rfqState.fetch(rfqPda)
+  const protocolState: any = await program.account.protocolState.fetch(protocolPda)
+  let rfqState: any = await program.account.rfqState.fetch(rfqPda)
 
-  // @ts-ignore
   const assetMint = new PublicKey(rfqState.assetMint.toString())
-  // @ts-ignore
   const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
@@ -485,7 +480,6 @@ export async function settle(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       assetMint,
-      // @ts-ignore
       protocolState.authority
     )
   } else {
@@ -493,7 +487,6 @@ export async function settle(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       quoteMint,
-      // @ts-ignore
       protocolState.authority
     )
   }
@@ -530,17 +523,16 @@ export async function settle(
 
 export async function getRFQs(
   provider: Provider,
-  _page: number,
-  _pageSize: number
+  page: number | null,
+  pageSize: number | null
 ): Promise<object[]> {
   const program = await getProgram(provider)
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
-  const protocolState = await program.account.protocolState.fetch(protocolPda)
+  const protocolState: any = await program.account.protocolState.fetch(protocolPda)
   const range = Array.from({
-    // @ts-ignore
     length: protocolState.rfqCount.toNumber()
   }, (_, i) => 1 + i)
 
@@ -577,10 +569,7 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
   return orders
 }
 
-export async function getProgram(provider: Provider): Promise<Program> {
-  const programId = new PublicKey(idl.metadata.address)
-  return new anchor.Program(idl as Idl, programId, provider)
-}
+// Utils
 
 export async function getBalance(
   provider: Provider,
@@ -596,11 +585,11 @@ export async function getBalance(
   }
 }
 
+/// Testing
+
 export const calcFee = (amount: number, numerator: number, denominator: number): number => {
   return parseInt((amount * (numerator / denominator)).toString(), 10)
 }
-
-/// Testing
 
 export async function requestAirdrop(
   provider: Provider,
