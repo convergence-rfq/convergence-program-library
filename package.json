@@ -3,7 +3,8 @@
     "dependencies": {
         "@project-serum/anchor": "0.24.2",
         "@solana/spl-token": "^0.1.8",
-        "mocha-dd-reporter": "^1.1.1"
+        "mocha-dd-reporter": "^1.1.1",
+        "typedoc": "^0.22.15"
     },
     "devDependencies": {
         "@saberhq/solana-contrib": "^1.12.47",
