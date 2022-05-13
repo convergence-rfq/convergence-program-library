@@ -98,7 +98,7 @@ export async function initializeProtocol(
       protocol: protocolPda,
       systemProgram: SystemProgram.programId
     })
-    .signers([signer.payer])
+    .signers(signer.payer ? [signer.payer] : [])
     .rpc()
   const protocolState = await program.account.protocolState.fetch(protocolPda)
   return { tx, protocolState }
@@ -121,7 +121,7 @@ export async function setFee(
       protocol: protocolPda,
       systemProgram: SystemProgram.programId
     })
-    .signers([signer.payer])
+    .signers(signer.payer ? [signer.payer] : [])
     .rpc()
   const protocolState = await program.account.protocolState.fetch(protocolPda)
   return { tx, protocolState }
@@ -175,7 +175,7 @@ export async function request(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
-    .signers([signer.payer])
+    .signers(signer.payer ? [signer.payer] : [])
     .rpc()
 
   protocolState = await program.account.protocolState.fetch(protocolPda)
@@ -208,7 +208,7 @@ export async function cancel(
       protocol: protocolPda,
       rfq: rfqPda
     })
-    .signers([signer.payer])
+    .signers(signer.payer ? [signer.payer] : [])
     .rpc()
   const rfqState = await program.account.rfqState.fetch(rfqPda)
   return { tx, rfqState }
@@ -264,7 +264,7 @@ export async function respond(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
-    .signers([signer.payer])
+    .signers(signer.payer ? [signer.payer] : [])
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -325,7 +325,7 @@ export async function confirm(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID
     })
-    .signers([signer.payer])
+    .signers(signer.payer ? [signer.payer] : [])
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -361,7 +361,7 @@ export async function lastLook(
       order: orderPda,
       rfq: rfqPda,
     })
-    .signers([signer.payer])
+    .signers(signer.payer ? [signer.payer] : [])
     .rpc()
 
   const rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -422,7 +422,7 @@ export async function returnCollateral(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID
     })
-    .signers([signer.payer])
+    .signers(signer.payer ? [signer.payer] : [])
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -508,7 +508,7 @@ export async function settle(
       treasuryWallet,
       rent: SYSVAR_RENT_PUBKEY,
     })
-    .signers([signer.payer])
+    .signers(signer.payer ? [signer.payer] : [])
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
