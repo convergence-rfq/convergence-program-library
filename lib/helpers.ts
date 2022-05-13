@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Idl, Program, Provider, Wallet } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
+import { PublicKey, SystemProgram, Signer, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
 
 import { default as idl } from '../target/idl/rfq.json'
 
@@ -92,13 +92,19 @@ export async function initializeProtocol(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
+
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.initialize(new anchor.BN(feeDenominator), new anchor.BN(feeNumerator))
     .accounts({
       signer: signer.publicKey,
       protocol: protocolPda,
       systemProgram: SystemProgram.programId
     })
-    .signers(signer.payer ? [signer.payer] : [])
+    .signers(signers)
     .rpc()
   const protocolState = await program.account.protocolState.fetch(protocolPda)
   return { tx, protocolState }
@@ -115,13 +121,17 @@ export async function setFee(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
   const tx = await program.methods.setFee(new anchor.BN(feeDenominator), new anchor.BN(feeNumerator))
     .accounts({
       signer: signer.publicKey,
       protocol: protocolPda,
       systemProgram: SystemProgram.programId
     })
-    .signers(signer.payer ? [signer.payer] : [])
+    .signers(signers)
     .rpc()
   const protocolState = await program.account.protocolState.fetch(protocolPda)
   return { tx, protocolState }
@@ -161,7 +171,10 @@ export async function request(
     [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
   const tx = await program.methods.request(accessManager, new anchor.BN(expiry), lastLook, legs, new anchor.BN(orderAmount), requestOrder)
     .accounts({
       assetEscrow: assetEscrowPda,
@@ -175,7 +188,7 @@ export async function request(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
-    .signers(signer.payer ? [signer.payer] : [])
+    .signers(signers)
     .rpc()
 
   protocolState = await program.account.protocolState.fetch(protocolPda)
@@ -202,13 +215,17 @@ export async function cancel(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
   const tx = await program.methods.cancel()
     .accounts({
       signer: signer.publicKey,
       protocol: protocolPda,
       rfq: rfqPda
     })
-    .signers(signer.payer ? [signer.payer] : [])
+    .signers(signers)
     .rpc()
   const rfqState = await program.account.rfqState.fetch(rfqPda)
   return { tx, rfqState }
@@ -249,6 +266,11 @@ export async function respond(
     program.programId
   )
 
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.respond(bid ? new anchor.BN(bid) : null, ask ? new anchor.BN(ask) : null)
     .accounts({
       assetMint,
@@ -264,7 +286,7 @@ export async function respond(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
-    .signers(signer.payer ? [signer.payer] : [])
+    .signers(signers)
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -310,6 +332,11 @@ export async function confirm(
     program.programId
   )
 
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.confirm(side)
     .accounts({
       assetMint,
@@ -325,7 +352,7 @@ export async function confirm(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID
     })
-    .signers(signer.payer ? [signer.payer] : [])
+    .signers(signers)
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -355,13 +382,18 @@ export async function lastLook(
     program.programId
   )
 
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.lastLook()
     .accounts({
       signer: signer.publicKey,
       order: orderPda,
       rfq: rfqPda,
     })
-    .signers(signer.payer ? [signer.payer] : [])
+    .signers(signers)
     .rpc()
 
   const rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -407,6 +439,11 @@ export async function returnCollateral(
     program.programId
   )
 
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.returnCollateral()
     .accounts({
       assetEscrow: assetEscrowPda,
@@ -422,7 +459,7 @@ export async function returnCollateral(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID
     })
-    .signers(signer.payer ? [signer.payer] : [])
+    .signers(signers)
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -491,6 +528,11 @@ export async function settle(
     )
   }
 
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.settle()
     .accounts({
       assetEscrow: assetEscrowPda,
@@ -508,7 +550,7 @@ export async function settle(
       treasuryWallet,
       rent: SYSVAR_RENT_PUBKEY,
     })
-    .signers(signer.payer ? [signer.payer] : [])
+    .signers(signers)
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
