@@ -812,6 +812,9 @@ export type Rfq = {
           },
           {
             "name": "RfqSettled"
+          },
+          {
+            "name": "DexIxError"
           }
         ]
       }
@@ -1701,6 +1704,9 @@ export const IDL: Rfq = {
           },
           {
             "name": "RfqSettled"
+          },
+          {
+            "name": "DexIxError"
           }
         ]
       }

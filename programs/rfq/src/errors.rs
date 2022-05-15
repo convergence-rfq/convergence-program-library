@@ -44,4 +44,6 @@ pub enum ProtocolError {
     RfqCanceled,
     #[msg("RFQ settled")]
     RfqSettled,
+    #[msg("Error creating a dex instruction")]
+    DexIxError,
 }

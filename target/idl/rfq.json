@@ -812,6 +812,9 @@
           },
           {
             "name": "RfqSettled"
+          },
+          {
+            "name": "DexIxError"
           }
         ]
       }

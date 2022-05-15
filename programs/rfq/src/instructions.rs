@@ -4,6 +4,7 @@ use num_traits::ToPrimitive;
 use solana_program::sysvar::clock::Clock;
 use psy_american::cpi::accounts::{ExerciseOption, MintOptionV2};
 use psy_american::OptionMarket;
+use anchor_lang::InstructionData;
 
 use crate::access_controls::*;
 use crate::constants::*;
@@ -92,6 +93,25 @@ pub fn request(
     rfq.expiry = expiry;
     rfq.id = ctx.accounts.protocol.rfq_count;
     rfq.last_look = last_look;
+
+    //check instrument type
+    for leg in rfq.legs.iter() {
+        match leg.instrument {
+             Instrument::Spot => println!("Spot Stuff"),
+             Instrument::Future => println!("Perp Stuff"),
+             Instrument::Option => println!("Option Stuff"),
+
+            // TODO ^ Try deleting the & and matching just "Ferris"
+            _ => println!("Not possible"),
+        }
+    }
+    
+
+
+    //if options initialize options and save in legs vector
+    // if spot default to legs
+
+
     rfq.legs = legs;
     rfq.order_amount = order_amount;
     rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
@@ -496,14 +516,87 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
     }
 
     // TODO: PsyOptions CPI integration if venue if multi-leg
+    // check if option market exists
+    // if no option market mint option market
+    // initialize instrument.
+
 
     Ok(())
 }
 
 
+//initialize option market if not there
+pub fn initialize_option_market<'a, 'b, 'c, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, InitOptionMarket<'info>>,
+    underlying_amount_per_contract: u64,
+    quote_amount_per_contract: u64,
+    expiration_unix_timestamp: i64,
+    bump_seed: u8
+) -> Result<()> {
+    let cpi_program = ctx.accounts.psy_american_program.clone();
+    let init_market_args = psy_american::instruction::InitializeMarket {
+        underlying_amount_per_contract,
+        quote_amount_per_contract,
+        expiration_unix_timestamp,
+        bump_seed
+    };
+    let mut cpi_accounts = vec![
+        ctx.accounts.user.to_account_metas(Some(true))[0].clone(),
+        // The Mint of the underlying asset for the contracts. Also the mint that is in the vault.
+        ctx.accounts.underlying_asset_mint.to_account_metas(Some(false))[0].clone(),
+        ctx.accounts.quote_asset_mint.to_account_metas(Some(false))[0].clone(),
+        // The mint of the option
+        ctx.accounts.option_mint.to_account_metas(Some(false))[0].clone(),
+        // The Mint of the writer token for the OptionMarket
+        ctx.accounts.writer_token_mint.to_account_metas(Some(false))[0].clone(),
+        ctx.accounts.quote_asset_pool.to_account_metas(Some(false))[0].clone(),
+        // The underlying asset pool for the OptionMarket
+        ctx.accounts.underlying_asset_pool.to_account_metas(Some(false))[0].clone(),
+        // The PsyOptions OptionMarket to mint from
+        ctx.accounts.option_market.to_account_metas(Some(false))[0].clone(),
+        // The fee_owner that is a constant in the PsyAmerican contract
+        ctx.accounts.fee_owner.to_account_metas(Some(false))[0].clone(),
+        // The rest are self explanatory, we can't spell everything out for you ;)
+        ctx.accounts.token_program.to_account_metas(Some(false))[0].clone(),
+        ctx.accounts.associated_token_program.to_account_metas(Some(false))[0].clone(),
+        ctx.accounts.rent.to_account_metas(Some(false))[0].clone(),
+        ctx.accounts.system_program.to_account_metas(Some(false))[0].clone(),
+        ctx.accounts.clock.to_account_metas(Some(false))[0].clone(),
+    ];
+    // msg!("cpi_accounts {:?}", cpi_accounts);
+    let mut account_infos = vec![
+        ctx.accounts.user.to_account_info().clone(),
+        ctx.accounts.underlying_asset_mint.to_account_info().clone(),
+        ctx.accounts.quote_asset_mint.to_account_info().clone(),
+        ctx.accounts.option_mint.to_account_info().clone(),
+        ctx.accounts.writer_token_mint.to_account_info().clone(),
+        ctx.accounts.quote_asset_pool.to_account_info().clone(),
+        ctx.accounts.underlying_asset_pool.to_account_info().clone(),
+        ctx.accounts.option_market.to_account_info().clone(),
+        ctx.accounts.fee_owner.to_account_info().clone(),
+        ctx.accounts.token_program.to_account_info().clone(),
+        ctx.accounts.associated_token_program.to_account_info().clone(),
+        ctx.accounts.rent.to_account_info().clone(),
+        ctx.accounts.system_program.to_account_info().clone(),
+        ctx.accounts.clock.to_account_info().clone(),
+    ];
+    for remaining_account in ctx.remaining_accounts {
+        cpi_accounts.push(remaining_account.to_account_metas(Some(false))[0].clone());
+        account_infos.push(remaining_account.clone());
+    }
+
+    let ix = solana_program::instruction::Instruction {
+        program_id: *cpi_program.key,
+        accounts: cpi_accounts,
+        data: init_market_args.data()
+    };
+
+    anchor_lang::solana_program::program::invoke(&ix, &account_infos).map_err(|_x| ProtocolError::DexIxError.into())
+}
+
 
 // cpi function
-pub fn mint<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, AmericanOptionCtx<'info>>, size: u64, vault_authority_bump: u8) -> Result<()> {
+pub fn mint<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, AmericanOption<'info>>, size: u64, vault_authority_bump: u8) -> Result<()> {
     let cpi_program = ctx.accounts.psy_american_program.clone();
     let cpi_accounts = MintOptionV2 {
         // The authority that has control over the underlying assets. In this case it's the 

@@ -114,9 +114,8 @@ pub struct OrderState {
 /// Instrument.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instrument {
-    Call,
+    Option,
     Future,
-    Put,
     Spot,
 }
 
@@ -132,11 +131,11 @@ pub enum Venue {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Leg {
     // Instrument
-    instrument: Instrument,
+    pub instrument: Instrument,
     // Venue
-    venue: Venue,
+    pub pubvenue: Venue,
     // Amount
-    amount: u64,
+    pub amount: u64,
 }
 
 /// Quote.
