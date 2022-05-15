@@ -2,7 +2,6 @@ import * as anchor from '@project-serum/anchor'
 import { Idl, Program, Provider, Wallet } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { PublicKey, SystemProgram, Signer, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
-import { assert } from 'chai'
 
 import { default as idl } from '../target/idl/rfq.json'
 
@@ -543,7 +542,9 @@ export async function settle(
   let instructions = []
   try {
     const account = await token.getAccountInfo(treasuryWallet)
-    assert.ok(account.amount.toNumber() >= 0)
+    if (account.amount.toNumber() < 0) {
+      throw new Error('Account does not exist')
+    }
   } catch {
     // ATA might not exist so create it
     instructions.push(Token.createAssociatedTokenAccountInstruction(
