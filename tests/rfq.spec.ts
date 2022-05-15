@@ -167,13 +167,15 @@ describe('RFQ Specification', () => {
       TOKEN_PROGRAM_ID
     )
 
-    daoAssetATA = await assetToken.createAssociatedTokenAccount(dao.publicKey)
+    // NOTE: Do not create DAO asset ATA as this is tested for in settle function
+    //daoAssetATA = await assetToken.createAssociatedTokenAccount(dao.publicKey)
     takerAssetATA = await assetToken.createAssociatedTokenAccount(taker.publicKey)
     makerAAssetATA = await assetToken.createAssociatedTokenAccount(makerA.publicKey)
     makerBAssetATA = await assetToken.createAssociatedTokenAccount(makerB.publicKey)
     makerCAssetATA = await assetToken.createAssociatedTokenAccount(makerC.publicKey)
     makerDAssetATA = await assetToken.createAssociatedTokenAccount(makerD.publicKey)
 
+    // NOTE: Do not create DAO asset ATA as this is tested for in settle function
     daoQuoteATA = await quoteToken.createAssociatedTokenAccount(dao.publicKey)
     takerQuoteATA = await quoteToken.createAssociatedTokenAccount(taker.publicKey)
     makerAQuoteATA = await quoteToken.createAssociatedTokenAccount(makerA.publicKey)
@@ -232,8 +234,8 @@ describe('RFQ Specification', () => {
     await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
     await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT2, MAKER_A_ASK_AMOUNT2, makerAAssetATA, makerAQuoteATA)
 
-    let assetBalance = await getBalance(provider, taker, assetToken.publicKey)
-    let quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    let assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey)
+    let quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
 
@@ -262,15 +264,15 @@ describe('RFQ Specification', () => {
       assert.strictEqual(err.error.errorCode.code, 'RfqConfirmed')
     }
 
-    assetBalance = await getBalance(provider, taker, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT1)
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE)
 
-    assetBalance = await getBalance(provider, makerA, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerA, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerA.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerA.publicKey, quoteToken.publicKey)
     console.log('Maker A asset balance:', assetBalance)
     console.log('Maker A quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT1 - TAKER_ORDER_AMOUNT1)
@@ -284,24 +286,24 @@ describe('RFQ Specification', () => {
 
     await returnCollateral(provider, makerA, rfqId, 1, makerAAssetATA, makerAQuoteATA)
     await returnCollateral(provider, makerA, rfqId, 2, makerAAssetATA, makerAQuoteATA)
-    let assetBalance = await getBalance(provider, makerA, assetToken.publicKey)
-    let quoteBalance = await getBalance(provider, makerA, quoteToken.publicKey)
+    let assetBalance = await getBalance(provider, makerA.publicKey, assetToken.publicKey)
+    let quoteBalance = await getBalance(provider, makerA.publicKey, quoteToken.publicKey)
     console.log('Maker A asset balance:', assetBalance)
     console.log('Maker A quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET)
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE - MAKER_A_BID_AMOUNT2)
 
     await settle(provider, makerA, rfqId, 2, makerAAssetATA, makerAQuoteATA)
-    assetBalance = await getBalance(provider, makerA, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerA, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerA.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerA.publicKey, quoteToken.publicKey)
     console.log('Maker A asset balance:', assetBalance)
     console.log('Maker A quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET + TAKER_ORDER_AMOUNT1)
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE - MAKER_A_BID_AMOUNT2)
 
     await settle(provider, taker, rfqId, 2, takerAssetATA, takerQuoteATA)
-    assetBalance = await getBalance(provider, taker, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT1)
@@ -323,8 +325,8 @@ describe('RFQ Specification', () => {
     console.log('Order type:', rfqState.orderType)
     console.log('Order amount:', rfqState.orderAmount.toNumber())
 
-    const assetBalance = await getBalance(provider, taker, assetToken.publicKey)
-    const quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    const assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey)
+    const quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
 
@@ -357,13 +359,13 @@ describe('RFQ Specification', () => {
     console.log('Response 3 best ask:', res3.rfqState.bestAskAmount?.toNumber())
     console.log('Response 3 best bid:', res3.rfqState.bestBidAmount?.toNumber())
 
-    let assetBalance = await getBalance(provider, makerB, assetToken.publicKey)
-    let quoteBalance = await getBalance(provider, makerB, quoteToken.publicKey)
+    let assetBalance = await getBalance(provider, makerB.publicKey, assetToken.publicKey)
+    let quoteBalance = await getBalance(provider, makerB.publicKey, quoteToken.publicKey)
     console.log('Maker B asset balance:', assetBalance)
     console.log('Maker B quote balance:', quoteBalance)
 
-    assetBalance = await getBalance(provider, makerC, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerC, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerC.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerC.publicKey, quoteToken.publicKey)
     console.log('Maker C asset balance:', assetBalance)
     console.log('Maker C quote balance:', quoteBalance)
 
@@ -393,8 +395,8 @@ describe('RFQ Specification', () => {
     console.log('Best ask:', rfqState.bestAskAmount?.toNumber())
     console.log('Best bid:', rfqState.bestBidAmount?.toNumber())
 
-    let assetBalance = await getBalance(provider, taker, assetToken.publicKey)
-    let quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    let assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey)
+    let quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
 
@@ -436,23 +438,23 @@ describe('RFQ Specification', () => {
       assert.strictEqual(err.error.errorCode.code, 'CollateralReturned')
     }
 
-    let assetBalance = await getBalance(provider, taker, assetToken.publicKey)
-    let quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    let assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey)
+    let quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
 
-    assetBalance = await getBalance(provider, makerA, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerA, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerA.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerA.publicKey, quoteToken.publicKey)
     console.log('Maker A asset balance:', assetBalance)
     console.log('Maker A quote balance:', quoteBalance)
 
-    assetBalance = await getBalance(provider, makerB, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerB, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerB.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerB.publicKey, quoteToken.publicKey)
     console.log('Maker B asset balance:', assetBalance)
     console.log('Maker B quote balance:', quoteBalance)
 
-    assetBalance = await getBalance(provider, makerC, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerC, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerC.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerC.publicKey, quoteToken.publicKey)
     console.log('Maker C asset balance:', assetBalance)
     console.log('Maker C quote balance:', quoteBalance)
   })
@@ -485,22 +487,22 @@ describe('RFQ Specification', () => {
       assert.strictEqual(err.error.errorCode.code, 'RfqSettled')
     }
 
-    let assetBalance = await getBalance(provider, taker, assetToken.publicKey)
-    let quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    let assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey)
+    let quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1)
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE + MAKER_A_BID_AMOUNT2 - FEE1 + MAKER_C_BID_AMOUNT1 - FEE2)
 
-    assetBalance = await getBalance(provider, makerB, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerB, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerB.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerB.publicKey, quoteToken.publicKey)
     console.log('Maker B asset balance:', assetBalance)
     console.log('Maker B quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET)
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE)
 
-    assetBalance = await getBalance(provider, makerC, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerC, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerC.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerC.publicKey, quoteToken.publicKey)
     console.log('Maker C asset balance:', assetBalance)
     console.log('Maker C quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET + TAKER_ORDER_AMOUNT2)
@@ -527,15 +529,15 @@ describe('RFQ Specification', () => {
     await settle(provider, taker, rfqId, 2, takerAssetATA, takerQuoteATA)
     await settle(provider, makerD, rfqId, 2, makerDAssetATA, makerDQuoteATA)
 
-    let assetBalance = await getBalance(provider, taker, assetToken.publicKey)
-    let quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    let assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey)
+    let quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3 - FEE3)
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE + MAKER_A_BID_AMOUNT2 - FEE1 + MAKER_C_BID_AMOUNT1 - FEE2 - MAKER_D_ASK_AMOUNT2)
 
-    assetBalance = await getBalance(provider, makerD, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerD, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerD.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerD.publicKey, quoteToken.publicKey)
     console.log('Maker D asset balance:', assetBalance)
     console.log('Maker D quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT3)
@@ -556,8 +558,8 @@ describe('RFQ Specification', () => {
 
     await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT4, provider, quoteToken.publicKey, requestOrder)
 
-    let assetBalance = await getBalance(provider, makerD, assetToken.publicKey)
-    let quoteBalance = await getBalance(provider, makerD, quoteToken.publicKey)
+    let assetBalance = await getBalance(provider, makerD.publicKey, assetToken.publicKey)
+    let quoteBalance = await getBalance(provider, makerD.publicKey, quoteToken.publicKey)
     console.log('Maker D asset balance:', assetBalance)
     console.log('Maker D quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT3)
@@ -592,8 +594,8 @@ describe('RFQ Specification', () => {
       assert.strictEqual(err.error.errorCode.code, 'RfqUnconfirmed')
     }
 
-    assetBalance = await getBalance(provider, makerD, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerD, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerD.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerD.publicKey, quoteToken.publicKey)
     console.log('Maker D asset balance:', assetBalance)
     console.log('Maker D quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT3 - TAKER_ORDER_AMOUNT4)
@@ -606,15 +608,15 @@ describe('RFQ Specification', () => {
     assert.ok(!res2.orderState.askConfirmed)
     assert.ok(!res2.orderState.bidConfirmed)
 
-    assetBalance = await getBalance(provider, makerD, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, makerD, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, makerD.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, makerD.publicKey, quoteToken.publicKey)
     console.log('Maker D asset balance:', assetBalance)
     console.log('Maker D quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT3)
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE + MAKER_D_ASK_AMOUNT2)
 
-    assetBalance = await getBalance(provider, taker, assetToken.publicKey)
-    quoteBalance = await getBalance(provider, taker, quoteToken.publicKey)
+    assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey)
+    quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey)
     console.log('Taker asset balance:', assetBalance)
     console.log('Taker quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3 - FEE3)

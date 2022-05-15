@@ -2,6 +2,7 @@ import * as anchor from '@project-serum/anchor'
 import { Idl, Program, Provider, Wallet } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { PublicKey, SystemProgram, Signer, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
+import { assert } from 'chai'
 
 import { default as idl } from '../target/idl/rfq.json'
 
@@ -512,7 +513,10 @@ export async function settle(
 
   const orderState: any = await program.account.orderState.fetch(orderPda)
   let treasuryWallet: PublicKey
+  let treasuryMint: PublicKey
+
   if (orderState?.confirmedQuote?.hasOwnProperty('ask')) {
+    treasuryMint = assetMint
     treasuryWallet = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -520,6 +524,7 @@ export async function settle(
       protocolState.authority
     )
   } else {
+    treasuryMint = quoteMint
     treasuryWallet = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -528,30 +533,64 @@ export async function settle(
     )
   }
 
+  const token = new Token(
+    provider.connection,
+    treasuryMint,
+    TOKEN_PROGRAM_ID,
+    signer as unknown as Signer
+  );
+
+  let instructions = []
+  try {
+    const account = await token.getAccountInfo(treasuryWallet)
+    assert.ok(account.amount.toNumber() >= 0)
+  } catch {
+    // ATA might not exist so create it
+    instructions.push(Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      treasuryMint,
+      treasuryWallet,
+      protocolState.authority,
+      signer.publicKey
+    ))
+  }
+
+  const accounts = {
+    assetEscrow: assetEscrowPda,
+    assetMint,
+    assetWallet,
+    signer: signer.publicKey,
+    order: orderPda,
+    quoteEscrow: quoteEscrowPda,
+    quoteMint,
+    quoteWallet,
+    rfq: rfqPda,
+    systemProgram: SystemProgram.programId,
+    tokenProgram: TOKEN_PROGRAM_ID,
+    protocol: protocolPda,
+    treasuryWallet,
+    rent: SYSVAR_RENT_PUBKEY,
+  }
+
   let signers = []
   if (signer.payer) {
     signers.push(signer.payer)
   }
 
-  const tx = await program.methods.settle()
-    .accounts({
-      assetEscrow: assetEscrowPda,
-      assetMint,
-      assetWallet,
-      signer: signer.publicKey,
-      order: orderPda,
-      quoteEscrow: quoteEscrowPda,
-      quoteMint,
-      quoteWallet,
-      rfq: rfqPda,
-      systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      protocol: protocolPda,
-      treasuryWallet,
-      rent: SYSVAR_RENT_PUBKEY,
-    })
-    .signers(signers)
-    .rpc()
+  let tx: string
+  if (instructions.length > 0) {
+    tx = await program.methods.settle()
+      .accounts(accounts)
+      .preInstructions(instructions)
+      .signers(signers)
+      .rpc()
+  } else {
+    tx = await program.methods.settle()
+      .accounts(accounts)
+      .signers(signers)
+      .rpc()
+  }
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
 
@@ -615,15 +654,15 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
 
 export async function getBalance(
   provider: Provider,
-  payer: Wallet,
+  signer: PublicKey,
   mint: PublicKey
 ) {
   const program = await getProgram(provider)
   try {
-    const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(payer.publicKey, { mint })
+    const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(signer, { mint })
     return parseInt(parsedAccount.value[0].account.data.parsed.info.tokenAmount.amount, 10);
   } catch (error) {
-    console.log('No mints found for wallet')
+    return null
   }
 }
 
