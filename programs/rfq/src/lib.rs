@@ -14,7 +14,7 @@ pub mod states;
 use contexts::*;
 use states::*;
 
-declare_id!("9XDtzeAwdc8sinFAR887UijxxnjB3rXztTeQjcFUtU5y");
+declare_id!("ARXw76Q5pc8b3onMmctDF2oqShK4N9BTq1BqRA3fPyZV");
 
 /// Request for quote (RFQ) protocol module.
 #[program]

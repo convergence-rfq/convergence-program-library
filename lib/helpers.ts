@@ -651,7 +651,7 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
   return orders
 }
 
-// Utils
+/// Utils
 
 export async function getBalance(
   provider: Provider,
@@ -662,7 +662,7 @@ export async function getBalance(
   try {
     const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(signer, { mint })
     return parseInt(parsedAccount.value[0].account.data.parsed.info.tokenAmount.amount, 10);
-  } catch (error) {
+  } catch {
     return null
   }
 }
