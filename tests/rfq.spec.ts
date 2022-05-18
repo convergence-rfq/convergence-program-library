@@ -210,7 +210,7 @@ describe('RFQ Specification', () => {
     assert.ok(protocolState.accessManagerCount.eq(new anchor.BN(0)))
   })
 
-  it(`RFQ 1: Taker requests two-way asset quote for ${TAKER_ORDER_AMOUNT1}`, async () => {
+  /*it(`RFQ 1: Taker requests two-way asset quote for ${TAKER_ORDER_AMOUNT1}`, async () => {
     const requestOrder = Order.TwoWay
     const now = (new Date()).getTime() / 1_000
     const expiry = now + 2 // Expires in 2 seconds
@@ -652,5 +652,6 @@ describe('RFQ Specification', () => {
     const responses = await getResponses(provider, rfqs)
     assert.equal(rfqs.length, 5)
     assert.equal(responses.length, 8)
-  })
+  })*/
+
 })
