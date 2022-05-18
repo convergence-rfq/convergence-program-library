@@ -88,7 +88,7 @@ pub mod rfq {
         instructions::settle(ctx)
     }
 
-    /// Initializes PsyOptions American option Market.
+    /// Initializes PsyOptions American option market.
     pub fn initialize_psyoptions_american_option_market<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeAmericanOptionMarket<'info>>,
         underlying_amount_per_contract: u64,

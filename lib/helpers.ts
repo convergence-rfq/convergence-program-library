@@ -55,7 +55,6 @@ export const Venue = {
   }
 }
 
-// Instrument from from Paradigm: BTC-25JUN21-20000-C
 export const Leg = {
   Instrument: {
     instrument: {}

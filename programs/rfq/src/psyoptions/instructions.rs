@@ -1,8 +1,7 @@
 ///! Instructions
 use anchor_lang::prelude::*;
 use anchor_lang::InstructionData;
-use psy_american::cpi::accounts::{ExerciseOption, MintOptionV2};
-//use psy_american::errors::*;
+use psy_american::cpi::accounts::*;
 
 use crate::errors::*;
 use crate::psyoptions::contexts::*;
@@ -54,7 +53,6 @@ pub fn initialize_american_option_market<'a, 'b, 'c, 'info>(
         ctx.accounts.system_program.to_account_metas(Some(false))[0].clone(),
         ctx.accounts.clock.to_account_metas(Some(false))[0].clone(),
     ];
-    // msg!("cpi_accounts {:?}", cpi_accounts);
     let mut account_infos = vec![
         ctx.accounts.user.to_account_info().clone(),
         ctx.accounts.underlying_asset_mint.to_account_info().clone(),
@@ -117,7 +115,6 @@ pub fn mint_american_option<'a, 'b, 'c, 'info>(
         minted_writer_token_dest: ctx.accounts.minted_writer_token_dest.to_account_info(),
         // The PsyOptions OptionMarket to mint from
         option_market: ctx.accounts.option_market.to_account_info(),
-        // The rest are self explanatory, we can't spell everything out for you ;)
         token_program: ctx.accounts.token_program.to_account_info(),
     };
     let key = ctx.accounts.underlying_asset_mint.key();
