@@ -6,6 +6,8 @@ use anchor_lang::prelude::*;
 pub enum ProtocolError {
     #[msg("Collateral returned")]
     CollateralReturned,
+    #[msg("CPI error")]
+    CpiError,
     #[msg("Invalid cancel")]
     InvalidCancel,
     #[msg("Invalid confirm")]
@@ -26,6 +28,8 @@ pub enum ProtocolError {
     LastLookNotSet,
     #[msg("Math")]
     Math,
+    #[msg("Not implemented")]
+    NotImplemented,
     #[msg("Order confirmed")]
     OrderConfirmed,
     #[msg("Order not approved via last look")]

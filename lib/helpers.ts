@@ -29,15 +29,9 @@ export const Instrument = {
   Spot: {
     spot: {}
   },
-  Call: {
-    call: {}
+  Option: {
+    option: {}
   },
-  Future: {
-    future: {}
-  },
-  Put: {
-    put: {}
-  }
 }
 
 export const Quote = {

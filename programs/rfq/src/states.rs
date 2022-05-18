@@ -1,4 +1,4 @@
-//! State
+///! State
 use anchor_lang::prelude::*;
 
 /// Access manager state.
@@ -133,7 +133,7 @@ pub struct Leg {
     // Instrument
     pub instrument: Instrument,
     // Venue
-    pub pubvenue: Venue,
+    pub venue: Venue,
     // Amount
     pub amount: u64,
 }

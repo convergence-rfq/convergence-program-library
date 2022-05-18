@@ -1,8 +1,7 @@
+///! Contexts
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-///! Contexts
 use std::mem;
-use psy_american::OptionMarket;
 
 use crate::constants::*;
 use crate::states::*;
@@ -391,80 +390,4 @@ pub struct Settle<'info> {
     // Treasury wallet
     #[account(mut, constraint = treasury_wallet.owner.key() == protocol.authority.key())]
     pub treasury_wallet: Box<Account<'info, TokenAccount>>,
-}
-
-#[derive(Accounts)]
-pub struct AmericanOption<'info> {
-    #[account(mut, signer)]
-    pub authority: AccountInfo<'info>,
-    
-    pub psy_american_program: AccountInfo<'info>,
-    /// The vault where the underlying assets are held. This is the PsyAmerican 
-    /// `underlying_asset_src`
-    #[account(mut)]
-    pub pool: Box<Account<'info, TokenAccount>>,
-
-    #[account(mut)]
-    pub pool_authority: AccountInfo<'info>,
-
-    /// Mint CPI acounts/
-    pub underlying_asset_mint: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub underlying_asset_pool: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
-    pub option_mint: Box<Account<'info, Mint>>,
-    #[account(mut)]
-    pub minted_option_dest: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
-    pub writer_token_mint: Box<Account<'info, Mint>>,
-    #[account(mut)]
-    pub minted_writer_token_dest: Box<Account<'info, TokenAccount>>,
-    pub option_market: Box<Account<'info, OptionMarket>>,
-    #[account(mut)]
-    pub fee_owner: AccountInfo<'info>,
-
-    /// RFQ
-    #[account(
-        mut,
-        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
-        bump = rfq.bump
-    )]
-    pub rfq: Box<Account<'info, RfqState>>,
-
-
-    pub token_program: AccountInfo<'info>,
-    pub associated_token_program: AccountInfo<'info>,
-    pub clock: Sysvar<'info, Clock>,
-    pub rent: Sysvar<'info, Rent>,
-    pub system_program: AccountInfo<'info>,
-}
-
-
-#[derive(Accounts)]
-pub struct InitOptionMarket<'info> {
-    #[account(mut)]
-    pub user: Signer<'info>,
-    pub psy_american_program: AccountInfo<'info>,
-    /////// Init OptionMarket accounts
-    pub underlying_asset_mint: Box<Account<'info, Mint>>,
-    pub quote_asset_mint: Box<Account<'info, Mint>>,
-
-    #[account(mut)]
-    pub option_mint: AccountInfo<'info>,
-    #[account(mut)]
-    pub writer_token_mint: AccountInfo<'info>,
-    #[account(mut)]
-    pub quote_asset_pool: AccountInfo<'info>,
-    #[account(mut)]
-    pub underlying_asset_pool: AccountInfo<'info>,
-    #[account(mut)]
-    pub option_market: AccountInfo<'info>,
-    pub fee_owner: AccountInfo<'info>,
-
-    pub token_program: AccountInfo<'info>,
-    pub associated_token_program: AccountInfo<'info>,
-    pub rent: Sysvar<'info, Rent>,
-    pub system_program: AccountInfo<'info>,
-    pub clock: Sysvar<'info, Clock>,
 }

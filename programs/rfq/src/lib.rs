@@ -9,9 +9,11 @@ pub mod constants;
 pub mod contexts;
 pub mod errors;
 pub mod instructions;
+pub mod psyoptions;
 pub mod states;
 
 use contexts::*;
+use psyoptions::contexts::*;
 use states::*;
 
 declare_id!("9XDtzeAwdc8sinFAR887UijxxnjB3rXztTeQjcFUtU5y");
@@ -84,5 +86,30 @@ pub mod rfq {
     /// Settles RFQ.
     pub fn settle(ctx: Context<Settle>) -> Result<()> {
         instructions::settle(ctx)
+    }
+
+    /// Initializes PsyOptions American option Market.
+    pub fn initialize_psyoptions_american_option_market<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, InitializeAmericanOptionMarket<'info>>,
+        underlying_amount_per_contract: u64,
+        quote_amount_per_contract: u64,
+        expiration_unix_timestamp: i64,
+        bump_seed: u8,
+    ) -> Result<()> {
+        psyoptions::instructions::initialize_american_option_market(
+            ctx,
+            underlying_amount_per_contract,
+            quote_amount_per_contract,
+            expiration_unix_timestamp,
+            bump_seed,
+        )
+    }
+
+    pub fn mint_psyoptions_american_option<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, AmericanOption<'info>>,
+        size: u64,
+        vault_authority_bump: u8,
+    ) -> Result<()> {
+        psyoptions::instructions::mint_american_option(ctx, size, vault_authority_bump)
     }
 }
