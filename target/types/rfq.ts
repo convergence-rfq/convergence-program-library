@@ -928,6 +928,36 @@ export type Rfq = {
         "kind": "struct",
         "fields": [
           {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "contract",
+            "type": {
+              "option": {
+                "defined": "Contract"
+              }
+            }
+          },
+          {
+            "name": "contractAssetAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "contractQuoteAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "expiry",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
             "name": "instrument",
             "type": {
               "defined": "Instrument"
@@ -938,10 +968,6 @@ export type Rfq = {
             "type": {
               "defined": "Venue"
             }
-          },
-          {
-            "name": "amount",
-            "type": "u64"
           }
         ]
       }
@@ -959,6 +985,26 @@ export type Rfq = {
           },
           {
             "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Contract",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Call"
+          },
+          {
+            "name": "Put"
+          },
+          {
+            "name": "Long"
+          },
+          {
+            "name": "Short"
           }
         ]
       }
@@ -2061,6 +2107,36 @@ export const IDL: Rfq = {
         "kind": "struct",
         "fields": [
           {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "contract",
+            "type": {
+              "option": {
+                "defined": "Contract"
+              }
+            }
+          },
+          {
+            "name": "contractAssetAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "contractQuoteAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "expiry",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
             "name": "instrument",
             "type": {
               "defined": "Instrument"
@@ -2071,10 +2147,6 @@ export const IDL: Rfq = {
             "type": {
               "defined": "Venue"
             }
-          },
-          {
-            "name": "amount",
-            "type": "u64"
           }
         ]
       }
@@ -2092,6 +2164,26 @@ export const IDL: Rfq = {
           },
           {
             "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Contract",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Call"
+          },
+          {
+            "name": "Put"
+          },
+          {
+            "name": "Long"
+          },
+          {
+            "name": "Short"
           }
         ]
       }

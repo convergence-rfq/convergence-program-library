@@ -928,6 +928,36 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "contract",
+            "type": {
+              "option": {
+                "defined": "Contract"
+              }
+            }
+          },
+          {
+            "name": "contractAssetAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "contractQuoteAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "expiry",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
             "name": "instrument",
             "type": {
               "defined": "Instrument"
@@ -938,10 +968,6 @@
             "type": {
               "defined": "Venue"
             }
-          },
-          {
-            "name": "amount",
-            "type": "u64"
           }
         ]
       }
@@ -959,6 +985,26 @@
           },
           {
             "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Contract",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Call"
+          },
+          {
+            "name": "Put"
+          },
+          {
+            "name": "Long"
+          },
+          {
+            "name": "Short"
           }
         ]
       }

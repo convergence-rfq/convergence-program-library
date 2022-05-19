@@ -97,11 +97,11 @@ pub fn mint_american_option<'a, 'b, 'c, 'info>(
     let cpi_program = ctx.accounts.psy_american_program.clone();
     let cpi_accounts = MintOptionV2 {
         // The authority that has control over the underlying assets. In this case it's the
-        // vault authority set in _init_mint_vault_
+        // vault authority set in mint vault intialization
         user_authority: ctx.accounts.pool_authority.to_account_info(),
         // The Mint of the underlying asset for the contracts. Also the mint that is in the vault.
         underlying_asset_mint: ctx.accounts.underlying_asset_mint.to_account_info(),
-        // The underlying asset pool for the OptionMarket
+        // The underlying asset pool for the option market
         underlying_asset_pool: ctx.accounts.underlying_asset_pool.to_account_info(),
         // The source account where the underlying assets are coming from. In this case it's the vault.
         underlying_asset_src: ctx.accounts.pool.to_account_info(),
@@ -109,11 +109,11 @@ pub fn mint_american_option<'a, 'b, 'c, 'info>(
         option_mint: ctx.accounts.option_mint.to_account_info(),
         // The destination for the minted options
         minted_option_dest: ctx.accounts.minted_option_dest.to_account_info(),
-        // The Mint of the writer token for the OptionMarket
+        // The Mint of the writer token for the option market
         writer_token_mint: ctx.accounts.writer_token_mint.to_account_info(),
-        // The destination for the minted WriterTokens
+        // The destination for the minted writer tokens
         minted_writer_token_dest: ctx.accounts.minted_writer_token_dest.to_account_info(),
-        // The PsyOptions OptionMarket to mint from
+        // The PsyOptions option market to mint from
         option_market: ctx.accounts.option_market.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
     };

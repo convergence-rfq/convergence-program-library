@@ -119,6 +119,15 @@ pub enum Instrument {
     Spot,
 }
 
+/// Contract.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Contract {
+    Call,
+    Put,
+    Long,
+    Short,
+}
+
 /// Venue.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Venue {
@@ -130,12 +139,20 @@ pub enum Venue {
 /// Leg.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Leg {
+    // Amount
+    pub amount: u64,
+    // Contract
+    pub contract: Option<Contract>,
+    // Contract asset amount
+    pub contract_asset_amount: Option<u64>,
+    // Contract quote amount
+    pub contract_quote_amount: Option<u64>,
+    // Expiry
+    pub expiry: Option<i64>,
     // Instrument
     pub instrument: Instrument,
     // Venue
     pub venue: Venue,
-    // Amount
-    pub amount: u64,
 }
 
 /// Quote.

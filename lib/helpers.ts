@@ -11,7 +11,16 @@ export const PROTOCOL_SEED = 'protocol'
 export const ASSET_ESCROW_SEED = 'asset_escrow'
 export const QUOTE_ESCROW_SEED = 'quote_escrow'
 
-// Types
+/// TODO: Import types and constants from Anchor
+///
+/// The following creates the correct types.
+///
+/// ```ts
+/// import { Rfq } from '../target/types/rfq'
+/// export type Instrument = IdlAccounts<Rfq>['instrument']
+/// ```
+
+/// Types
 
 export const Order = {
   Buy: {
@@ -55,16 +64,35 @@ export const Venue = {
   }
 }
 
+export const Contract = {
+  Call: {
+    call: {}
+  },
+  Put: {
+    put: {}
+  },
+  Long: {
+    long: {}
+  },
+  Short: {
+    short: {}
+  }
+}
+
 export const Leg = {
+  Amount: {
+    amount: {}
+  },
+  Contract: null,
+  ContractQuoteAmount: null,
+  ContractAssetAmount: null,
+  Expiry: null,
   Instrument: {
     instrument: {}
   },
   Venue: {
     venue: {}
   },
-  Amount: {
-    amount: {}
-  }
 }
 
 export async function getProgram(provider: Provider): Promise<Program> {
@@ -529,13 +557,15 @@ export async function getRFQs(
     length: protocolState.rfqCount.toNumber()
   }, (_, i) => 1 + i)
 
-  const rfqs = await Promise.all(range.map(async (i) => {
+  const rfqPDAs = await Promise.all(range.map(async (i) => {
     const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
       [Buffer.from(RFQ_SEED), Buffer.from(i.toString())],
       program.programId
     )
-    return await program.account.rfqState.fetch(rfqPda)
+    return rfqPda
   }))
+
+  const rfqs: any[] = await program.account.rfqState.fetchMultiple(rfqPDAs)
 
   return rfqs
 }
@@ -562,7 +592,29 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
   return orders
 }
 
-// Utils
+/// Integration
+
+export async function mintPsyOptionsAmericanOptions(provider: Provider, rfqId: number) {
+  const program = await getProgram(provider)
+  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
+    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
+    program.programId
+  )
+  const rfqState = await program.account.rfqState.fetch(rfqPda)
+
+  // @ts-ignore 
+  for (let i = 0; i < rfqState.legs.length; i++) {
+    // 🦆
+    // - Check if market exists for each leg
+    // - Initialize market if does not exist
+    // - Mint option
+    console.log(rfqState.legs[i])
+  }
+
+  return { rfqState }
+}
+
+/// Utils
 
 export async function getBalance(
   provider: Provider,
