@@ -15,6 +15,8 @@ pub fn initialize_access_control<'info>(
     fee_denominator: u64,
 ) -> Result<()> {
     #[cfg(feature = "devnet")]
+    // Last time i have used it only worked on non verifiable builds
+    // So just small info idk if its fixed.
     let signer = _ctx.accounts.signer.key();
     #[cfg(feature = "devnet")]
     let dao: Pubkey = "9XDtzeAwdc8sinFAR887UijxxnjB3rXztTeQjcFUtU5y"

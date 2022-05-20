@@ -1,3 +1,7 @@
+// I would try to split tests into multiple files, and run them in isolated instances
+// Checkout https://github.com/invariant-labs/protocol
+// Also you should considers using CI tests for your project
+
 /** 
   * RFQ Specification
   * 

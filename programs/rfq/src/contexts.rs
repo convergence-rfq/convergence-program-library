@@ -17,7 +17,7 @@ pub struct Initialize<'info> {
         init,
         payer = signer,
         seeds = [PROTOCOL_SEED.as_bytes()],
-        space = 8 + mem::size_of::<ProtocolState>(),
+        space = 8 + mem::size_of::<ProtocolState>(), // this is redundand so i would remove it.
         bump
     )]
     pub protocol: Account<'info, ProtocolState>,
@@ -131,7 +131,7 @@ pub struct Respond<'info> {
         init,
         payer = signer,
         seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), (rfq.response_count + 1).to_string().as_bytes()],
-        space = 8 + mem::size_of::<OrderState>(),
+        space = 8 + mem::size_of::<OrderState>(), // Implicit  no reason to have this.
         bump
     )]
     pub order: Box<Account<'info, OrderState>>,

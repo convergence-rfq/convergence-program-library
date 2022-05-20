@@ -1,3 +1,5 @@
+// Imo its better to split it this way https://github.com/invariant-labs/protocol
+
 //! Private module for program instructions.
 use anchor_lang::prelude::*;
 use num_traits::ToPrimitive;
