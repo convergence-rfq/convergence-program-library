@@ -600,9 +600,8 @@ export async function mintPsyOptionsAmericanOptions(provider: Provider, rfqId: n
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-  const rfqState = await program.account.rfqState.fetch(rfqPda)
+  const rfqState: any = await program.account.rfqState.fetch(rfqPda)
 
-  // @ts-ignore 
   for (let i = 0; i < rfqState.legs.length; i++) {
     // 🦆
     // - Check if market exists for each leg
