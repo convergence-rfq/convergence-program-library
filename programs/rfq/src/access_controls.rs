@@ -8,7 +8,6 @@ use crate::states::*;
 /// Initialzie access control.
 ///
 /// Ensures:
-/// - Signer is Convergence DAO
 /// - Fee denominator is greater than 0
 pub fn initialize_access_control<'info>(
     _ctx: &Context<Initialize<'info>>,
@@ -22,7 +21,7 @@ pub fn initialize_access_control<'info>(
 /// Set fee access control.
 ///
 /// Ensures:
-/// - Signer is Convergence DAO
+/// - Signer is DAO
 /// - Fee denominator is greater than 0
 pub fn set_fee_access_control<'info>(
     ctx: &Context<SetFee<'info>>,

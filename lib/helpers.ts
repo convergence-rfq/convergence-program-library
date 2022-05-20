@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Idl, Program, Provider, Wallet } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
+import { PublicKey, SystemProgram, Signer, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
 
 import { default as idl } from '../target/idl/rfq.json'
 
@@ -113,13 +113,19 @@ export async function initializeProtocol(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
+
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.initialize(new anchor.BN(feeDenominator), new anchor.BN(feeNumerator))
     .accounts({
       signer: signer.publicKey,
       protocol: protocolPda,
       systemProgram: SystemProgram.programId
     })
-    .signers([signer.payer])
+    .signers(signers)
     .rpc()
   const protocolState = await program.account.protocolState.fetch(protocolPda)
   return { tx, protocolState }
@@ -136,13 +142,17 @@ export async function setFee(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
   const tx = await program.methods.setFee(new anchor.BN(feeDenominator), new anchor.BN(feeNumerator))
     .accounts({
       signer: signer.publicKey,
       protocol: protocolPda,
       systemProgram: SystemProgram.programId
     })
-    .signers([signer.payer])
+    .signers(signers)
     .rpc()
   const protocolState = await program.account.protocolState.fetch(protocolPda)
   return { tx, protocolState }
@@ -182,7 +192,10 @@ export async function request(
     [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
-
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
   const tx = await program.methods.request(accessManager, new anchor.BN(expiry), lastLook, legs, new anchor.BN(orderAmount), requestOrder)
     .accounts({
       assetEscrow: assetEscrowPda,
@@ -196,7 +209,7 @@ export async function request(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
-    .signers([signer.payer])
+    .signers(signers)
     .rpc()
 
   protocolState = await program.account.protocolState.fetch(protocolPda)
@@ -223,13 +236,17 @@ export async function cancel(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
     program.programId
   )
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
   const tx = await program.methods.cancel()
     .accounts({
       signer: signer.publicKey,
       protocol: protocolPda,
       rfq: rfqPda
     })
-    .signers([signer.payer])
+    .signers(signers)
     .rpc()
   const rfqState = await program.account.rfqState.fetch(rfqPda)
   return { tx, rfqState }
@@ -270,6 +287,11 @@ export async function respond(
     program.programId
   )
 
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.respond(bid ? new anchor.BN(bid) : null, ask ? new anchor.BN(ask) : null)
     .accounts({
       assetMint,
@@ -285,7 +307,7 @@ export async function respond(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
-    .signers([signer.payer])
+    .signers(signers)
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -331,6 +353,11 @@ export async function confirm(
     program.programId
   )
 
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.confirm(side)
     .accounts({
       assetMint,
@@ -346,7 +373,7 @@ export async function confirm(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID
     })
-    .signers([signer.payer])
+    .signers(signers)
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -376,13 +403,18 @@ export async function lastLook(
     program.programId
   )
 
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.lastLook()
     .accounts({
       signer: signer.publicKey,
       order: orderPda,
       rfq: rfqPda,
     })
-    .signers([signer.payer])
+    .signers(signers)
     .rpc()
 
   const rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -428,6 +460,11 @@ export async function returnCollateral(
     program.programId
   )
 
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
   const tx = await program.methods.returnCollateral()
     .accounts({
       assetEscrow: assetEscrowPda,
@@ -443,7 +480,7 @@ export async function returnCollateral(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID
     })
-    .signers([signer.payer])
+    .signers(signers)
     .rpc()
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
@@ -496,7 +533,10 @@ export async function settle(
 
   const orderState: any = await program.account.orderState.fetch(orderPda)
   let treasuryWallet: PublicKey
+  let treasuryMint: PublicKey
+
   if (orderState?.confirmedQuote?.hasOwnProperty('ask')) {
+    treasuryMint = assetMint
     treasuryWallet = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -504,6 +544,7 @@ export async function settle(
       protocolState.authority
     )
   } else {
+    treasuryMint = quoteMint
     treasuryWallet = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -512,25 +553,66 @@ export async function settle(
     )
   }
 
-  const tx = await program.methods.settle()
-    .accounts({
-      assetEscrow: assetEscrowPda,
-      assetMint,
-      assetWallet,
-      signer: signer.publicKey,
-      order: orderPda,
-      quoteEscrow: quoteEscrowPda,
-      quoteMint,
-      quoteWallet,
-      rfq: rfqPda,
-      systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      protocol: protocolPda,
+  const token = new Token(
+    provider.connection,
+    treasuryMint,
+    TOKEN_PROGRAM_ID,
+    signer as unknown as Signer
+  );
+
+  let instructions = []
+  try {
+    const account = await token.getAccountInfo(treasuryWallet)
+    if (account.amount.toNumber() < 0) {
+      throw new Error('Account does not exist')
+    }
+  } catch {
+    // ATA might not exist so create it
+    instructions.push(Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      treasuryMint,
       treasuryWallet,
-      rent: SYSVAR_RENT_PUBKEY,
-    })
-    .signers([signer.payer])
-    .rpc()
+      protocolState.authority,
+      signer.publicKey
+    ))
+  }
+
+  const accounts = {
+    assetEscrow: assetEscrowPda,
+    assetMint,
+    assetWallet,
+    signer: signer.publicKey,
+    order: orderPda,
+    quoteEscrow: quoteEscrowPda,
+    quoteMint,
+    quoteWallet,
+    rfq: rfqPda,
+    systemProgram: SystemProgram.programId,
+    tokenProgram: TOKEN_PROGRAM_ID,
+    protocol: protocolPda,
+    treasuryWallet,
+    rent: SYSVAR_RENT_PUBKEY,
+  }
+
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
+  let tx: string
+  if (instructions.length > 0) {
+    tx = await program.methods.settle()
+      .accounts(accounts)
+      .preInstructions(instructions)
+      .signers(signers)
+      .rpc()
+  } else {
+    tx = await program.methods.settle()
+      .accounts(accounts)
+      .signers(signers)
+      .rpc()
+  }
 
   rfqState = await program.account.rfqState.fetch(rfqPda)
 
@@ -617,15 +699,15 @@ export async function mintPsyOptionsAmericanOptions(provider: Provider, rfqId: n
 
 export async function getBalance(
   provider: Provider,
-  payer: Wallet,
+  signer: PublicKey,
   mint: PublicKey
 ) {
   const program = await getProgram(provider)
   try {
-    const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(payer.publicKey, { mint })
+    const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(signer, { mint })
     return parseInt(parsedAccount.value[0].account.data.parsed.info.tokenAmount.amount, 10);
-  } catch (error) {
-    console.log('No mints found for wallet')
+  } catch {
+    return null
   }
 }
 
