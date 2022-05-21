@@ -170,14 +170,12 @@ describe('RFQ Specification', () => {
     )
 
     // NOTE: Do not create DAO asset ATA as this is tested for in settle function
-    //daoAssetATA = await assetToken.createAssociatedTokenAccount(dao.publicKey)
     takerAssetATA = await assetToken.createAssociatedTokenAccount(taker.publicKey)
     makerAAssetATA = await assetToken.createAssociatedTokenAccount(makerA.publicKey)
     makerBAssetATA = await assetToken.createAssociatedTokenAccount(makerB.publicKey)
     makerCAssetATA = await assetToken.createAssociatedTokenAccount(makerC.publicKey)
     makerDAssetATA = await assetToken.createAssociatedTokenAccount(makerD.publicKey)
 
-    // NOTE: Do not create DAO asset ATA as this is tested for in settle function
     daoQuoteATA = await quoteToken.createAssociatedTokenAccount(dao.publicKey)
     takerQuoteATA = await quoteToken.createAssociatedTokenAccount(taker.publicKey)
     makerAQuoteATA = await quoteToken.createAssociatedTokenAccount(makerA.publicKey)
@@ -680,10 +678,10 @@ describe('RFQ Specification', () => {
     const res1 = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT2, provider, quoteToken.publicKey, requestOrder)
     assert.equal(legs.toString(), res1.rfqState.legs.toString())
 
-    await respond(provider, makerB, rfqId, MAKER_B_BID_AMOUNT1, MAKER_B_ASK_AMOUNT1, makerBAssetATA, makerBQuoteATA)
-    await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
-    await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
-    await settle(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
+    //await respond(provider, makerB, rfqId, MAKER_B_BID_AMOUNT1, MAKER_B_ASK_AMOUNT1, makerBAssetATA, makerBQuoteATA)
+    //await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
+    //await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
+    //await settle(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
 
     await mintPsyOptionsAmericanOptions(provider, rfqId)
     // 🦆: Verify all legs have been executed

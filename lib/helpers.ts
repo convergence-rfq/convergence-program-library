@@ -1,9 +1,12 @@
 import * as anchor from '@project-serum/anchor'
-import { Idl, Program, Provider, Wallet } from '@project-serum/anchor'
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
-import { PublicKey, SystemProgram, Signer, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
+import { ProgramAccount, BN, Idl, Program, Provider, Wallet } from '@project-serum/anchor'
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { PublicKey, SystemProgram, Signer, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
 
 import { default as idl } from '../target/idl/rfq.json'
+import { default as psyAmericanIdl } from '../lib/integrations/idl/psyAmerican.json'
+import { PsyAmerican } from '../lib/integrations/types/psyAmerican'
+
 
 export const RFQ_SEED = 'rfq'
 export const ORDER_SEED = 'order'
@@ -674,15 +677,40 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
   return orders
 }
 
-/// Integration
+/// Integrations
+
+export type OptionMarket = {
+  optionMint: PublicKey
+  writerTokenMint: PublicKey
+  underlyingAssetMint: PublicKey
+  quoteAssetMint: PublicKey
+  underlyingAssetPool: PublicKey
+  quoteAssetPool: PublicKey
+  mintFeeAccount: PublicKey
+  exerciseFeeAccount: PublicKey
+  underlyingAmountPerContract: BN
+  quoteAmountPerContract: BN
+  expirationUnixTimestamp: BN
+  expired: boolean
+  bumpSeed: number
+}
+
+export async function getPsyAmericanProgram(provider: Provider): Promise<Program> {
+  const programId = new PublicKey(psyAmericanIdl.metadata.address)
+  return new anchor.Program(psyAmericanIdl as Idl, programId, provider)
+}
 
 export async function mintPsyOptionsAmericanOptions(provider: Provider, rfqId: number) {
-  const program = await getProgram(provider)
+  const psyAmericanProgram = await getPsyAmericanProgram(provider)
+  const optionMarkets = (await psyAmericanProgram.account.optionMarket.all()) as unknown as ProgramAccount<OptionMarket>[]
+  console.log(optionMarkets)
+
+  const rfqProgram = await getProgram(provider)
   const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    program.programId
+    rfqProgram.programId
   )
-  const rfqState: any = await program.account.rfqState.fetch(rfqPda)
+  const rfqState: any = await rfqProgram.account.rfqState.fetch(rfqPda)
 
   for (let i = 0; i < rfqState.legs.length; i++) {
     // 🦆
