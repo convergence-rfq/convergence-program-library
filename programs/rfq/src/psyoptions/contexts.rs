@@ -48,7 +48,6 @@ pub struct InitializeAmericanOptionMarket<'info> {
     pub user: Signer<'info>,
     /// CHECK:
     pub psy_american_program: AccountInfo<'info>,
-    ///Init OptionMarket accounts
     pub underlying_asset_mint: Box<Account<'info, Mint>>,
     pub quote_asset_mint: Box<Account<'info, Mint>>,
     /// CHECK:

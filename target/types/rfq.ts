@@ -478,7 +478,7 @@ export type Rfq = {
       "args": []
     },
     {
-      "name": "initializePsyoptionsAmericanOptionMarket",
+      "name": "initializePsyOptionsAmericanOptionMarket",
       "accounts": [
         {
           "name": "user",
@@ -576,7 +576,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "mintPsyoptionsAmericanOption",
+      "name": "mintPsyOptionsAmericanOption",
       "accounts": [
         {
           "name": "authority",
@@ -1657,7 +1657,7 @@ export const IDL: Rfq = {
       "args": []
     },
     {
-      "name": "initializePsyoptionsAmericanOptionMarket",
+      "name": "initializePsyOptionsAmericanOptionMarket",
       "accounts": [
         {
           "name": "user",
@@ -1755,7 +1755,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "mintPsyoptionsAmericanOption",
+      "name": "mintPsyOptionsAmericanOption",
       "accounts": [
         {
           "name": "authority",

@@ -117,7 +117,7 @@ describe('RFQ Specification', () => {
         rfqCount = protocolState.rfqCount.toNumber()
     })
 
-    it(`RFQ ${rfqCount + 1}: Taker requests sell for PsyOptions American multi-leg strategy`, async () => {
+    it(`RFQ 1: Taker requests sell for PsyOptions American multi-leg strategy`, async () => {
         const rfqId = rfqCount + 1
         const requestOrder = Order.Sell
         const now = (new Date()).getTime() / 1_000
@@ -148,7 +148,9 @@ describe('RFQ Specification', () => {
         //await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
         //await settle(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
 
+        // NOTE: Do not forget to re-sync PsyOptions American program IDL?
         await mintPsyAmericanOptions(provider, rfqId, taker)
+
         // 🦆: Verify all legs have been executed
     })
 })

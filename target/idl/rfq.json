@@ -478,7 +478,7 @@
       "args": []
     },
     {
-      "name": "initializePsyoptionsAmericanOptionMarket",
+      "name": "initializePsyOptionsAmericanOptionMarket",
       "accounts": [
         {
           "name": "user",
@@ -576,7 +576,7 @@
       ]
     },
     {
-      "name": "mintPsyoptionsAmericanOption",
+      "name": "mintPsyOptionsAmericanOption",
       "accounts": [
         {
           "name": "authority",
