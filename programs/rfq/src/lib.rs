@@ -106,7 +106,7 @@ pub mod rfq {
         )
     }
 
-    pub fn mint_psyoptions_american_option<'a, 'b, 'c, 'info>(
+    pub fn mint_psy_options_american_option<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, AmericanOption<'info>>,
         size: u64,
         vault_authority_bump: u8,
