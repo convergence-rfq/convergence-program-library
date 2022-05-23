@@ -1,27 +1,19 @@
 import * as anchor from '@project-serum/anchor'
-import { ProgramAccount, BN, Idl, Program, Provider, Wallet } from '@project-serum/anchor'
+import { ProgramAccount, BN, Idl, IdlAccounts, Program, Provider, Wallet } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { PublicKey, SystemProgram, Signer, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
 
 import { default as idl } from '../target/idl/rfq.json'
+import { Rfq } from '../target/types/rfq'
+
 import { default as psyAmericanIdl } from '../lib/integrations/idl/psyAmerican.json'
 import { PsyAmerican } from '../lib/integrations/types/psyAmerican'
-
 
 export const RFQ_SEED = 'rfq'
 export const ORDER_SEED = 'order'
 export const PROTOCOL_SEED = 'protocol'
 export const ASSET_ESCROW_SEED = 'asset_escrow'
 export const QUOTE_ESCROW_SEED = 'quote_escrow'
-
-/// TODO: Import types and constants from Anchor
-///
-/// The following creates the correct types.
-///
-/// ```ts
-/// import { Rfq } from '../target/types/rfq'
-/// export type Instrument = IdlAccounts<Rfq>['instrument']
-/// ```
 
 /// Types
 
@@ -44,6 +36,9 @@ export const Instrument = {
   Option: {
     option: {}
   },
+  Future: {
+    future: {}
+  }
 }
 
 export const Quote = {
@@ -83,24 +78,13 @@ export const Contract = {
 }
 
 export const Leg = {
-  Amount: {
-    amount: {}
-  },
+  Amount: null,
   Contract: null,
   ContractQuoteAmount: null,
   ContractAssetAmount: null,
   Expiry: null,
-  Instrument: {
-    instrument: {}
-  },
-  Venue: {
-    venue: {}
-  },
-}
-
-export async function getProgram(provider: Provider): Promise<Program> {
-  const programId = new PublicKey(idl.metadata.address)
-  return new anchor.Program(idl as Idl, programId, provider)
+  Instrument: null,
+  Venue: null,
 }
 
 /// Protocol methods
@@ -700,10 +684,9 @@ export async function getPsyAmericanProgram(provider: Provider): Promise<Program
   return new anchor.Program(psyAmericanIdl as Idl, programId, provider)
 }
 
-export async function mintPsyOptionsAmericanOptions(provider: Provider, rfqId: number) {
+export async function mintPsyAmericanOptions(provider: Provider, rfqId: number) {
   const psyAmericanProgram = await getPsyAmericanProgram(provider)
   const optionMarkets = (await psyAmericanProgram.account.optionMarket.all()) as unknown as ProgramAccount<OptionMarket>[]
-  console.log(optionMarkets)
 
   const rfqProgram = await getProgram(provider)
   const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
@@ -712,18 +695,40 @@ export async function mintPsyOptionsAmericanOptions(provider: Provider, rfqId: n
   )
   const rfqState: any = await rfqProgram.account.rfqState.fetch(rfqPda)
 
-  for (let i = 0; i < rfqState.legs.length; i++) {
-    // 🦆
-    // - Check if market exists for each leg
-    // - Initialize market if does not exist
-    // - Mint option
-    console.log(rfqState.legs[i])
+  let marketPublicKey: PublicKey
+  for (let i = 0; i < optionMarkets.length; i++) {
+    for (let j = 0; j < rfqState.legs.length; j++) {
+      const optionMarket: OptionMarket = optionMarkets[i].account
+      const leg = rfqState.legs[j]
+      // Check if market exists
+      if (rfqState.assetMint.toString() == optionMarket.underlyingAssetMint.toString() &&
+        rfqState.quoteMint.toString() == optionMarket.quoteAssetMint.toString() &&
+        leg.expiry.toNumber() == optionMarket.expirationUnixTimestamp.toNumber() &&
+        leg.contractAssetAmount.toNumber() == optionMarket.underlyingAmountPerContract.toNumber() &&
+        leg.contractQuoteAmount.toNumber() == optionMarket.quoteAmountPerContract.toNumber()) {
+        marketPublicKey = optionMarkets[i].publicKey
+        break
+      }
+    }
   }
+
+  // Initialize market if does not exist
+  if (!marketPublicKey) {
+    console.log('Market does not exist')
+  }
+
+  // 🦆:
+  // - Mint option
 
   return { rfqState }
 }
 
 /// Utils
+
+export async function getProgram(provider: Provider): Promise<Program> {
+  const programId = new PublicKey(idl.metadata.address)
+  return new anchor.Program(idl as Idl, programId, provider)
+}
 
 export async function getBalance(
   provider: Provider,

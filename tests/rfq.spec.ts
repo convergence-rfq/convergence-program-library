@@ -204,7 +204,7 @@ describe('RFQ Specification', () => {
     assert.ok(protocolState.accessManagerCount.eq(new anchor.BN(0)))
   })
 
-  /*it(`DAO sets ${FEE_NUMERATOR}bps protocol fee`, async () => {
+  it(`DAO sets ${FEE_NUMERATOR}bps protocol fee`, async () => {
     const { protocolState } = await setFee(provider, dao, FEE_DENOMINATOR, FEE_NUMERATOR)
     assert.ok(protocolState.feeDenominator.eq(new anchor.BN(FEE_DENOMINATOR)))
     assert.ok(protocolState.feeNumerator.eq(new anchor.BN(FEE_NUMERATOR)))
@@ -654,36 +654,5 @@ describe('RFQ Specification', () => {
     const responses = await getResponses(provider, rfqs)
     assert.equal(rfqs.length, 5)
     assert.equal(responses.length, 8)
-  })*/
-
-  it(`RFQ 6: Taker requests sell for PsyOptions multi-leg strategy`, async () => {
-    const rfqId = 1
-    const requestOrder = Order.Sell
-    const now = (new Date()).getTime() / 1_000
-    const expiry = now + 2
-    const legs = [{
-      amount: new anchor.BN(10 * (10 ** ASSET_DECIMALS)),
-      contract: Contract.Call,
-      contractAssetAmount: new anchor.BN(0.5 * (10 ** ASSET_DECIMALS)),
-      contractQuoteAmount: new anchor.BN(1 * (10 ** QUOTE_DECIMALS)),
-      expiry: new anchor.BN(now + 30),
-      instrument: Instrument.Option,
-      venue: Venue.PsyOptions
-    }, {
-      amount: new anchor.BN(5 * (10 ** ASSET_DECIMALS)),
-      instrument: Instrument.Spot,
-      venue: Venue.Convergence
-    }]
-
-    const res1 = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT2, provider, quoteToken.publicKey, requestOrder)
-    assert.equal(legs.toString(), res1.rfqState.legs.toString())
-
-    //await respond(provider, makerB, rfqId, MAKER_B_BID_AMOUNT1, MAKER_B_ASK_AMOUNT1, makerBAssetATA, makerBQuoteATA)
-    //await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
-    //await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
-    //await settle(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
-
-    await mintPsyOptionsAmericanOptions(provider, rfqId)
-    // 🦆: Verify all legs have been executed
   })
 })
