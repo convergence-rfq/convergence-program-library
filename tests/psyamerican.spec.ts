@@ -17,20 +17,13 @@ import {
     Quote,
     Venue,
     calcFee,
-    cancel,
     confirm,
     getBalance,
-    getRFQs,
     getProgram,
-    getResponses,
-    initializeProtocol,
     mintPsyAmericanOptions,
-    lastLook,
     respond,
-    returnCollateral,
     request,
     requestAirdrop,
-    setFee,
     settle,
 } from '../lib/helpers'
 import { Program } from '@project-serum/anchor'
@@ -59,15 +52,10 @@ let takerAssetATA: PublicKey
 let takerQuoteATA: PublicKey
 let makerAAssetATA: PublicKey
 let makerAQuoteATA: PublicKey
-let makerBAssetATA: PublicKey
-let makerBQuoteATA: PublicKey
 
 let mintAuthority: Wallet
-let dao: Wallet
-let bot: Wallet
 let taker: Wallet
 let makerA: Wallet
-let makerB: Wallet
 
 let rfqCount: number
 
@@ -81,18 +69,12 @@ describe('RFQ Specification', () => {
         program = await getProgram(provider)
 
         mintAuthority = new Wallet(Keypair.generate())
-        dao = new Wallet(Keypair.generate())
         taker = new Wallet(Keypair.generate())
-        bot = new Wallet(Keypair.generate())
         makerA = new Wallet(Keypair.generate())
-        makerB = new Wallet(Keypair.generate())
 
         await requestAirdrop(provider, mintAuthority.publicKey, LAMPORTS_PER_SOL * 10)
-        await requestAirdrop(provider, dao.publicKey, LAMPORTS_PER_SOL * 10)
         await requestAirdrop(provider, taker.publicKey, LAMPORTS_PER_SOL * 10)
-        await requestAirdrop(provider, bot.publicKey, LAMPORTS_PER_SOL * 10)
         await requestAirdrop(provider, makerA.publicKey, LAMPORTS_PER_SOL * 10)
-        await requestAirdrop(provider, makerB.publicKey, LAMPORTS_PER_SOL * 10)
 
         const takerBalance = await provider.connection.getBalance(taker.publicKey)
         console.log('Taker SOL balance:', takerBalance)
@@ -117,19 +99,15 @@ describe('RFQ Specification', () => {
 
         takerAssetATA = await assetToken.createAssociatedTokenAccount(taker.publicKey)
         makerAAssetATA = await assetToken.createAssociatedTokenAccount(makerA.publicKey)
-        makerBAssetATA = await assetToken.createAssociatedTokenAccount(makerB.publicKey)
 
         takerQuoteATA = await quoteToken.createAssociatedTokenAccount(taker.publicKey)
         makerAQuoteATA = await quoteToken.createAssociatedTokenAccount(makerA.publicKey)
-        makerBQuoteATA = await quoteToken.createAssociatedTokenAccount(makerB.publicKey)
 
         await assetToken.mintTo(takerAssetATA, mintAuthority.publicKey, [], MINT_AIRDROP_ASSET)
         await assetToken.mintTo(makerAAssetATA, mintAuthority.publicKey, [], MINT_AIRDROP_ASSET)
-        await assetToken.mintTo(makerBAssetATA, mintAuthority.publicKey, [], MINT_AIRDROP_ASSET)
 
         await quoteToken.mintTo(takerQuoteATA, mintAuthority.publicKey, [], MINT_AIRDROP_QUOTE)
         await quoteToken.mintTo(makerAQuoteATA, mintAuthority.publicKey, [], MINT_AIRDROP_QUOTE)
-        await quoteToken.mintTo(makerBQuoteATA, mintAuthority.publicKey, [], MINT_AIRDROP_QUOTE)
 
         const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
             [Buffer.from(PROTOCOL_SEED)],
@@ -170,7 +148,7 @@ describe('RFQ Specification', () => {
         //await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
         //await settle(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
 
-        await mintPsyAmericanOptions(provider, rfqId)
+        await mintPsyAmericanOptions(provider, rfqId, taker)
         // 🦆: Verify all legs have been executed
     })
 })

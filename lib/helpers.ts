@@ -8,6 +8,7 @@ import { Rfq } from '../target/types/rfq'
 
 import { default as psyAmericanIdl } from '../lib/integrations/idl/psyAmerican.json'
 import { PsyAmerican } from '../lib/integrations/types/psyAmerican'
+import { SignerWallet } from '@saberhq/solana-contrib'
 
 export const RFQ_SEED = 'rfq'
 export const ORDER_SEED = 'order'
@@ -684,7 +685,7 @@ export async function getPsyAmericanProgram(provider: Provider): Promise<Program
   return new anchor.Program(psyAmericanIdl as Idl, programId, provider)
 }
 
-export async function mintPsyAmericanOptions(provider: Provider, rfqId: number) {
+export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, signer: Wallet) {
   const psyAmericanProgram = await getPsyAmericanProgram(provider)
   const optionMarkets = (await psyAmericanProgram.account.optionMarket.all()) as unknown as ProgramAccount<OptionMarket>[]
 
@@ -695,12 +696,19 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number) 
   )
   const rfqState: any = await rfqProgram.account.rfqState.fetch(rfqPda)
 
-  let marketPublicKey: PublicKey
-  for (let i = 0; i < optionMarkets.length; i++) {
-    for (let j = 0; j < rfqState.legs.length; j++) {
-      const optionMarket: OptionMarket = optionMarkets[i].account
-      const leg = rfqState.legs[j]
-      // Check if market exists
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
+  // Check if market exists
+  for (let i = 0; i < rfqState.legs.length; i++) {
+    let marketPublicKey: PublicKey
+    const leg = rfqState.legs[i]
+
+    for (let j = 0; j < optionMarkets.length; j++) {
+      const optionMarket: OptionMarket = optionMarkets[j].account
+
       if (rfqState.assetMint.toString() == optionMarket.underlyingAssetMint.toString() &&
         rfqState.quoteMint.toString() == optionMarket.quoteAssetMint.toString() &&
         leg.expiry.toNumber() == optionMarket.expirationUnixTimestamp.toNumber() &&
@@ -710,15 +718,34 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number) 
         break
       }
     }
+
+    // Initialize market if it does not exist
+    if (!marketPublicKey) {
+      const underlyingAmountPerContract = leg.contractAssetAmount
+      const quoteAmountPerContract = leg.contractQuoteAmount
+      const expirationUnixTimestamp = leg.expiry
+      const bumpSeed = new anchor.BN(0)
+
+      await rfqProgram.methods.initializePsyoptionsAmericanOptionMarket(
+        underlyingAmountPerContract,
+        quoteAmountPerContract,
+        expirationUnixTimestamp,
+        bumpSeed
+      )
+        .accounts({
+
+        })
+        .signers(signers)
+        .rpc()
+    }
   }
 
-  // Initialize market if does not exist
-  if (!marketPublicKey) {
-    console.log('Market does not exist')
-  }
-
-  // 🦆:
+  // 🦆: 
   // - Mint option
+  // 🦆:
+  // - Execute option
+  // 🦆:
+  // - Consolidate instructions into one transaction
 
   return { rfqState }
 }
