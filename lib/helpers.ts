@@ -1,7 +1,9 @@
 import * as anchor from '@project-serum/anchor'
 import { ProgramAccount, BN, Idl, IdlAccounts, Program, Provider, Wallet } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { PublicKey, SystemProgram, Keypair, SYSVAR_CLOCK_PUBKEY, AccountMeta, TransactionInstruction, Signer, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
+import {
+  LAMPORTS_PER_SOL, PublicKey, SystemProgram, Keypair, SYSVAR_CLOCK_PUBKEY, AccountMeta, TransactionInstruction, Signer, SYSVAR_RENT_PUBKEY
+} from '@solana/web3.js'
 
 import { default as idl } from '../target/idl/rfq.json'
 import { Rfq } from '../target/types/rfq'
@@ -685,7 +687,22 @@ export async function getPsyAmericanProgram(provider: Provider): Promise<Program
   return new anchor.Program(psyAmericanIdl as Idl, programId, provider)
 }
 
-export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, signer: Wallet) {
+/**
+ * mintPsyAmericanOptions
+ * 
+ * Fetch RFQ legs and initialize market if it does not exist, then mint the leg options. Finally,
+ * execute the options.
+ * 
+ * @param provider 
+ * @param rfqId 
+ * @param signer 
+ * @returns Promise
+ */
+export async function mintPsyAmericanOptions(
+  provider: Provider,
+  rfqId: number,
+  signer: Wallet
+): Promise<object> {
   const psyAmericanProgram = await getPsyAmericanProgram(provider)
   const optionMarkets = (await psyAmericanProgram.account.optionMarket.all()) as unknown as ProgramAccount<OptionMarket>[]
 
@@ -710,7 +727,7 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, 
   )
 
   const assetMint = await assetToken.getMintInfo()
-  const quoteMint = await assetToken.getMintInfo()
+  const quoteMint = await quoteToken.getMintInfo()
 
   let signers = []
   if (signer.payer) {
@@ -719,7 +736,7 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, 
 
   // Check if market exists
   for (let i = 0; i < rfqState.legs.length; i++) {
-    let marketPublicKey: PublicKey
+    let marketPublicKey: PublicKey = null
     const leg = rfqState.legs[i]
 
     for (let j = 0; j < optionMarkets.length; j++) {
@@ -730,14 +747,14 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, 
         leg.expiry.toNumber() == optionMarket.expirationUnixTimestamp.toNumber() &&
         leg.contractAssetAmount.toNumber() == optionMarket.underlyingAmountPerContract.toNumber() &&
         leg.contractQuoteAmount.toNumber() == optionMarket.quoteAmountPerContract.toNumber()) {
-        // Found market
+        // Market exists
         marketPublicKey = optionMarkets[i].publicKey
         break
       }
     }
 
     // Initialize market if it does not exist
-    if (!marketPublicKey) {
+    if (marketPublicKey === null) {
       const underlyingAmountPerContract = leg.contractAssetAmount
       const quoteAmountPerContract = leg.contractQuoteAmount
       const expirationUnixTimestamp = leg.expiry
@@ -745,9 +762,9 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, 
       const [optionMarket, optionMarketBumpSeed] = await PublicKey.findProgramAddress([
         assetToken.publicKey.toBuffer(),
         quoteToken.publicKey.toBuffer(),
-        underlyingAmountPerContract.toBuffer('le', assetMint.decimals), // TODO: Are these decimals correct?
-        quoteAmountPerContract.toBuffer('le', quoteMint.decimals), // TODO: Are these decimals correct?
-        expirationUnixTimestamp.toBuffer('le', 8), // TODO: Are these decimals correct?
+        underlyingAmountPerContract.toBuffer('le', assetMint.decimals), // TODO: Correct?
+        quoteAmountPerContract.toBuffer('le', quoteMint.decimals), // TODO: Correct?
+        expirationUnixTimestamp.toBuffer('le', 8) // TODO: Correct?
       ],
         psyAmericanProgram.programId
       )
@@ -768,8 +785,10 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, 
         psyAmericanProgram.programId
       )
 
-      const feeOwner = new Keypair()
-      signers.push(feeOwner)
+      // TODO: Verify correct as was taken from PsyOptions American test program
+      const feeOwner = {
+        publicKey: new PublicKey('6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD')
+      }
 
       let remainingAccounts: AccountMeta[] = []
       let instructions: TransactionInstruction[] = []
@@ -780,44 +799,54 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, 
         assetToken.publicKey,
         feeOwner.publicKey
       )
-      remainingAccounts.push({
-        pubkey: mintFeeATA,
-        isWritable: true,
-        isSigner: false
-      })
-      instructions.push(Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        assetToken.publicKey,
-        mintFeeATA,
-        feeOwner.publicKey,
-        signer.publicKey
-      ))
-
       const exerciseFeeATA = await Token.getAssociatedTokenAddress(
         ASSOCIATED_TOKEN_PROGRAM_ID,
         TOKEN_PROGRAM_ID,
         quoteToken.publicKey,
         feeOwner.publicKey
-      );
-      remainingAccounts.push({
-        pubkey: exerciseFeeATA,
-        isWritable: false,
-        isSigner: false
-      })
-      instructions.push(Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        quoteToken.publicKey,
-        exerciseFeeATA,
-        feeOwner.publicKey,
-        signer.publicKey
-      ))
+      )
 
-      console.log('Initializing PsyOptions american option market...')
+      try {
+        await assetToken.getAccountInfo(mintFeeATA);
+      } catch {
+        // Mint fee ATA DNE
+        remainingAccounts.push({
+          pubkey: mintFeeATA,
+          isWritable: true,
+          isSigner: false
+        })
+        instructions.push(Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          assetToken.publicKey,
+          mintFeeATA,
+          feeOwner.publicKey,
+          signer.publicKey
+        ))
+      }
 
-      //await rfqProgram.methods.initializePsyOptionsAmericanOptionMarket(
-      await psyAmericanProgram.methods.initializeMarket(
+      try {
+        await quoteToken.getAccountInfo(exerciseFeeATA);
+      } catch {
+        // Exercise fee ATA DNE
+        remainingAccounts.push({
+          pubkey: exerciseFeeATA,
+          isWritable: false,
+          isSigner: false
+        })
+        instructions.push(Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          quoteToken.publicKey,
+          exerciseFeeATA,
+          feeOwner.publicKey,
+          signer.publicKey
+        ))
+      }
+
+      console.log('Initializing PsyOptions American option market...')
+
+      const tx = await rfqProgram.methods.initializePsyOptionsAmericanOptionMarket(
         underlyingAmountPerContract,
         quoteAmountPerContract,
         expirationUnixTimestamp,
@@ -825,15 +854,15 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, 
       )
         .accounts({
           user: signer.publicKey,
-          psyAmericanProgram: psyAmericanProgram.programId,
           underlyingAssetMint: rfqState.assetMint,
           quoteAssetMint: rfqState.quoteMint,
+          psyAmericanProgram: psyAmericanProgram.programId,
           optionMint,
           writerTokenMint,
           quoteAssetPool,
           underlyingAssetPool,
           optionMarket,
-          feeOwner: signer.publicKey,
+          feeOwner: feeOwner.publicKey,
           tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
@@ -844,6 +873,8 @@ export async function mintPsyAmericanOptions(provider: Provider, rfqId: number, 
         .remainingAccounts(remainingAccounts)
         .signers(signers)
         .rpc()
+
+      console.log('tx', tx)
     }
   }
 

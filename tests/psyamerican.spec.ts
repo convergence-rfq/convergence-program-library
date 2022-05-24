@@ -4,7 +4,7 @@
   */
 
 import * as anchor from '@project-serum/anchor'
-import { Wallet } from '@project-serum/anchor'
+import { Wallet, BN } from '@project-serum/anchor'
 import * as assert from 'assert'
 import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
@@ -125,13 +125,13 @@ describe('RFQ Specification', () => {
         const legs = [{
             amount: new anchor.BN(10 * (10 ** ASSET_DECIMALS)),
             contract: Contract.Call,
-            contractAssetAmount: new anchor.BN(0.5 * (10 ** ASSET_DECIMALS)),
-            contractQuoteAmount: new anchor.BN(1 * (10 ** QUOTE_DECIMALS)),
-            expiry: new anchor.BN(now + 30),
+            contractAssetAmount: new BN(1 * (10 ** ASSET_DECIMALS)),
+            contractQuoteAmount: new BN(1 * (10 ** QUOTE_DECIMALS)),
+            expiry: new BN(now + 30),
             instrument: Instrument.Option,
             venue: Venue.PsyOptions
         }, {
-            amount: new anchor.BN(5 * (10 ** ASSET_DECIMALS)),
+            amount: new BN(5 * (10 ** ASSET_DECIMALS)),
             contract: null,
             contractAssetAmount: null,
             contractQuoteAmount: null,
@@ -148,7 +148,6 @@ describe('RFQ Specification', () => {
         //await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
         //await settle(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
 
-        // NOTE: Do not forget to re-sync PsyOptions American program IDL?
         await mintPsyAmericanOptions(provider, rfqId, taker)
 
         // 🦆: Verify all legs have been executed
