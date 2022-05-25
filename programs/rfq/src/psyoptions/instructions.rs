@@ -53,6 +53,7 @@ pub fn initialize_american_option_market<'a, 'b, 'c, 'info>(
         ctx.accounts.system_program.to_account_metas(Some(false))[0].clone(),
         ctx.accounts.clock.to_account_metas(Some(false))[0].clone(),
     ];
+    // Use Anchor CPI context instead
     let mut account_infos = vec![
         ctx.accounts.user.to_account_info().clone(),
         ctx.accounts.underlying_asset_mint.to_account_info().clone(),

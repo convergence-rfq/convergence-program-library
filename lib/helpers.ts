@@ -726,9 +726,6 @@ export async function mintPsyAmericanOptions(
     signer as unknown as Signer
   )
 
-  const assetMint = await assetToken.getMintInfo()
-  const quoteMint = await quoteToken.getMintInfo()
-
   let signers = []
   if (signer.payer) {
     signers.push(signer.payer)
@@ -738,6 +735,10 @@ export async function mintPsyAmericanOptions(
   for (let i = 0; i < rfqState.legs.length; i++) {
     let marketPublicKey: PublicKey = null
     const leg = rfqState.legs[i]
+
+    if (!('psyOptions' in leg.venue)) {
+      continue
+    }
 
     for (let j = 0; j < optionMarkets.length; j++) {
       const optionMarket: OptionMarket = optionMarkets[j].account
@@ -762,9 +763,9 @@ export async function mintPsyAmericanOptions(
       const [optionMarket, optionMarketBumpSeed] = await PublicKey.findProgramAddress([
         assetToken.publicKey.toBuffer(),
         quoteToken.publicKey.toBuffer(),
-        underlyingAmountPerContract.toBuffer('le', assetMint.decimals), // TODO: Correct?
-        quoteAmountPerContract.toBuffer('le', quoteMint.decimals), // TODO: Correct?
-        expirationUnixTimestamp.toBuffer('le', 8) // TODO: Correct?
+        underlyingAmountPerContract.toBuffer('le', 8),
+        quoteAmountPerContract.toBuffer('le', 8),
+        expirationUnixTimestamp.toBuffer('le', 8)
       ],
         psyAmericanProgram.programId
       )
@@ -784,11 +785,7 @@ export async function mintPsyAmericanOptions(
         [optionMarket.toBuffer(), Buffer.from('underlyingAssetPool')],
         psyAmericanProgram.programId
       )
-
-      // TODO: Verify correct as was taken from PsyOptions American test program
-      const feeOwner = {
-        publicKey: new PublicKey('6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD')
-      }
+      const feeOwner = new PublicKey('6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD')
 
       let remainingAccounts: AccountMeta[] = []
       let instructions: TransactionInstruction[] = []
@@ -797,13 +794,13 @@ export async function mintPsyAmericanOptions(
         ASSOCIATED_TOKEN_PROGRAM_ID,
         TOKEN_PROGRAM_ID,
         assetToken.publicKey,
-        feeOwner.publicKey
+        feeOwner
       )
       const exerciseFeeATA = await Token.getAssociatedTokenAddress(
         ASSOCIATED_TOKEN_PROGRAM_ID,
         TOKEN_PROGRAM_ID,
         quoteToken.publicKey,
-        feeOwner.publicKey
+        feeOwner
       )
 
       try {
@@ -820,7 +817,7 @@ export async function mintPsyAmericanOptions(
           TOKEN_PROGRAM_ID,
           assetToken.publicKey,
           mintFeeATA,
-          feeOwner.publicKey,
+          feeOwner,
           signer.publicKey
         ))
       }
@@ -839,42 +836,40 @@ export async function mintPsyAmericanOptions(
           TOKEN_PROGRAM_ID,
           quoteToken.publicKey,
           exerciseFeeATA,
-          feeOwner.publicKey,
+          feeOwner,
           signer.publicKey
         ))
       }
 
-      console.log('Initializing PsyOptions American option market...')
+      const accounts = {
+        user: signer.payer.publicKey,
+        underlyingAssetMint: rfqState.assetMint,
+        quoteAssetMint: rfqState.quoteMint,
+        psyAmericanProgram: psyAmericanProgram.programId,
+        optionMint,
+        writerTokenMint,
+        quoteAssetPool,
+        underlyingAssetPool,
+        optionMarket,
+        feeOwner: feeOwner,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId,
+        clock: SYSVAR_CLOCK_PUBKEY
+      }
 
-      const tx = await rfqProgram.methods.initializePsyOptionsAmericanOptionMarket(
+      await rfqProgram.methods.initializePsyOptionsAmericanOptionMarket(
         underlyingAmountPerContract,
         quoteAmountPerContract,
         expirationUnixTimestamp,
         optionMarketBumpSeed
       )
-        .accounts({
-          user: signer.publicKey,
-          underlyingAssetMint: rfqState.assetMint,
-          quoteAssetMint: rfqState.quoteMint,
-          psyAmericanProgram: psyAmericanProgram.programId,
-          optionMint,
-          writerTokenMint,
-          quoteAssetPool,
-          underlyingAssetPool,
-          optionMarket,
-          feeOwner: feeOwner.publicKey,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          rent: SYSVAR_RENT_PUBKEY,
-          systemProgram: SystemProgram.programId,
-          clock: SYSVAR_CLOCK_PUBKEY
-        })
+        .accounts(accounts)
         .preInstructions(instructions)
         .remainingAccounts(remainingAccounts)
         .signers(signers)
         .rpc()
-
-      console.log('tx', tx)
     }
   }
 
