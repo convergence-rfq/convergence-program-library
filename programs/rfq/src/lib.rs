@@ -105,8 +105,16 @@ pub mod rfq {
         )
     }
 
+    /// Initializes PsyOptions American mint vault
+    pub fn initialize_psy_options_american_mint_vault<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, InitializeAmericanMintVault<'info>>,
+    ) -> Result<()> {
+        psyoptions::instructions::initialize_american_mint_vault(ctx)
+    }
+
+    /// Mints PsyOptions American option market.
     pub fn mint_psy_options_american_option<'a, 'b, 'c, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, AmericanOption<'info>>,
+        ctx: Context<'a, 'b, 'c, 'info, MintAmericanOption<'info>>,
         size: u64,
         vault_authority_bump: u8,
     ) -> Result<()> {

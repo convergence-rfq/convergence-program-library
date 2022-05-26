@@ -1,12 +1,67 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use psy_american::OptionMarket;
 
 #[derive(Accounts)]
-pub struct AmericanOption<'info> {
-    /// CHECK: Authority
-    #[account(mut, signer)]
-    pub authority: AccountInfo<'info>,
+pub struct InitializeAmericanOptionMarket<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+    /// CHECK: TODO
+    pub psy_american_program: AccountInfo<'info>,
+    pub underlying_asset_mint: Box<Account<'info, Mint>>,
+    pub quote_asset_mint: Box<Account<'info, Mint>>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub option_mint: AccountInfo<'info>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub writer_token_mint: AccountInfo<'info>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub quote_asset_pool: AccountInfo<'info>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub underlying_asset_pool: AccountInfo<'info>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub option_market: AccountInfo<'info>,
+    /// CHECK: TODO
+    pub fee_owner: AccountInfo<'info>,
+    /// CHECK: TODO
+    pub token_program: AccountInfo<'info>,
+    /// CHECK: TODO
+    pub associated_token_program: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    /// CHECK: TODO
+    pub system_program: AccountInfo<'info>,
+    pub clock: Sysvar<'info, Clock>,
+}
+
+#[derive(Accounts)]
+pub struct InitializeAmericanMintVault<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub underlying_asset: Box<Account<'info, Mint>>,
+    #[account(
+        init,
+        seeds = [&underlying_asset.key().to_bytes()[..], b"vault"],
+        payer = authority,    
+        token::mint = underlying_asset,
+        token::authority = vault_authority,
+        bump
+    )]
+    pub vault: Box<Account<'info, TokenAccount>>,
+    /// CHECK: TODO
+    pub vault_authority: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct MintAmericanOption<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
     /// CHECK: PsyOptions American program
     pub psy_american_program: AccountInfo<'info>,
     /// The vault where the underlying assets are held. This is the PsyAmerican 
@@ -40,39 +95,4 @@ pub struct AmericanOption<'info> {
     pub rent: Sysvar<'info, Rent>,
     /// CHECK:
     pub system_program: AccountInfo<'info>,
-}
-
-#[derive(Accounts)]
-pub struct InitializeAmericanOptionMarket<'info> {
-    #[account(mut)]
-    pub user: Signer<'info>,
-    /// CHECK:
-    pub psy_american_program: AccountInfo<'info>,
-    pub underlying_asset_mint: Box<Account<'info, Mint>>,
-    pub quote_asset_mint: Box<Account<'info, Mint>>,
-    /// CHECK:
-    #[account(mut)]
-    pub option_mint: AccountInfo<'info>,
-    /// CHECK:
-    #[account(mut)]
-    pub writer_token_mint: AccountInfo<'info>,
-    /// CHECK:
-    #[account(mut)]
-    pub quote_asset_pool: AccountInfo<'info>,
-    /// CHECK:
-    #[account(mut)]
-    pub underlying_asset_pool: AccountInfo<'info>,
-    /// CHECK:
-    #[account(mut)]
-    pub option_market: AccountInfo<'info>,
-    /// CHECK:
-    pub fee_owner: AccountInfo<'info>,
-    /// CHECK:
-    pub token_program: AccountInfo<'info>,
-    /// CHECK:
-    pub associated_token_program: AccountInfo<'info>,
-    pub rent: Sysvar<'info, Rent>,
-    /// CHECK:
-    pub system_program: AccountInfo<'info>,
-    pub clock: Sysvar<'info, Clock>,
 }

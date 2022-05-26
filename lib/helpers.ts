@@ -829,9 +829,139 @@ export async function initializePsyAmericanOptionMarket(
     .rpc()
 
   return {
-    optionMarket,
-    key: optionMarket
+    optionMarket: accounts,
+    publicKey: optionMarket
   }
+}
+
+export async function mintPsyAmericanOption(
+  assetToken: Token,
+  key: PublicKey,
+  optionMarket: any,
+  provider: Provider,
+  signer: Wallet,
+  size: BN
+): Promise<any> {
+  const psyAmericanProgram = await getPsyAmericanProgram(provider)
+  const rfqProgram = await getProgram(provider)
+
+  // TODO: What is the correct program?
+  const [vault, _vaultBump] = await PublicKey.findProgramAddress(
+    [assetToken.publicKey.toBuffer(), Buffer.from('vault')],
+    rfqProgram.programId
+  )
+  const [vaultAuthority, vaultAuthorityBump] = await PublicKey.findProgramAddress(
+    [assetToken.publicKey.toBuffer(), Buffer.from('vaultAuthority')],
+    rfqProgram.programId
+  )
+
+  if (true) {
+    // TODO: What if vault already exists?
+    await rfqProgram.methods.initializePsyOptionsAmericanMintVault()
+      .accounts({
+        authority: signer.publicKey,
+        underlyingAsset: assetToken.publicKey,
+        vault,
+        vaultAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([signer.payer])
+      .rpc()
+  }
+
+  const optionToken = new Token(
+    provider.connection,
+    optionMarket.optionMint,
+    TOKEN_PROGRAM_ID,
+    signer as unknown as Signer
+  )
+  const writerToken = new Token(
+    provider.connection,
+    optionMarket.writerTokenMint,
+    TOKEN_PROGRAM_ID,
+    signer as unknown as Signer
+  )
+
+  let instructions = []
+
+  // TODO: Correct?
+  const mintedOptionDest = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    optionToken.publicKey,
+    signer.publicKey
+  )
+  // TODO: Correct?
+  const mintedWriterTokenDest = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    writerToken.publicKey,
+    signer.publicKey
+  )
+
+  try {
+    const account = await optionToken.getAccountInfo(signer.publicKey)
+    if (account.amount.toNumber() < 0) {
+      throw new Error('Account does not exist')
+    }
+  } catch {
+    // ATA might not exist so create it
+    instructions.push(Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      optionToken.publicKey,
+      mintedOptionDest,
+      signer.publicKey,
+      signer.publicKey
+    ))
+  }
+
+  try {
+    const account = await writerToken.getAccountInfo(signer.publicKey)
+    if (account.amount.toNumber() < 0) {
+      throw new Error('Account does not exist')
+    }
+  } catch {
+    // ATA might not exist so create it
+    instructions.push(Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      writerToken.publicKey,
+      mintedWriterTokenDest,
+      signer.publicKey,
+      signer.publicKey
+    ))
+  }
+
+  const accounts = {
+    authority: signer.publicKey,
+    psyAmericanProgram: psyAmericanProgram.programId,
+    pool: optionMarket.underlyingAssetPool,
+    poolAuthority: vaultAuthority, // TODO: ?
+    underlyingAssetMint: assetToken.publicKey,
+    underlyingAssetPool: optionMarket.underlyingAssetPool,
+    optionMint: optionMarket.optionMint,
+    mintedOptionDest,
+    writerTokenMint: optionMarket.writerTokenMint,
+    mintedWriterTokenDest,
+    optionMarket: key,
+    feeOwner: FEE_OWNER,
+    tokenProgram: TOKEN_PROGRAM_ID,
+    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    clock: SYSVAR_CLOCK_PUBKEY,
+    rent: SYSVAR_RENT_PUBKEY,
+    systemProgram: SystemProgram.programId
+  }
+
+  await rfqProgram.methods.mintPsyOptionsAmericanOption(size, vaultAuthorityBump)
+    .accounts(accounts)
+    .preInstructions(instructions)
+    .signers([signer.payer])
+    .rpc()
+
+  return {}
 }
 
 /**
@@ -916,33 +1046,10 @@ export async function mintPsyAmericanOptions(
       )
 
       legOptionMarket = res.optionMarket
-      legOptionMarketPublicKey = res.key
+      legOptionMarketPublicKey = res.publicKey
     }
 
-    const vaultAuthorityBump = new BN(1)
-
-    const accounts = {
-      user: signer.publicKey,
-      psyAmericanProgram: psyAmericanProgram.programId,
-      underlyingAssetMint: assetToken.publicKey,
-      quoteAssetMint: quoteToken.publicKey,
-      optionMint: legOptionMarket.optionMint,
-      writerTokenMint: legOptionMarket.writerTokenMint,
-      quoteAssetPool: legOptionMarket.quoteAssetPool,
-      underlyingAssetPool: legOptionMarket.quoteAssetPool,
-      optionMarket: legOptionMarketPublicKey,
-      feeOwner: FEE_OWNER,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      rent: SYSVAR_RENT_PUBKEY,
-      systemProgram: SystemProgram.programId,
-      clock: SYSVAR_CLOCK_PUBKEY
-    }
-
-    //const res = await rfqProgram.methods.mintPsyOptionsAmericanOption(size, vaultAuthorityBump)
-    //  .accounts(accounts)
-    //  .signers([signer.payer])
-    //  .rpc()
+    //await mintPsyAmericanOption(assetToken, legOptionMarketPublicKey, legOptionMarket, provider, signer, size)
 
     // 🦆:
     // - Execute option
