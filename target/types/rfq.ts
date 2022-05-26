@@ -630,12 +630,12 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "pool",
+          "name": "vault",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "poolAuthority",
+          "name": "vaultAuthority",
           "isMut": true,
           "isSigner": false
         },
@@ -1850,12 +1850,12 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "pool",
+          "name": "vault",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "poolAuthority",
+          "name": "vaultAuthority",
           "isMut": true,
           "isSigner": false
         },

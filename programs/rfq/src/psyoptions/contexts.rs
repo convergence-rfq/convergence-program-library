@@ -62,16 +62,15 @@ pub struct InitializeAmericanMintVault<'info> {
 pub struct MintAmericanOption<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
-    /// CHECK: PsyOptions American program
+    /// CHECK: TODO
     pub psy_american_program: AccountInfo<'info>,
     /// The vault where the underlying assets are held. This is the PsyAmerican 
-    /// underlying asset source
     #[account(mut)]
-    pub pool: Box<Account<'info, TokenAccount>>,
-    /// CHECK: Pool authority
+    pub vault: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub pool_authority: AccountInfo<'info>,
-    /// CHECK: Mint CPI acounts
+    /// CHECK: TODO
+    pub vault_authority: AccountInfo<'info>,
+    /// CHECK: TODO
     pub underlying_asset_mint: AccountInfo<'info>,
     #[account(mut)]
     pub underlying_asset_pool: Box<Account<'info, TokenAccount>>,
@@ -84,15 +83,13 @@ pub struct MintAmericanOption<'info> {
     #[account(mut)]
     pub minted_writer_token_dest: Box<Account<'info, TokenAccount>>,
     pub option_market: Box<Account<'info, OptionMarket>>,
-    /// CHECK:
     #[account(mut)]
+    /// CHECK: TODO
     pub fee_owner: AccountInfo<'info>,
-    /// CHECK:
-    pub token_program: AccountInfo<'info>,
-    /// CHECK:
+    pub token_program: Program<'info, Token>,
+    /// CHECK: TODO
     pub associated_token_program: AccountInfo<'info>,
     pub clock: Sysvar<'info, Clock>,
     pub rent: Sysvar<'info, Rent>,
-    /// CHECK:
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }

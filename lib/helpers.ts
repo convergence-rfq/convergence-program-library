@@ -666,8 +666,10 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
 
 /// Integrations
 
+// PsyOptions market fee owner as hardcoded in contract code
 const FEE_OWNER = new PublicKey('6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD')
 
+// Option market structure
 export type OptionMarket = {
   optionMint: PublicKey
   writerTokenMint: PublicKey
@@ -684,13 +686,23 @@ export type OptionMarket = {
   bumpSeed: number
 }
 
+/**
+ * getPsyAmericanProgram.
+ * 
+ * Gets PsyOptions American options program.
+ * 
+ * @param provider 
+ * @returns Promise<Program>
+ */
 export async function getPsyAmericanProgram(provider: Provider): Promise<Program> {
   const programId = new PublicKey(psyAmericanIdl.metadata.address)
   return new anchor.Program(psyAmericanIdl as Idl, programId, provider)
 }
 
 /**
- * initializePsyAmericanOptionMarket
+ * initializePsyAmericanOptionMarket.
+ * 
+ * Initialize the PsyOptions American option market.
  * 
  * @param assetToken 
  * @param expirationUnixTimestamp 
@@ -834,10 +846,23 @@ export async function initializePsyAmericanOptionMarket(
   }
 }
 
+/**
+ * mintPsyAmericanOption.
+ * 
+ * Mint PsyOptions American option.
+ * 
+ * @param assetToken 
+ * @param publicKey 
+ * @param optionMarket 
+ * @param provider 
+ * @param signer 
+ * @param size 
+ * @returns 
+ */
 export async function mintPsyAmericanOption(
   assetToken: Token,
-  key: PublicKey,
-  optionMarket: any,
+  publicKey: PublicKey,
+  optionMarket: OptionMarket,
   provider: Provider,
   signer: Wallet,
   size: BN
@@ -886,14 +911,12 @@ export async function mintPsyAmericanOption(
 
   let instructions = []
 
-  // TODO: Correct?
   const mintedOptionDest = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     optionToken.publicKey,
     signer.publicKey
   )
-  // TODO: Correct?
   const mintedWriterTokenDest = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
@@ -935,24 +958,33 @@ export async function mintPsyAmericanOption(
     ))
   }
 
+  const signerAssetATA = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    assetToken.publicKey,
+    signer.publicKey
+  )
+
   const accounts = {
     authority: signer.publicKey,
     psyAmericanProgram: psyAmericanProgram.programId,
-    pool: optionMarket.underlyingAssetPool,
-    poolAuthority: vaultAuthority, // TODO: ?
+    // TODO: Is this correct?
+    vault: signerAssetATA,
+    // TODO: Is this correct?
+    vaultAuthority: signer.publicKey,
     underlyingAssetMint: assetToken.publicKey,
     underlyingAssetPool: optionMarket.underlyingAssetPool,
     optionMint: optionMarket.optionMint,
     mintedOptionDest,
     writerTokenMint: optionMarket.writerTokenMint,
     mintedWriterTokenDest,
-    optionMarket: key,
+    optionMarket: publicKey,
     feeOwner: FEE_OWNER,
     tokenProgram: TOKEN_PROGRAM_ID,
     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     clock: SYSVAR_CLOCK_PUBKEY,
     rent: SYSVAR_RENT_PUBKEY,
-    systemProgram: SystemProgram.programId
+    systemProgram: SystemProgram.programId,
   }
 
   await rfqProgram.methods.mintPsyOptionsAmericanOption(size, vaultAuthorityBump)
@@ -1049,7 +1081,7 @@ export async function mintPsyAmericanOptions(
       legOptionMarketPublicKey = res.publicKey
     }
 
-    //await mintPsyAmericanOption(assetToken, legOptionMarketPublicKey, legOptionMarket, provider, signer, size)
+    await mintPsyAmericanOption(assetToken, legOptionMarketPublicKey, legOptionMarket, provider, signer, size)
 
     // 🦆:
     // - Execute option

@@ -105,7 +105,7 @@ pub mod rfq {
         )
     }
 
-    /// Initializes PsyOptions American mint vault
+    /// Initializes PsyOptions American mint vault.
     pub fn initialize_psy_options_american_mint_vault<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeAmericanMintVault<'info>>,
     ) -> Result<()> {
