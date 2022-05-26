@@ -144,10 +144,10 @@ describe('RFQ Specification', () => {
         const res1 = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT2, provider, quoteToken.publicKey, requestOrder)
         assert.equal(legs.toString(), res1.rfqState.legs.toString())
 
-        //await respond(provider, makerB, rfqId, MAKER_B_BID_AMOUNT1, MAKER_B_ASK_AMOUNT1, makerBAssetATA, makerBQuoteATA)
-        //await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
-        //await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
-        //await settle(provider, makerB, rfqId, 1, makerBAssetATA, makerBQuoteATA)
+        await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
+        await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
+        await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
+        await settle(provider, makerA, rfqId, 1, makerAAssetATA, makerAQuoteATA)
 
         await mintPsyAmericanOptions(provider, rfqId, taker)
 

@@ -493,10 +493,12 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
         order.settled = true;
     }
 
-    // TODO: PsyOptions CPI integration if venue if multi-leg
-    // check if option market exists
-    // if no option market mint option market
-    // initialize instrument.
+    // 🦆:
+    // 
+    // How do we want to sequence settlment for multi-leg assets?
+    // 
+    // Could make PsyOptions CPI directly here. One bottleneck is leg size. Might be easier to execute 
+    // all at the same time.
 
     Ok(())
 }
