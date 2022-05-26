@@ -82,6 +82,10 @@ pub fn initialize_american_option_market<'a, 'b, 'c, 'info>(
         .map_err(|_x| ProtocolError::CpiError.into())
 }
 
+pub fn initialize_american_mint_vault(_ctx: Context<InitializeAmericanMintVault>) -> Result<()> {
+    Ok(())
+}
+
 // Mints American option.
 pub fn mint_american_option<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, MintAmericanOption<'info>>,
@@ -110,8 +114,4 @@ pub fn mint_american_option<'a, 'b, 'c, 'info>(
         let signer = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
         psy_american::cpi::mint_option_v2(cpi_ctx, size)
-}
-
-pub fn initialize_american_mint_vault(_ctx: Context<InitializeAmericanMintVault>) -> Result<()> {
-    Ok(())
 }

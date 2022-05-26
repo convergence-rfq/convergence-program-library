@@ -687,8 +687,6 @@ export type OptionMarket = {
 }
 
 /**
- * getPsyAmericanProgram.
- * 
  * Gets PsyOptions American options program.
  * 
  * @param provider 
@@ -700,9 +698,7 @@ export async function getPsyAmericanProgram(provider: Provider): Promise<Program
 }
 
 /**
- * initializePsyAmericanOptionMarket.
- * 
- * Initialize the PsyOptions American option market.
+ * Initializes the PsyOptions American option market.
  * 
  * @param assetToken 
  * @param expirationUnixTimestamp 
@@ -847,9 +843,7 @@ export async function initializePsyAmericanOptionMarket(
 }
 
 /**
- * mintPsyAmericanOption.
- * 
- * Mint PsyOptions American option.
+ * Mints PsyOptions American option.
  * 
  * @param assetToken 
  * @param publicKey 
@@ -870,7 +864,7 @@ export async function mintPsyAmericanOption(
   const psyAmericanProgram = await getPsyAmericanProgram(provider)
   const rfqProgram = await getProgram(provider)
 
-  // TODO: What is the correct program?
+  // TODO: Is this the correct program?
   const [vault, _vaultBump] = await PublicKey.findProgramAddress(
     [assetToken.publicKey.toBuffer(), Buffer.from('vault')],
     rfqProgram.programId
@@ -880,21 +874,19 @@ export async function mintPsyAmericanOption(
     rfqProgram.programId
   )
 
-  if (true) {
-    // TODO: What if vault already exists?
-    await rfqProgram.methods.initializePsyOptionsAmericanMintVault()
-      .accounts({
-        authority: signer.publicKey,
-        underlyingAsset: assetToken.publicKey,
-        vault,
-        vaultAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([signer.payer])
-      .rpc()
-  }
+  // TODO: What if vault already exists?
+  await rfqProgram.methods.initializePsyOptionsAmericanMintVault()
+    .accounts({
+      authority: signer.publicKey,
+      underlyingAsset: assetToken.publicKey,
+      vault,
+      vaultAuthority,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+      systemProgram: SystemProgram.programId,
+    })
+    .signers([signer.payer])
+    .rpc()
 
   const optionToken = new Token(
     provider.connection,
@@ -987,20 +979,23 @@ export async function mintPsyAmericanOption(
     systemProgram: SystemProgram.programId,
   }
 
-  await rfqProgram.methods.mintPsyOptionsAmericanOption(size, vaultAuthorityBump)
+  const tx = await rfqProgram.methods.mintPsyOptionsAmericanOption(size, vaultAuthorityBump)
     .accounts(accounts)
     .preInstructions(instructions)
     .signers([signer.payer])
     .rpc()
 
-  return {}
+  return { tx }
 }
 
 /**
- * mintPsyAmericanOptions
+ * Mints PsyOptions American options for RFQ. Steps include the following.
  * 
- * Fetch RFQ legs and initialize market if it does not exist, then mint the leg options. Finally,
- * execute the options.
+ * - Fetches RFQ
+ * - Iterates through legs
+ *  - Initializes market if it does not exist
+ *  - Initialized vault if it does not exist
+ *  - Mints the leg option
  * 
  * @param provider 
  * @param rfqId 
@@ -1082,9 +1077,6 @@ export async function mintPsyAmericanOptions(
     }
 
     await mintPsyAmericanOption(assetToken, legOptionMarketPublicKey, legOptionMarket, provider, signer, size)
-
-    // 🦆:
-    // - Execute option
 
     legOptionMarket = null
     legOptionMarketPublicKey = null
