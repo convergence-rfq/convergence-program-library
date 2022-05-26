@@ -688,6 +688,151 @@ export async function getPsyAmericanProgram(provider: Provider): Promise<Program
 }
 
 /**
+ * initializePsyAmericanOptionMarket
+ * 
+ * @param assetToken 
+ * @param expirationUnixTimestamp 
+ * @param provider 
+ * @param quoteAmountPerContract 
+ * @param quoteToken 
+ * @param signer 
+ * @param underlyingAmountPerContract 
+ * @returns Promise<any> 
+ */
+export async function initializePsyAmericanOptionMarket(
+  assetToken: Token,
+  expirationUnixTimestamp: BN,
+  provider: Provider,
+  quoteAmountPerContract: BN,
+  quoteToken: Token,
+  signer: Wallet,
+  underlyingAmountPerContract: BN
+): Promise<any> {
+  const psyAmericanProgram = await getPsyAmericanProgram(provider)
+
+  let signers = []
+  if (signer.payer) {
+    signers.push(signer.payer)
+  }
+
+  const [optionMarket, optionMarketBumpSeed] = await PublicKey.findProgramAddress([
+    assetToken.publicKey.toBuffer(),
+    quoteToken.publicKey.toBuffer(),
+    underlyingAmountPerContract.toBuffer('le', 8),
+    quoteAmountPerContract.toBuffer('le', 8),
+    expirationUnixTimestamp.toBuffer('le', 8)
+  ],
+    psyAmericanProgram.programId
+  )
+  const [optionMint, _optionMintBump] = await PublicKey.findProgramAddress(
+    [optionMarket.toBuffer(), Buffer.from('optionToken')],
+    psyAmericanProgram.programId
+  )
+  const [writerTokenMint, _writerTokenMintBump] = await PublicKey.findProgramAddress(
+    [optionMarket.toBuffer(), Buffer.from('writerToken')],
+    psyAmericanProgram.programId
+  )
+  const [quoteAssetPool, _quoteAssetPoolBump] = await PublicKey.findProgramAddress(
+    [optionMarket.toBuffer(), Buffer.from('quoteAssetPool')],
+    psyAmericanProgram.programId
+  )
+  const [underlyingAssetPool, _underlyingAssetPoolBump] = await PublicKey.findProgramAddress(
+    [optionMarket.toBuffer(), Buffer.from('underlyingAssetPool')],
+    psyAmericanProgram.programId
+  )
+  const feeOwner = new PublicKey('6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD')
+
+  let remainingAccounts: AccountMeta[] = []
+  let instructions: TransactionInstruction[] = []
+
+  const mintFeeATA = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    assetToken.publicKey,
+    feeOwner
+  )
+  const exerciseFeeATA = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    quoteToken.publicKey,
+    feeOwner
+  )
+
+  try {
+    await assetToken.getAccountInfo(mintFeeATA);
+  } catch {
+    // Mint fee ATA DNE
+    remainingAccounts.push({
+      pubkey: mintFeeATA,
+      isWritable: true,
+      isSigner: false
+    })
+    instructions.push(Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      assetToken.publicKey,
+      mintFeeATA,
+      feeOwner,
+      signer.publicKey
+    ))
+  }
+
+  try {
+    await quoteToken.getAccountInfo(exerciseFeeATA);
+  } catch {
+    // Exercise fee ATA DNE
+    remainingAccounts.push({
+      pubkey: exerciseFeeATA,
+      isWritable: false,
+      isSigner: false
+    })
+    instructions.push(Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      quoteToken.publicKey,
+      exerciseFeeATA,
+      feeOwner,
+      signer.publicKey
+    ))
+  }
+
+  const accounts = {
+    user: signer.payer.publicKey,
+    underlyingAssetMint: assetToken.publicKey,
+    quoteAssetMint: quoteToken.publicKey,
+    psyAmericanProgram: psyAmericanProgram.programId,
+    optionMint,
+    writerTokenMint,
+    quoteAssetPool,
+    underlyingAssetPool,
+    optionMarket,
+    feeOwner: feeOwner,
+    tokenProgram: TOKEN_PROGRAM_ID,
+    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    rent: SYSVAR_RENT_PUBKEY,
+    systemProgram: SystemProgram.programId,
+    clock: SYSVAR_CLOCK_PUBKEY
+  }
+
+  const rfqProgram = await getProgram(provider)
+  await rfqProgram.methods.initializePsyOptionsAmericanOptionMarket(
+    underlyingAmountPerContract,
+    quoteAmountPerContract,
+    expirationUnixTimestamp,
+    optionMarketBumpSeed
+  )
+    .accounts(accounts)
+    .preInstructions(instructions)
+    .remainingAccounts(remainingAccounts)
+    .signers(signers)
+    .rpc()
+
+  return {
+    optionMarket
+  }
+}
+
+/**
  * mintPsyAmericanOptions
  * 
  * Fetch RFQ legs and initialize market if it does not exist, then mint the leg options. Finally,
@@ -696,7 +841,7 @@ export async function getPsyAmericanProgram(provider: Provider): Promise<Program
  * @param provider 
  * @param rfqId 
  * @param signer 
- * @returns Promise
+ * @returns Promise<any>
  */
 export async function mintPsyAmericanOptions(
   provider: Provider,
@@ -726,158 +871,53 @@ export async function mintPsyAmericanOptions(
     signer as unknown as Signer
   )
 
-  let signers = []
-  if (signer.payer) {
-    signers.push(signer.payer)
-  }
-
   // Check if market exists
   for (let i = 0; i < rfqState.legs.length; i++) {
-    let marketPublicKey: PublicKey = null
-    const leg = rfqState.legs[i]
-
-    if (!('psyOptions' in leg.venue)) {
+    if (!('psyOptions' in rfqState.legs[i].venue)) {
       continue
     }
+
+    let optionMarketPublicKey: PublicKey
+
+    const underlyingAmountPerContract = rfqState.legs[i].contractAssetAmount
+    const quoteAmountPerContract = rfqState.legs[i].contractQuoteAmount
+    const expirationUnixTimestamp = rfqState.legs[i].expiry
 
     for (let j = 0; j < optionMarkets.length; j++) {
       const optionMarket: OptionMarket = optionMarkets[j].account
 
-      if (rfqState.assetMint.toString() == optionMarket.underlyingAssetMint.toString() &&
-        rfqState.quoteMint.toString() == optionMarket.quoteAssetMint.toString() &&
-        leg.expiry.toNumber() == optionMarket.expirationUnixTimestamp.toNumber() &&
-        leg.contractAssetAmount.toNumber() == optionMarket.underlyingAmountPerContract.toNumber() &&
-        leg.contractQuoteAmount.toNumber() == optionMarket.quoteAmountPerContract.toNumber()) {
+      if (assetToken.publicKey.toString() == optionMarket.underlyingAssetMint.toString() &&
+        quoteToken.publicKey.toString() == optionMarket.quoteAssetMint.toString() &&
+        expirationUnixTimestamp.toNumber() == optionMarket.expirationUnixTimestamp.toNumber() &&
+        underlyingAmountPerContract.toNumber() == optionMarket.underlyingAmountPerContract.toNumber() &&
+        quoteAmountPerContract.toNumber() == optionMarket.quoteAmountPerContract.toNumber()) {
         // Market exists
-        marketPublicKey = optionMarkets[i].publicKey
+        optionMarketPublicKey = optionMarkets[i].publicKey
         break
       }
     }
 
     // Initialize market if it does not exist
-    if (marketPublicKey === null) {
-      const underlyingAmountPerContract = leg.contractAssetAmount
-      const quoteAmountPerContract = leg.contractQuoteAmount
-      const expirationUnixTimestamp = leg.expiry
-
-      const [optionMarket, optionMarketBumpSeed] = await PublicKey.findProgramAddress([
-        assetToken.publicKey.toBuffer(),
-        quoteToken.publicKey.toBuffer(),
-        underlyingAmountPerContract.toBuffer('le', 8),
-        quoteAmountPerContract.toBuffer('le', 8),
-        expirationUnixTimestamp.toBuffer('le', 8)
-      ],
-        psyAmericanProgram.programId
-      )
-      const [optionMint, _optionMintBump] = await PublicKey.findProgramAddress(
-        [optionMarket.toBuffer(), Buffer.from('optionToken')],
-        psyAmericanProgram.programId
-      )
-      const [writerTokenMint, _writerTokenMintBump] = await PublicKey.findProgramAddress(
-        [optionMarket.toBuffer(), Buffer.from('writerToken')],
-        psyAmericanProgram.programId
-      )
-      const [quoteAssetPool, _quoteAssetPoolBump] = await PublicKey.findProgramAddress(
-        [optionMarket.toBuffer(), Buffer.from('quoteAssetPool')],
-        psyAmericanProgram.programId
-      )
-      const [underlyingAssetPool, _underlyingAssetPoolBump] = await PublicKey.findProgramAddress(
-        [optionMarket.toBuffer(), Buffer.from('underlyingAssetPool')],
-        psyAmericanProgram.programId
-      )
-      const feeOwner = new PublicKey('6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD')
-
-      let remainingAccounts: AccountMeta[] = []
-      let instructions: TransactionInstruction[] = []
-
-      const mintFeeATA = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        assetToken.publicKey,
-        feeOwner
-      )
-      const exerciseFeeATA = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        quoteToken.publicKey,
-        feeOwner
-      )
-
-      try {
-        await assetToken.getAccountInfo(mintFeeATA);
-      } catch {
-        // Mint fee ATA DNE
-        remainingAccounts.push({
-          pubkey: mintFeeATA,
-          isWritable: true,
-          isSigner: false
-        })
-        instructions.push(Token.createAssociatedTokenAccountInstruction(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          assetToken.publicKey,
-          mintFeeATA,
-          feeOwner,
-          signer.publicKey
-        ))
-      }
-
-      try {
-        await quoteToken.getAccountInfo(exerciseFeeATA);
-      } catch {
-        // Exercise fee ATA DNE
-        remainingAccounts.push({
-          pubkey: exerciseFeeATA,
-          isWritable: false,
-          isSigner: false
-        })
-        instructions.push(Token.createAssociatedTokenAccountInstruction(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          quoteToken.publicKey,
-          exerciseFeeATA,
-          feeOwner,
-          signer.publicKey
-        ))
-      }
-
-      const accounts = {
-        user: signer.payer.publicKey,
-        underlyingAssetMint: rfqState.assetMint,
-        quoteAssetMint: rfqState.quoteMint,
-        psyAmericanProgram: psyAmericanProgram.programId,
-        optionMint,
-        writerTokenMint,
-        quoteAssetPool,
-        underlyingAssetPool,
-        optionMarket,
-        feeOwner: feeOwner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId,
-        clock: SYSVAR_CLOCK_PUBKEY
-      }
-
-      await rfqProgram.methods.initializePsyOptionsAmericanOptionMarket(
-        underlyingAmountPerContract,
-        quoteAmountPerContract,
+    if (optionMarketPublicKey === null) {
+      const res = await initializePsyAmericanOptionMarket(
+        assetToken,
         expirationUnixTimestamp,
-        optionMarketBumpSeed
+        provider,
+        quoteAmountPerContract,
+        quoteToken,
+        signer,
+        underlyingAmountPerContract
       )
-        .accounts(accounts)
-        .preInstructions(instructions)
-        .remainingAccounts(remainingAccounts)
-        .signers(signers)
-        .rpc()
+
+      optionMarketPublicKey = res.optionMarket
     }
+
+    // 🦆: 
+    // - Mint option
+
+    // 🦆:
+    // - Execute option
   }
-
-  // 🦆: 
-  // - Mint option
-
-  // 🦆:
-  // - Execute option
 
   // 🦆:
   // - Consolidate instructions into one transaction
