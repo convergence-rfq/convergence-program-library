@@ -11,6 +11,7 @@ import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 
 import {
     PROTOCOL_SEED,
+    RFQ_SEED,
     Contract,
     Instrument,
     Order,
@@ -43,7 +44,7 @@ const FEE_DENOMINATOR = 1_000
 const TAKER_ORDER_AMOUNT1 = 5 * (10 ** ASSET_DECIMALS)
 const TAKER_ORDER_AMOUNT2 = 32 * (10 ** ASSET_DECIMALS)
 
-const MAKER_A_ASK_AMOUNT1 = 41_000 * (10 ** QUOTE_DECIMALS) * TAKER_ORDER_AMOUNT1
+const MAKER_A_ASK_AMOUNT1 = 0 * (10 ** QUOTE_DECIMALS) * TAKER_ORDER_AMOUNT1
 const MAKER_A_BID_AMOUNT1 = 39_100 * (10 ** QUOTE_DECIMALS) * TAKER_ORDER_AMOUNT1
 
 const FEE1 = calcFee(MAKER_A_BID_AMOUNT1, FEE_NUMERATOR, FEE_DENOMINATOR)
@@ -149,7 +150,14 @@ describe('RFQ Specification', () => {
         await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
         await settle(provider, makerA, rfqId, 1, makerAAssetATA, makerAQuoteATA)
 
+        // 🦆: Decide how to consolidate
         await mintPsyAmericanOptions(provider, rfqId, taker)
+
+        const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
+            [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
+            program.programId
+        )
+        const _rfqState: any = await program.account.rfqState.fetch(rfqPda)
 
         // 🦆: Verify all legs have been executed
     })
