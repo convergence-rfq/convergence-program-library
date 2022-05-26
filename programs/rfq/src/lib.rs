@@ -29,7 +29,6 @@ pub mod rfq {
         fee_denominator: u64,
         fee_numerator: u64,
     ) -> Result<()> {
-        msg!("Hi");
         instructions::initialize(ctx, fee_denominator, fee_numerator)
     }
 

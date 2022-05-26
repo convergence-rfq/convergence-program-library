@@ -666,6 +666,8 @@ export async function getResponses(provider: Provider, rfqs: any[]): Promise<obj
 
 /// Integrations
 
+const FEE_OWNER = new PublicKey('6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD')
+
 export type OptionMarket = {
   optionMint: PublicKey
   writerTokenMint: PublicKey
@@ -740,7 +742,6 @@ export async function initializePsyAmericanOptionMarket(
     [optionMarket.toBuffer(), Buffer.from('underlyingAssetPool')],
     psyAmericanProgram.programId
   )
-  const feeOwner = new PublicKey('6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD')
 
   let remainingAccounts: AccountMeta[] = []
   let instructions: TransactionInstruction[] = []
@@ -749,13 +750,13 @@ export async function initializePsyAmericanOptionMarket(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     assetToken.publicKey,
-    feeOwner
+    FEE_OWNER
   )
   const exerciseFeeATA = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     quoteToken.publicKey,
-    feeOwner
+    FEE_OWNER
   )
 
   try {
@@ -772,7 +773,7 @@ export async function initializePsyAmericanOptionMarket(
       TOKEN_PROGRAM_ID,
       assetToken.publicKey,
       mintFeeATA,
-      feeOwner,
+      FEE_OWNER,
       signer.publicKey
     ))
   }
@@ -791,7 +792,7 @@ export async function initializePsyAmericanOptionMarket(
       TOKEN_PROGRAM_ID,
       quoteToken.publicKey,
       exerciseFeeATA,
-      feeOwner,
+      FEE_OWNER,
       signer.publicKey
     ))
   }
@@ -806,7 +807,7 @@ export async function initializePsyAmericanOptionMarket(
     quoteAssetPool,
     underlyingAssetPool,
     optionMarket,
-    feeOwner: feeOwner,
+    feeOwner: FEE_OWNER,
     tokenProgram: TOKEN_PROGRAM_ID,
     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     rent: SYSVAR_RENT_PUBKEY,
@@ -828,7 +829,8 @@ export async function initializePsyAmericanOptionMarket(
     .rpc()
 
   return {
-    optionMarket
+    optionMarket,
+    key: optionMarket
   }
 }
 
@@ -877,28 +879,32 @@ export async function mintPsyAmericanOptions(
       continue
     }
 
-    let optionMarketPublicKey: PublicKey
+    let legOptionMarket: OptionMarket = null
+    let legOptionMarketPublicKey: PublicKey = null
 
     const underlyingAmountPerContract = rfqState.legs[i].contractAssetAmount
     const quoteAmountPerContract = rfqState.legs[i].contractQuoteAmount
     const expirationUnixTimestamp = rfqState.legs[i].expiry
+    const size = rfqState.legs[i].amount
 
     for (let j = 0; j < optionMarkets.length; j++) {
-      const optionMarket: OptionMarket = optionMarkets[j].account
+      const optionMarket = optionMarkets[j].account
+      const optionMarketPublicKey = optionMarkets[j].publicKey
 
       if (assetToken.publicKey.toString() == optionMarket.underlyingAssetMint.toString() &&
         quoteToken.publicKey.toString() == optionMarket.quoteAssetMint.toString() &&
         expirationUnixTimestamp.toNumber() == optionMarket.expirationUnixTimestamp.toNumber() &&
         underlyingAmountPerContract.toNumber() == optionMarket.underlyingAmountPerContract.toNumber() &&
         quoteAmountPerContract.toNumber() == optionMarket.quoteAmountPerContract.toNumber()) {
-        // Market exists
-        optionMarketPublicKey = optionMarkets[i].publicKey
+        // Leg market exists
+        legOptionMarket = optionMarket
+        legOptionMarketPublicKey = optionMarketPublicKey
         break
       }
     }
 
     // Initialize market if it does not exist
-    if (optionMarketPublicKey === null) {
+    if (legOptionMarket === null && legOptionMarketPublicKey === null) {
       const res = await initializePsyAmericanOptionMarket(
         assetToken,
         expirationUnixTimestamp,
@@ -909,14 +915,40 @@ export async function mintPsyAmericanOptions(
         underlyingAmountPerContract
       )
 
-      optionMarketPublicKey = res.optionMarket
+      legOptionMarket = res.optionMarket
+      legOptionMarketPublicKey = res.key
     }
 
-    // 🦆: 
-    // - Mint option
+    const vaultAuthorityBump = new BN(1)
+
+    const accounts = {
+      user: signer.publicKey,
+      psyAmericanProgram: psyAmericanProgram.programId,
+      underlyingAssetMint: assetToken.publicKey,
+      quoteAssetMint: quoteToken.publicKey,
+      optionMint: legOptionMarket.optionMint,
+      writerTokenMint: legOptionMarket.writerTokenMint,
+      quoteAssetPool: legOptionMarket.quoteAssetPool,
+      underlyingAssetPool: legOptionMarket.quoteAssetPool,
+      optionMarket: legOptionMarketPublicKey,
+      feeOwner: FEE_OWNER,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+      systemProgram: SystemProgram.programId,
+      clock: SYSVAR_CLOCK_PUBKEY
+    }
+
+    //const res = await rfqProgram.methods.mintPsyOptionsAmericanOption(size, vaultAuthorityBump)
+    //  .accounts(accounts)
+    //  .signers([signer.payer])
+    //  .rpc()
 
     // 🦆:
     // - Execute option
+
+    legOptionMarket = null
+    legOptionMarketPublicKey = null
   }
 
   // 🦆:
