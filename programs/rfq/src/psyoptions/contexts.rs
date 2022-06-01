@@ -3,6 +3,9 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use psy_american::OptionMarket;
 
+use crate::states::RfqState;
+use crate::constants::RFQ_SEED;
+
 #[derive(Accounts)]
 pub struct InitializeAmericanOptionMarket<'info> {
     #[account(mut)]
@@ -88,6 +91,13 @@ pub struct MintAmericanOption<'info> {
     /// CHECK: TODO
     pub fee_owner: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
+    #[account(
+        mut,
+        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        bump = rfq.bump,
+        constraint = rfq.to_account_info().owner == program_id
+    )]
+    pub rfq: Box<Account<'info, RfqState>>,
     /// CHECK: TODO
     pub associated_token_program: AccountInfo<'info>,
     pub clock: Sysvar<'info, Clock>,

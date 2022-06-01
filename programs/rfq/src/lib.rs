@@ -115,9 +115,10 @@ pub mod rfq {
     /// Mints PsyOptions American option market.
     pub fn mint_psy_options_american_option<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, MintAmericanOption<'info>>,
+        leg: u64,
         size: u64,
         vault_authority_bump: u8,
     ) -> Result<()> {
-        psyoptions::instructions::mint_american_option(ctx, size, vault_authority_bump)
+        psyoptions::instructions::mint_american_option(ctx, leg, size, vault_authority_bump)
     }
 }

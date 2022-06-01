@@ -493,12 +493,5 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
         order.settled = true;
     }
 
-    // 🦆:
-    // 
-    // How do we want to sequence settlment for multi-leg assets?
-    // 
-    // Could make PsyOptions CPI directly here. One bottleneck is leg size. Might be easier to execute 
-    // all at the same time.
-
     Ok(())
 }

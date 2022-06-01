@@ -685,6 +685,11 @@ export type Rfq = {
           "isSigner": false
         },
         {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "associatedTokenProgram",
           "isMut": false,
           "isSigner": false
@@ -706,6 +711,10 @@ export type Rfq = {
         }
       ],
       "args": [
+        {
+          "name": "leg",
+          "type": "u64"
+        },
         {
           "name": "size",
           "type": "u64"
@@ -993,10 +1002,18 @@ export type Rfq = {
             }
           },
           {
+            "name": "processed",
+            "type": "bool"
+          },
+          {
             "name": "expiry",
             "type": {
               "option": "i64"
             }
+          },
+          {
+            "name": "id",
+            "type": "u64"
           },
           {
             "name": "instrument",
@@ -1905,6 +1922,11 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "associatedTokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1926,6 +1948,10 @@ export const IDL: Rfq = {
         }
       ],
       "args": [
+        {
+          "name": "leg",
+          "type": "u64"
+        },
         {
           "name": "size",
           "type": "u64"
@@ -2213,10 +2239,18 @@ export const IDL: Rfq = {
             }
           },
           {
+            "name": "processed",
+            "type": "bool"
+          },
+          {
             "name": "expiry",
             "type": {
               "option": "i64"
             }
+          },
+          {
+            "name": "id",
+            "type": "u64"
           },
           {
             "name": "instrument",

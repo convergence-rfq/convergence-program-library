@@ -855,9 +855,11 @@ export async function initializePsyAmericanOptionMarket(
  */
 export async function mintPsyAmericanOption(
   assetToken: Token,
+  legId: number,
   publicKey: PublicKey,
   optionMarket: OptionMarket,
   provider: Provider,
+  rfqId: number,
   signer: Wallet,
   size: BN
 ): Promise<any> {
@@ -957,6 +959,11 @@ export async function mintPsyAmericanOption(
     signer.publicKey
   )
 
+  const [rfqPda, _rfqPdaBump] = await PublicKey.findProgramAddress(
+    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
+    rfqProgram.programId
+  )
+
   const accounts = {
     authority: signer.publicKey,
     psyAmericanProgram: psyAmericanProgram.programId,
@@ -974,12 +981,13 @@ export async function mintPsyAmericanOption(
     feeOwner: FEE_OWNER,
     tokenProgram: TOKEN_PROGRAM_ID,
     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    rfq: rfqPda,
     clock: SYSVAR_CLOCK_PUBKEY,
     rent: SYSVAR_RENT_PUBKEY,
     systemProgram: SystemProgram.programId,
   }
 
-  const tx = await rfqProgram.methods.mintPsyOptionsAmericanOption(size, vaultAuthorityBump)
+  const tx = await rfqProgram.methods.mintPsyOptionsAmericanOption(legId, size, vaultAuthorityBump)
     .accounts(accounts)
     .preInstructions(instructions)
     .signers([signer.payer])
@@ -1002,7 +1010,7 @@ export async function mintPsyAmericanOption(
  * @param signer 
  * @returns Promise<any>
  */
-export async function mintPsyAmericanOptions(
+export async function processLegs(
   provider: Provider,
   rfqId: number,
   signer: Wallet
@@ -1043,6 +1051,7 @@ export async function mintPsyAmericanOptions(
     const quoteAmountPerContract = rfqState.legs[i].contractQuoteAmount
     const expirationUnixTimestamp = rfqState.legs[i].expiry
     const size = rfqState.legs[i].amount
+    const legId = rfqState.legs[i].id
 
     for (let j = 0; j < optionMarkets.length; j++) {
       const optionMarket = optionMarkets[j].account
@@ -1076,7 +1085,7 @@ export async function mintPsyAmericanOptions(
       legOptionMarketPublicKey = res.publicKey
     }
 
-    await mintPsyAmericanOption(assetToken, legOptionMarketPublicKey, legOptionMarket, provider, signer, size)
+    await mintPsyAmericanOption(assetToken, legId, legOptionMarketPublicKey, legOptionMarket, provider, rfqId, signer, size)
 
     legOptionMarket = null
     legOptionMarketPublicKey = null

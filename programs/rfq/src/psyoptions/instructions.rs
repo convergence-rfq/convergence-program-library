@@ -89,29 +89,35 @@ pub fn initialize_american_mint_vault(_ctx: Context<InitializeAmericanMintVault>
 // Mints American option.
 pub fn mint_american_option<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, MintAmericanOption<'info>>,
+    leg: u64,
     size: u64,
     vault_authority_bump: u8,
 ) -> Result<()> {
-        let cpi_program = ctx.accounts.psy_american_program.clone();
-        let cpi_accounts = MintOptionV2 {
-            user_authority: ctx.accounts.vault_authority.to_account_info(),
-            underlying_asset_mint: ctx.accounts.underlying_asset_mint.to_account_info(),
-            underlying_asset_pool: ctx.accounts.underlying_asset_pool.to_account_info(),
-            underlying_asset_src: ctx.accounts.vault.to_account_info(),
-            option_mint: ctx.accounts.option_mint.to_account_info(),
-            minted_option_dest: ctx.accounts.minted_option_dest.to_account_info(),
-            writer_token_mint: ctx.accounts.writer_token_mint.to_account_info(),
-            minted_writer_token_dest: ctx.accounts.minted_writer_token_dest.to_account_info(),
-            option_market: ctx.accounts.option_market.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-        };
-        let key = ctx.accounts.underlying_asset_mint.key();
-        let seeds = &[
-            key.as_ref(),
-            b"vaultAuthority",
-            &[vault_authority_bump]
-        ];
-        let signer = &[&seeds[..]];
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        psy_american::cpi::mint_option_v2(cpi_ctx, size)
+    let cpi_program = ctx.accounts.psy_american_program.clone();
+    let cpi_accounts = MintOptionV2 {
+        user_authority: ctx.accounts.vault_authority.to_account_info(),
+        underlying_asset_mint: ctx.accounts.underlying_asset_mint.to_account_info(),
+        underlying_asset_pool: ctx.accounts.underlying_asset_pool.to_account_info(),
+        underlying_asset_src: ctx.accounts.vault.to_account_info(),
+        option_mint: ctx.accounts.option_mint.to_account_info(),
+        minted_option_dest: ctx.accounts.minted_option_dest.to_account_info(),
+        writer_token_mint: ctx.accounts.writer_token_mint.to_account_info(),
+        minted_writer_token_dest: ctx.accounts.minted_writer_token_dest.to_account_info(),
+        option_market: ctx.accounts.option_market.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+    };
+    let key = ctx.accounts.underlying_asset_mint.key();
+    let seeds = &[key.as_ref(), b"vaultAuthority", &[vault_authority_bump]];
+    let signer = &[&seeds[..]];
+    let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+    psy_american::cpi::mint_option_v2(cpi_ctx, size)?;
+
+    let rfq = &mut ctx.accounts.rfq;
+    for l in rfq.legs.iter_mut() {
+        if l.id == leg {
+            l.processed = true;
+        }
+    }
+
+    Ok(())
 }

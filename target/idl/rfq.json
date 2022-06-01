@@ -685,6 +685,11 @@
           "isSigner": false
         },
         {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "associatedTokenProgram",
           "isMut": false,
           "isSigner": false
@@ -706,6 +711,10 @@
         }
       ],
       "args": [
+        {
+          "name": "leg",
+          "type": "u64"
+        },
         {
           "name": "size",
           "type": "u64"
@@ -993,10 +1002,18 @@
             }
           },
           {
+            "name": "processed",
+            "type": "bool"
+          },
+          {
             "name": "expiry",
             "type": {
               "option": "i64"
             }
+          },
+          {
+            "name": "id",
+            "type": "u64"
           },
           {
             "name": "instrument",

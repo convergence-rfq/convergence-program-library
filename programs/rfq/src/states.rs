@@ -147,8 +147,12 @@ pub struct Leg {
     pub contract_asset_amount: Option<u64>,
     // Contract quote amount
     pub contract_quote_amount: Option<u64>,
+    // Processed
+    pub processed: bool,
     // Expiry
     pub expiry: Option<i64>,
+    // Id
+    pub id: u64,
     // Instrument
     pub instrument: Instrument,
     // Venue
