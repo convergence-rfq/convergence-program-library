@@ -85,6 +85,7 @@ export const Leg = {
   Contract: null,
   ContractQuoteAmount: null,
   ContractAssetAmount: null,
+  Processed: null,
   Expiry: null,
   Instrument: null,
   Venue: null,
