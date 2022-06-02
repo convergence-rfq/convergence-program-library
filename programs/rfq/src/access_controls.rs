@@ -8,21 +8,11 @@ use crate::states::*;
 /// Initialzie access control.
 ///
 /// Ensures:
-/// - Signer is Convergence DAO
 /// - Fee denominator is greater than 0
 pub fn initialize_access_control<'info>(
     _ctx: &Context<Initialize<'info>>,
     fee_denominator: u64,
 ) -> Result<()> {
-    #[cfg(feature = "devnet")]
-    let signer = _ctx.accounts.signer.key();
-    #[cfg(feature = "devnet")]
-    let dao: Pubkey = "9XDtzeAwdc8sinFAR887UijxxnjB3rXztTeQjcFUtU5y"
-        .parse()
-        .unwrap();
-    #[cfg(feature = "devnet")]
-    require!(signer == dao, ProtocolError::InvalidAuthority);
-
     require!(fee_denominator > 0, ProtocolError::InvalidFee);
 
     Ok(())
@@ -31,21 +21,16 @@ pub fn initialize_access_control<'info>(
 /// Set fee access control.
 ///
 /// Ensures:
-/// - Signer is Convergence DAO
+/// - Signer is DAO
 /// - Fee denominator is greater than 0
 pub fn set_fee_access_control<'info>(
-    _ctx: &Context<SetFee<'info>>,
+    ctx: &Context<SetFee<'info>>,
     fee_denominator: u64,
 ) -> Result<()> {
-    #[cfg(feature = "mainnet")]
-    let signer = _ctx.accounts.signer.key();
-    #[cfg(feature = "mainnet")]
-    let dao: Pubkey = "9sZmY1J1L31d6Pw2yUF3p99sob7dbSJDNpYCxUGx3AsU"
-        .parse()
-        .unwrap();
-    #[cfg(feature = "devnet")]
-    require!(signer == dao, ProtocolError::InvalidAuthority);
+    let signer = ctx.accounts.signer.key();
+    let authority = ctx.accounts.protocol.authority.key();
 
+    require!(signer == authority, ProtocolError::InvalidAuthority);
     require!(fee_denominator > 0, ProtocolError::InvalidFee);
 
     Ok(())
@@ -56,9 +41,11 @@ pub fn set_fee_access_control<'info>(
 /// Ensures:
 /// - Order amount is greater than 0
 /// - Expiry is greater than now
+/// - Legs are valid
 pub fn request_access_control<'info>(
     _ctx: &Context<Request<'info>>,
     expiry: i64,
+    legs: &Vec<Leg>,
     order_amount: u64,
 ) -> Result<()> {
     require!(order_amount > 0, ProtocolError::InvalidRequest);
@@ -66,6 +53,15 @@ pub fn request_access_control<'info>(
         Clock::get().unwrap().unix_timestamp < expiry,
         ProtocolError::InvalidRequest
     );
+
+    // Check instrument type
+    for leg in legs.iter() {
+        match leg.instrument {
+            Instrument::Option => continue,
+            Instrument::Spot => continue,
+            _ => return Err(error!(ProtocolError::NotImplemented)),
+        }
+    }
 
     Ok(())
 }

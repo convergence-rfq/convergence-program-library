@@ -476,6 +476,254 @@ export type Rfq = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "initializePsyOptionsAmericanOptionMarket",
+      "accounts": [
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "psyAmericanProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteAssetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "optionMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "writerTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMarket",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "underlyingAmountPerContract",
+          "type": "u64"
+        },
+        {
+          "name": "quoteAmountPerContract",
+          "type": "u64"
+        },
+        {
+          "name": "expirationUnixTimestamp",
+          "type": "i64"
+        },
+        {
+          "name": "bumpSeed",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "initializePsyOptionsAmericanMintVault",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "underlyingAsset",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "mintPsyOptionsAmericanOption",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "psyAmericanProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintedOptionDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "writerTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintedWriterTokenDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeOwner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "leg",
+          "type": "u64"
+        },
+        {
+          "name": "size",
+          "type": "u64"
+        },
+        {
+          "name": "vaultAuthorityBump",
+          "type": "u8"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -730,6 +978,44 @@ export type Rfq = {
         "kind": "struct",
         "fields": [
           {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "contract",
+            "type": {
+              "option": {
+                "defined": "Contract"
+              }
+            }
+          },
+          {
+            "name": "contractAssetAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "contractQuoteAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "processed",
+            "type": "bool"
+          },
+          {
+            "name": "expiry",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
             "name": "instrument",
             "type": {
               "defined": "Instrument"
@@ -740,10 +1026,6 @@ export type Rfq = {
             "type": {
               "defined": "Venue"
             }
-          },
-          {
-            "name": "amount",
-            "type": "u64"
           }
         ]
       }
@@ -754,16 +1036,33 @@ export type Rfq = {
         "kind": "enum",
         "variants": [
           {
-            "name": "Call"
+            "name": "Option"
           },
           {
             "name": "Future"
           },
           {
+            "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Contract",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Call"
+          },
+          {
             "name": "Put"
           },
           {
-            "name": "Spot"
+            "name": "Long"
+          },
+          {
+            "name": "Short"
           }
         ]
       }
@@ -825,98 +1124,113 @@ export type Rfq = {
     },
     {
       "code": 6001,
+      "name": "CpiError",
+      "msg": "CPI error"
+    },
+    {
+      "code": 6002,
       "name": "InvalidCancel",
       "msg": "Invalid cancel"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "InvalidConfirm",
       "msg": "Invalid confirm"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "InvalidFee",
       "msg": "Invalid fee"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "InvalidRfq",
       "msg": "Invalid RFQ"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "InvalidTaker",
       "msg": "Invalid taker"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidAuthority",
       "msg": "Invalid authority"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "InvalidRequest",
       "msg": "Invalid request"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "LastLookNotSet",
       "msg": "Last look not set"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "Math",
       "msg": "Math"
     },
     {
-      "code": 6011,
+      "code": 6012,
+      "name": "NotImplemented",
+      "msg": "Not implemented"
+    },
+    {
+      "code": 6013,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6012,
+      "code": 6014,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6013,
+      "code": 6015,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6014,
+      "code": 6016,
       "name": "RfqActive",
       "msg": "RFQ active"
     },
     {
-      "code": 6015,
+      "code": 6017,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6016,
+      "code": 6018,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6017,
+      "code": 6019,
       "name": "RfqUnconfirmed",
       "msg": "RFQ unconfirmed"
     },
     {
-      "code": 6018,
+      "code": 6020,
       "name": "RfqCanceled",
       "msg": "RFQ canceled"
     },
     {
-      "code": 6019,
+      "code": 6021,
       "name": "RfqSettled",
       "msg": "RFQ settled"
+    },
+    {
+      "code": 6022,
+      "name": "DexIxError",
+      "msg": "Error creating a dex instruction"
     }
   ]
 };
@@ -1399,6 +1713,254 @@ export const IDL: Rfq = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "initializePsyOptionsAmericanOptionMarket",
+      "accounts": [
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "psyAmericanProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteAssetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "optionMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "writerTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMarket",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "underlyingAmountPerContract",
+          "type": "u64"
+        },
+        {
+          "name": "quoteAmountPerContract",
+          "type": "u64"
+        },
+        {
+          "name": "expirationUnixTimestamp",
+          "type": "i64"
+        },
+        {
+          "name": "bumpSeed",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "initializePsyOptionsAmericanMintVault",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "underlyingAsset",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "mintPsyOptionsAmericanOption",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "psyAmericanProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "underlyingAssetPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintedOptionDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "writerTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintedWriterTokenDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "optionMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeOwner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "leg",
+          "type": "u64"
+        },
+        {
+          "name": "size",
+          "type": "u64"
+        },
+        {
+          "name": "vaultAuthorityBump",
+          "type": "u8"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1653,6 +2215,44 @@ export const IDL: Rfq = {
         "kind": "struct",
         "fields": [
           {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "contract",
+            "type": {
+              "option": {
+                "defined": "Contract"
+              }
+            }
+          },
+          {
+            "name": "contractAssetAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "contractQuoteAmount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "processed",
+            "type": "bool"
+          },
+          {
+            "name": "expiry",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
             "name": "instrument",
             "type": {
               "defined": "Instrument"
@@ -1663,10 +2263,6 @@ export const IDL: Rfq = {
             "type": {
               "defined": "Venue"
             }
-          },
-          {
-            "name": "amount",
-            "type": "u64"
           }
         ]
       }
@@ -1677,16 +2273,33 @@ export const IDL: Rfq = {
         "kind": "enum",
         "variants": [
           {
-            "name": "Call"
+            "name": "Option"
           },
           {
             "name": "Future"
           },
           {
+            "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Contract",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Call"
+          },
+          {
             "name": "Put"
           },
           {
-            "name": "Spot"
+            "name": "Long"
+          },
+          {
+            "name": "Short"
           }
         ]
       }
@@ -1748,98 +2361,113 @@ export const IDL: Rfq = {
     },
     {
       "code": 6001,
+      "name": "CpiError",
+      "msg": "CPI error"
+    },
+    {
+      "code": 6002,
       "name": "InvalidCancel",
       "msg": "Invalid cancel"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "InvalidConfirm",
       "msg": "Invalid confirm"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "InvalidFee",
       "msg": "Invalid fee"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidQuote",
       "msg": "Invalid quote"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "InvalidRfq",
       "msg": "Invalid RFQ"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "InvalidTaker",
       "msg": "Invalid taker"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidAuthority",
       "msg": "Invalid authority"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "InvalidRequest",
       "msg": "Invalid request"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "LastLookNotSet",
       "msg": "Last look not set"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "Math",
       "msg": "Math"
     },
     {
-      "code": 6011,
+      "code": 6012,
+      "name": "NotImplemented",
+      "msg": "Not implemented"
+    },
+    {
+      "code": 6013,
       "name": "OrderConfirmed",
       "msg": "Order confirmed"
     },
     {
-      "code": 6012,
+      "code": 6014,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6013,
+      "code": 6015,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6014,
+      "code": 6016,
       "name": "RfqActive",
       "msg": "RFQ active"
     },
     {
-      "code": 6015,
+      "code": 6017,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6016,
+      "code": 6018,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6017,
+      "code": 6019,
       "name": "RfqUnconfirmed",
       "msg": "RFQ unconfirmed"
     },
     {
-      "code": 6018,
+      "code": 6020,
       "name": "RfqCanceled",
       "msg": "RFQ canceled"
     },
     {
-      "code": 6019,
+      "code": 6021,
       "name": "RfqSettled",
       "msg": "RFQ settled"
+    },
+    {
+      "code": 6022,
+      "name": "DexIxError",
+      "msg": "Error creating a dex instruction"
     }
   ]
 };

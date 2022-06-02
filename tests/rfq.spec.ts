@@ -31,6 +31,7 @@ import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 
 import {
+  Contract,
   Instrument,
   Order,
   Quote,
@@ -43,6 +44,7 @@ import {
   getProgram,
   getResponses,
   initializeProtocol,
+  mintPsyOptionsAmericanOptions,
   lastLook,
   respond,
   returnCollateral,
@@ -168,14 +170,12 @@ describe('RFQ Specification', () => {
     )
 
     // NOTE: Do not create DAO asset ATA as this is tested for in settle function
-    //daoAssetATA = await assetToken.createAssociatedTokenAccount(dao.publicKey)
     takerAssetATA = await assetToken.createAssociatedTokenAccount(taker.publicKey)
     makerAAssetATA = await assetToken.createAssociatedTokenAccount(makerA.publicKey)
     makerBAssetATA = await assetToken.createAssociatedTokenAccount(makerB.publicKey)
     makerCAssetATA = await assetToken.createAssociatedTokenAccount(makerC.publicKey)
     makerDAssetATA = await assetToken.createAssociatedTokenAccount(makerD.publicKey)
 
-    // NOTE: Do not create DAO asset ATA as this is tested for in settle function
     daoQuoteATA = await quoteToken.createAssociatedTokenAccount(dao.publicKey)
     takerQuoteATA = await quoteToken.createAssociatedTokenAccount(taker.publicKey)
     makerAQuoteATA = await quoteToken.createAssociatedTokenAccount(makerA.publicKey)

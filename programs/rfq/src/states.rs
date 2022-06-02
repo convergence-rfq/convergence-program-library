@@ -1,4 +1,4 @@
-//! State
+///! State
 use anchor_lang::prelude::*;
 
 /// Access manager state.
@@ -114,10 +114,18 @@ pub struct OrderState {
 /// Instrument.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instrument {
-    Call,
+    Option,
     Future,
-    Put,
     Spot,
+}
+
+/// Contract.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Contract {
+    Call,
+    Put,
+    Long,
+    Short,
 }
 
 /// Venue.
@@ -131,12 +139,24 @@ pub enum Venue {
 /// Leg.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Leg {
-    // Instrument
-    instrument: Instrument,
-    // Venue
-    venue: Venue,
     // Amount
-    amount: u64,
+    pub amount: u64,
+    // Contract
+    pub contract: Option<Contract>,
+    // Contract asset amount
+    pub contract_asset_amount: Option<u64>,
+    // Contract quote amount
+    pub contract_quote_amount: Option<u64>,
+    // Processed
+    pub processed: bool,
+    // Expiry
+    pub expiry: Option<i64>,
+    // Id
+    pub id: u64,
+    // Instrument
+    pub instrument: Instrument,
+    // Venue
+    pub venue: Venue,
 }
 
 /// Quote.

@@ -49,3 +49,15 @@ List RFQs and responses.
 ```bash
 ./bin/list.ts
 ```
+
+**Testing**
+
+Run the following to perform all integration tests.
+
+``bash
+cd psyoptions
+anchor test --detach
+# In a new tab
+cd rfq
+anchor test --skip-local-validator
+```
