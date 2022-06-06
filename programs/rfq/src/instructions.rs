@@ -274,12 +274,16 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
                 &[
                     &[
                         ASSET_ESCROW_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        rfq.key().as_ref(),
                         &[rfq.asset_escrow_bump],
                     ][..],
                     &[
                         RFQ_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        &rfq.authority.key().to_bytes(),
+                        &rfq.asset_mint.key().to_bytes(),
+                        &rfq.quote_mint.key().to_bytes(),
+                        &rfq.order_amount.to_le_bytes(),
+                        &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
                     ][..],
                 ],
@@ -300,12 +304,16 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
                 &[
                     &[
                         QUOTE_ESCROW_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        rfq.key().as_ref(),
                         &[rfq.quote_escrow_bump],
                     ][..],
                     &[
                         RFQ_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        &rfq.authority.key().to_bytes(),
+                        &rfq.asset_mint.key().to_bytes(),
+                        &rfq.quote_mint.key().to_bytes(),
+                        &rfq.order_amount.to_le_bytes(),
+                        &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
                     ][..],
                 ],
@@ -392,12 +400,16 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                 &[
                     &[
                         ASSET_ESCROW_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        rfq.key().as_ref(),
                         &[rfq.asset_escrow_bump],
                     ][..],
                     &[
                         RFQ_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        &rfq.authority.key().to_bytes(),
+                        &rfq.asset_mint.key().to_bytes(),
+                        &rfq.quote_mint.key().to_bytes(),
+                        &rfq.order_amount.to_le_bytes(),
+                        &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
                     ][..],
                 ],
@@ -418,12 +430,16 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     &[
                         &[
                             ASSET_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
+                            rfq.key().as_ref(),
                             &[rfq.asset_escrow_bump],
                         ][..],
                         &[
                             RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
+                            &rfq.authority.key().to_bytes(),
+                            &rfq.asset_mint.key().to_bytes(),
+                            &rfq.quote_mint.key().to_bytes(),
+                            &rfq.order_amount.to_le_bytes(),
+                            &rfq.expiry.to_le_bytes(),
                             &[rfq.bump],
                         ][..],
                     ],
@@ -445,12 +461,16 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                 &[
                     &[
                         QUOTE_ESCROW_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        rfq.key().as_ref(),
                         &[rfq.quote_escrow_bump],
                     ][..],
                     &[
                         RFQ_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        &rfq.authority.key().to_bytes(),
+                        &rfq.asset_mint.key().to_bytes(),
+                        &rfq.quote_mint.key().to_bytes(),
+                        &rfq.order_amount.to_le_bytes(),
+                        &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
                     ][..],
                 ],
@@ -470,12 +490,16 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     &[
                         &[
                             QUOTE_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
+                            rfq.key().as_ref(),
                             &[rfq.quote_escrow_bump],
                         ][..],
                         &[
                             RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
+                            &rfq.authority.key().to_bytes(),
+                            &rfq.asset_mint.key().to_bytes(),
+                            &rfq.quote_mint.key().to_bytes(),
+                            &rfq.order_amount.to_le_bytes(),
+                            &rfq.expiry.to_le_bytes(),
                             &[rfq.bump],
                         ][..],
                     ],

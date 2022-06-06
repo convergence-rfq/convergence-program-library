@@ -168,26 +168,32 @@ export async function request(
     program.programId
   )
 
-  let protocolState: any = await program.account.protocolState.fetch(protocolPda)
-  const rfqId = protocolState.rfqCount.toNumber() + 1
-
   const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
+    [
+      Buffer.from(RFQ_SEED),
+      signer.publicKey.toBuffer(),
+      assetMint.toBuffer(),
+      quoteMint.toBuffer(),
+      new BN(orderAmount).toBuffer('le', 8),
+      new BN(expiry).toBuffer('le', 8)
+    ],
     program.programId
   )
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
   const [quoteEscrowPda, _quoteEscrowPda] = await PublicKey.findProgramAddress(
-    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
+
   let signers = []
   if (signer.payer) {
     signers.push(signer.payer)
   }
-  const tx = await program.methods.request(accessManager, new anchor.BN(expiry), lastLook, legs, new anchor.BN(orderAmount), requestOrder)
+
+  const tx = await program.methods.request(accessManager, new BN(expiry), lastLook, legs, new BN(orderAmount), requestOrder)
     .accounts({
       assetEscrow: assetEscrowPda,
       assetMint,
@@ -203,34 +209,33 @@ export async function request(
     .signers(signers)
     .rpc()
 
-  protocolState = await program.account.protocolState.fetch(protocolPda)
+  const protocolState = await program.account.protocolState.fetch(protocolPda)
   const rfqState = await program.account.rfqState.fetch(rfqPda)
 
   return {
     tx,
     protocolState,
-    rfqState
+    rfqState,
+    rfqPda
   }
 }
 
 export async function cancel(
   provider: Provider,
   signer: Wallet,
-  rfqId: number
+  rfqPda: PublicKey
 ): Promise<any> {
   const program = await getProgram(provider)
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
-  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    program.programId
-  )
+
   let signers = []
   if (signer.payer) {
     signers.push(signer.payer)
   }
+
   const tx = await program.methods.cancel()
     .accounts({
       signer: signer.publicKey,
@@ -239,6 +244,7 @@ export async function cancel(
     })
     .signers(signers)
     .rpc()
+
   const rfqState = await program.account.rfqState.fetch(rfqPda)
   return { tx, rfqState }
 }
@@ -246,18 +252,13 @@ export async function cancel(
 export async function respond(
   provider: Provider,
   signer: Wallet,
-  rfqId: number,
+  rfqPda: PublicKey,
   bid: number | null,
   ask: number | null,
   assetWallet: PublicKey,
   quoteWallet: PublicKey
 ): Promise<any> {
   const program = await getProgram(provider)
-
-  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    program.programId
-  )
 
   let rfqState: any = await program.account.rfqState.fetch(rfqPda)
   const responseId = rfqState.responseCount.toNumber() + 1
@@ -266,15 +267,15 @@ export async function respond(
   const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
   const [quoteEscrowPda, _quoteEscrowPDA] = await PublicKey.findProgramAddress(
-    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
   const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(responseId.toString())],
+    [Buffer.from(ORDER_SEED), rfqPda.toBuffer(), Buffer.from(responseId.toString())],
     program.programId
   )
 
@@ -313,7 +314,7 @@ export async function respond(
 
 export async function confirm(
   provider: Provider,
-  rfqId: number,
+  rfqPda: PublicKey,
   responseId: number,
   signer: Wallet,
   assetWallet: PublicKey,
@@ -322,25 +323,20 @@ export async function confirm(
 ): Promise<any> {
   const program = await getProgram(provider)
 
-  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    program.programId
-  )
-
   let rfqState: any = await program.account.rfqState.fetch(rfqPda)
   const assetMint = new PublicKey(rfqState.assetMint.toString())
   const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
   const [quoteEscrowPda, _quoteEscrowPda] = await PublicKey.findProgramAddress(
-    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
   const [orderPda, _orderPda] = await PublicKey.findProgramAddress(
-    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(responseId.toString())],
+    [Buffer.from(ORDER_SEED), rfqPda.toBuffer(), Buffer.from(responseId.toString())],
     program.programId
   )
 
@@ -380,17 +376,13 @@ export async function confirm(
 export async function lastLook(
   provider: Provider,
   signer: Wallet,
-  rfqId: number,
+  rfqPda: PublicKey,
   orderId: number
 ): Promise<any> {
   const program = await getProgram(provider)
 
-  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    program.programId
-  )
   const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
+    [Buffer.from(ORDER_SEED), rfqPda.toBuffer(), Buffer.from(orderId.toString())],
     program.programId
   )
 
@@ -421,33 +413,27 @@ export async function lastLook(
 export async function returnCollateral(
   provider: Provider,
   signer: Wallet,
-  rfqId: number,
+  rfqPda: PublicKey,
   orderId: number,
   assetWallet: PublicKey,
   quoteWallet: PublicKey,
 ): Promise<any> {
   const program = await getProgram(provider)
 
-  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    program.programId
-  )
-
   let rfqState: any = await program.account.rfqState.fetch(rfqPda)
-
   const assetMint = new PublicKey(rfqState.assetMint.toString())
   const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
   const [quoteEscrowPda, _quoteEscrowPDA] = await PublicKey.findProgramAddress(
-    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
   const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
+    [Buffer.from(ORDER_SEED), rfqPda.toBuffer(), Buffer.from(orderId.toString())],
     program.programId
   )
 
@@ -487,7 +473,7 @@ export async function returnCollateral(
 export async function settle(
   provider: Provider,
   signer: Wallet,
-  rfqId: number,
+  rfqPda: PublicKey,
   orderId: number,
   assetWallet: PublicKey,
   quoteWallet: PublicKey
@@ -498,10 +484,6 @@ export async function settle(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
-  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    program.programId
-  )
 
   const protocolState: any = await program.account.protocolState.fetch(protocolPda)
   let rfqState: any = await program.account.rfqState.fetch(rfqPda)
@@ -510,15 +492,15 @@ export async function settle(
   const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(ASSET_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
   const [quoteEscrowPda, _quoteEscrowPDA] = await PublicKey.findProgramAddress(
-    [Buffer.from(QUOTE_ESCROW_SEED), Buffer.from(rfqId.toString())],
+    [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
   const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(ORDER_SEED), Buffer.from(rfqId.toString()), Buffer.from(orderId.toString())],
+    [Buffer.from(ORDER_SEED), rfqPda.toBuffer(), Buffer.from(orderId.toString())],
     program.programId
   )
 
@@ -621,25 +603,7 @@ export async function getRFQs(
   pageSize: number | null
 ): Promise<object[]> {
   const program = await getProgram(provider)
-  const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(PROTOCOL_SEED)],
-    program.programId
-  )
-  const protocolState: any = await program.account.protocolState.fetch(protocolPda)
-  const range = Array.from({
-    length: protocolState.rfqCount.toNumber()
-  }, (_, i) => 1 + i)
-
-  const rfqPDAs = await Promise.all(range.map(async (i) => {
-    const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(RFQ_SEED), Buffer.from(i.toString())],
-      program.programId
-    )
-    return rfqPda
-  }))
-
-  const rfqs: any[] = await program.account.rfqState.fetchMultiple(rfqPDAs)
-
+  const rfqs: any[] = await program.account.rfqState.all()
   return rfqs
 }
 

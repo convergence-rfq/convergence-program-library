@@ -385,7 +385,7 @@ export type Rfq = {
         },
         {
           "name": "rfq",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1622,7 +1622,7 @@ export const IDL: Rfq = {
         },
         {
           "name": "rfq",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
