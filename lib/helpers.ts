@@ -608,14 +608,16 @@ export async function getRFQs(
 }
 
 export async function getResponses(provider: Provider, rfqs: any[]): Promise<object[]> {
+  const program = await getProgram(provider)
   let orderPdas = []
 
-  const program = await getProgram(provider)
-
   for (let i = 0; i < rfqs.length; i++) {
-    for (let j = 0; j < rfqs[i].responseCount.toNumber(); j++) {
+    const publicKey = rfqs[i].publicKey
+    const account = rfqs[i].account
+
+    for (let j = 0; j < account.responseCount.toNumber(); j++) {
       const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
-        [Buffer.from(ORDER_SEED), Buffer.from(rfqs[i].id.toString()), Buffer.from((j + 1).toString())],
+        [Buffer.from(ORDER_SEED), publicKey.toBuffer(), Buffer.from((j + 1).toString())],
         program.programId
       )
       orderPdas.push([orderPda, rfqs[i]])
