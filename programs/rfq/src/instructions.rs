@@ -418,7 +418,6 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
         )?;
 
         if fee_amount > 0 {
-            msg!("ASSET");
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),

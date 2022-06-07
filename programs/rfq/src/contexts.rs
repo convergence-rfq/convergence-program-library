@@ -144,6 +144,7 @@ pub struct Cancel<'info> {
 
 /// Responds to quote.
 #[derive(Accounts)]
+#[instruction(bid: Option<u64>, ask: Option<u64>)]
 pub struct Respond<'info> {
     /// Authority
     #[account(mut)]
@@ -152,12 +153,13 @@ pub struct Respond<'info> {
     #[account(
         init,
         payer = signer,
-        seeds = [ORDER_SEED.as_bytes(), rfq.key().as_ref(), (rfq.response_count + 1).to_string().as_bytes()],
-        //seeds = [
-        //    ORDER_SEED.as_bytes(),
-        //    rfq.key().as_ref(),
-        //    signer.key().as_ref(),
-        //],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            signer.key().as_ref(),
+            &bid.unwrap_or(0).to_le_bytes(),
+            &ask.unwrap_or(0).to_le_bytes(),
+        ],
         space = 8 + mem::size_of::<OrderState>(),
         bump
     )]
@@ -236,7 +238,13 @@ pub struct Confirm<'info> {
     /// Order
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), rfq.key().as_ref(), order.id.to_string().as_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            order.authority.key().as_ref(),
+            &order.bid.unwrap_or(0).to_le_bytes(),
+            &order.ask.unwrap_or(0).to_le_bytes(),
+        ],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id
     )]
@@ -288,7 +296,13 @@ pub struct LastLook<'info> {
     /// Order
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), rfq.key().as_ref(), order.id.to_string().as_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            order.authority.key().as_ref(),
+            &order.bid.unwrap_or(0).to_le_bytes(),
+            &order.ask.unwrap_or(0).to_le_bytes(),
+        ],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id
     )]
@@ -334,7 +348,13 @@ pub struct ReturnCollateral<'info> {
     /// Order
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), rfq.key().as_ref(), order.id.to_string().as_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            order.authority.key().as_ref(),
+            &order.bid.unwrap_or(0).to_le_bytes(),
+            &order.ask.unwrap_or(0).to_le_bytes(),
+        ],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id
     )]
@@ -398,7 +418,13 @@ pub struct Settle<'info> {
     /// Order
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), rfq.key().as_ref(), order.id.to_string().as_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            order.authority.key().as_ref(),
+            &order.bid.unwrap_or(0).to_le_bytes(),
+            &order.ask.unwrap_or(0).to_le_bytes(),
+        ],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id
     )]
