@@ -41,8 +41,6 @@ pub struct RfqState {
     pub confirmed: bool,
     /// Expiry time
     pub expiry: i64,
-    /// Incremental integer id
-    pub id: u64,
     /// Legs
     pub legs: Vec<Leg>,
     /// Last look required to approve trade
@@ -95,8 +93,6 @@ pub struct OrderState {
     pub collateral_returned: bool,
     // Confirmed quote
     pub confirmed_quote: Option<Quote>,
-    // Order id
-    pub id: u64,
     /// Rfq
     pub rfq: Pubkey,
     /// Settled

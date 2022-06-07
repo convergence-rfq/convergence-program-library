@@ -93,7 +93,14 @@ pub struct MintAmericanOption<'info> {
     pub token_program: Program<'info, Token>,
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            rfq.authority.key().as_ref(),
+            rfq.asset_mint.key().as_ref(),
+            rfq.quote_mint.key().as_ref(),
+            &rfq.order_amount.to_le_bytes(),
+            &rfq.expiry.to_le_bytes()
+        ],
         bump = rfq.bump,
         constraint = rfq.to_account_info().owner == program_id
     )]

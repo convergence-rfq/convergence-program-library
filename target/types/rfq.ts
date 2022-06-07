@@ -822,10 +822,6 @@ export type Rfq = {
             "type": "i64"
           },
           {
-            "name": "id",
-            "type": "u64"
-          },
-          {
             "name": "legs",
             "type": {
               "vec": {
@@ -938,10 +934,6 @@ export type Rfq = {
                 "defined": "Quote"
               }
             }
-          },
-          {
-            "name": "id",
-            "type": "u64"
           },
           {
             "name": "rfq",
@@ -2047,10 +2039,6 @@ export const IDL: Rfq = {
             "type": "i64"
           },
           {
-            "name": "id",
-            "type": "u64"
-          },
-          {
             "name": "legs",
             "type": {
               "vec": {
@@ -2163,10 +2151,6 @@ export const IDL: Rfq = {
                 "defined": "Quote"
               }
             }
-          },
-          {
-            "name": "id",
-            "type": "u64"
           },
           {
             "name": "rfq",

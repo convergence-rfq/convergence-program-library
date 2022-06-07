@@ -295,11 +295,6 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
 
     require!(rfq.confirmed, ProtocolError::RfqUnconfirmed);
     require!(!rfq.canceled, ProtocolError::RfqCanceled);
-    if rfq.id == 4 as u64 {
-        msg!("{}", rfq.confirmed);
-        msg!("{}", rfq.canceled);
-        assert!(false);
-    }
 
     match order.confirmed_quote {
         Some(Quote::Ask) => require!(order.ask_confirmed, ProtocolError::OrderConfirmed),

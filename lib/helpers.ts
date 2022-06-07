@@ -583,21 +583,36 @@ export async function getRFQs(
   return rfqs
 }
 
-export async function getResponses(provider: Provider, rfqs: any[]): Promise<object[]> {
+
+export async function getMyOrders(provider: Provider, publicKey: PublicKey): Promise<object[]> {
   const program = await getProgram(provider)
-  let allOrders = []
-
-  for (let i = 0; i < rfqs.length; i++) {
-    const publicKey = rfqs[i].publicKey
-    const account = rfqs[i].account
-
-    // TODO: Add filter
-    const rfqOrders = await program.account.orderState.all()
-    for (let j = 0; j < rfqOrders.length; j++) {
-      allOrders.push([rfqOrders[j], { publicKey, account }])
+  const myOrders = await program.account.orderState.all([
+    {
+      memcmp: {
+        offset: 10,
+        bytes: publicKey.toBase58()
+      }
     }
-  }
+  ])
+  return myOrders
+}
 
+export async function getRfqOrders(provider: Provider, publicKey: PublicKey): Promise<object[]> {
+  const program = await getProgram(provider)
+  const rfqOrders = await program.account.orderState.all([
+    {
+      memcmp: {
+        offset: 57,
+        bytes: publicKey.toBase58()
+      }
+    }
+  ])
+  return rfqOrders
+}
+
+export async function getAllOrders(provider: Provider): Promise<object[]> {
+  const program = await getProgram(provider)
+  const allOrders = await program.account.orderState.all()
   return allOrders
 }
 

@@ -41,7 +41,8 @@ import {
   getBalance,
   getRFQs,
   getProgram,
-  getResponses,
+  getAllOrders,
+  getRfqOrders,
   initializeProtocol,
   lastLook,
   respond,
@@ -649,9 +650,11 @@ describe('RFQ Specification', () => {
   })
 
   it('DAO views all RFQs and responses', async () => {
-    const rfqs = await getRFQs(provider, 1, 10)
-    const responses = await getResponses(provider, rfqs)
+    const rfqs: any = await getRFQs(provider, 1, 10)
+    const allOrders = await getAllOrders(provider)
+    const rfqOrders = await getRfqOrders(provider, rfqs[0].publicKey)
     assert.equal(rfqs.length, 5)
-    assert.equal(responses.length, 8)
+    assert.equal(allOrders.length, 8)
+    assert.equal(rfqOrders.length, 8)
   })
 })
