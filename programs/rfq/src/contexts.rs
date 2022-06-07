@@ -153,6 +153,11 @@ pub struct Respond<'info> {
         init,
         payer = signer,
         seeds = [ORDER_SEED.as_bytes(), rfq.key().as_ref(), (rfq.response_count + 1).to_string().as_bytes()],
+        //seeds = [
+        //    ORDER_SEED.as_bytes(),
+        //    rfq.key().as_ref(),
+        //    signer.key().as_ref(),
+        //],
         space = 8 + mem::size_of::<OrderState>(),
         bump
     )]

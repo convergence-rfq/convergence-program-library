@@ -1,16 +1,13 @@
 import * as anchor from '@project-serum/anchor'
-import { ProgramAccount, BN, Idl, IdlAccounts, Program, Provider, Wallet } from '@project-serum/anchor'
+import { ProgramAccount, BN, Idl, Program, Provider, Wallet } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import {
-  LAMPORTS_PER_SOL, PublicKey, SystemProgram, Keypair, SYSVAR_CLOCK_PUBKEY, AccountMeta, TransactionInstruction, Signer, SYSVAR_RENT_PUBKEY
-} from '@solana/web3.js'
+import { PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY, AccountMeta, TransactionInstruction, Signer, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
 
 import { default as idl } from '../target/idl/rfq.json'
 import { Rfq } from '../target/types/rfq'
 
 import { default as psyAmericanIdl } from '../lib/integrations/idl/psyAmerican.json'
 import { PsyAmerican } from '../lib/integrations/types/psyAmerican'
-import { SignerWallet } from '@saberhq/solana-contrib'
 
 export const RFQ_SEED = 'rfq'
 export const ORDER_SEED = 'order'
@@ -119,6 +116,7 @@ export async function initializeProtocol(
     .signers(signers)
     .rpc()
   const protocolState = await program.account.protocolState.fetch(protocolPda)
+
   return { tx, protocolState }
 }
 
@@ -133,10 +131,12 @@ export async function setFee(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
+
   let signers = []
   if (signer.payer) {
     signers.push(signer.payer)
   }
+
   const tx = await program.methods.setFee(new anchor.BN(feeDenominator), new anchor.BN(feeNumerator))
     .accounts({
       signer: signer.publicKey,
@@ -145,7 +145,9 @@ export async function setFee(
     })
     .signers(signers)
     .rpc()
+
   const protocolState = await program.account.protocolState.fetch(protocolPda)
+
   return { tx, protocolState }
 }
 
@@ -246,6 +248,7 @@ export async function cancel(
     .rpc()
 
   const rfqState = await program.account.rfqState.fetch(rfqPda)
+
   return { tx, rfqState }
 }
 
@@ -262,9 +265,6 @@ export async function respond(
 
   let rfqState: any = await program.account.rfqState.fetch(rfqPda)
   const responseId = rfqState.responseCount.toNumber() + 1
-
-  const assetMint = new PublicKey(rfqState.assetMint.toString())
-  const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
@@ -286,13 +286,13 @@ export async function respond(
 
   const tx = await program.methods.respond(bid ? new anchor.BN(bid) : null, ask ? new anchor.BN(ask) : null)
     .accounts({
-      assetMint,
+      assetMint: rfqState.assetMint,
       assetWallet,
       signer: signer.publicKey,
       assetEscrow: assetEscrowPda,
       quoteEscrow: quoteEscrowPda,
       order: orderPda,
-      quoteMint,
+      quoteMint: rfqState.quoteMint,
       quoteWallet,
       rent: SYSVAR_RENT_PUBKEY,
       rfq: rfqPda,
@@ -324,8 +324,6 @@ export async function confirm(
   const program = await getProgram(provider)
 
   let rfqState: any = await program.account.rfqState.fetch(rfqPda)
-  const assetMint = new PublicKey(rfqState.assetMint.toString())
-  const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
@@ -347,14 +345,14 @@ export async function confirm(
 
   const tx = await program.methods.confirm(side)
     .accounts({
-      assetMint,
+      assetMint: rfqState.assetMint,
       assetWallet,
       signer: signer.publicKey,
       assetEscrow: assetEscrowPda,
       order: orderPda,
       quoteWallet,
       quoteEscrow: quoteEscrowPda,
-      quoteMint,
+      quoteMint: rfqState.quoteMint,
       rent: SYSVAR_RENT_PUBKEY,
       rfq: rfqPda,
       systemProgram: SystemProgram.programId,
@@ -421,8 +419,6 @@ export async function returnCollateral(
   const program = await getProgram(provider)
 
   let rfqState: any = await program.account.rfqState.fetch(rfqPda)
-  const assetMint = new PublicKey(rfqState.assetMint.toString())
-  const quoteMint = new PublicKey(rfqState.quoteMint.toString())
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
@@ -445,13 +441,13 @@ export async function returnCollateral(
   const tx = await program.methods.returnCollateral()
     .accounts({
       assetEscrow: assetEscrowPda,
-      assetMint,
+      assetMint: rfqState.assetMint,
       assetWallet,
       signer: signer.publicKey,
       order: orderPda,
       quoteEscrow: quoteEscrowPda,
       quoteWallet,
-      quoteMint,
+      quoteMint: rfqState.quoteMint,
       rent: SYSVAR_RENT_PUBKEY,
       rfq: rfqPda,
       systemProgram: SystemProgram.programId,
@@ -488,9 +484,6 @@ export async function settle(
   const protocolState: any = await program.account.protocolState.fetch(protocolPda)
   let rfqState: any = await program.account.rfqState.fetch(rfqPda)
 
-  const assetMint = new PublicKey(rfqState.assetMint.toString())
-  const quoteMint = new PublicKey(rfqState.quoteMint.toString())
-
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
@@ -505,26 +498,20 @@ export async function settle(
   )
 
   const orderState: any = await program.account.orderState.fetch(orderPda)
-  let treasuryWallet: PublicKey
-  let treasuryMint: PublicKey
 
+  let treasuryMint: PublicKey
   if (orderState?.confirmedQuote?.hasOwnProperty('ask')) {
-    treasuryMint = assetMint
-    treasuryWallet = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      assetMint,
-      protocolState.authority
-    )
+    treasuryMint = rfqState.assetMint
   } else {
-    treasuryMint = quoteMint
-    treasuryWallet = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      quoteMint,
-      protocolState.authority
-    )
+    treasuryMint = rfqState.quoteMint
   }
+
+  const treasuryWallet = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    treasuryMint,
+    protocolState.authority
+  )
 
   const token = new Token(
     provider.connection,
@@ -553,12 +540,12 @@ export async function settle(
 
   const accounts = {
     assetEscrow: assetEscrowPda,
-    assetMint,
+    assetMint: rfqState.assetMint,
     assetWallet,
     signer: signer.publicKey,
     order: orderPda,
     quoteEscrow: quoteEscrowPda,
-    quoteMint,
+    quoteMint: rfqState.quoteMint,
     quoteWallet,
     rfq: rfqPda,
     systemProgram: SystemProgram.programId,
