@@ -55,8 +55,6 @@ pub struct RfqState {
     pub quote_escrow_bump: u8,
     /// Quote mint
     pub quote_mint: Pubkey,
-    /// Response count
-    pub response_count: u64,
     /// Settled
     pub settled: bool,
     /// Creation time
@@ -66,8 +64,6 @@ pub struct RfqState {
 /// Protocol state.
 #[account]
 pub struct ProtocolState {
-    // Access manager count
-    pub access_manager_count: u64,
     // Protocol authority
     pub authority: Pubkey,
     // PDA bump
@@ -76,8 +72,6 @@ pub struct ProtocolState {
     pub fee_denominator: u64,
     // Fee numerator
     pub fee_numerator: u64,
-    // RFQ count
-    pub rfq_count: u64,
     // Treasury wallet
     pub treasury_wallet: Pubkey,
 }

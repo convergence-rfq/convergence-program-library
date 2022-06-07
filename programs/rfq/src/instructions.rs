@@ -23,12 +23,10 @@ pub fn initialize(
     fee_numerator: u64,
 ) -> Result<()> {
     let protocol = &mut ctx.accounts.protocol;
-    protocol.access_manager_count = 0;
     protocol.authority = ctx.accounts.signer.key();
     protocol.bump = *ctx.bumps.get(PROTOCOL_SEED).unwrap();
     protocol.fee_denominator = fee_denominator;
     protocol.fee_numerator = fee_numerator;
-    protocol.rfq_count = 0;
 
     Ok(())
 }
@@ -70,12 +68,6 @@ pub fn request(
     order_amount: u64,
     order_type: Order,
 ) -> Result<()> {
-    let protocol = &mut ctx.accounts.protocol;
-    protocol.rfq_count = protocol
-        .rfq_count
-        .checked_add(1)
-        .ok_or(ProtocolError::Math)?;
-
     let rfq = &mut ctx.accounts.rfq;
     rfq.access_manager = access_manager;
     rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
@@ -88,14 +80,12 @@ pub fn request(
     rfq.best_bid_amount = None;
     rfq.bump = *ctx.bumps.get(RFQ_SEED).unwrap();
     rfq.expiry = expiry;
-    rfq.id = ctx.accounts.protocol.rfq_count;
     rfq.last_look = last_look;
     rfq.legs = legs;
     rfq.order_amount = order_amount;
     rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
     rfq.quote_mint = ctx.accounts.quote_mint.key();
     rfq.order_type = order_type;
-    rfq.response_count = 0;
     rfq.settled = false;
     rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
 
@@ -129,17 +119,12 @@ pub fn cancel(ctx: Context<Cancel>) -> Result<()> {
 #[access_control(respond_access_control(&ctx, bid, ask))]
 pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Result<()> {
     let rfq = &mut ctx.accounts.rfq;
-    rfq.response_count = rfq
-        .response_count
-        .checked_add(1)
-        .ok_or(ProtocolError::Math)?;
 
     let order = &mut ctx.accounts.order;
     order.ask_confirmed = false;
     order.authority = ctx.accounts.signer.key();
     order.bid_confirmed = false;
     order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
-    order.id = rfq.response_count;
     order.rfq = rfq.key();
     order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
 

@@ -856,10 +856,6 @@
             "type": "publicKey"
           },
           {
-            "name": "responseCount",
-            "type": "u64"
-          },
-          {
             "name": "settled",
             "type": "bool"
           },
@@ -876,10 +872,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "accessManagerCount",
-            "type": "u64"
-          },
-          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -893,10 +885,6 @@
           },
           {
             "name": "feeNumerator",
-            "type": "u64"
-          },
-          {
-            "name": "rfqCount",
             "type": "u64"
           },
           {

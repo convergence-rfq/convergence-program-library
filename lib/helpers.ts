@@ -585,26 +585,20 @@ export async function getRFQs(
 
 export async function getResponses(provider: Provider, rfqs: any[]): Promise<object[]> {
   const program = await getProgram(provider)
-  let orderPdas = []
+  let allOrders = []
 
   for (let i = 0; i < rfqs.length; i++) {
     const publicKey = rfqs[i].publicKey
     const account = rfqs[i].account
 
-    for (let j = 0; j < account.responseCount.toNumber(); j++) {
-      const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
-        [Buffer.from(ORDER_SEED), publicKey.toBuffer(), Buffer.from((j + 1).toString())],
-        program.programId
-      )
-      orderPdas.push([orderPda, rfqs[i]])
+    // TODO: Add filter
+    const rfqOrders = await program.account.orderState.all()
+    for (let j = 0; j < rfqOrders.length; j++) {
+      allOrders.push([rfqOrders[j], { publicKey, account }])
     }
   }
 
-  const orders = await Promise.all(orderPdas.map(async ([orderPda, rfqState]) => {
-    return [await program.account.orderState.fetch(orderPda), rfqState]
-  }))
-
-  return orders
+  return allOrders
 }
 
 /// Integrations

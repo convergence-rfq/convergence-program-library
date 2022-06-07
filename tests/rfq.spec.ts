@@ -204,14 +204,12 @@ describe('RFQ Specification', () => {
     const { protocolState } = await initializeProtocol(provider, dao, FEE_DENOMINATOR, 0)
     assert.ok(protocolState.feeDenominator.eq(new anchor.BN(FEE_DENOMINATOR)))
     assert.ok(protocolState.feeNumerator.eq(new anchor.BN(0)))
-    assert.ok(protocolState.accessManagerCount.eq(new anchor.BN(0)))
   })
 
   it(`DAO sets ${FEE_NUMERATOR}bps protocol fee`, async () => {
     const { protocolState } = await setFee(provider, dao, FEE_DENOMINATOR, FEE_NUMERATOR)
     assert.ok(protocolState.feeDenominator.eq(new anchor.BN(FEE_DENOMINATOR)))
     assert.ok(protocolState.feeNumerator.eq(new anchor.BN(FEE_NUMERATOR)))
-    assert.ok(protocolState.accessManagerCount.eq(new anchor.BN(0)))
   })
 
   it(`RFQ 1: Taker requests two-way asset quote for ${TAKER_ORDER_AMOUNT1}`, async () => {
@@ -225,7 +223,6 @@ describe('RFQ Specification', () => {
     }]
 
     const res = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT1, provider, quoteToken.publicKey, requestOrder)
-    assert.ok(res.rfqState.id.eq(new anchor.BN(1)))
     assert.ok(res.rfqState.authority.toString() === taker.publicKey.toString())
 
     rfqPda = res.rfqPda

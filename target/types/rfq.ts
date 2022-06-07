@@ -856,10 +856,6 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "responseCount",
-            "type": "u64"
-          },
-          {
             "name": "settled",
             "type": "bool"
           },
@@ -876,10 +872,6 @@ export type Rfq = {
         "kind": "struct",
         "fields": [
           {
-            "name": "accessManagerCount",
-            "type": "u64"
-          },
-          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -893,10 +885,6 @@ export type Rfq = {
           },
           {
             "name": "feeNumerator",
-            "type": "u64"
-          },
-          {
-            "name": "rfqCount",
             "type": "u64"
           },
           {
@@ -2093,10 +2081,6 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "responseCount",
-            "type": "u64"
-          },
-          {
             "name": "settled",
             "type": "bool"
           },
@@ -2113,10 +2097,6 @@ export const IDL: Rfq = {
         "kind": "struct",
         "fields": [
           {
-            "name": "accessManagerCount",
-            "type": "u64"
-          },
-          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -2130,10 +2110,6 @@ export const IDL: Rfq = {
           },
           {
             "name": "feeNumerator",
-            "type": "u64"
-          },
-          {
-            "name": "rfqCount",
             "type": "u64"
           },
           {
