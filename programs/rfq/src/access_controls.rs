@@ -41,9 +41,11 @@ pub fn set_fee_access_control<'info>(
 /// Ensures:
 /// - Order amount is greater than 0
 /// - Expiry is greater than now
+/// - Legs are valid
 pub fn request_access_control<'info>(
     _ctx: &Context<Request<'info>>,
     expiry: i64,
+    legs: &Vec<Leg>,
     order_amount: u64,
 ) -> Result<()> {
     require!(order_amount > 0, ProtocolError::InvalidRequest);
@@ -51,6 +53,15 @@ pub fn request_access_control<'info>(
         Clock::get().unwrap().unix_timestamp < expiry,
         ProtocolError::InvalidRequest
     );
+
+    // Check instrument type
+    for leg in legs.iter() {
+        match leg.instrument {
+            Instrument::Option => continue,
+            Instrument::Spot => continue,
+            _ => return Err(error!(ProtocolError::NotImplemented)),
+        }
+    }
 
     Ok(())
 }
@@ -284,11 +295,6 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
 
     require!(rfq.confirmed, ProtocolError::RfqUnconfirmed);
     require!(!rfq.canceled, ProtocolError::RfqCanceled);
-    if rfq.id == 4 as u64 {
-        msg!("{}", rfq.confirmed);
-        msg!("{}", rfq.canceled);
-        assert!(false);
-    }
 
     match order.confirmed_quote {
         Some(Quote::Ask) => require!(order.ask_confirmed, ProtocolError::OrderConfirmed),

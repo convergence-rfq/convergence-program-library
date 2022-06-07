@@ -23,12 +23,10 @@ pub fn initialize(
     fee_numerator: u64,
 ) -> Result<()> {
     let protocol = &mut ctx.accounts.protocol;
-    protocol.access_manager_count = 0;
     protocol.authority = ctx.accounts.signer.key();
     protocol.bump = *ctx.bumps.get(PROTOCOL_SEED).unwrap();
     protocol.fee_denominator = fee_denominator;
     protocol.fee_numerator = fee_numerator;
-    protocol.rfq_count = 0;
 
     Ok(())
 }
@@ -60,7 +58,7 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
 /// expiry
 /// order_amount
 /// order_type
-#[access_control(request_access_control(&ctx, expiry, order_amount))]
+#[access_control(request_access_control(&ctx, expiry, &legs, order_amount))]
 pub fn request(
     ctx: Context<Request>,
     access_manager: Option<Pubkey>,
@@ -70,12 +68,6 @@ pub fn request(
     order_amount: u64,
     order_type: Order,
 ) -> Result<()> {
-    let protocol = &mut ctx.accounts.protocol;
-    protocol.rfq_count = protocol
-        .rfq_count
-        .checked_add(1)
-        .ok_or(ProtocolError::Math)?;
-
     let rfq = &mut ctx.accounts.rfq;
     rfq.access_manager = access_manager;
     rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
@@ -88,14 +80,12 @@ pub fn request(
     rfq.best_bid_amount = None;
     rfq.bump = *ctx.bumps.get(RFQ_SEED).unwrap();
     rfq.expiry = expiry;
-    rfq.id = ctx.accounts.protocol.rfq_count;
     rfq.last_look = last_look;
     rfq.legs = legs;
     rfq.order_amount = order_amount;
     rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
     rfq.quote_mint = ctx.accounts.quote_mint.key();
     rfq.order_type = order_type;
-    rfq.response_count = 0;
     rfq.settled = false;
     rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
 
@@ -129,17 +119,12 @@ pub fn cancel(ctx: Context<Cancel>) -> Result<()> {
 #[access_control(respond_access_control(&ctx, bid, ask))]
 pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Result<()> {
     let rfq = &mut ctx.accounts.rfq;
-    rfq.response_count = rfq
-        .response_count
-        .checked_add(1)
-        .ok_or(ProtocolError::Math)?;
 
     let order = &mut ctx.accounts.order;
     order.ask_confirmed = false;
     order.authority = ctx.accounts.signer.key();
     order.bid_confirmed = false;
     order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
-    order.id = rfq.response_count;
     order.rfq = rfq.key();
     order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
 
@@ -274,12 +259,16 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
                 &[
                     &[
                         ASSET_ESCROW_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        rfq.key().as_ref(),
                         &[rfq.asset_escrow_bump],
                     ][..],
                     &[
                         RFQ_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        &rfq.authority.key().to_bytes(),
+                        &rfq.asset_mint.key().to_bytes(),
+                        &rfq.quote_mint.key().to_bytes(),
+                        &rfq.order_amount.to_le_bytes(),
+                        &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
                     ][..],
                 ],
@@ -300,12 +289,16 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
                 &[
                     &[
                         QUOTE_ESCROW_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        rfq.key().as_ref(),
                         &[rfq.quote_escrow_bump],
                     ][..],
                     &[
                         RFQ_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        &rfq.authority.key().to_bytes(),
+                        &rfq.asset_mint.key().to_bytes(),
+                        &rfq.quote_mint.key().to_bytes(),
+                        &rfq.order_amount.to_le_bytes(),
+                        &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
                     ][..],
                 ],
@@ -392,12 +385,16 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                 &[
                     &[
                         ASSET_ESCROW_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        rfq.key().as_ref(),
                         &[rfq.asset_escrow_bump],
                     ][..],
                     &[
                         RFQ_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        &rfq.authority.key().to_bytes(),
+                        &rfq.asset_mint.key().to_bytes(),
+                        &rfq.quote_mint.key().to_bytes(),
+                        &rfq.order_amount.to_le_bytes(),
+                        &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
                     ][..],
                 ],
@@ -406,7 +403,6 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
         )?;
 
         if fee_amount > 0 {
-            msg!("ASSET");
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -418,12 +414,16 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     &[
                         &[
                             ASSET_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
+                            rfq.key().as_ref(),
                             &[rfq.asset_escrow_bump],
                         ][..],
                         &[
                             RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
+                            &rfq.authority.key().to_bytes(),
+                            &rfq.asset_mint.key().to_bytes(),
+                            &rfq.quote_mint.key().to_bytes(),
+                            &rfq.order_amount.to_le_bytes(),
+                            &rfq.expiry.to_le_bytes(),
                             &[rfq.bump],
                         ][..],
                     ],
@@ -445,12 +445,16 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                 &[
                     &[
                         QUOTE_ESCROW_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        rfq.key().as_ref(),
                         &[rfq.quote_escrow_bump],
                     ][..],
                     &[
                         RFQ_SEED.as_bytes(),
-                        rfq.id.to_string().as_bytes(),
+                        &rfq.authority.key().to_bytes(),
+                        &rfq.asset_mint.key().to_bytes(),
+                        &rfq.quote_mint.key().to_bytes(),
+                        &rfq.order_amount.to_le_bytes(),
+                        &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
                     ][..],
                 ],
@@ -470,12 +474,16 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     &[
                         &[
                             QUOTE_ESCROW_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
+                            rfq.key().as_ref(),
                             &[rfq.quote_escrow_bump],
                         ][..],
                         &[
                             RFQ_SEED.as_bytes(),
-                            rfq.id.to_string().as_bytes(),
+                            &rfq.authority.key().to_bytes(),
+                            &rfq.asset_mint.key().to_bytes(),
+                            &rfq.quote_mint.key().to_bytes(),
+                            &rfq.order_amount.to_le_bytes(),
+                            &rfq.expiry.to_le_bytes(),
                             &[rfq.bump],
                         ][..],
                     ],
@@ -492,8 +500,6 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
     if signer == maker {
         order.settled = true;
     }
-
-    // TODO: PsyOptions CPI integration if venue if multi-leg
 
     Ok(())
 }

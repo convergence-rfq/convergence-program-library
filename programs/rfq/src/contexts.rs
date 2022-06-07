@@ -1,6 +1,6 @@
+///! Contexts
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-///! Contexts
 use std::mem;
 
 use crate::constants::*;
@@ -43,6 +43,14 @@ pub struct SetFee<'info> {
 
 /// Requests quote (RFQ).
 #[derive(Accounts)]
+#[instruction(
+    access_manager: Option<Pubkey>,
+    expiry: i64,
+    last_look: bool,
+    legs: Vec<Leg>,
+    order_amount: u64,
+    order_type: Order,
+)]
 pub struct Request<'info> {
     /// Asset escrow
     #[account(
@@ -50,7 +58,7 @@ pub struct Request<'info> {
         payer = signer,
         token::mint = asset_mint,
         token::authority = rfq,
-        seeds = [ASSET_ESCROW_SEED.as_bytes(), (protocol.rfq_count + 1).to_string().as_bytes()],
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump
     )]
     pub asset_escrow: Account<'info, TokenAccount>,
@@ -71,7 +79,7 @@ pub struct Request<'info> {
         payer = signer,
         token::mint = quote_mint,
         token::authority = rfq,
-        seeds = [QUOTE_ESCROW_SEED.as_bytes(), (protocol.rfq_count + 1).to_string().as_bytes()],
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump
     )]
     pub quote_escrow: Account<'info, TokenAccount>,
@@ -84,7 +92,14 @@ pub struct Request<'info> {
     #[account(
         init,
         payer = signer,
-        seeds = [RFQ_SEED.as_bytes(), (protocol.rfq_count + 1).to_string().as_bytes()],
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            signer.key().as_ref(),
+            asset_mint.key().as_ref(),
+            quote_mint.key().as_ref(),
+            &order_amount.to_le_bytes(),
+            &expiry.to_le_bytes()
+        ],
         space = 8 + mem::size_of::<RfqState>(),
         bump
     )]
@@ -111,7 +126,14 @@ pub struct Cancel<'info> {
     /// RFQ
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            rfq.authority.key().as_ref(),
+            rfq.asset_mint.key().as_ref(),
+            rfq.quote_mint.key().as_ref(),
+            &rfq.order_amount.to_le_bytes(),
+            &rfq.expiry.to_le_bytes()
+        ],
         bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
@@ -122,6 +144,7 @@ pub struct Cancel<'info> {
 
 /// Responds to quote.
 #[derive(Accounts)]
+#[instruction(bid: Option<u64>, ask: Option<u64>)]
 pub struct Respond<'info> {
     /// Authority
     #[account(mut)]
@@ -130,7 +153,13 @@ pub struct Respond<'info> {
     #[account(
         init,
         payer = signer,
-        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), (rfq.response_count + 1).to_string().as_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            signer.key().as_ref(),
+            &bid.unwrap_or(0).to_le_bytes(),
+            &ask.unwrap_or(0).to_le_bytes(),
+        ],
         space = 8 + mem::size_of::<OrderState>(),
         bump
     )]
@@ -138,7 +167,14 @@ pub struct Respond<'info> {
     /// RFQ
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            rfq.authority.key().as_ref(),
+            rfq.asset_mint.key().as_ref(),
+            rfq.quote_mint.key().as_ref(),
+            &rfq.order_amount.to_le_bytes(),
+            &rfq.expiry.to_le_bytes()    
+        ],
         bump = rfq.bump,
         constraint = rfq.to_account_info().owner == program_id
     )]
@@ -152,7 +188,7 @@ pub struct Respond<'info> {
     /// Asset escrow
     #[account(
         mut,
-        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.asset_escrow_bump,
         constraint = asset_escrow.owner.key() == rfq.key(),
         constraint = asset_escrow.mint == rfq.asset_mint
@@ -161,7 +197,7 @@ pub struct Respond<'info> {
     /// Quote escrow
     #[account(
         mut,
-        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.quote_escrow_bump,
         constraint = quote_escrow.owner == rfq.key(),
         constraint = quote_escrow.mint == rfq.quote_mint
@@ -187,7 +223,7 @@ pub struct Confirm<'info> {
     /// Asset escrow
     #[account(
         mut,
-        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.asset_escrow_bump,
         constraint = asset_escrow.owner.key() == rfq.key(),
         constraint = asset_escrow.mint == rfq.asset_mint
@@ -202,7 +238,13 @@ pub struct Confirm<'info> {
     /// Order
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), order.id.to_string().as_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            order.authority.key().as_ref(),
+            &order.bid.unwrap_or(0).to_le_bytes(),
+            &order.ask.unwrap_or(0).to_le_bytes(),
+        ],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id
     )]
@@ -210,7 +252,7 @@ pub struct Confirm<'info> {
     /// Quote escrow
     #[account(
         mut,
-        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.quote_escrow_bump,
         constraint = quote_escrow.owner.key() == rfq.key(),
         constraint = quote_escrow.mint == rfq.quote_mint
@@ -227,7 +269,14 @@ pub struct Confirm<'info> {
     /// RFQ
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            rfq.authority.key().as_ref(),
+            rfq.asset_mint.key().as_ref(),
+            rfq.quote_mint.key().as_ref(),
+            &rfq.order_amount.to_le_bytes(),
+            &rfq.expiry.to_le_bytes()
+        ],
         bump = rfq.bump,
         constraint = rfq.to_account_info().owner == program_id
     )]
@@ -247,7 +296,13 @@ pub struct LastLook<'info> {
     /// Order
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), order.id.to_string().as_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            order.authority.key().as_ref(),
+            &order.bid.unwrap_or(0).to_le_bytes(),
+            &order.ask.unwrap_or(0).to_le_bytes(),
+        ],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id
     )]
@@ -255,7 +310,14 @@ pub struct LastLook<'info> {
     /// RFQ
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            rfq.authority.key().as_ref(),
+            rfq.asset_mint.key().as_ref(),
+            rfq.quote_mint.key().as_ref(),
+            &rfq.order_amount.to_le_bytes(),
+            &rfq.expiry.to_le_bytes()
+        ],
         bump = rfq.bump,
         constraint = rfq.to_account_info().owner == program_id
     )]
@@ -271,7 +333,7 @@ pub struct ReturnCollateral<'info> {
     /// Asset escrow
     #[account(
         mut,
-        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.asset_escrow_bump,
         constraint = asset_escrow.owner.key() == rfq.key(),
         constraint = asset_escrow.mint == rfq.asset_mint
@@ -286,7 +348,13 @@ pub struct ReturnCollateral<'info> {
     /// Order
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), order.id.to_string().as_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            order.authority.key().as_ref(),
+            &order.bid.unwrap_or(0).to_le_bytes(),
+            &order.ask.unwrap_or(0).to_le_bytes(),
+        ],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id
     )]
@@ -294,7 +362,7 @@ pub struct ReturnCollateral<'info> {
     /// Quote escrow
     #[account(
         mut,
-        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.quote_escrow_bump,
         constraint = quote_escrow.owner.key() == rfq.key(),
         constraint = quote_escrow.mint == rfq.quote_mint
@@ -310,7 +378,15 @@ pub struct ReturnCollateral<'info> {
     pub rent: Sysvar<'info, Rent>,
     /// RFQ
     #[account(
-        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        mut,
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            rfq.authority.key().as_ref(),
+            rfq.asset_mint.key().as_ref(),
+            rfq.quote_mint.key().as_ref(),
+            &rfq.order_amount.to_le_bytes(),
+            &rfq.expiry.to_le_bytes()
+        ],
         bump = rfq.bump,
         constraint = rfq.to_account_info().owner == program_id
     )]
@@ -333,7 +409,7 @@ pub struct Settle<'info> {
     pub asset_wallet: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.asset_escrow_bump,
         constraint = asset_escrow.owner.key() == rfq.key(),
         constraint = asset_escrow.mint == rfq.asset_mint
@@ -342,7 +418,13 @@ pub struct Settle<'info> {
     /// Order
     #[account(
         mut,
-        seeds = [ORDER_SEED.as_bytes(), rfq.id.to_string().as_bytes(), order.id.to_string().as_bytes()],
+        seeds = [
+            ORDER_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            order.authority.key().as_ref(),
+            &order.bid.unwrap_or(0).to_le_bytes(),
+            &order.ask.unwrap_or(0).to_le_bytes(),
+        ],
         bump = order.bump,
         constraint = order.to_account_info().owner == program_id
     )]
@@ -358,7 +440,7 @@ pub struct Settle<'info> {
     /// Quote escrow
     #[account(
         mut,
-        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.quote_escrow_bump,
         constraint = quote_escrow.owner.key() == rfq.key(),
         constraint = quote_escrow.mint == rfq.quote_mint
@@ -373,7 +455,14 @@ pub struct Settle<'info> {
     /// RFQ
     #[account(
         mut,
-        seeds = [RFQ_SEED.as_bytes(), rfq.id.to_string().as_bytes()],
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            rfq.authority.key().as_ref(),
+            rfq.asset_mint.key().as_ref(),
+            rfq.quote_mint.key().as_ref(),
+            &rfq.order_amount.to_le_bytes(),
+            &rfq.expiry.to_le_bytes()
+        ],
         bump = rfq.bump,
         constraint = rfq.to_account_info().owner == program_id
     )]

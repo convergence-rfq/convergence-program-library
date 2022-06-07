@@ -89,13 +89,6 @@
   dependencies:
     buffer "~6.0.3"
 
-"@solana/spl-token-registry@^0.2.1406":
-  version "0.2.2708"
-  resolved "https://registry.npmjs.org/@solana/spl-token-registry/-/spl-token-registry-0.2.2708.tgz"
-  integrity sha512-sFc3toiQloJ3JZqGlPbLFAnXQ+VRPu54wbrI2MbVFzRCYFAwCvnWCLrhdyrWfejrtVBVxSFUizGVdXNocqZt5Q==
-  dependencies:
-    cross-fetch "3.0.6"
-
 "@solana/spl-token@^0.1.8":
   version "0.1.8"
   resolved "https://registry.npmjs.org/@solana/spl-token/-/spl-token-0.1.8.tgz"
@@ -503,13 +496,6 @@ create-require@^1.1.0:
   version "1.1.1"
   resolved "https://registry.npmjs.org/create-require/-/create-require-1.1.1.tgz"
   integrity sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==
-
-cross-fetch@3.0.6:
-  version "3.0.6"
-  resolved "https://registry.npmjs.org/cross-fetch/-/cross-fetch-3.0.6.tgz"
-  integrity sha512-KBPUbqgFjzWlVcURG+Svp9TlhA5uliYtiNx/0r8nv0pdypeQCRJ9IaSIc3q/x3q8t3F75cHuwxVql1HFGHCNJQ==
-  dependencies:
-    node-fetch "2.6.1"
 
 cross-fetch@^3.1.4, cross-fetch@^3.1.5:
   version "3.1.5"
@@ -945,11 +931,6 @@ mkdirp@^0.5.1:
   dependencies:
     minimist "^1.2.5"
 
-mocha-dd-reporter@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/mocha-dd-reporter/-/mocha-dd-reporter-1.1.1.tgz#de44d539a61a47fa85fc1857deb1999f288609d4"
-  integrity sha512-fiVlMq5c+wO4v1gq1zCZgTa5x5YB4ZGtoIUJgSSyg4SI4Kql2a2ca+1G545lR5jlyCbNRWiddB6w+UTL4ZZkLg==
-
 mocha@^9.2.1:
   version "9.2.1"
   resolved "https://registry.npmjs.org/mocha/-/mocha-9.2.1.tgz"
@@ -1007,11 +988,6 @@ node-addon-api@^2.0.0:
   version "2.0.2"
   resolved "https://registry.npmjs.org/node-addon-api/-/node-addon-api-2.0.2.tgz"
   integrity sha512-Ntyt4AIXyaLIuMHF6IOoTakB3K+RWxwtsHNRxllEoA6vPwP9o4866g6YWDLUdnucilZhmkxiHwHr11gAENw+QA==
-
-node-fetch@2.6.1:
-  version "2.6.1"
-  resolved "https://registry.npmjs.org/node-fetch/-/node-fetch-2.6.1.tgz"
-  integrity sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==
 
 node-fetch@2.6.7:
   version "2.6.7"

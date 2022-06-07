@@ -1,4 +1,4 @@
-//! State
+///! State
 use anchor_lang::prelude::*;
 
 /// Access manager state.
@@ -41,8 +41,6 @@ pub struct RfqState {
     pub confirmed: bool,
     /// Expiry time
     pub expiry: i64,
-    /// Incremental integer id
-    pub id: u64,
     /// Legs
     pub legs: Vec<Leg>,
     /// Last look required to approve trade
@@ -55,8 +53,6 @@ pub struct RfqState {
     pub quote_escrow_bump: u8,
     /// Quote mint
     pub quote_mint: Pubkey,
-    /// Response count
-    pub response_count: u64,
     /// Settled
     pub settled: bool,
     /// Creation time
@@ -66,8 +62,6 @@ pub struct RfqState {
 /// Protocol state.
 #[account]
 pub struct ProtocolState {
-    // Access manager count
-    pub access_manager_count: u64,
     // Protocol authority
     pub authority: Pubkey,
     // PDA bump
@@ -76,8 +70,6 @@ pub struct ProtocolState {
     pub fee_denominator: u64,
     // Fee numerator
     pub fee_numerator: u64,
-    // RFQ count
-    pub rfq_count: u64,
     // Treasury wallet
     pub treasury_wallet: Pubkey,
 }
@@ -101,8 +93,6 @@ pub struct OrderState {
     pub collateral_returned: bool,
     // Confirmed quote
     pub confirmed_quote: Option<Quote>,
-    // Order id
-    pub id: u64,
     /// Rfq
     pub rfq: Pubkey,
     /// Settled
@@ -114,10 +104,18 @@ pub struct OrderState {
 /// Instrument.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instrument {
-    Call,
+    Option,
     Future,
-    Put,
     Spot,
+}
+
+/// Contract.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Contract {
+    Call,
+    Put,
+    Long,
+    Short,
 }
 
 /// Venue.
@@ -131,12 +129,24 @@ pub enum Venue {
 /// Leg.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Leg {
-    // Instrument
-    instrument: Instrument,
-    // Venue
-    venue: Venue,
     // Amount
-    amount: u64,
+    pub amount: u64,
+    // Contract
+    pub contract: Option<Contract>,
+    // Contract asset amount
+    pub contract_asset_amount: Option<u64>,
+    // Contract quote amount
+    pub contract_quote_amount: Option<u64>,
+    // Processed
+    pub processed: bool,
+    // Expiry
+    pub expiry: Option<i64>,
+    // Id
+    pub id: u64,
+    // Instrument
+    pub instrument: Instrument,
+    // Venue
+    pub venue: Venue,
 }
 
 /// Quote.
