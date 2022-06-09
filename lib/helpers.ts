@@ -602,7 +602,7 @@ export async function getRfqOrders(provider: Provider, publicKey: PublicKey): Pr
   const rfqOrders = await program.account.orderState.all([
     {
       memcmp: {
-        offset: 57,
+        offset: 59,
         bytes: publicKey.toBase58()
       }
     }

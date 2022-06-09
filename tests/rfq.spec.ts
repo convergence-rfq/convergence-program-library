@@ -621,6 +621,9 @@ describe('RFQ Specification', () => {
     console.log('Taker quote balance:', quoteBalance)
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1 + TAKER_ORDER_AMOUNT3 - FEE3)
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE + MAKER_A_BID_AMOUNT2 - FEE1 + MAKER_C_BID_AMOUNT1 - FEE2 - MAKER_D_ASK_AMOUNT2)
+
+    const rfqOrders = await getRfqOrders(provider, rfqPda)
+    assert.equal(rfqOrders.length, 1)
   })
 
   it(`RFQ 5: Taker requests buy for ${TAKER_ORDER_AMOUNT2} but cancels`, async () => {
@@ -652,9 +655,7 @@ describe('RFQ Specification', () => {
   it('DAO views all RFQs and responses', async () => {
     const rfqs: any = await getRFQs(provider, 1, 10)
     const allOrders = await getAllOrders(provider)
-    const rfqOrders = await getRfqOrders(provider, rfqs[0].publicKey)
     assert.equal(rfqs.length, 5)
     assert.equal(allOrders.length, 8)
-    assert.equal(rfqOrders.length, 8)
   })
 })
