@@ -996,8 +996,8 @@ export async function processLegs(
       continue
     }
 
-    let legOptionMarket: OptionMarket = null
-    let legOptionMarketPublicKey: PublicKey = null
+    let legOptionMarket: OptionMarket | null = null
+    let legOptionMarketPublicKey: PublicKey | null = null
 
     const underlyingAmountPerContract = rfqState.legs[i].contractAssetAmount
     const quoteAmountPerContract = rfqState.legs[i].contractQuoteAmount
@@ -1037,7 +1037,9 @@ export async function processLegs(
       legOptionMarketPublicKey = res.publicKey
     }
 
-    await mintPsyAmericanOption(assetToken, legId, legOptionMarketPublicKey, legOptionMarket, provider, rfqId, signer, size)
+    if (legOptionMarketPublicKey && legOptionMarket) {
+      await mintPsyAmericanOption(assetToken, legId, legOptionMarketPublicKey, legOptionMarket, provider, rfqId, signer, size)
+    }
 
     legOptionMarket = null
     legOptionMarketPublicKey = null
