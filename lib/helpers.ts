@@ -170,14 +170,15 @@ export async function request(
     program.programId
   )
 
+
   const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [
       Buffer.from(RFQ_SEED),
       signer.publicKey.toBuffer(),
       assetMint.toBuffer(),
       quoteMint.toBuffer(),
-      new BN(orderAmount).toBuffer('le', 8),
-      new BN(expiry).toBuffer('le', 8)
+      new BN(orderAmount).toArrayLike(Buffer, 'le', 8),
+      new BN(expiry).toArrayLike(Buffer, 'le', 8)
     ],
     program.programId
   )
@@ -278,8 +279,8 @@ export async function respond(
       Buffer.from(ORDER_SEED),
       rfqPda.toBuffer(),
       signer.publicKey.toBuffer(),
-      new BN(bid ? bid : 0).toBuffer('le', 8),
-      new BN(ask ? ask : 0).toBuffer('le', 8),
+      new BN(bid ? bid : 0).toArrayLike(Buffer, 'le', 8),
+      new BN(ask ? ask : 0).toArrayLike(Buffer, 'le', 8),
     ],
     program.programId
   )
@@ -680,9 +681,9 @@ export async function initializePsyAmericanOptionMarket(
   const [optionMarket, optionMarketBumpSeed] = await PublicKey.findProgramAddress([
     assetToken.publicKey.toBuffer(),
     quoteToken.publicKey.toBuffer(),
-    underlyingAmountPerContract.toBuffer('le', 8),
-    quoteAmountPerContract.toBuffer('le', 8),
-    expirationUnixTimestamp.toBuffer('le', 8)
+    underlyingAmountPerContract.toArrayLike(Buffer, 'le', 8),
+    quoteAmountPerContract.toArrayLike(Buffer, 'le', 8),
+    expirationUnixTimestamp.toArrayLike(Buffer, 'le', 8)
   ],
     psyAmericanProgram.programId
   )
