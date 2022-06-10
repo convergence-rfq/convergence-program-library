@@ -93,7 +93,7 @@ pub struct OrderState {
     pub collateral_returned: bool,
     // Confirmed quote
     pub confirmed_quote: Option<Quote>,
-    /// Rfq 1 + 8 + 1 + 32 + 1 + 8 + 1 + 1 + 1 + 1 + 1 + 1 + 2
+    /// Rfq
     pub rfq: Pubkey,
     /// Settled
     pub settled: bool,

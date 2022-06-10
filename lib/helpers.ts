@@ -585,26 +585,28 @@ export async function getRFQs(
 }
 
 
-export async function getMyOrders(provider: Provider, publicKey: PublicKey): Promise<object[]> {
-  const program = await getProgram(provider)
+export async function getMyOrders(provider: Provider, signer: PublicKey): Promise<object[]> {
+  const programId = new PublicKey(idl.metadata.address)
+  const program = new anchor.Program(idl as Idl, programId, provider) as Program<Rfq>
   const myOrders = await program.account.orderState.all([
     {
       memcmp: {
-        offset: 10,
-        bytes: publicKey.toBase58()
+        offset: 8 + 10,
+        bytes: signer.toBase58()
       }
     }
   ])
   return myOrders
 }
 
-export async function getRfqOrders(provider: Provider, publicKey: PublicKey): Promise<object[]> {
-  const program = await getProgram(provider)
+export async function getRfqOrders(provider: Provider, rfq: PublicKey): Promise<object[]> {
+  const programId = new PublicKey(idl.metadata.address)
+  const program = new anchor.Program(idl as Idl, programId, provider) as Program<Rfq>
   const rfqOrders = await program.account.orderState.all([
     {
       memcmp: {
-        offset: 59,
-        bytes: publicKey.toBase58()
+        offset: 8 + 55,
+        bytes: rfq.toBase58()
       }
     }
   ])

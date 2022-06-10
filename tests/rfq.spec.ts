@@ -42,6 +42,7 @@ import {
   getRFQs,
   getProgram,
   getAllOrders,
+  getMyOrders,
   getRfqOrders,
   initializeProtocol,
   lastLook,
@@ -624,6 +625,9 @@ describe('RFQ Specification', () => {
 
     const rfqOrders = await getRfqOrders(provider, rfqPda)
     assert.equal(rfqOrders.length, 1)
+
+    const myOrders = await getMyOrders(provider, makerD.publicKey)
+    assert.equal(myOrders.length, 3)
   })
 
   it(`RFQ 5: Taker requests buy for ${TAKER_ORDER_AMOUNT2} but cancels`, async () => {
