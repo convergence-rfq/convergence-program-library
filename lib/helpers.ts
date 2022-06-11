@@ -814,7 +814,7 @@ export async function mintPsyAmericanOption(
   publicKey: PublicKey,
   optionMarket: OptionMarket,
   provider: Provider,
-  rfqId: number,
+  rfqPda: PublicKey,
   signer: Wallet,
   size: BN
 ): Promise<any> {
@@ -914,11 +914,6 @@ export async function mintPsyAmericanOption(
     signer.publicKey
   )
 
-  const [rfqPda, _rfqPdaBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    rfqProgram.programId
-  )
-
   const accounts = {
     authority: signer.publicKey,
     psyAmericanProgram: psyAmericanProgram.programId,
@@ -961,23 +956,19 @@ export async function mintPsyAmericanOption(
  *  - Mints the leg option
  * 
  * @param provider 
- * @param rfqId 
+ * @param rfqPda
  * @param signer 
  * @returns Promise<any>
  */
 export async function processLegs(
   provider: Provider,
-  rfqId: number,
+  rfqPda: PublicKey,
   signer: Wallet
 ): Promise<object> {
   const psyAmericanProgram = await getPsyAmericanProgram(provider)
   const optionMarkets = (await psyAmericanProgram.account.optionMarket.all()) as unknown as ProgramAccount<OptionMarket>[]
 
   const rfqProgram = await getProgram(provider)
-  const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-    rfqProgram.programId
-  )
   const rfqState: any = await rfqProgram.account.rfqState.fetch(rfqPda)
 
   const assetToken = new Token(
@@ -1041,7 +1032,7 @@ export async function processLegs(
     }
 
     if (legOptionMarketPublicKey && legOptionMarket) {
-      await mintPsyAmericanOption(assetToken, legId, legOptionMarketPublicKey, legOptionMarket, provider, rfqId, signer, size)
+      await mintPsyAmericanOption(assetToken, legId, legOptionMarketPublicKey, legOptionMarket, provider, rfqPda, signer, size)
     }
 
     legOptionMarket = null

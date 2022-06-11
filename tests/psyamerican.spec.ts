@@ -109,17 +109,9 @@ describe('RFQ Specification', () => {
 
         await quoteToken.mintTo(takerQuoteATA, mintAuthority.publicKey, [], MINT_AIRDROP_QUOTE)
         await quoteToken.mintTo(makerAQuoteATA, mintAuthority.publicKey, [], MINT_AIRDROP_QUOTE)
-
-        const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
-            [Buffer.from(PROTOCOL_SEED)],
-            program.programId
-        )
-        const protocolState: any = await program.account.protocolState.fetch(protocolPda)
-        rfqCount = protocolState.rfqCount.toNumber()
     })
 
     it(`RFQ 1: Taker requests sell for PsyOptions American multi-leg strategy`, async () => {
-        const rfqId = rfqCount + 1
         const requestOrder = Order.Sell
         const now = (new Date()).getTime() / 1_000
         const expiry = now + 2
@@ -145,18 +137,15 @@ describe('RFQ Specification', () => {
         const res1 = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT2, provider, quoteToken.publicKey, requestOrder)
         assert.equal(legs.toString(), res1.rfqState.legs.toString())
 
-        await respond(provider, makerA, rfqId, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
-        await confirm(provider, rfqId, 1, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
-        await settle(provider, taker, rfqId, 1, takerAssetATA, takerQuoteATA)
-        await settle(provider, makerA, rfqId, 1, makerAAssetATA, makerAQuoteATA)
+        const res2 = await respond(provider, makerA, res1.rfqPda, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
 
-        await processLegs(provider, rfqId, taker)
+        await confirm(provider, res1.rfqPda, res2.orderPda, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
+        await settle(provider, taker, res1.rfqPda, res2.orderPda, takerAssetATA, takerQuoteATA)
+        await settle(provider, makerA, res1.rfqPda, res2.orderPda, makerAAssetATA, makerAQuoteATA)
 
-        const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
-            [Buffer.from(RFQ_SEED), Buffer.from(rfqId.toString())],
-            program.programId
-        )
-        const rfqState: any = await program.account.rfqState.fetch(rfqPda)
+        await processLegs(provider, res1.rfqPda, taker)
+
+        const rfqState: any = await program.account.rfqState.fetch(res1.rfqPda)
         for (let i = 0; i < rfqState.legs.length; i++) {
             assert.ok(rfqState.legs[i].processed)
         }
