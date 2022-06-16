@@ -3,6 +3,7 @@
 //! Provides an abstraction and implements the RFQ mechanism.
 
 use anchor_lang::prelude::*;
+use solana_security_txt::security_txt;
 
 pub mod access_controls;
 pub mod constants;
@@ -15,6 +16,16 @@ pub mod states;
 use contexts::*;
 use psyoptions::contexts::*;
 use states::*;
+
+security_txt! {
+    name: "Convergence RFQ",
+    project_url: "https://www.convergence.so",
+    contacts: "email:hello@convergence.so,link:https://www.convergence.so/security",
+    policy: "https://github.com/convergence-rfq/convergence/blob/master/SECURITY.md",
+    preferred_languages: "en",
+    source_code: "https://github.com/convergence-rfq/rfq",
+    auditors: "None"
+}
 
 declare_id!("47p5Rh3fDeWp8ejFxThZE2uSwkAoyySSRXLDGWzcic92");
 

@@ -1047,6 +1047,7 @@ dependencies = [
  "num-traits",
  "psy_american",
  "solana-program",
+ "solana-security-txt",
  "spl-token",
 ]
 
@@ -1333,6 +1334,12 @@ dependencies = [
  "rustversion",
  "syn",
 ]
+
+[[package]]
+name = "solana-security-txt"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f14189df19df7f3977a7ea236ccae6cdc40855ab5baf1ab2796a091ef5c490d1"
 
 [[package]]
 name = "spl-associated-token-account"
