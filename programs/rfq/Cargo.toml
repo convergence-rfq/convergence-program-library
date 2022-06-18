@@ -22,6 +22,7 @@ solana-program = "1.9.13"
 num-traits = "0.2.14"
 spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
 psy_american = { version = "0.2.6", features = ["cpi"] }
+solana-security-txt = "1.0.1"
 
 [profile.release]
 overflow-checks = true
