@@ -129,9 +129,7 @@ export type Rfq = {
         {
           "name": "legs",
           "type": {
-            "vec": {
-              "defined": "Leg"
-            }
+            "option": "publicKey"
           }
         },
         {
@@ -665,6 +663,11 @@ export type Rfq = {
           "isSigner": false
         },
         {
+          "name": "legs",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "mintedWriterTokenDest",
           "isMut": true,
           "isSigner": false
@@ -824,9 +827,7 @@ export type Rfq = {
           {
             "name": "legs",
             "type": {
-              "vec": {
-                "defined": "Leg"
-              }
+              "option": "publicKey"
             }
           },
           {
@@ -946,6 +947,30 @@ export type Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "legsState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "legs",
+            "type": {
+              "vec": {
+                "defined": "Leg"
+              }
+            }
+          },
+          {
+            "name": "rfq",
+            "type": "publicKey"
           }
         ]
       }
@@ -1346,9 +1371,7 @@ export const IDL: Rfq = {
         {
           "name": "legs",
           "type": {
-            "vec": {
-              "defined": "Leg"
-            }
+            "option": "publicKey"
           }
         },
         {
@@ -1882,6 +1905,11 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
+          "name": "legs",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "mintedWriterTokenDest",
           "isMut": true,
           "isSigner": false
@@ -2041,9 +2069,7 @@ export const IDL: Rfq = {
           {
             "name": "legs",
             "type": {
-              "vec": {
-                "defined": "Leg"
-              }
+              "option": "publicKey"
             }
           },
           {
@@ -2163,6 +2189,30 @@ export const IDL: Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "legsState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "legs",
+            "type": {
+              "vec": {
+                "defined": "Leg"
+              }
+            }
+          },
+          {
+            "name": "rfq",
+            "type": "publicKey"
           }
         ]
       }

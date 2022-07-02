@@ -42,7 +42,7 @@ pub struct RfqState {
     /// Expiry time
     pub expiry: i64,
     /// Legs
-    pub legs: Vec<Leg>,
+    pub legs: Option<Pubkey>,
     /// Last look required to approve trade
     pub last_look: bool,
     /// Order amount
@@ -99,6 +99,17 @@ pub struct OrderState {
     pub settled: bool,
     /// Creation time
     pub unix_timestamp: i64,
+}
+
+/// Legs state.
+#[account]
+pub struct LegsState {
+    /// Bump
+    pub bump: u8,
+    /// Legs
+    pub legs: Vec<Leg>,
+    /// Rfq
+    pub rfq: Pubkey,
 }
 
 /// Instrument.

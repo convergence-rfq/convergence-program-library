@@ -54,7 +54,7 @@ pub mod rfq {
         access_manager: Option<Pubkey>,
         expiry: i64,
         last_look: bool,
-        legs: Vec<Leg>,
+        legs: Option<Pubkey>,
         order_amount: u64,
         order_type: Order,
     ) -> Result<()> {

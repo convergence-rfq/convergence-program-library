@@ -58,13 +58,13 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
 /// expiry
 /// order_amount
 /// order_type
-#[access_control(request_access_control(&ctx, expiry, &legs, order_amount))]
+#[access_control(request_access_control(&ctx, expiry, order_amount))]
 pub fn request(
     ctx: Context<Request>,
     access_manager: Option<Pubkey>,
     expiry: i64,
     last_look: bool,
-    legs: Vec<Leg>,
+    legs: Option<Pubkey>,
     order_amount: u64,
     order_type: Order,
 ) -> Result<()> {

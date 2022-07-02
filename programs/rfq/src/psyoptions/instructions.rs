@@ -112,8 +112,8 @@ pub fn mint_american_option<'a, 'b, 'c, 'info>(
     let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
     psy_american::cpi::mint_option_v2(cpi_ctx, size)?;
 
-    let rfq = &mut ctx.accounts.rfq;
-    for l in rfq.legs.iter_mut() {
+    let legs = &mut ctx.accounts.legs;
+    for l in legs.legs.iter_mut() {
         if l.id == leg {
             l.processed = true;
         }

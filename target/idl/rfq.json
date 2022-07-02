@@ -129,9 +129,7 @@
         {
           "name": "legs",
           "type": {
-            "vec": {
-              "defined": "Leg"
-            }
+            "option": "publicKey"
           }
         },
         {
@@ -665,6 +663,11 @@
           "isSigner": false
         },
         {
+          "name": "legs",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "mintedWriterTokenDest",
           "isMut": true,
           "isSigner": false
@@ -824,9 +827,7 @@
           {
             "name": "legs",
             "type": {
-              "vec": {
-                "defined": "Leg"
-              }
+              "option": "publicKey"
             }
           },
           {
@@ -946,6 +947,30 @@
           {
             "name": "unixTimestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LegsState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "legs",
+            "type": {
+              "vec": {
+                "defined": "Leg"
+              }
+            }
+          },
+          {
+            "name": "rfq",
+            "type": "publicKey"
           }
         ]
       }

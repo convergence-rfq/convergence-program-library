@@ -45,7 +45,6 @@ pub fn set_fee_access_control<'info>(
 pub fn request_access_control<'info>(
     _ctx: &Context<Request<'info>>,
     expiry: i64,
-    legs: &Vec<Leg>,
     order_amount: u64,
 ) -> Result<()> {
     require!(order_amount > 0, ProtocolError::InvalidRequest);
@@ -53,15 +52,6 @@ pub fn request_access_control<'info>(
         Clock::get().unwrap().unix_timestamp < expiry,
         ProtocolError::InvalidRequest
     );
-
-    // Check instrument type
-    for leg in legs.iter() {
-        match leg.instrument {
-            Instrument::Option => continue,
-            Instrument::Spot => continue,
-            _ => return Err(error!(ProtocolError::NotImplemented)),
-        }
-    }
 
     Ok(())
 }

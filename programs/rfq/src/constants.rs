@@ -10,3 +10,5 @@ pub const PROTOCOL_SEED: &str = "protocol";
 pub const QUOTE_ESCROW_SEED: &str = "quote_escrow";
 /// RFQ PDA seed
 pub const RFQ_SEED: &str = "rfq";
+/// Legs PDA seed
+pub const LEGS_SEED: &str = "legs";

@@ -14,6 +14,7 @@ export const ORDER_SEED = 'order'
 export const PROTOCOL_SEED = 'protocol'
 export const ASSET_ESCROW_SEED = 'asset_escrow'
 export const QUOTE_ESCROW_SEED = 'quote_escrow'
+export const LEGS_SEED = 'legs'
 
 /// Types
 
@@ -169,8 +170,6 @@ export async function request(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
   )
-
-
   const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [
       Buffer.from(RFQ_SEED),
@@ -186,8 +185,12 @@ export async function request(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
-  const [quoteEscrowPda, _quoteEscrowPda] = await PublicKey.findProgramAddress(
+  const [quoteEscrowPda, _quoteEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
+    program.programId
+  )
+  const [legsPda, _legsBump] = await PublicKey.findProgramAddress(
+    [Buffer.from(LEGS_SEED), rfqPda.toBuffer()],
     program.programId
   )
 
@@ -196,7 +199,7 @@ export async function request(
     signers.push(signer.payer)
   }
 
-  const tx = await program.methods.request(accessManager, new BN(expiry), lastLook, legs, new BN(orderAmount), requestOrder)
+  const tx = await program.methods.request(accessManager, new BN(expiry), lastLook, legsPda, new BN(orderAmount), requestOrder)
     .accounts({
       assetEscrow: assetEscrowPda,
       assetMint,
@@ -209,6 +212,7 @@ export async function request(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
+    .preInstructions([await program.account.legsState.createInstruction(legsPda)])
     .signers(signers)
     .rpc()
 
