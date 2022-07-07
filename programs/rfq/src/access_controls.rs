@@ -39,20 +39,11 @@ pub fn set_fee_access_control<'info>(
 /// Initialzie leg.
 ///
 /// Ensures:
-/// - Expiry in future
 pub fn initialize_leg_access_control<'info>(
     _ctx: &Context<InitializeLeg<'info>>,
-    expiry: Option<i64>,
+    _leg: Leg,
     _rfq: Pubkey,
-    _venue: Venue,
 ) -> Result<()> {
-    if expiry.is_some() {
-        require!(
-            Clock::get().unwrap().unix_timestamp < expiry.unwrap(),
-            ProtocolError::InvalidLeg
-        );
-    }
-
     // TODO: Finish checks
 
     Ok(())

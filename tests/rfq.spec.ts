@@ -29,9 +29,12 @@ import { Wallet } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import * as assert from 'assert'
+import { Program } from '@project-serum/anchor'
+
+// @ts-ignore
+import { Instrument, Leg } from '../target/types/rfq'
 
 import {
-  Instrument,
   Order,
   Quote,
   Venue,
@@ -53,7 +56,6 @@ import {
   setFee,
   settle,
 } from '../lib/helpers'
-import { Program } from '@project-serum/anchor'
 
 let assetToken: Token
 let quoteToken: Token
@@ -221,19 +223,25 @@ describe('RFQ Specification', () => {
 
     // TODO: Test more legs
 
-    const legs = [{
-      expiry: now + 10,
-      venue: Venue.PsyOptions
-    }]
+    const legs = [
+      {
+        leg: {
+          instrument: {
+            baseMint: assetToken.publicKey,
+            quoteMint: quoteToken.publicKey,
+          },
+          venue: Venue.Convergence
+        }
+      }
+    ]
 
-    const res = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT1, provider, quoteToken.publicKey, requestOrder)
+    const res = await request(null, taker, expiry, false, legs, TAKER_ORDER_AMOUNT1, provider, requestOrder)
     assert.ok(res.rfqState.authority.toString() === taker.publicKey.toString())
 
     rfqPda = res.rfqPda
   })
 
-  return
-
+  /*
   it('RFQ 1: Maker A responds to two-way request then Taker confirms best bid', async () => {
     const res1 = await respond(provider, makerA, rfqPda, MAKER_A_BID_AMOUNT1, MAKER_A_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
     orderPda1 = res1.orderPda
@@ -650,4 +658,6 @@ describe('RFQ Specification', () => {
     assert.equal(rfqs.length, 5)
     assert.equal(allOrders.length, 8)
   })
+
+  */
 })

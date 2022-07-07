@@ -52,12 +52,16 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
 /// ctx Accounts context
 /// expiry Expiry
 /// venue Venue
-#[access_control(initialize_leg_access_control(&ctx, expiry, rfq, venue))]
-pub fn initialize_leg(ctx: Context<InitializeLeg>, expiry: Option<i64>, rfq: Pubkey, venue: Venue) -> Result<()> {
-    let leg = &mut ctx.accounts.leg;
-    leg.expiry = expiry;
-    leg.venue = venue;
-    leg.rfq = rfq;
+#[access_control(initialize_leg_access_control(&ctx, leg, rfq))]
+pub fn initialize_leg(
+    ctx: Context<InitializeLeg>,
+    leg: Leg,
+    rfq: Pubkey,
+) -> Result<()> {
+    //let leg = &mut ctx.accounts.leg;
+    //leg.instrument = instrument;
+    //leg.rfq = rfq;
+    //leg.processed = false;
 
     Ok(())
 }
@@ -85,7 +89,6 @@ pub fn request(
     let rfq = &mut ctx.accounts.rfq;
     rfq.access_manager = access_manager;
     rfq.asset_escrow_bump = *ctx.bumps.get(ASSET_ESCROW_SEED).unwrap();
-    rfq.asset_mint = ctx.accounts.asset_mint.key();
     rfq.authority = ctx.accounts.signer.key();
     rfq.canceled = false;
     rfq.best_ask_address = None;
@@ -99,7 +102,6 @@ pub fn request(
     //rfq.legs = [];
     rfq.order_amount = order_amount;
     rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
-    rfq.quote_mint = ctx.accounts.quote_mint.key();
     rfq.order_type = order_type;
     rfq.settled = false;
     rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
@@ -280,8 +282,6 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
                     &[
                         RFQ_SEED.as_bytes(),
                         &rfq.authority.key().to_bytes(),
-                        &rfq.asset_mint.key().to_bytes(),
-                        &rfq.quote_mint.key().to_bytes(),
                         &rfq.order_amount.to_le_bytes(),
                         &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
@@ -310,8 +310,6 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
                     &[
                         RFQ_SEED.as_bytes(),
                         &rfq.authority.key().to_bytes(),
-                        &rfq.asset_mint.key().to_bytes(),
-                        &rfq.quote_mint.key().to_bytes(),
                         &rfq.order_amount.to_le_bytes(),
                         &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
@@ -406,8 +404,6 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     &[
                         RFQ_SEED.as_bytes(),
                         &rfq.authority.key().to_bytes(),
-                        &rfq.asset_mint.key().to_bytes(),
-                        &rfq.quote_mint.key().to_bytes(),
                         &rfq.order_amount.to_le_bytes(),
                         &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
@@ -435,8 +431,6 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                         &[
                             RFQ_SEED.as_bytes(),
                             &rfq.authority.key().to_bytes(),
-                            &rfq.asset_mint.key().to_bytes(),
-                            &rfq.quote_mint.key().to_bytes(),
                             &rfq.order_amount.to_le_bytes(),
                             &rfq.expiry.to_le_bytes(),
                             &[rfq.bump],
@@ -466,8 +460,6 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                     &[
                         RFQ_SEED.as_bytes(),
                         &rfq.authority.key().to_bytes(),
-                        &rfq.asset_mint.key().to_bytes(),
-                        &rfq.quote_mint.key().to_bytes(),
                         &rfq.order_amount.to_le_bytes(),
                         &rfq.expiry.to_le_bytes(),
                         &[rfq.bump],
@@ -495,8 +487,6 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
                         &[
                             RFQ_SEED.as_bytes(),
                             &rfq.authority.key().to_bytes(),
-                            &rfq.asset_mint.key().to_bytes(),
-                            &rfq.quote_mint.key().to_bytes(),
                             &rfq.order_amount.to_le_bytes(),
                             &rfq.expiry.to_le_bytes(),
                             &[rfq.bump],

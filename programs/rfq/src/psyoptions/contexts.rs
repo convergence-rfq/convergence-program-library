@@ -96,8 +96,6 @@ pub struct MintAmericanOption<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            rfq.asset_mint.key().as_ref(),
-            rfq.quote_mint.key().as_ref(),
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],

@@ -83,20 +83,14 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "expiry",
+          "name": "leg",
           "type": {
-            "option": "i64"
+            "defined": "Leg"
           }
         },
         {
           "name": "rfq",
           "type": "publicKey"
-        },
-        {
-          "name": "venue",
-          "type": {
-            "defined": "Venue"
-          }
         }
       ]
     },
@@ -109,11 +103,6 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "protocol",
           "isMut": true,
           "isSigner": false
@@ -121,11 +110,6 @@ export type Rfq = {
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "quoteMint",
-          "isMut": false,
           "isSigner": false
         },
         {
@@ -809,10 +793,6 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "assetMint",
-            "type": "publicKey"
-          },
-          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -884,10 +864,6 @@ export type Rfq = {
             "type": "u8"
           },
           {
-            "name": "quoteMint",
-            "type": "publicKey"
-          },
-          {
             "name": "settled",
             "type": "bool"
           },
@@ -904,37 +880,13 @@ export type Rfq = {
         "kind": "struct",
         "fields": [
           {
-            "name": "assetAmount",
-            "type": "u64"
-          },
-          {
-            "name": "assetContractSize",
-            "type": "u64"
-          },
-          {
-            "name": "assetMint",
-            "type": "publicKey"
-          },
-          {
             "name": "bump",
             "type": "u8"
           },
           {
-            "name": "contract",
+            "name": "leg",
             "type": {
-              "defined": "Contract"
-            }
-          },
-          {
-            "name": "expiry",
-            "type": {
-              "option": "i64"
-            }
-          },
-          {
-            "name": "instrument",
-            "type": {
-              "defined": "Instrument"
+              "defined": "Leg"
             }
           },
           {
@@ -942,26 +894,8 @@ export type Rfq = {
             "type": "bool"
           },
           {
-            "name": "quoteAmount",
-            "type": "u64"
-          },
-          {
-            "name": "quoteContractSize",
-            "type": "u64"
-          },
-          {
-            "name": "quoteMint",
-            "type": "publicKey"
-          },
-          {
             "name": "rfq",
             "type": "publicKey"
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
-            }
           }
         ]
       }
@@ -1057,24 +991,137 @@ export type Rfq = {
   ],
   "types": [
     {
-      "name": "Instrument",
+      "name": "Leg",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "Option"
+            "name": "baseAmount",
+            "type": "publicKey"
           },
           {
-            "name": "Future"
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
           },
           {
-            "name": "Spot"
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           }
         ]
       }
     },
     {
-      "name": "Contract",
+      "name": "Spot",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "baseMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NFT",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "baseMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PsyOptionsAmerican",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "baseContractSize",
+            "type": "u64"
+          },
+          {
+            "name": "baseMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "callPut",
+            "type": {
+              "defined": "CallPut"
+            }
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "strike",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PsyOptionsEuropean",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "baseContractSize",
+            "type": "u64"
+          },
+          {
+            "name": "baseMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "callPut",
+            "type": {
+              "defined": "CallPut"
+            }
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "strike",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CallPut",
       "type": {
         "kind": "enum",
         "variants": [
@@ -1083,12 +1130,54 @@ export type Rfq = {
           },
           {
             "name": "Put"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Quote",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Bid"
           },
           {
-            "name": "Long"
+            "name": "Ask"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Instrument",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "PsyOptionsAmerican"
           },
           {
-            "name": "Short"
+            "name": "PsyOptionsEuropean"
+          },
+          {
+            "name": "NFT"
+          },
+          {
+            "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Side",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
           }
         ]
       }
@@ -1109,20 +1198,6 @@ export type Rfq = {
           },
           {
             "name": "Convergence"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Quote",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Bid"
-          },
-          {
-            "name": "Ask"
           }
         ]
       }
@@ -1354,20 +1429,14 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "expiry",
+          "name": "leg",
           "type": {
-            "option": "i64"
+            "defined": "Leg"
           }
         },
         {
           "name": "rfq",
           "type": "publicKey"
-        },
-        {
-          "name": "venue",
-          "type": {
-            "defined": "Venue"
-          }
         }
       ]
     },
@@ -1380,11 +1449,6 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "assetMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "protocol",
           "isMut": true,
           "isSigner": false
@@ -1392,11 +1456,6 @@ export const IDL: Rfq = {
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "quoteMint",
-          "isMut": false,
           "isSigner": false
         },
         {
@@ -2080,10 +2139,6 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "assetMint",
-            "type": "publicKey"
-          },
-          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -2155,10 +2210,6 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
-            "name": "quoteMint",
-            "type": "publicKey"
-          },
-          {
             "name": "settled",
             "type": "bool"
           },
@@ -2175,37 +2226,13 @@ export const IDL: Rfq = {
         "kind": "struct",
         "fields": [
           {
-            "name": "assetAmount",
-            "type": "u64"
-          },
-          {
-            "name": "assetContractSize",
-            "type": "u64"
-          },
-          {
-            "name": "assetMint",
-            "type": "publicKey"
-          },
-          {
             "name": "bump",
             "type": "u8"
           },
           {
-            "name": "contract",
+            "name": "leg",
             "type": {
-              "defined": "Contract"
-            }
-          },
-          {
-            "name": "expiry",
-            "type": {
-              "option": "i64"
-            }
-          },
-          {
-            "name": "instrument",
-            "type": {
-              "defined": "Instrument"
+              "defined": "Leg"
             }
           },
           {
@@ -2213,26 +2240,8 @@ export const IDL: Rfq = {
             "type": "bool"
           },
           {
-            "name": "quoteAmount",
-            "type": "u64"
-          },
-          {
-            "name": "quoteContractSize",
-            "type": "u64"
-          },
-          {
-            "name": "quoteMint",
-            "type": "publicKey"
-          },
-          {
             "name": "rfq",
             "type": "publicKey"
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
-            }
           }
         ]
       }
@@ -2328,24 +2337,137 @@ export const IDL: Rfq = {
   ],
   "types": [
     {
-      "name": "Instrument",
+      "name": "Leg",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "Option"
+            "name": "baseAmount",
+            "type": "publicKey"
           },
           {
-            "name": "Future"
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
           },
           {
-            "name": "Spot"
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           }
         ]
       }
     },
     {
-      "name": "Contract",
+      "name": "Spot",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "baseMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NFT",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "baseMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PsyOptionsAmerican",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "baseContractSize",
+            "type": "u64"
+          },
+          {
+            "name": "baseMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "callPut",
+            "type": {
+              "defined": "CallPut"
+            }
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "strike",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PsyOptionsEuropean",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "baseContractSize",
+            "type": "u64"
+          },
+          {
+            "name": "baseMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "callPut",
+            "type": {
+              "defined": "CallPut"
+            }
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "strike",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CallPut",
       "type": {
         "kind": "enum",
         "variants": [
@@ -2354,12 +2476,54 @@ export const IDL: Rfq = {
           },
           {
             "name": "Put"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Quote",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Bid"
           },
           {
-            "name": "Long"
+            "name": "Ask"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Instrument",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "PsyOptionsAmerican"
           },
           {
-            "name": "Short"
+            "name": "PsyOptionsEuropean"
+          },
+          {
+            "name": "NFT"
+          },
+          {
+            "name": "Spot"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Side",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
           }
         ]
       }
@@ -2380,20 +2544,6 @@ export const IDL: Rfq = {
           },
           {
             "name": "Convergence"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Quote",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Bid"
-          },
-          {
-            "name": "Ask"
           }
         ]
       }

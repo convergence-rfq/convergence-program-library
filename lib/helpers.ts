@@ -4,6 +4,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/sp
 import { PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY, AccountMeta, TransactionInstruction, Signer, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
 
 import { default as idl } from '../target/idl/rfq.json'
+// @ts-ignore
 import { Rfq } from '../target/types/rfq'
 
 import { default as psyAmericanIdl } from '../lib/integrations/idl/psyAmerican.json'
@@ -27,18 +28,6 @@ export const Order = {
   },
   TwoWay: {
     twoWay: {}
-  }
-}
-
-export const Instrument = {
-  Spot: {
-    spot: {}
-  },
-  Option: {
-    option: {}
-  },
-  Future: {
-    future: {}
   }
 }
 
@@ -66,19 +55,20 @@ export const Venue = {
   }
 }
 
-export const Contract = {
+export const PutCall = {
   Call: {
     call: {}
   },
   Put: {
     put: {}
   },
-  Long: {
-    long: {}
-  },
-  Short: {
-    short: {}
-  }
+}
+
+export const Leg = {
+  baseAmount: {},
+  side: {},
+  instrument: {},
+  venue: {}
 }
 
 /// Protocol methods
@@ -146,14 +136,12 @@ export async function setFee(
 
 export async function request(
   accessManager: number | null,
-  assetMint: PublicKey,
   signer: Wallet,
   expiry: number,
   lastLook: boolean,
   legs: any[],
   orderAmount: number,
   provider: Provider,
-  quoteMint: PublicKey,
   requestOrder: object,
 ): Promise<any> {
   const program = await getProgram(provider)
@@ -166,8 +154,6 @@ export async function request(
     [
       Buffer.from(RFQ_SEED),
       signer.publicKey.toBuffer(),
-      assetMint.toBuffer(),
-      quoteMint.toBuffer(),
       new BN(orderAmount).toArrayLike(Buffer, 'le', 8),
       new BN(expiry).toArrayLike(Buffer, 'le', 8)
     ],
@@ -191,28 +177,31 @@ export async function request(
   let instructions: TransactionInstruction[] = []
 
   for (let i = 0; i < legs.length; i++) {
-    const expiry = new BN(legs[i].expiry)
     const [legPda, _legBump] = await PublicKey.findProgramAddress(
       [
         Buffer.from(LEG_SEED),
-        expiry.toArrayLike(Buffer, 'le', 8),
+        // TODO: Finish
         rfqPda.toBuffer()
       ],
       program.programId
     )
 
-    instructions.push(
-      await program.methods.initializeLeg(expiry, rfqPda, legs[i].venue)
-        .accounts({
-          signer: signer.publicKey,
-          protocol: protocolPda,
-          rent: SYSVAR_RENT_PUBKEY,
-          leg: legPda,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers(signers)
-        .instruction()
-    )
+    console.log('hi?')
+
+    //instructions.push(
+    await program.methods.initializeLeg(legs[i], rfqPda)
+      .accounts({
+        signer: signer.publicKey,
+        protocol: protocolPda,
+        rent: SYSVAR_RENT_PUBKEY,
+        leg: legPda,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers(signers)
+      .rpc()
+    //.instruction()
+    //)
+    console.log('NICE')
 
     remainingAccounts.push({
       pubkey: legPda,
@@ -224,11 +213,9 @@ export async function request(
   const tx = await program.methods.request(accessManager, new BN(expiry), lastLook, new BN(orderAmount), requestOrder)
     .accounts({
       assetEscrow: assetEscrowPda,
-      assetMint,
       signer: signer.publicKey,
       protocol: protocolPda,
       quoteEscrow: quoteEscrowPda,
-      quoteMint,
       rent: SYSVAR_RENT_PUBKEY,
       rfq: rfqPda,
       systemProgram: SystemProgram.programId,

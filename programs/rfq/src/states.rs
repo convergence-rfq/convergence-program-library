@@ -58,23 +58,30 @@ pub struct RfqState {
 /// Leg.
 #[account]
 pub struct LegState {
-    // Base amount
-    pub base_amount: Pubkey,
     // Bump
     pub bump: u8,
-    // Instrument
-    //
-    // TODO: Should instrument store additional IDs? Verify with Armani, Tommy and Norbert:
-    //
-    // - Integration ID
-    // - Token ID
-    // - ATA ID
-    // - System ID
-    pub instrument: Spot | PsyOptionsAmerican | PsyOptionsEuropean | NFT, // Perp | TermFuture
+    // Leg
+    pub leg: Leg,
     // Processed
     pub processed: bool,
     // RFQ
     pub rfq: Pubkey,
+}   
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Leg {
+    // Base amount
+    pub base_amount: Pubkey,
+    // Instrument
+    //
+    // TODO:
+    //
+    // Should instrument store additional IDs? Verify with Armani, Tommy and Norbert:
+    // - Protocol integration ID
+    // - Token ID
+    // - ATA ID
+    // - System ID
+    pub instrument: Instrument,
     // Side can be Buy or Sell
     pub side: Side,    
     // Venue
@@ -136,13 +143,13 @@ pub struct PsyOptionsEuropean {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct CallPut {
+pub enum CallPut {
     Call,
     Put,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Quote {
+pub enum Quote {
     Bid,
     Ask,
 }
@@ -214,13 +221,6 @@ pub enum Venue {
     Sollar,
     Mango,
     Convergence,
-}
-
-/// Quote.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Quote {
-    Bid,
-    Ask,
 }
 
 /// Order.

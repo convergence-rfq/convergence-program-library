@@ -44,9 +44,8 @@ pub struct SetFee<'info> {
 /// Initialize leg.
 #[derive(Accounts)]
 #[instruction(
-    expiry: Option<i64>,
+    leg: Leg,
     rfq: Pubkey,
-    venue: Venue,
 )]
 pub struct InitializeLeg<'info> {
     /// Protocol
@@ -62,7 +61,6 @@ pub struct InitializeLeg<'info> {
         payer = signer,
         seeds = [
             LEG_SEED.as_bytes(),
-            &expiry.unwrap_or(0).to_le_bytes(),
             rfq.as_ref(),
         ],
         space = 8 + mem::size_of::<LegState>(),
@@ -90,15 +88,11 @@ pub struct Request<'info> {
     #[account(
         init,
         payer = signer,
-        token::mint = asset_mint,
-        token::authority = rfq,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
+        space = 8 + mem::size_of::<TokenAccount>(),
         bump
     )]
     pub asset_escrow: Account<'info, TokenAccount>,
-    /// Asset mint
-    #[account(constraint = asset_mint.key() == asset_escrow.mint.key(), constraint = asset_mint.key() != quote_mint.key())]
-    pub asset_mint: Box<Account<'info, Mint>>,
     /// Protocol
     #[account(
         mut,
@@ -111,15 +105,11 @@ pub struct Request<'info> {
     #[account(
         init,
         payer = signer,
-        token::mint = quote_mint,
-        token::authority = rfq,
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
+        space = 8 + mem::size_of::<TokenAccount>(),
         bump
     )]
     pub quote_escrow: Account<'info, TokenAccount>,
-    /// Quote mint
-    #[account(constraint = quote_mint.key() == quote_escrow.mint.key(), constraint = asset_mint.key() != quote_mint.key())]
-    pub quote_mint: Box<Account<'info, Mint>>,
     /// Rent
     pub rent: Sysvar<'info, Rent>,
     /// RFQ
@@ -129,8 +119,6 @@ pub struct Request<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             signer.key().as_ref(),
-            asset_mint.key().as_ref(),
-            quote_mint.key().as_ref(),
             &order_amount.to_le_bytes(),
             &expiry.to_le_bytes()
         ],
@@ -163,8 +151,6 @@ pub struct Cancel<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            rfq.asset_mint.key().as_ref(),
-            rfq.quote_mint.key().as_ref(),
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
@@ -204,8 +190,6 @@ pub struct Respond<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            rfq.asset_mint.key().as_ref(),
-            rfq.quote_mint.key().as_ref(),
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()    
         ],
@@ -214,10 +198,18 @@ pub struct Respond<'info> {
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     /// Asset wallet
-    #[account(mut, constraint = asset_wallet.mint == rfq.asset_mint, constraint = asset_wallet.owner.key() == signer.key())]
+    #[account(
+        mut, 
+        //constraint = asset_wallet.mint == rfq.asset_mint,
+        constraint = asset_wallet.owner.key() == signer.key()
+    )]
     pub asset_wallet: Box<Account<'info, TokenAccount>>,
     /// Quote wallet
-    #[account(mut, constraint = quote_wallet.mint == rfq.quote_mint, constraint = quote_wallet.owner.key() == signer.key())]
+    #[account(
+        mut, 
+        //constraint = quote_wallet.mint == rfq.quote_mint,
+        constraint = quote_wallet.owner.key() == signer.key()
+    )]
     pub quote_wallet: Box<Account<'info, TokenAccount>>,
     /// Asset escrow
     #[account(
@@ -225,7 +217,7 @@ pub struct Respond<'info> {
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.asset_escrow_bump,
         constraint = asset_escrow.owner.key() == rfq.key(),
-        constraint = asset_escrow.mint == rfq.asset_mint
+        //constraint = asset_escrow.mint == rfq.asset_mint
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     /// Quote escrow
@@ -234,14 +226,20 @@ pub struct Respond<'info> {
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.quote_escrow_bump,
         constraint = quote_escrow.owner == rfq.key(),
-        constraint = quote_escrow.mint == rfq.quote_mint
+        //constraint = quote_escrow.mint == rfq.quote_mint
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     /// Asset mint
-    #[account(mut, constraint = asset_mint.key() == rfq.asset_mint.key())]
+    #[account(
+        mut, 
+        //constraint = asset_mint.key() == rfq.asset_mint.key()
+    )]
     pub asset_mint: Box<Account<'info, Mint>>,
     /// Quote mint
-    #[account(mut, constraint = quote_mint.key() == rfq.quote_mint.key())]
+    #[account(
+        mut, 
+        //constraint = quote_mint.key() == rfq.quote_mint.key()
+    )]
     pub quote_mint: Box<Account<'info, Mint>>,
     /// System program
     pub system_program: Program<'info, System>,
@@ -260,14 +258,21 @@ pub struct Confirm<'info> {
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.asset_escrow_bump,
         constraint = asset_escrow.owner.key() == rfq.key(),
-        constraint = asset_escrow.mint == rfq.asset_mint
+        //constraint = asset_escrow.mint == rfq.asset_mint
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     /// Asset mint
-    #[account(mut, constraint = asset_mint.key() == rfq.asset_mint.key())]
+    #[account(
+        mut,
+        //constraint = asset_mint.key() == rfq.asset_mint.key()
+    )]
     pub asset_mint: Box<Account<'info, Mint>>,
     /// Asset wallet
-    #[account(mut, constraint = asset_wallet.mint == rfq.asset_mint, constraint = asset_wallet.owner.key() == signer.key())]
+    #[account(
+        mut,
+        //constraint = asset_wallet.mint == rfq.asset_mint,
+        constraint = asset_wallet.owner.key() == signer.key()
+    )]
     pub asset_wallet: Box<Account<'info, TokenAccount>>,
     /// Order
     #[account(
@@ -289,14 +294,21 @@ pub struct Confirm<'info> {
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.quote_escrow_bump,
         constraint = quote_escrow.owner.key() == rfq.key(),
-        constraint = quote_escrow.mint == rfq.quote_mint
+        //constraint = quote_escrow.mint == rfq.quote_mint
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     /// Quote mint
-    #[account(mut, constraint = quote_wallet.mint == rfq.quote_mint)]
+    #[account(
+        mut,
+        //constraint = quote_wallet.mint == rfq.quote_mint
+    )]
     pub quote_mint: Box<Account<'info, Mint>>,
     /// Quote wallet
-    #[account(mut, constraint = quote_wallet.mint == rfq.quote_mint, constraint = quote_wallet.owner.key() == signer.key())]
+    #[account(
+        mut,
+        //constraint = quote_wallet.mint == rfq.quote_mint,
+        constraint = quote_wallet.owner.key() == signer.key()
+    )]
     pub quote_wallet: Box<Account<'info, TokenAccount>>,
     /// Rent
     pub rent: Sysvar<'info, Rent>,
@@ -306,8 +318,6 @@ pub struct Confirm<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            rfq.asset_mint.key().as_ref(),
-            rfq.quote_mint.key().as_ref(),
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
@@ -347,8 +357,6 @@ pub struct LastLook<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            rfq.asset_mint.key().as_ref(),
-            rfq.quote_mint.key().as_ref(),
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
@@ -370,14 +378,21 @@ pub struct ReturnCollateral<'info> {
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.asset_escrow_bump,
         constraint = asset_escrow.owner.key() == rfq.key(),
-        constraint = asset_escrow.mint == rfq.asset_mint
+        //constraint = asset_escrow.mint == rfq.asset_mint
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     /// Asset mint
-    #[account(mut, constraint = asset_mint.key() == rfq.asset_mint.key())]
+    #[account(
+        mut, 
+        //constraint = asset_mint.key() == rfq.asset_mint.key()
+    )]
     pub asset_mint: Box<Account<'info, Mint>>,
     /// Asset wallet
-    #[account(mut, constraint = asset_wallet.mint == rfq.asset_mint, constraint = asset_wallet.owner.key() == signer.key())]
+    #[account(
+        mut, 
+        //constraint = asset_wallet.mint == rfq.asset_mint,
+        constraint = asset_wallet.owner.key() == signer.key()
+    )]
     pub asset_wallet: Box<Account<'info, TokenAccount>>,
     /// Order
     #[account(
@@ -399,14 +414,21 @@ pub struct ReturnCollateral<'info> {
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.quote_escrow_bump,
         constraint = quote_escrow.owner.key() == rfq.key(),
-        constraint = quote_escrow.mint == rfq.quote_mint
+        //constraint = quote_escrow.mint == rfq.quote_mint
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     /// Quote mint
-    #[account(mut, constraint = quote_mint.key() == rfq.quote_mint.key())]
+    #[account(
+        mut, 
+        //constraint = quote_mint.key() == rfq.quote_mint.key()
+    )]
     pub quote_mint: Box<Account<'info, Mint>>,
     /// Quote wallet
-    #[account(mut, constraint = quote_wallet.mint == rfq.quote_mint, constraint = quote_wallet.owner.key() == signer.key())]
+    #[account(
+        mut,
+        //constraint = quote_wallet.mint == rfq.quote_mint,
+        constraint = quote_wallet.owner.key() == signer.key()
+    )]
     pub quote_wallet: Box<Account<'info, TokenAccount>>,
     /// Rent
     pub rent: Sysvar<'info, Rent>,
@@ -416,8 +438,6 @@ pub struct ReturnCollateral<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            rfq.asset_mint.key().as_ref(),
-            rfq.quote_mint.key().as_ref(),
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
@@ -436,17 +456,24 @@ pub struct ReturnCollateral<'info> {
 #[derive(Accounts)]
 pub struct Settle<'info> {
     /// Asset mint
-    #[account(mut, constraint = asset_mint.key() == rfq.asset_mint.key())]
+    #[account(
+        mut,
+        //constraint = asset_mint.key() == rfq.asset_mint.key()
+    )]
     pub asset_mint: Box<Account<'info, Mint>>,
     /// Asset wallet
-    #[account(mut, constraint = asset_wallet.mint == rfq.asset_mint, constraint = asset_wallet.owner.key() == signer.key())]
+    #[account(
+        mut,
+        //constraint = asset_wallet.mint == rfq.asset_mint,
+        constraint = asset_wallet.owner.key() == signer.key()
+    )]
     pub asset_wallet: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         seeds = [ASSET_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.asset_escrow_bump,
         constraint = asset_escrow.owner.key() == rfq.key(),
-        constraint = asset_escrow.mint == rfq.asset_mint
+        //constraint = asset_escrow.mint == rfq.asset_mint
     )]
     pub asset_escrow: Box<Account<'info, TokenAccount>>,
     /// Order
@@ -477,14 +504,21 @@ pub struct Settle<'info> {
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), rfq.key().as_ref()],
         bump = rfq.quote_escrow_bump,
         constraint = quote_escrow.owner.key() == rfq.key(),
-        constraint = quote_escrow.mint == rfq.quote_mint
+        //constraint = quote_escrow.mint == rfq.quote_mint
     )]
     pub quote_escrow: Box<Account<'info, TokenAccount>>,
     /// Quote mint
-    #[account(mut, constraint = quote_mint.key() == rfq.quote_mint.key())]
+    #[account(
+        mut,
+        //constraint = quote_mint.key() == rfq.quote_mint.key()
+    )]
     pub quote_mint: Box<Account<'info, Mint>>,
     /// Quote wallet
-    #[account(mut, constraint = quote_wallet.mint == rfq.quote_mint, constraint = quote_wallet.owner.key() == signer.key())]
+    #[account(
+        mut, 
+        //constraint = quote_wallet.mint == rfq.quote_mint,
+        constraint = quote_wallet.owner.key() == signer.key()
+    )]
     pub quote_wallet: Box<Account<'info, TokenAccount>>,
     /// RFQ
     #[account(
@@ -492,8 +526,6 @@ pub struct Settle<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            rfq.asset_mint.key().as_ref(),
-            rfq.quote_mint.key().as_ref(),
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
