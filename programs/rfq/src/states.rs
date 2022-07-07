@@ -74,7 +74,7 @@ pub struct RfqState {
 #[account]
 pub struct LegState {
     // Base amount
-    pub base_amount: Pubkey,
+    pub base_amount: u64,
     // Bump
     pub bump: u8,
     // Instrument

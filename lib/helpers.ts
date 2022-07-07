@@ -177,17 +177,20 @@ export async function request(
   let instructions: TransactionInstruction[] = []
 
   for (let i = 0; i < legs.length; i++) {
+    const baseAmount = new BN(legs[i].baseAmount)
+
+    // TODO: Finish
     const [legPda, _legBump] = await PublicKey.findProgramAddress(
       [
         Buffer.from(LEG_SEED),
-        // TODO: Finish
-        rfqPda.toBuffer()
+        rfqPda.toBuffer(),
+        baseAmount.toArrayLike(Buffer, 'le', 8),
       ],
       program.programId
     )
 
     //instructions.push(
-    await program.methods.initializeLeg(legs[i].instrument, rfqPda, legs[i].venue)
+    await program.methods.initializeLeg(baseAmount, legs[i].instrument, rfqPda, legs[i].side, legs[i].venue)
       .accounts({
         signer: signer.publicKey,
         protocol: protocolPda,

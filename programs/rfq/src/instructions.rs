@@ -55,15 +55,19 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
 //#[access_control(initialize_leg_access_control(&ctx, rfq, venue))]
 pub fn initialize_leg(
     ctx: Context<InitializeLeg>,
+    base_amount: u64,
     instrument: Instrument,
     rfq: Pubkey,
+    side: Side,
     venue: Venue,
 ) -> Result<()> {
     let leg = &mut ctx.accounts.leg;
-    leg.venue = venue;
+    leg.base_amount = base_amount;
     leg.instrument = instrument;
-    leg.rfq = rfq;
     leg.processed = false;
+    leg.rfq = rfq;
+    leg.side = side;
+    leg.venue = venue;
 
     Ok(())
 }

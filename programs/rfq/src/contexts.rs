@@ -44,8 +44,10 @@ pub struct SetFee<'info> {
 /// Initialize leg.
 #[derive(Accounts)]
 #[instruction(
+    base_amount: u64,
     instrument: Instrument,
     rfq: Pubkey,
+    side: Side,
     venue: Venue,
 )]
 pub struct InitializeLeg<'info> {
@@ -63,6 +65,7 @@ pub struct InitializeLeg<'info> {
         seeds = [
             LEG_SEED.as_bytes(),
             rfq.as_ref(),
+            &base_amount.to_le_bytes(),
         ],
         space = 8 + mem::size_of::<LegState>(),
         bump

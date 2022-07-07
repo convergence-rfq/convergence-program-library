@@ -83,6 +83,10 @@
       ],
       "args": [
         {
+          "name": "baseAmount",
+          "type": "u64"
+        },
+        {
           "name": "instrument",
           "type": {
             "defined": "Instrument"
@@ -91,6 +95,12 @@
         {
           "name": "rfq",
           "type": "publicKey"
+        },
+        {
+          "name": "side",
+          "type": {
+            "defined": "Side"
+          }
         },
         {
           "name": "venue",
@@ -915,7 +925,7 @@
         "fields": [
           {
             "name": "baseAmount",
-            "type": "publicKey"
+            "type": "u64"
           },
           {
             "name": "bump",

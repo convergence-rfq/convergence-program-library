@@ -83,6 +83,10 @@ export type Rfq = {
       ],
       "args": [
         {
+          "name": "baseAmount",
+          "type": "u64"
+        },
+        {
           "name": "instrument",
           "type": {
             "defined": "Instrument"
@@ -91,6 +95,12 @@ export type Rfq = {
         {
           "name": "rfq",
           "type": "publicKey"
+        },
+        {
+          "name": "side",
+          "type": {
+            "defined": "Side"
+          }
         },
         {
           "name": "venue",
@@ -915,7 +925,7 @@ export type Rfq = {
         "fields": [
           {
             "name": "baseAmount",
-            "type": "publicKey"
+            "type": "u64"
           },
           {
             "name": "bump",
@@ -1403,6 +1413,10 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
+          "name": "baseAmount",
+          "type": "u64"
+        },
+        {
           "name": "instrument",
           "type": {
             "defined": "Instrument"
@@ -1411,6 +1425,12 @@ export const IDL: Rfq = {
         {
           "name": "rfq",
           "type": "publicKey"
+        },
+        {
+          "name": "side",
+          "type": {
+            "defined": "Side"
+          }
         },
         {
           "name": "venue",
@@ -2235,7 +2255,7 @@ export const IDL: Rfq = {
         "fields": [
           {
             "name": "baseAmount",
-            "type": "publicKey"
+            "type": "u64"
           },
           {
             "name": "bump",
