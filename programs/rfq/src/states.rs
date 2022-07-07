@@ -1,6 +1,21 @@
 ///! State
 use anchor_lang::prelude::*;
 
+/// Protocol state.
+#[account]
+pub struct ProtocolState {
+    // Protocol authority
+    pub authority: Pubkey,
+    // PDA bump
+    pub bump: u8,
+    // Fee denominator
+    pub fee_denominator: u64,
+    // Fee numerator
+    pub fee_numerator: u64,
+    // Treasury wallet
+    pub treasury_wallet: Pubkey,
+}
+
 /// Access manager state.
 #[account]
 pub struct AccessManagerState {
@@ -82,13 +97,53 @@ pub struct LegState {
     pub venue: Venue,
 }   
 
-/// Spot.
+/// Instrument.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct NFT {
-    // Base mint
-    pub base_mint: Pubkey,
-    // Quote mint
-    pub quote_mint: Pubkey,
+pub enum Instrument {
+    PsyOptionsAmerican,
+    PsyOptionsEuropean,
+    NFT {
+        // Base mint
+        base_mint: Pubkey,
+        // Quote mint
+        quote_mint: Pubkey,
+    },
+    Spot {
+        // Base mint
+        base_mint: Pubkey,
+        // Quote mint
+        quote_mint: Pubkey,
+    },
+    Perp,
+    Future,    
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum CallPut {
+    Call,
+    Put,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Quote {
+    Bid,
+    Ask,
+}
+
+/// Direction.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Side {
+    Buy,
+    Sell,
+}
+
+/// Venue.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Venue {
+    PsyOptions,
+    Sollar,
+    Mango,
+    Convergence,
 }
 
 /// PsyOptions American.
@@ -127,33 +182,6 @@ pub struct PsyOptionsEuropean {
     pub strike: u64,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum CallPut {
-    Call,
-    Put,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Quote {
-    Bid,
-    Ask,
-}
-
-/// Protocol state.
-#[account]
-pub struct ProtocolState {
-    // Protocol authority
-    pub authority: Pubkey,
-    // PDA bump
-    pub bump: u8,
-    // Fee denominator
-    pub fee_denominator: u64,
-    // Fee numerator
-    pub fee_numerator: u64,
-    // Treasury wallet
-    pub treasury_wallet: Pubkey,
-}
-
 /// Order state.
 #[account]
 pub struct OrderState {
@@ -179,38 +207,6 @@ pub struct OrderState {
     pub settled: bool,
     /// Creation time
     pub unix_timestamp: i64,
-}
-
-/// Instrument.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Instrument {
-    PsyOptionsAmerican,
-    PsyOptionsEuropean,
-    NFT,
-    Spot {
-        // Base mint
-        base_mint: Pubkey,
-        // Quote mint
-        quote_mint: Pubkey,
-    }
-    // Perp,
-    // Future,    
-}
-
-/// Direction.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Side {
-    Buy,
-    Sell,
-}
-
-/// Venue.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Venue {
-    PsyOptions,
-    Sollar,
-    Mango,
-    Convergence,
 }
 
 /// Order.

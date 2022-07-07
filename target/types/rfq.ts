@@ -753,6 +753,34 @@ export type Rfq = {
   ],
   "accounts": [
     {
+      "name": "protocolState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "feeDenominator",
+            "type": "u64"
+          },
+          {
+            "name": "feeNumerator",
+            "type": "u64"
+          },
+          {
+            "name": "treasuryWallet",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
       "name": "accessManagerState",
       "type": {
         "kind": "struct",
@@ -923,34 +951,6 @@ export type Rfq = {
       }
     },
     {
-      "name": "protocolState",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "authority",
-            "type": "publicKey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "feeDenominator",
-            "type": "u64"
-          },
-          {
-            "name": "feeNumerator",
-            "type": "u64"
-          },
-          {
-            "name": "treasuryWallet",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
       "name": "orderState",
       "type": {
         "kind": "struct",
@@ -1012,22 +1012,6 @@ export type Rfq = {
     }
   ],
   "types": [
-    {
-      "name": "NFT",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "baseMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "quoteMint",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
     {
       "name": "PsyOptionsAmerican",
       "type": {
@@ -1097,6 +1081,52 @@ export type Rfq = {
       }
     },
     {
+      "name": "Instrument",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "PsyOptionsAmerican"
+          },
+          {
+            "name": "PsyOptionsEuropean"
+          },
+          {
+            "name": "NFT",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
+          },
+          {
+            "name": "Spot",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
+          },
+          {
+            "name": "Perp"
+          },
+          {
+            "name": "Future"
+          }
+        ]
+      }
+    },
+    {
       "name": "CallPut",
       "type": {
         "kind": "enum",
@@ -1120,36 +1150,6 @@ export type Rfq = {
           },
           {
             "name": "Ask"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Instrument",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "PsyOptionsAmerican"
-          },
-          {
-            "name": "PsyOptionsEuropean"
-          },
-          {
-            "name": "NFT"
-          },
-          {
-            "name": "Spot",
-            "fields": [
-              {
-                "name": "base_mint",
-                "type": "publicKey"
-              },
-              {
-                "name": "quote_mint",
-                "type": "publicKey"
-              }
-            ]
           }
         ]
       }
@@ -2085,6 +2085,34 @@ export const IDL: Rfq = {
   ],
   "accounts": [
     {
+      "name": "protocolState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "feeDenominator",
+            "type": "u64"
+          },
+          {
+            "name": "feeNumerator",
+            "type": "u64"
+          },
+          {
+            "name": "treasuryWallet",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
       "name": "accessManagerState",
       "type": {
         "kind": "struct",
@@ -2255,34 +2283,6 @@ export const IDL: Rfq = {
       }
     },
     {
-      "name": "protocolState",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "authority",
-            "type": "publicKey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "feeDenominator",
-            "type": "u64"
-          },
-          {
-            "name": "feeNumerator",
-            "type": "u64"
-          },
-          {
-            "name": "treasuryWallet",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
       "name": "orderState",
       "type": {
         "kind": "struct",
@@ -2344,22 +2344,6 @@ export const IDL: Rfq = {
     }
   ],
   "types": [
-    {
-      "name": "NFT",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "baseMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "quoteMint",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
     {
       "name": "PsyOptionsAmerican",
       "type": {
@@ -2429,6 +2413,52 @@ export const IDL: Rfq = {
       }
     },
     {
+      "name": "Instrument",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "PsyOptionsAmerican"
+          },
+          {
+            "name": "PsyOptionsEuropean"
+          },
+          {
+            "name": "NFT",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
+          },
+          {
+            "name": "Spot",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
+          },
+          {
+            "name": "Perp"
+          },
+          {
+            "name": "Future"
+          }
+        ]
+      }
+    },
+    {
       "name": "CallPut",
       "type": {
         "kind": "enum",
@@ -2452,36 +2482,6 @@ export const IDL: Rfq = {
           },
           {
             "name": "Ask"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Instrument",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "PsyOptionsAmerican"
-          },
-          {
-            "name": "PsyOptionsEuropean"
-          },
-          {
-            "name": "NFT"
-          },
-          {
-            "name": "Spot",
-            "fields": [
-              {
-                "name": "base_mint",
-                "type": "publicKey"
-              },
-              {
-                "name": "quote_mint",
-                "type": "publicKey"
-              }
-            ]
           }
         ]
       }
