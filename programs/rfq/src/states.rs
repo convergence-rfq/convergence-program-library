@@ -21,8 +21,6 @@ pub struct RfqState {
     pub approved: Option<bool>,
     /// Asset escrow bump
     pub asset_escrow_bump: u8,
-    /// Asset mint
-    pub asset_mint: Pubkey,
     /// Authority
     pub authority: Pubkey,
     /// Best ask amount
@@ -47,12 +45,10 @@ pub struct RfqState {
     pub last_look: bool,
     /// Order amount
     pub order_amount: u64,
-    /// Order type
+    /// Order type can be Buy or Sell
     pub order_type: Order,
     /// Quote escrow bump
     pub quote_escrow_bump: u8,
-    /// Quote mint
-    pub quote_mint: Pubkey,
     /// Settled
     pub settled: bool,
     /// Creation time
@@ -62,32 +58,93 @@ pub struct RfqState {
 /// Leg.
 #[account]
 pub struct LegState {
-    // Asset amount
-    pub asset_amount: u64,
-    // Asset contract size
-    pub asset_contract_size: u64,
-    // Asset mint
-    pub asset_mint: Pubkey,
+    // Base amount
+    pub base_amount: Pubkey,
     // Bump
     pub bump: u8,
-    // Contract
-    pub contract: Contract,
-    // Expiry
-    pub expiry: Option<i64>,
     // Instrument
-    pub instrument: Instrument,
+    //
+    // TODO: Should instrument store additional IDs? Verify with Armani, Tommy and Norbert:
+    //
+    // - Integration ID
+    // - Token ID
+    // - ATA ID
+    // - System ID
+    pub instrument: Spot | PsyOptionsAmerican | PsyOptionsEuropean | NFT, // Perp | TermFuture
     // Processed
     pub processed: bool,
-    // Quote amount
-    pub quote_amount: u64,
-    // Quote contract size
-    pub quote_contract_size: u64,
-    // Quote mint
-    pub quote_mint: Pubkey,
     // RFQ
     pub rfq: Pubkey,
+    // Side can be Buy or Sell
+    pub side: Side,    
     // Venue
     pub venue: Venue,
+}
+
+/// Spot.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Spot {
+    // Base mint
+    pub base_mint: Pubkey,
+    // Quote mint
+    pub quote_mint: Pubkey,
+}
+
+/// Spot.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct NFT {
+    // Base mint
+    pub base_mint: Pubkey,
+    // Quote mint
+    pub quote_mint: Pubkey,
+}
+
+/// PsyOptions American.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct PsyOptionsAmerican {
+    // Base contract size
+    pub base_contract_size: u64,
+    // Base mint
+    pub base_mint: Pubkey,
+    // Expiry
+    pub expiry: i64,    
+    // Call or Put
+    pub call_put: CallPut,
+    // Quote mint
+    pub quote_mint: Pubkey,
+    // Strike
+    pub strike: u64,
+}
+
+/// PsyOptions European.
+///
+/// Different than American due to exercise enforcement.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct PsyOptionsEuropean {
+    // Base contract size
+    pub base_contract_size: u64,
+    // Base mint
+    pub base_mint: Pubkey,
+    // Expiry
+    pub expiry: i64,    
+    // Call or Put
+    pub call_put: CallPut,
+    // Quote mint
+    pub quote_mint: Pubkey,
+    // Strike
+    pub strike: u64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct CallPut {
+    Call,
+    Put,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Quote {
+    Bid,
+    Ask,
 }
 
 /// Protocol state.
@@ -135,18 +192,19 @@ pub struct OrderState {
 /// Instrument.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instrument {
-    Option,
-    Future,
+    PsyOptionsAmerican,
+    PsyOptionsEuropean,
+    NFT,
     Spot,
+    // Perp,
+    // Future,    
 }
 
-/// Contract.
+/// Direction.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Contract {
-    Call,
-    Put,
-    Long,
-    Short,
+pub enum Side {
+    Buy,
+    Sell,
 }
 
 /// Venue.
