@@ -58,14 +58,10 @@ pub struct RfqState {
 /// Leg.
 #[account]
 pub struct LegState {
+    // Base amount
+    pub base_amount: Pubkey,
     // Bump
     pub bump: u8,
-    // Leg
-    pub leg: Leg,
-    // Processed
-    pub processed: bool,
-    // RFQ
-    pub rfq: Pubkey,
     // Instrument
     //
     // TODO:
@@ -76,17 +72,15 @@ pub struct LegState {
     // - ATA ID
     // - System ID
     pub instrument: Instrument,
+    // Processed
+    pub processed: bool,
+    // RFQ
+    pub rfq: Pubkey,
+    // Side can be Buy or Sell
+    pub side: Side,    
     // Venue
     pub venue: Venue,
 }   
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Leg {
-    // Base amount
-    pub base_amount: Pubkey,
-    // Side can be Buy or Sell
-    pub side: Side,    
-}
 
 /// Spot.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]

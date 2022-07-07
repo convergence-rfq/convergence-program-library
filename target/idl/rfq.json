@@ -886,13 +886,17 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "baseAmount",
+            "type": "publicKey"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
           {
-            "name": "leg",
+            "name": "instrument",
             "type": {
-              "defined": "Leg"
+              "defined": "Instrument"
             }
           },
           {
@@ -904,9 +908,9 @@
             "type": "publicKey"
           },
           {
-            "name": "instrument",
+            "name": "side",
             "type": {
-              "defined": "Instrument"
+              "defined": "Side"
             }
           },
           {
@@ -1008,24 +1012,6 @@
     }
   ],
   "types": [
-    {
-      "name": "Leg",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "baseAmount",
-            "type": "publicKey"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
-          }
-        ]
-      }
-    },
     {
       "name": "NFT",
       "type": {

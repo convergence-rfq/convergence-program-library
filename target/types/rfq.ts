@@ -886,13 +886,17 @@ export type Rfq = {
         "kind": "struct",
         "fields": [
           {
+            "name": "baseAmount",
+            "type": "publicKey"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
           {
-            "name": "leg",
+            "name": "instrument",
             "type": {
-              "defined": "Leg"
+              "defined": "Instrument"
             }
           },
           {
@@ -904,9 +908,9 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "instrument",
+            "name": "side",
             "type": {
-              "defined": "Instrument"
+              "defined": "Side"
             }
           },
           {
@@ -1008,24 +1012,6 @@ export type Rfq = {
     }
   ],
   "types": [
-    {
-      "name": "Leg",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "baseAmount",
-            "type": "publicKey"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
-          }
-        ]
-      }
-    },
     {
       "name": "NFT",
       "type": {
@@ -2232,13 +2218,17 @@ export const IDL: Rfq = {
         "kind": "struct",
         "fields": [
           {
+            "name": "baseAmount",
+            "type": "publicKey"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
           {
-            "name": "leg",
+            "name": "instrument",
             "type": {
-              "defined": "Leg"
+              "defined": "Instrument"
             }
           },
           {
@@ -2250,9 +2240,9 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "instrument",
+            "name": "side",
             "type": {
-              "defined": "Instrument"
+              "defined": "Side"
             }
           },
           {
@@ -2354,24 +2344,6 @@ export const IDL: Rfq = {
     }
   ],
   "types": [
-    {
-      "name": "Leg",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "baseAmount",
-            "type": "publicKey"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
-          }
-        ]
-      }
-    },
     {
       "name": "NFT",
       "type": {
