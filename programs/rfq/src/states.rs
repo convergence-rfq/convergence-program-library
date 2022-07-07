@@ -66,12 +66,6 @@ pub struct LegState {
     pub processed: bool,
     // RFQ
     pub rfq: Pubkey,
-}   
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Leg {
-    // Base amount
-    pub base_amount: Pubkey,
     // Instrument
     //
     // TODO:
@@ -82,10 +76,16 @@ pub struct Leg {
     // - ATA ID
     // - System ID
     pub instrument: Instrument,
-    // Side can be Buy or Sell
-    pub side: Side,    
     // Venue
     pub venue: Venue,
+}   
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Leg {
+    // Base amount
+    pub base_amount: Pubkey,
+    // Side can be Buy or Sell
+    pub side: Side,    
 }
 
 /// Spot.

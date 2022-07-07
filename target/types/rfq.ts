@@ -83,6 +83,12 @@ export type Rfq = {
       ],
       "args": [
         {
+          "name": "instrument",
+          "type": {
+            "defined": "Instrument"
+          }
+        },
+        {
           "name": "rfq",
           "type": "publicKey"
         },
@@ -90,12 +96,6 @@ export type Rfq = {
           "name": "venue",
           "type": {
             "defined": "Venue"
-          }
-        },
-        {
-          "name": "instrument",
-          "type": {
-            "defined": "Instrument"
           }
         }
       ]
@@ -902,6 +902,18 @@ export type Rfq = {
           {
             "name": "rfq",
             "type": "publicKey"
+          },
+          {
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
+          },
+          {
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           }
         ]
       }
@@ -1006,21 +1018,9 @@ export type Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "instrument",
-            "type": {
-              "defined": "Instrument"
-            }
-          },
-          {
             "name": "side",
             "type": {
               "defined": "Side"
-            }
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
             }
           }
         ]
@@ -1429,6 +1429,12 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
+          "name": "instrument",
+          "type": {
+            "defined": "Instrument"
+          }
+        },
+        {
           "name": "rfq",
           "type": "publicKey"
         },
@@ -1436,12 +1442,6 @@ export const IDL: Rfq = {
           "name": "venue",
           "type": {
             "defined": "Venue"
-          }
-        },
-        {
-          "name": "instrument",
-          "type": {
-            "defined": "Instrument"
           }
         }
       ]
@@ -2248,6 +2248,18 @@ export const IDL: Rfq = {
           {
             "name": "rfq",
             "type": "publicKey"
+          },
+          {
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
+          },
+          {
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           }
         ]
       }
@@ -2352,21 +2364,9 @@ export const IDL: Rfq = {
             "type": "publicKey"
           },
           {
-            "name": "instrument",
-            "type": {
-              "defined": "Instrument"
-            }
-          },
-          {
             "name": "side",
             "type": {
               "defined": "Side"
-            }
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
             }
           }
         ]

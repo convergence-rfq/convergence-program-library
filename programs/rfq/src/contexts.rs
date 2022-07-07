@@ -44,9 +44,9 @@ pub struct SetFee<'info> {
 /// Initialize leg.
 #[derive(Accounts)]
 #[instruction(
+    instrument: Instrument,
     rfq: Pubkey,
     venue: Venue,
-    instrument: Instrument
 )]
 pub struct InitializeLeg<'info> {
     /// Protocol

@@ -41,9 +41,9 @@ pub fn set_fee_access_control<'info>(
 /// Ensures:
 pub fn initialize_leg_access_control<'info>(
     _ctx: &Context<InitializeLeg<'info>>,
-    _leg: Leg,
+    _instrument: Instrument,
     _rfq: Pubkey,
-    _venue: Venue
+    _venue: Venue,
 ) -> Result<()> {
     // TODO: Finish checks
 

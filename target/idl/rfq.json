@@ -83,6 +83,12 @@
       ],
       "args": [
         {
+          "name": "instrument",
+          "type": {
+            "defined": "Instrument"
+          }
+        },
+        {
           "name": "rfq",
           "type": "publicKey"
         },
@@ -90,12 +96,6 @@
           "name": "venue",
           "type": {
             "defined": "Venue"
-          }
-        },
-        {
-          "name": "instrument",
-          "type": {
-            "defined": "Instrument"
           }
         }
       ]
@@ -902,6 +902,18 @@
           {
             "name": "rfq",
             "type": "publicKey"
+          },
+          {
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
+          },
+          {
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           }
         ]
       }
@@ -1006,21 +1018,9 @@
             "type": "publicKey"
           },
           {
-            "name": "instrument",
-            "type": {
-              "defined": "Instrument"
-            }
-          },
-          {
             "name": "side",
             "type": {
               "defined": "Side"
-            }
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
             }
           }
         ]

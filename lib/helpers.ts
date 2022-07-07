@@ -186,10 +186,8 @@ export async function request(
       program.programId
     )
 
-    console.log(0)
-
     //instructions.push(
-    await program.methods.initializeLeg(rfqPda, legs[i].venue, legs[i].instrument)
+    await program.methods.initializeLeg(legs[i].instrument, rfqPda, legs[i].venue)
       .accounts({
         signer: signer.publicKey,
         protocol: protocolPda,
@@ -202,10 +200,8 @@ export async function request(
     //.instruction()
     //)
 
-    const data = await program.account.legState.fetch(legPda)
-    console.log(JSON.stringify(data))
-
-    console.log(1)
+    const leg = await program.account.legState.fetch(legPda)
+    console.log(JSON.stringify(leg))
 
     remainingAccounts.push({
       pubkey: legPda,
