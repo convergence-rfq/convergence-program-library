@@ -225,13 +225,13 @@ describe('RFQ Specification', () => {
 
     const legs = [
       {
-        leg: {
-          instrument: {
+        instrument: {
+          spot: {
             baseMint: assetToken.publicKey,
             quoteMint: quoteToken.publicKey,
-          },
-          venue: Venue.Convergence
-        }
+          }
+        },
+        venue: Venue.Convergence
       }
     ]
 

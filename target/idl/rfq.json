@@ -83,14 +83,20 @@
       ],
       "args": [
         {
-          "name": "leg",
+          "name": "rfq",
+          "type": "publicKey"
+        },
+        {
+          "name": "venue",
           "type": {
-            "defined": "Leg"
+            "defined": "Venue"
           }
         },
         {
-          "name": "rfq",
-          "type": "publicKey"
+          "name": "instrument",
+          "type": {
+            "defined": "Instrument"
+          }
         }
       ]
     },
@@ -1021,22 +1027,6 @@
       }
     },
     {
-      "name": "Spot",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "baseMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "quoteMint",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
       "name": "NFT",
       "type": {
         "kind": "struct",
@@ -1163,7 +1153,17 @@
             "name": "NFT"
           },
           {
-            "name": "Spot"
+            "name": "Spot",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
           }
         ]
       }

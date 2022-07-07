@@ -83,14 +83,20 @@ export type Rfq = {
       ],
       "args": [
         {
-          "name": "leg",
+          "name": "rfq",
+          "type": "publicKey"
+        },
+        {
+          "name": "venue",
           "type": {
-            "defined": "Leg"
+            "defined": "Venue"
           }
         },
         {
-          "name": "rfq",
-          "type": "publicKey"
+          "name": "instrument",
+          "type": {
+            "defined": "Instrument"
+          }
         }
       ]
     },
@@ -1021,22 +1027,6 @@ export type Rfq = {
       }
     },
     {
-      "name": "Spot",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "baseMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "quoteMint",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
       "name": "NFT",
       "type": {
         "kind": "struct",
@@ -1163,7 +1153,17 @@ export type Rfq = {
             "name": "NFT"
           },
           {
-            "name": "Spot"
+            "name": "Spot",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
           }
         ]
       }
@@ -1429,14 +1429,20 @@ export const IDL: Rfq = {
       ],
       "args": [
         {
-          "name": "leg",
+          "name": "rfq",
+          "type": "publicKey"
+        },
+        {
+          "name": "venue",
           "type": {
-            "defined": "Leg"
+            "defined": "Venue"
           }
         },
         {
-          "name": "rfq",
-          "type": "publicKey"
+          "name": "instrument",
+          "type": {
+            "defined": "Instrument"
+          }
         }
       ]
     },
@@ -2367,22 +2373,6 @@ export const IDL: Rfq = {
       }
     },
     {
-      "name": "Spot",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "baseMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "quoteMint",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
       "name": "NFT",
       "type": {
         "kind": "struct",
@@ -2509,7 +2499,17 @@ export const IDL: Rfq = {
             "name": "NFT"
           },
           {
-            "name": "Spot"
+            "name": "Spot",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
           }
         ]
       }

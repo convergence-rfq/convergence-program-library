@@ -90,15 +90,6 @@ pub struct Leg {
 
 /// Spot.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Spot {
-    // Base mint
-    pub base_mint: Pubkey,
-    // Quote mint
-    pub quote_mint: Pubkey,
-}
-
-/// Spot.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct NFT {
     // Base mint
     pub base_mint: Pubkey,
@@ -202,7 +193,12 @@ pub enum Instrument {
     PsyOptionsAmerican,
     PsyOptionsEuropean,
     NFT,
-    Spot,
+    Spot {
+        // Base mint
+        base_mint: Pubkey,
+        // Quote mint
+        quote_mint: Pubkey,
+    }
     // Perp,
     // Future,    
 }

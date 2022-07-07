@@ -51,10 +51,11 @@ pub mod rfq {
     /// Initialize leg.
     pub fn initialize_leg(
         ctx: Context<InitializeLeg>,
-        leg: Leg,
         rfq: Pubkey,
+        venue: Venue,
+        instrument: Instrument
     ) -> Result<()> {
-        instructions::initialize_leg(ctx, leg, rfq)
+        instructions::initialize_leg(ctx, rfq, venue, instrument)
     }
 
     /// Requests quote (RFQ).
