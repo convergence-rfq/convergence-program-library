@@ -100,8 +100,34 @@ pub struct LegState {
 /// Instrument.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instrument {
-    PsyOptionsAmerican,
-    PsyOptionsEuropean,
+    PsyOptionsAmerican {
+        // Base contract size
+        base_contract_size: u64,
+        // Base mint
+        base_mint: Pubkey,
+        // Expiry
+        expiry: i64,    
+        // Call or Put
+        call_put: CallPut,
+        // Quote mint
+        quote_mint: Pubkey,
+        // Strike
+        strike: u64,
+    },
+    PsyOptionsEuropean {
+        // Base contract size
+        base_contract_size: u64,
+        // Base mint
+        base_mint: Pubkey,
+        // Expiry
+        expiry: i64,    
+        // Call or Put
+        call_put: CallPut,
+        // Quote mint
+        quote_mint: Pubkey,
+        // Strike
+        strike: u64,
+    },
     NFT {
         // Base mint
         base_mint: Pubkey,
@@ -144,42 +170,6 @@ pub enum Venue {
     Sollar,
     Mango,
     Convergence,
-}
-
-/// PsyOptions American.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct PsyOptionsAmerican {
-    // Base contract size
-    pub base_contract_size: u64,
-    // Base mint
-    pub base_mint: Pubkey,
-    // Expiry
-    pub expiry: i64,    
-    // Call or Put
-    pub call_put: CallPut,
-    // Quote mint
-    pub quote_mint: Pubkey,
-    // Strike
-    pub strike: u64,
-}
-
-/// PsyOptions European.
-///
-/// Different than American due to exercise enforcement.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct PsyOptionsEuropean {
-    // Base contract size
-    pub base_contract_size: u64,
-    // Base mint
-    pub base_mint: Pubkey,
-    // Expiry
-    pub expiry: i64,    
-    // Call or Put
-    pub call_put: CallPut,
-    // Quote mint
-    pub quote_mint: Pubkey,
-    // Strike
-    pub strike: u64,
 }
 
 /// Order state.
