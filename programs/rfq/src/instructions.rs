@@ -47,6 +47,21 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
     Ok(())
 }
 
+/// Initialize leg.
+///
+/// ctx Accounts context
+/// expiry Expiry
+/// venue Venue
+#[access_control(initialize_leg_access_control(&ctx, expiry, rfq, venue))]
+pub fn initialize_leg(ctx: Context<InitializeLeg>, expiry: Option<i64>, rfq: Pubkey, venue: Venue) -> Result<()> {
+    let leg = &mut ctx.accounts.leg;
+    leg.expiry = expiry;
+    leg.venue = venue;
+    leg.rfq = rfq;
+
+    Ok(())
+}
+
 /// Requests quote (RFQ).
 ///
 /// Step 2: Taker request quote.
@@ -64,7 +79,6 @@ pub fn request(
     access_manager: Option<Pubkey>,
     expiry: i64,
     last_look: bool,
-    legs: Option<Pubkey>,
     order_amount: u64,
     order_type: Order,
 ) -> Result<()> {
@@ -81,7 +95,8 @@ pub fn request(
     rfq.bump = *ctx.bumps.get(RFQ_SEED).unwrap();
     rfq.expiry = expiry;
     rfq.last_look = last_look;
-    rfq.legs = legs;
+    // TODO: Finish via remaining accounts
+    //rfq.legs = [];
     rfq.order_amount = order_amount;
     rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
     rfq.quote_mint = ctx.accounts.quote_mint.key();

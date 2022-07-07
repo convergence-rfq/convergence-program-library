@@ -114,7 +114,6 @@ describe('RFQ Specification', () => {
         const now = (new Date()).getTime() / 1_000
         const expiry = now + 2
         const legs = [{
-            // TODO: Is this correct?
             amount: new anchor.BN(10),
             contract: Contract.Call,
             contractAssetAmount: new BN(1 * (10 ** ASSET_DECIMALS)),

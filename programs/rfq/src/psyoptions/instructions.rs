@@ -89,7 +89,7 @@ pub fn initialize_american_mint_vault(_ctx: Context<InitializeAmericanMintVault>
 // Mints American option.
 pub fn mint_american_option<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, MintAmericanOption<'info>>,
-    leg: u64,
+    _leg: Pubkey,
     size: u64,
     vault_authority_bump: u8,
 ) -> Result<()> {
@@ -112,12 +112,12 @@ pub fn mint_american_option<'a, 'b, 'c, 'info>(
     let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
     psy_american::cpi::mint_option_v2(cpi_ctx, size)?;
 
-    let legs = &mut ctx.accounts.legs;
-    for l in legs.legs.iter_mut() {
-        if l.id == leg {
-            l.processed = true;
-        }
-    }
+    //let legs = &mut ctx.accounts.legs;
+    //for l in legs.legs.iter_mut() {
+    //    if l.id == leg {
+    //        l.processed = true;
+    //    }
+    //}
 
     Ok(())
 }

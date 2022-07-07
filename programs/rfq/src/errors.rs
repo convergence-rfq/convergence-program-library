@@ -36,6 +36,8 @@ pub enum ProtocolError {
     OrderNotApproved,
     #[msg("Order settled")]
     OrderSettled,
+    #[msg("Invalid leg")]
+    InvalidLeg,
     #[msg("RFQ active")]
     RfqActive,
     #[msg("RFQ inactive")]

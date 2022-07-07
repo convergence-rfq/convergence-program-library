@@ -14,7 +14,7 @@ export const ORDER_SEED = 'order'
 export const PROTOCOL_SEED = 'protocol'
 export const ASSET_ESCROW_SEED = 'asset_escrow'
 export const QUOTE_ESCROW_SEED = 'quote_escrow'
-export const LEGS_SEED = 'legs'
+export const LEG_SEED = 'leg'
 
 /// Types
 
@@ -60,6 +60,9 @@ export const Venue = {
   },
   Sollar: {
     sollar: {}
+  },
+  Mango: {
+    mango: {}
   }
 }
 
@@ -76,17 +79,6 @@ export const Contract = {
   Short: {
     short: {}
   }
-}
-
-export const Leg = {
-  Amount: null,
-  Contract: null,
-  ContractQuoteAmount: null,
-  ContractAssetAmount: null,
-  Processed: null,
-  Expiry: null,
-  Instrument: null,
-  Venue: null,
 }
 
 /// Protocol methods
@@ -158,7 +150,7 @@ export async function request(
   signer: Wallet,
   expiry: number,
   lastLook: boolean,
-  legs: object[],
+  legs: any[],
   orderAmount: number,
   provider: Provider,
   quoteMint: PublicKey,
@@ -189,17 +181,47 @@ export async function request(
     [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
   )
-  const [legsPda, _legsBump] = await PublicKey.findProgramAddress(
-    [Buffer.from(LEGS_SEED), rfqPda.toBuffer()],
-    program.programId
-  )
 
   let signers = []
   if (signer.payer) {
     signers.push(signer.payer)
   }
 
-  const tx = await program.methods.request(accessManager, new BN(expiry), lastLook, legsPda, new BN(orderAmount), requestOrder)
+  let remainingAccounts: AccountMeta[] = []
+  let instructions: TransactionInstruction[] = []
+
+  for (let i = 0; i < legs.length; i++) {
+    const expiry = new BN(legs[i].expiry)
+    const [legPda, _legBump] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from(LEG_SEED),
+        expiry.toArrayLike(Buffer, 'le', 8),
+        rfqPda.toBuffer()
+      ],
+      program.programId
+    )
+
+    instructions.push(
+      await program.methods.initializeLeg(expiry, rfqPda, legs[i].venue)
+        .accounts({
+          signer: signer.publicKey,
+          protocol: protocolPda,
+          rent: SYSVAR_RENT_PUBKEY,
+          leg: legPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers(signers)
+        .instruction()
+    )
+
+    remainingAccounts.push({
+      pubkey: legPda,
+      isWritable: false,
+      isSigner: false
+    })
+  }
+
+  const tx = await program.methods.request(accessManager, new BN(expiry), lastLook, new BN(orderAmount), requestOrder)
     .accounts({
       assetEscrow: assetEscrowPda,
       assetMint,
@@ -212,7 +234,8 @@ export async function request(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
-    .preInstructions([await program.account.legsState.createInstruction(legsPda)])
+    .preInstructions(instructions)
+    .remainingAccounts(remainingAccounts)
     .signers(signers)
     .rpc()
 

@@ -42,7 +42,7 @@ pub struct RfqState {
     /// Expiry time
     pub expiry: i64,
     /// Legs
-    pub legs: Option<Pubkey>,
+    pub legs: [Pubkey; 10],
     /// Last look required to approve trade
     pub last_look: bool,
     /// Order amount
@@ -57,6 +57,37 @@ pub struct RfqState {
     pub settled: bool,
     /// Creation time
     pub unix_timestamp: i64,
+}
+
+/// Leg.
+#[account]
+pub struct LegState {
+    // Asset amount
+    pub asset_amount: u64,
+    // Asset contract size
+    pub asset_contract_size: u64,
+    // Asset mint
+    pub asset_mint: Pubkey,
+    // Bump
+    pub bump: u8,
+    // Contract
+    pub contract: Contract,
+    // Expiry
+    pub expiry: Option<i64>,
+    // Instrument
+    pub instrument: Instrument,
+    // Processed
+    pub processed: bool,
+    // Quote amount
+    pub quote_amount: u64,
+    // Quote contract size
+    pub quote_contract_size: u64,
+    // Quote mint
+    pub quote_mint: Pubkey,
+    // RFQ
+    pub rfq: Pubkey,
+    // Venue
+    pub venue: Venue,
 }
 
 /// Protocol state.
@@ -101,17 +132,6 @@ pub struct OrderState {
     pub unix_timestamp: i64,
 }
 
-/// Legs state.
-#[account]
-pub struct LegsState {
-    /// Bump
-    pub bump: u8,
-    /// Legs
-    pub legs: Vec<Leg>,
-    /// Rfq
-    pub rfq: Pubkey,
-}
-
 /// Instrument.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instrument {
@@ -132,32 +152,10 @@ pub enum Contract {
 /// Venue.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Venue {
-    Convergence,
     PsyOptions,
     Sollar,
-}
-
-/// Leg.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Leg {
-    // Amount
-    pub amount: u64,
-    // Contract
-    pub contract: Option<Contract>,
-    // Contract asset amount
-    pub contract_asset_amount: Option<u64>,
-    // Contract quote amount
-    pub contract_quote_amount: Option<u64>,
-    // Processed
-    pub processed: bool,
-    // Expiry
-    pub expiry: Option<i64>,
-    // Id
-    pub id: u64,
-    // Instrument
-    pub instrument: Instrument,
-    // Venue
-    pub venue: Venue,
+    Mango,
+    Convergence,
 }
 
 /// Quote.

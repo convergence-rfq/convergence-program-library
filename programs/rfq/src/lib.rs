@@ -48,13 +48,22 @@ pub mod rfq {
         instructions::set_fee(ctx, fee_denominator, fee_numerator)
     }
 
+    /// Initialize leg.
+    pub fn initialize_leg(
+        ctx: Context<InitializeLeg>,
+        expiry: Option<i64>,
+        rfq: Pubkey,
+        venue: Venue
+    ) -> Result<()> {
+        instructions::initialize_leg(ctx, expiry, rfq, venue)
+    }
+
     /// Requests quote (RFQ).
     pub fn request(
         ctx: Context<Request>,
         access_manager: Option<Pubkey>,
         expiry: i64,
         last_look: bool,
-        legs: Option<Pubkey>,
         order_amount: u64,
         order_type: Order,
     ) -> Result<()> {
@@ -63,7 +72,6 @@ pub mod rfq {
             access_manager,
             expiry,
             last_look,
-            legs,
             order_amount,
             order_type,
         )
@@ -126,7 +134,7 @@ pub mod rfq {
     /// Mints PsyOptions American option market.
     pub fn mint_psy_options_american_option<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, MintAmericanOption<'info>>,
-        leg: u64,
+        leg: Pubkey,
         size: u64,
         vault_authority_bump: u8,
     ) -> Result<()> {

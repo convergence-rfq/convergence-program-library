@@ -58,6 +58,49 @@ export type Rfq = {
       ]
     },
     {
+      "name": "initializeLeg",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leg",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "expiry",
+          "type": {
+            "option": "i64"
+          }
+        },
+        {
+          "name": "rfq",
+          "type": "publicKey"
+        },
+        {
+          "name": "venue",
+          "type": {
+            "defined": "Venue"
+          }
+        }
+      ]
+    },
+    {
       "name": "request",
       "accounts": [
         {
@@ -125,12 +168,6 @@ export type Rfq = {
         {
           "name": "lastLook",
           "type": "bool"
-        },
-        {
-          "name": "legs",
-          "type": {
-            "option": "publicKey"
-          }
         },
         {
           "name": "orderAmount",
@@ -663,11 +700,6 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "legs",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "mintedWriterTokenDest",
           "isMut": true,
           "isSigner": false
@@ -716,7 +748,7 @@ export type Rfq = {
       "args": [
         {
           "name": "leg",
-          "type": "u64"
+          "type": "publicKey"
         },
         {
           "name": "size",
@@ -827,7 +859,10 @@ export type Rfq = {
           {
             "name": "legs",
             "type": {
-              "option": "publicKey"
+              "array": [
+                "publicKey",
+                10
+              ]
             }
           },
           {
@@ -859,6 +894,74 @@ export type Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "legState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "assetAmount",
+            "type": "u64"
+          },
+          {
+            "name": "assetContractSize",
+            "type": "u64"
+          },
+          {
+            "name": "assetMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "contract",
+            "type": {
+              "defined": "Contract"
+            }
+          },
+          {
+            "name": "expiry",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
+          },
+          {
+            "name": "processed",
+            "type": "bool"
+          },
+          {
+            "name": "quoteAmount",
+            "type": "u64"
+          },
+          {
+            "name": "quoteContractSize",
+            "type": "u64"
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "rfq",
+            "type": "publicKey"
+          },
+          {
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           }
         ]
       }
@@ -950,91 +1053,9 @@ export type Rfq = {
           }
         ]
       }
-    },
-    {
-      "name": "legsState",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "legs",
-            "type": {
-              "vec": {
-                "defined": "Leg"
-              }
-            }
-          },
-          {
-            "name": "rfq",
-            "type": "publicKey"
-          }
-        ]
-      }
     }
   ],
   "types": [
-    {
-      "name": "Leg",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "contract",
-            "type": {
-              "option": {
-                "defined": "Contract"
-              }
-            }
-          },
-          {
-            "name": "contractAssetAmount",
-            "type": {
-              "option": "u64"
-            }
-          },
-          {
-            "name": "contractQuoteAmount",
-            "type": {
-              "option": "u64"
-            }
-          },
-          {
-            "name": "processed",
-            "type": "bool"
-          },
-          {
-            "name": "expiry",
-            "type": {
-              "option": "i64"
-            }
-          },
-          {
-            "name": "id",
-            "type": "u64"
-          },
-          {
-            "name": "instrument",
-            "type": {
-              "defined": "Instrument"
-            }
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
-            }
-          }
-        ]
-      }
-    },
     {
       "name": "Instrument",
       "type": {
@@ -1078,13 +1099,16 @@ export type Rfq = {
         "kind": "enum",
         "variants": [
           {
-            "name": "Convergence"
-          },
-          {
             "name": "PsyOptions"
           },
           {
             "name": "Sollar"
+          },
+          {
+            "name": "Mango"
+          },
+          {
+            "name": "Convergence"
           }
         ]
       }
@@ -1204,36 +1228,41 @@ export type Rfq = {
     },
     {
       "code": 6016,
+      "name": "InvalidLeg",
+      "msg": "Invalid leg"
+    },
+    {
+      "code": 6017,
       "name": "RfqActive",
       "msg": "RFQ active"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "RfqUnconfirmed",
       "msg": "RFQ unconfirmed"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "RfqCanceled",
       "msg": "RFQ canceled"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "DexIxError",
       "msg": "Error creating a dex instruction"
     }
@@ -1300,6 +1329,49 @@ export const IDL: Rfq = {
       ]
     },
     {
+      "name": "initializeLeg",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leg",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "expiry",
+          "type": {
+            "option": "i64"
+          }
+        },
+        {
+          "name": "rfq",
+          "type": "publicKey"
+        },
+        {
+          "name": "venue",
+          "type": {
+            "defined": "Venue"
+          }
+        }
+      ]
+    },
+    {
       "name": "request",
       "accounts": [
         {
@@ -1367,12 +1439,6 @@ export const IDL: Rfq = {
         {
           "name": "lastLook",
           "type": "bool"
-        },
-        {
-          "name": "legs",
-          "type": {
-            "option": "publicKey"
-          }
         },
         {
           "name": "orderAmount",
@@ -1905,11 +1971,6 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "legs",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "mintedWriterTokenDest",
           "isMut": true,
           "isSigner": false
@@ -1958,7 +2019,7 @@ export const IDL: Rfq = {
       "args": [
         {
           "name": "leg",
-          "type": "u64"
+          "type": "publicKey"
         },
         {
           "name": "size",
@@ -2069,7 +2130,10 @@ export const IDL: Rfq = {
           {
             "name": "legs",
             "type": {
-              "option": "publicKey"
+              "array": [
+                "publicKey",
+                10
+              ]
             }
           },
           {
@@ -2101,6 +2165,74 @@ export const IDL: Rfq = {
           {
             "name": "unixTimestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "legState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "assetAmount",
+            "type": "u64"
+          },
+          {
+            "name": "assetContractSize",
+            "type": "u64"
+          },
+          {
+            "name": "assetMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "contract",
+            "type": {
+              "defined": "Contract"
+            }
+          },
+          {
+            "name": "expiry",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "instrument",
+            "type": {
+              "defined": "Instrument"
+            }
+          },
+          {
+            "name": "processed",
+            "type": "bool"
+          },
+          {
+            "name": "quoteAmount",
+            "type": "u64"
+          },
+          {
+            "name": "quoteContractSize",
+            "type": "u64"
+          },
+          {
+            "name": "quoteMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "rfq",
+            "type": "publicKey"
+          },
+          {
+            "name": "venue",
+            "type": {
+              "defined": "Venue"
+            }
           }
         ]
       }
@@ -2192,91 +2324,9 @@ export const IDL: Rfq = {
           }
         ]
       }
-    },
-    {
-      "name": "legsState",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "legs",
-            "type": {
-              "vec": {
-                "defined": "Leg"
-              }
-            }
-          },
-          {
-            "name": "rfq",
-            "type": "publicKey"
-          }
-        ]
-      }
     }
   ],
   "types": [
-    {
-      "name": "Leg",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "contract",
-            "type": {
-              "option": {
-                "defined": "Contract"
-              }
-            }
-          },
-          {
-            "name": "contractAssetAmount",
-            "type": {
-              "option": "u64"
-            }
-          },
-          {
-            "name": "contractQuoteAmount",
-            "type": {
-              "option": "u64"
-            }
-          },
-          {
-            "name": "processed",
-            "type": "bool"
-          },
-          {
-            "name": "expiry",
-            "type": {
-              "option": "i64"
-            }
-          },
-          {
-            "name": "id",
-            "type": "u64"
-          },
-          {
-            "name": "instrument",
-            "type": {
-              "defined": "Instrument"
-            }
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
-            }
-          }
-        ]
-      }
-    },
     {
       "name": "Instrument",
       "type": {
@@ -2320,13 +2370,16 @@ export const IDL: Rfq = {
         "kind": "enum",
         "variants": [
           {
-            "name": "Convergence"
-          },
-          {
             "name": "PsyOptions"
           },
           {
             "name": "Sollar"
+          },
+          {
+            "name": "Mango"
+          },
+          {
+            "name": "Convergence"
           }
         ]
       }
@@ -2446,36 +2499,41 @@ export const IDL: Rfq = {
     },
     {
       "code": 6016,
+      "name": "InvalidLeg",
+      "msg": "Invalid leg"
+    },
+    {
+      "code": 6017,
       "name": "RfqActive",
       "msg": "RFQ active"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "RfqUnconfirmed",
       "msg": "RFQ unconfirmed"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "RfqCanceled",
       "msg": "RFQ canceled"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "DexIxError",
       "msg": "Error creating a dex instruction"
     }

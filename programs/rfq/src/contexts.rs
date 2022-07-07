@@ -41,13 +41,47 @@ pub struct SetFee<'info> {
     pub protocol: Account<'info, ProtocolState>,
 }
 
+/// Initialize leg.
+#[derive(Accounts)]
+#[instruction(
+    expiry: Option<i64>,
+    rfq: Pubkey,
+    venue: Venue,
+)]
+pub struct InitializeLeg<'info> {
+    /// Protocol
+    #[account(
+        seeds = [PROTOCOL_SEED.as_bytes()],
+        bump = protocol.bump,
+        constraint = protocol.to_account_info().owner == program_id
+    )]
+    pub protocol: Account<'info, ProtocolState>,
+    /// Leg
+    #[account(
+        init,
+        payer = signer,
+        seeds = [
+            LEG_SEED.as_bytes(),
+            &expiry.unwrap_or(0).to_le_bytes(),
+            rfq.as_ref(),
+        ],
+        space = 8 + mem::size_of::<LegState>(),
+        bump
+    )]
+    pub leg: Box<Account<'info, LegState>>,
+    /// Signer
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    /// Solana system program
+    pub system_program: Program<'info, System>,
+}
+
 /// Requests quote (RFQ).
 #[derive(Accounts)]
 #[instruction(
     access_manager: Option<Pubkey>,
     expiry: i64,
     last_look: bool,
-    legs: Vec<Leg>,
     order_amount: u64,
     order_type: Order,
 )]
