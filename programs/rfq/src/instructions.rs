@@ -52,7 +52,14 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
 /// ctx Accounts context
 /// expiry Expiry
 /// venue Venue
-//#[access_control(initialize_leg_access_control(&ctx, rfq, venue))]
+#[access_control(initialize_leg_access_control(
+    &ctx,
+    base_amount,
+    instrument,
+    rfq,
+    side,
+    venue
+))]
 pub fn initialize_leg(
     ctx: Context<InitializeLeg>,
     base_amount: u64,
