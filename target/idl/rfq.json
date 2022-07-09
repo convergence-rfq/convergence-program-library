@@ -101,12 +101,6 @@
           "type": {
             "defined": "Side"
           }
-        },
-        {
-          "name": "venue",
-          "type": {
-            "defined": "Venue"
-          }
         }
       ]
     },
@@ -168,10 +162,6 @@
         {
           "name": "lastLook",
           "type": "bool"
-        },
-        {
-          "name": "orderAmount",
-          "type": "u64"
         },
         {
           "name": "orderType",
@@ -786,6 +776,10 @@
           {
             "name": "treasuryWallet",
             "type": "publicKey"
+          },
+          {
+            "name": "active",
+            "type": "bool"
           }
         ]
       }
@@ -798,10 +792,6 @@
           {
             "name": "authority",
             "type": "publicKey"
-          },
-          {
-            "name": "id",
-            "type": "u64"
           },
           {
             "name": "wallets",
@@ -950,12 +940,6 @@
             "type": {
               "defined": "Side"
             }
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
-            }
           }
         ]
       }
@@ -1043,9 +1027,9 @@
                 "type": "i64"
               },
               {
-                "name": "call_put",
+                "name": "option_type",
                 "type": {
-                  "defined": "CallPut"
+                  "defined": "OptionType"
                 }
               },
               {
@@ -1074,9 +1058,9 @@
                 "type": "i64"
               },
               {
-                "name": "call_put",
+                "name": "option_type",
                 "type": {
-                  "defined": "CallPut"
+                  "defined": "OptionType"
                 }
               },
               {
@@ -1116,16 +1100,36 @@
             ]
           },
           {
-            "name": "Perp"
+            "name": "MangoPerp",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
           },
           {
-            "name": "Future"
+            "name": "CypherFuture",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
           }
         ]
       }
     },
     {
-      "name": "CallPut",
+      "name": "OptionType",
       "type": {
         "kind": "enum",
         "variants": [
@@ -1162,26 +1166,6 @@
           },
           {
             "name": "Sell"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Venue",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "PsyOptions"
-          },
-          {
-            "name": "Sollar"
-          },
-          {
-            "name": "Mango"
-          },
-          {
-            "name": "Convergence"
           }
         ]
       }

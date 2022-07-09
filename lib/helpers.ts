@@ -140,7 +140,6 @@ export async function request(
   expiry: number,
   lastLook: boolean,
   legs: any[],
-  orderAmount: number,
   provider: Provider,
   requestOrder: object,
 ): Promise<any> {
@@ -154,7 +153,6 @@ export async function request(
     [
       Buffer.from(RFQ_SEED),
       signer.publicKey.toBuffer(),
-      new BN(orderAmount).toArrayLike(Buffer, 'le', 8),
       new BN(expiry).toArrayLike(Buffer, 'le', 8)
     ],
     program.programId
@@ -189,22 +187,18 @@ export async function request(
       program.programId
     )
 
-    //instructions.push(
-    await program.methods.initializeLeg(baseAmount, legs[i].instrument, rfqPda, legs[i].side, legs[i].venue)
-      .accounts({
-        signer: signer.publicKey,
-        protocol: protocolPda,
-        rent: SYSVAR_RENT_PUBKEY,
-        leg: legPda,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers(signers)
-      .rpc()
-    //.instruction()
-    //)
-
-    const leg = await program.account.legState.fetch(legPda)
-    console.log(JSON.stringify(leg))
+    instructions.push(
+      await program.methods.initializeLeg(baseAmount, legs[i].instrument, rfqPda, legs[i].side)
+        .accounts({
+          signer: signer.publicKey,
+          protocol: protocolPda,
+          rent: SYSVAR_RENT_PUBKEY,
+          leg: legPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers(signers)
+        .instruction()
+    )
 
     remainingAccounts.push({
       pubkey: legPda,
@@ -213,7 +207,7 @@ export async function request(
     })
   }
 
-  const tx = await program.methods.request(accessManager, new BN(expiry), lastLook, new BN(orderAmount), requestOrder)
+  const tx = await program.methods.request(accessManager, new BN(expiry), lastLook, requestOrder)
     .accounts({
       assetEscrow: assetEscrowPda,
       signer: signer.publicKey,

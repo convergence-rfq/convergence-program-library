@@ -50,7 +50,10 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
 /// Initialize leg.
 ///
 /// ctx Accounts context
-/// expiry Expiry
+/// base_amount Base amount
+/// instrument Instrument
+/// rfq RFQ
+/// side Side
 /// venue Venue
 #[access_control(initialize_leg_access_control(
     &ctx,
@@ -58,7 +61,6 @@ pub fn set_fee(ctx: Context<SetFee>, fee_denominator: u64, fee_numerator: u64) -
     instrument,
     rfq,
     side,
-    venue
 ))]
 pub fn initialize_leg(
     ctx: Context<InitializeLeg>,
@@ -66,7 +68,6 @@ pub fn initialize_leg(
     instrument: Instrument,
     rfq: Pubkey,
     side: Side,
-    venue: Venue,
 ) -> Result<()> {
     let leg = &mut ctx.accounts.leg;
     leg.base_amount = base_amount;
@@ -74,7 +75,6 @@ pub fn initialize_leg(
     leg.processed = false;
     leg.rfq = rfq;
     leg.side = side;
-    leg.venue = venue;
 
     Ok(())
 }
@@ -90,13 +90,12 @@ pub fn initialize_leg(
 /// expiry
 /// order_amount
 /// order_type
-#[access_control(request_access_control(&ctx, expiry, order_amount))]
+#[access_control(request_access_control(&ctx, expiry))]
 pub fn request(
     ctx: Context<Request>,
     access_manager: Option<Pubkey>,
     expiry: i64,
     last_look: bool,
-    order_amount: u64,
     order_type: Order,
 ) -> Result<()> {
     let rfq = &mut ctx.accounts.rfq;
@@ -113,7 +112,6 @@ pub fn request(
     rfq.last_look = last_look;
     // TODO: Finish via remaining accounts
     //rfq.legs = [];
-    rfq.order_amount = order_amount;
     rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
     rfq.order_type = order_type;
     rfq.settled = false;

@@ -39,13 +39,13 @@ pub fn set_fee_access_control<'info>(
 /// Initialzie leg.
 ///
 /// Ensures:
+/// - ?
 pub fn initialize_leg_access_control<'info>(
     _ctx: &Context<InitializeLeg<'info>>,
     _base_amount: u64,
     _instrument: Instrument,
     _rfq: Pubkey,
     _side: Side,
-    _venue: Venue,
 ) -> Result<()> {
     // TODO: Finish checks
 
@@ -61,9 +61,7 @@ pub fn initialize_leg_access_control<'info>(
 pub fn request_access_control<'info>(
     _ctx: &Context<Request<'info>>,
     expiry: i64,
-    order_amount: u64,
 ) -> Result<()> {
-    require!(order_amount > 0, ProtocolError::InvalidRequest);
     require!(
         Clock::get().unwrap().unix_timestamp < expiry,
         ProtocolError::InvalidRequest

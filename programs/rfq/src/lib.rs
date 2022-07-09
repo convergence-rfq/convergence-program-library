@@ -55,9 +55,8 @@ pub mod rfq {
         instrument: Instrument,
         rfq: Pubkey,
         side: Side,
-        venue: Venue,
     ) -> Result<()> {
-        instructions::initialize_leg(ctx, base_amount, instrument, rfq, side, venue)
+        instructions::initialize_leg(ctx, base_amount, instrument, rfq, side)
     }
 
     /// Requests quote (RFQ).
@@ -66,7 +65,6 @@ pub mod rfq {
         access_manager: Option<Pubkey>,
         expiry: i64,
         last_look: bool,
-        order_amount: u64,
         order_type: Order,
     ) -> Result<()> {
         instructions::request(
@@ -74,7 +72,6 @@ pub mod rfq {
             access_manager,
             expiry,
             last_look,
-            order_amount,
             order_type,
         )
     }

@@ -220,12 +220,9 @@ describe('RFQ Specification', () => {
     const requestOrder = Order.TwoWay
     const now = (new Date()).getTime() / 1_000
     const expiry = now + 2 // Expires in 2 seconds
-
-    // TODO: Test more legs
-
     const legs = [
       {
-        baseAmount: 1,
+        baseAmount: new anchor.BN(TAKER_ORDER_AMOUNT1),
         instrument: {
           spot: {
             baseMint: assetToken.publicKey,
@@ -234,12 +231,11 @@ describe('RFQ Specification', () => {
         },
         side: {
           buy: {}
-        },
-        venue: Venue.Convergence
+        }
       }
     ]
 
-    const res = await request(null, taker, expiry, false, legs, TAKER_ORDER_AMOUNT1, provider, requestOrder)
+    const res = await request(null, taker, expiry, false, legs, provider, requestOrder)
     assert.ok(res.rfqState.authority.toString() === taker.publicKey.toString())
 
     rfqPda = res.rfqPda

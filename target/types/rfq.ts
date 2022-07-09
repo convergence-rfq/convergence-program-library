@@ -101,12 +101,6 @@ export type Rfq = {
           "type": {
             "defined": "Side"
           }
-        },
-        {
-          "name": "venue",
-          "type": {
-            "defined": "Venue"
-          }
         }
       ]
     },
@@ -168,10 +162,6 @@ export type Rfq = {
         {
           "name": "lastLook",
           "type": "bool"
-        },
-        {
-          "name": "orderAmount",
-          "type": "u64"
         },
         {
           "name": "orderType",
@@ -786,6 +776,10 @@ export type Rfq = {
           {
             "name": "treasuryWallet",
             "type": "publicKey"
+          },
+          {
+            "name": "active",
+            "type": "bool"
           }
         ]
       }
@@ -798,10 +792,6 @@ export type Rfq = {
           {
             "name": "authority",
             "type": "publicKey"
-          },
-          {
-            "name": "id",
-            "type": "u64"
           },
           {
             "name": "wallets",
@@ -950,12 +940,6 @@ export type Rfq = {
             "type": {
               "defined": "Side"
             }
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
-            }
           }
         ]
       }
@@ -1043,9 +1027,9 @@ export type Rfq = {
                 "type": "i64"
               },
               {
-                "name": "call_put",
+                "name": "option_type",
                 "type": {
-                  "defined": "CallPut"
+                  "defined": "OptionType"
                 }
               },
               {
@@ -1074,9 +1058,9 @@ export type Rfq = {
                 "type": "i64"
               },
               {
-                "name": "call_put",
+                "name": "option_type",
                 "type": {
-                  "defined": "CallPut"
+                  "defined": "OptionType"
                 }
               },
               {
@@ -1116,16 +1100,36 @@ export type Rfq = {
             ]
           },
           {
-            "name": "Perp"
+            "name": "MangoPerp",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
           },
           {
-            "name": "Future"
+            "name": "CypherFuture",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
           }
         ]
       }
     },
     {
-      "name": "CallPut",
+      "name": "OptionType",
       "type": {
         "kind": "enum",
         "variants": [
@@ -1162,26 +1166,6 @@ export type Rfq = {
           },
           {
             "name": "Sell"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Venue",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "PsyOptions"
-          },
-          {
-            "name": "Sollar"
-          },
-          {
-            "name": "Mango"
-          },
-          {
-            "name": "Convergence"
           }
         ]
       }
@@ -1431,12 +1415,6 @@ export const IDL: Rfq = {
           "type": {
             "defined": "Side"
           }
-        },
-        {
-          "name": "venue",
-          "type": {
-            "defined": "Venue"
-          }
         }
       ]
     },
@@ -1498,10 +1476,6 @@ export const IDL: Rfq = {
         {
           "name": "lastLook",
           "type": "bool"
-        },
-        {
-          "name": "orderAmount",
-          "type": "u64"
         },
         {
           "name": "orderType",
@@ -2116,6 +2090,10 @@ export const IDL: Rfq = {
           {
             "name": "treasuryWallet",
             "type": "publicKey"
+          },
+          {
+            "name": "active",
+            "type": "bool"
           }
         ]
       }
@@ -2128,10 +2106,6 @@ export const IDL: Rfq = {
           {
             "name": "authority",
             "type": "publicKey"
-          },
-          {
-            "name": "id",
-            "type": "u64"
           },
           {
             "name": "wallets",
@@ -2280,12 +2254,6 @@ export const IDL: Rfq = {
             "type": {
               "defined": "Side"
             }
-          },
-          {
-            "name": "venue",
-            "type": {
-              "defined": "Venue"
-            }
           }
         ]
       }
@@ -2373,9 +2341,9 @@ export const IDL: Rfq = {
                 "type": "i64"
               },
               {
-                "name": "call_put",
+                "name": "option_type",
                 "type": {
-                  "defined": "CallPut"
+                  "defined": "OptionType"
                 }
               },
               {
@@ -2404,9 +2372,9 @@ export const IDL: Rfq = {
                 "type": "i64"
               },
               {
-                "name": "call_put",
+                "name": "option_type",
                 "type": {
-                  "defined": "CallPut"
+                  "defined": "OptionType"
                 }
               },
               {
@@ -2446,16 +2414,36 @@ export const IDL: Rfq = {
             ]
           },
           {
-            "name": "Perp"
+            "name": "MangoPerp",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
           },
           {
-            "name": "Future"
+            "name": "CypherFuture",
+            "fields": [
+              {
+                "name": "base_mint",
+                "type": "publicKey"
+              },
+              {
+                "name": "quote_mint",
+                "type": "publicKey"
+              }
+            ]
           }
         ]
       }
     },
     {
-      "name": "CallPut",
+      "name": "OptionType",
       "type": {
         "kind": "enum",
         "variants": [
@@ -2492,26 +2480,6 @@ export const IDL: Rfq = {
           },
           {
             "name": "Sell"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Venue",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "PsyOptions"
-          },
-          {
-            "name": "Sollar"
-          },
-          {
-            "name": "Mango"
-          },
-          {
-            "name": "Convergence"
           }
         ]
       }

@@ -14,6 +14,8 @@ pub struct ProtocolState {
     pub fee_numerator: u64,
     // Treasury wallet
     pub treasury_wallet: Pubkey,
+    // Active
+    pub active: bool,
 }
 
 /// Access manager state.
@@ -21,8 +23,6 @@ pub struct ProtocolState {
 pub struct AccessManagerState {
     // Authority
     pub authority: Pubkey,
-    // Id
-    pub id: u64,
     // Wallets
     pub wallets: [Pubkey; 25],
 }
@@ -93,8 +93,6 @@ pub struct LegState {
     pub rfq: Pubkey,
     // Side can be Buy or Sell
     pub side: Side,    
-    // Venue
-    pub venue: Venue,
 }   
 
 /// Instrument.
@@ -107,8 +105,8 @@ pub enum Instrument {
         base_mint: Pubkey,
         // Expiry
         expiry: i64,    
-        // Call or Put
-        call_put: CallPut,
+        // Option type
+        option_type: OptionType,
         // Quote mint
         quote_mint: Pubkey,
         // Strike
@@ -122,7 +120,7 @@ pub enum Instrument {
         // Expiry
         expiry: i64,    
         // Call or Put
-        call_put: CallPut,
+        option_type: OptionType,
         // Quote mint
         quote_mint: Pubkey,
         // Strike
@@ -140,12 +138,22 @@ pub enum Instrument {
         // Quote mint
         quote_mint: Pubkey,
     },
-    Perp,
-    Future,    
+    MangoPerp {
+        // Base mint
+        base_mint: Pubkey,
+        // Quote mint
+        quote_mint: Pubkey,
+    },
+    CypherFuture {
+        // Base mint
+        base_mint: Pubkey,
+        // Quote mint
+        quote_mint: Pubkey,
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum CallPut {
+pub enum OptionType {
     Call,
     Put,
 }
@@ -161,15 +169,6 @@ pub enum Quote {
 pub enum Side {
     Buy,
     Sell,
-}
-
-/// Venue.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Venue {
-    PsyOptions,
-    Sollar,
-    Mango,
-    Convergence,
 }
 
 /// Order state.

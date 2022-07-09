@@ -48,7 +48,6 @@ pub struct SetFee<'info> {
     instrument: Instrument,
     rfq: Pubkey,
     side: Side,
-    venue: Venue,
 )]
 pub struct InitializeLeg<'info> {
     /// Protocol
@@ -84,7 +83,6 @@ pub struct InitializeLeg<'info> {
     access_manager: Option<Pubkey>,
     expiry: i64,
     last_look: bool,
-    order_amount: u64,
     order_type: Order,
 )]
 pub struct Request<'info> {
@@ -123,7 +121,6 @@ pub struct Request<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             signer.key().as_ref(),
-            &order_amount.to_le_bytes(),
             &expiry.to_le_bytes()
         ],
         space = 8 + mem::size_of::<RfqState>(),
@@ -155,7 +152,6 @@ pub struct Cancel<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
         bump = rfq.bump
@@ -194,7 +190,6 @@ pub struct Respond<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()    
         ],
         bump = rfq.bump,
@@ -322,7 +317,6 @@ pub struct Confirm<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
         bump = rfq.bump,
@@ -361,7 +355,6 @@ pub struct LastLook<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
         bump = rfq.bump,
@@ -442,7 +435,6 @@ pub struct ReturnCollateral<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
         bump = rfq.bump,
@@ -530,7 +522,6 @@ pub struct Settle<'info> {
         seeds = [
             RFQ_SEED.as_bytes(),
             rfq.authority.key().as_ref(),
-            &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
         bump = rfq.bump,
