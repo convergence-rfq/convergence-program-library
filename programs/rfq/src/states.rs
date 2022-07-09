@@ -110,6 +110,8 @@ pub struct LegState {
     // RFQ
     pub rfq: Pubkey,
     // Side can be Buy or Sell
+    // - If dealing with spot, and side is buy, it means we want to buy base amount
+    // - If dealing with PsyOptions American, 
     pub side: Side,    
 }   
 
@@ -202,6 +204,7 @@ pub enum Side {
 pub struct OrderState {
     // Optional ask
     pub ask: Option<u64>,
+    // TODO: pub asks: Option<[u64; 10]>,
     // Order ask confirmed
     pub ask_confirmed: bool,
     // Order athority
