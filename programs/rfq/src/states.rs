@@ -34,8 +34,6 @@ pub struct RfqState {
     pub access_manager: Option<Pubkey>,
     /// Last look approved
     pub approved: Option<bool>,
-    /// Asset escrow bump
-    pub asset_escrow_bump: u8,
     /// Authority
     pub authority: Pubkey,
     /// Best ask amount
@@ -58,9 +56,7 @@ pub struct RfqState {
     pub legs: [Pubkey; 10],
     /// Last look required to approve trade
     pub last_look: bool,
-    /// Order amount
-    pub order_amount: u64,
-    /// Order type can be Buy or Sell
+    /// Order type can be Buy, Sell or TwoWay
     pub order_type: Order,
     /// Quote escrow bump
     pub quote_escrow_bump: u8,
@@ -72,9 +68,31 @@ pub struct RfqState {
 
 /// Leg.
 #[account]
+pub struct RiskEngineState {
+    // 
+}
+
+/// TODO: Risk Engine for Collateral Requirements
+/// 
+/// How do we handle quotes for multiple spots? Example:
+///
+/// Two-way RFQ
+///
+/// 2 BTC/USDT
+/// 10 ETH/USDC
+///
+/// Risk Engine 
+/// - Input should determine collateral 
+///   - Input comes from risk engine as another progam
+///   - Says how much collateral is needed
+///
+/// MVP
+/// - Fully-collateralized
+/// - One-way for now
+
+/// Leg.
+#[account]
 pub struct LegState {
-    // Base amount
-    pub base_amount: u64,
     // Bump
     pub bump: u8,
     // Instrument
@@ -99,6 +117,8 @@ pub struct LegState {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instrument {
     PsyOptionsAmerican {
+        // Base amount
+        base_amount: u64,       
         // Base contract size
         base_contract_size: u64,
         // Base mint
@@ -112,7 +132,9 @@ pub enum Instrument {
         // Strike
         strike: u64,
     },
-    PsyOptionsEuropean {
+    PsyOptionsEuropean {        
+        // Base amount
+        base_amount: u64,
         // Base contract size
         base_contract_size: u64,
         // Base mint
@@ -132,9 +154,13 @@ pub enum Instrument {
         // Quote mint
         quote_mint: Pubkey,
     },
-    Spot {
+    Spot {        
+        // Base amount
+        base_amount: Option<u64>,
         // Base mint
         base_mint: Pubkey,
+        // Quote amount
+        quote_amount: Option<u64>,
         // Quote mint
         quote_mint: Pubkey,
     },
