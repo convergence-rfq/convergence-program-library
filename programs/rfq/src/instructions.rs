@@ -79,6 +79,53 @@ pub fn initialize_leg(
     Ok(())
 }
 
+pub fn collateral_requirement(ctx: Context<CollateralRequirement>) -> Result<()> {
+    let rfq = &mut ctx.accounts.rfq;
+    
+    let is_initiator = signer == ctx.accounts.signer;
+    
+    let calculate_leg_collateral = |leg| {
+        let (amount, mint) = match leg.instrument {
+            Spot => {  
+                match leg.side {
+                    Buy => {
+                        if is_initiator {
+                            // Initiator buys base asset
+                            (leg.instrument.quote_amount, leg.instrument.quote_mint)
+                        } else {
+                            // Responder sells base asset
+                            let order = &mut ctx.accounts.order;
+                            (order.base_amount, order.base_mint)
+                        }                         
+                    },
+                    Sell => {
+                        if is_initiator {
+                            // Initiary sells base asset
+                            (leg.instrument.base_amount, leg.instrument.base_mint)
+                        } else {
+                            // Responder buys base asset 
+                            let order = &mut ctx.accounts.order;
+                            (order.quote_amount, order.quote_mint)
+                        }                     
+                    }                    
+                }
+            }
+            PsyOptionsAmerican => {
+                
+            }
+            PsyOptionsEuropean => // TODO: Throw error
+            MangoPerp => // TODO: Throw error
+            CypherFuture => // TODO: Throw error
+        }      
+    }
+
+    for leg in ctx.accounts.remaining_accounts.iter_mut() {
+        calculate_leg_risk(leg);                    
+    }
+    
+    Ok(())
+}
+
 /// Requests quote (RFQ).
 ///
 /// Step 2: Taker request quote.
