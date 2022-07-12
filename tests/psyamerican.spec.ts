@@ -123,7 +123,9 @@ describe('RFQ Specification', () => {
             contractQuoteAmount: new BN(1 * (10 ** QUOTE_DECIMALS)),
             expiry: new BN(now + 30),
             instrument: Instrument.Option,
-            venue: Venue.PsyOptions
+            venue: Venue.PsyOptions,
+            // TODO: Finish
+            buySell: BuySell.Buy
         }, {
             amount: new BN(5 * (10 ** ASSET_DECIMALS)),
             contract: null,
