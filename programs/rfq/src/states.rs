@@ -147,6 +147,15 @@ pub struct Leg {
     pub instrument: Instrument,
     // Venue
     pub venue: Venue,
+    // Buy or Sell
+    pub buy_sell: BuySell
+}
+
+/// BuySell.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum BuySell {
+    Buy,
+    Sell,
 }
 
 /// Quote.
