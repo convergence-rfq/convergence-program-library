@@ -1,24 +1,39 @@
 export type Rfq = {
   "version": "0.1.0",
   "name": "rfq",
+  "docs": [
+    "Request for quote (RFQ) protocol module."
+  ],
   "instructions": [
     {
       "name": "initialize",
+      "docs": [
+        "Initializes."
+      ],
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana system program"
+          ]
         }
       ],
       "args": [
@@ -34,16 +49,25 @@ export type Rfq = {
     },
     {
       "name": "setFee",
+      "docs": [
+        "Sets fee."
+      ],
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         }
       ],
       "args": [
@@ -59,56 +83,89 @@ export type Rfq = {
     },
     {
       "name": "request",
+      "docs": [
+        "Requests quote (RFQ)."
+      ],
       "accounts": [
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset escrow"
+          ]
         },
         {
           "name": "assetMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana system program"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana token program"
+          ]
         }
       ],
       "args": [
@@ -148,66 +205,105 @@ export type Rfq = {
     },
     {
       "name": "respond",
+      "docs": [
+        "Responds to RFQ."
+      ],
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Authority"
+          ]
         },
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset wallet"
+          ]
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote wallet"
+          ]
         },
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset escrow"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token program"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         }
       ],
       "args": [
@@ -227,108 +323,171 @@ export type Rfq = {
     },
     {
       "name": "cancel",
+      "docs": [
+        "Cancels RFQ."
+      ],
       "accounts": [
         {
           "name": "protocol",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "lastLook",
+      "docs": [
+        "Quote last look."
+      ],
       "accounts": [
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "confirm",
+      "docs": [
+        "Confirms quote."
+      ],
       "accounts": [
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset escrow"
+          ]
         },
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset wallet"
+          ]
         },
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote wallet"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token program"
+          ]
         }
       ],
       "args": [
@@ -342,77 +501,122 @@ export type Rfq = {
     },
     {
       "name": "returnCollateral",
+      "docs": [
+        "Returns quote collateral."
+      ],
       "accounts": [
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset escrow"
+          ]
         },
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset wallet"
+          ]
         },
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote wallet"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana token program"
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "settle",
+      "docs": [
+        "Settles RFQ."
+      ],
       "accounts": [
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset wallet"
+          ]
         },
         {
           "name": "assetEscrow",
@@ -422,52 +626,82 @@ export type Rfq = {
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote wallet"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana token program"
+          ]
         },
         {
           "name": "treasuryWallet",
@@ -479,6 +713,9 @@ export type Rfq = {
     },
     {
       "name": "initializePsyOptionsAmericanOptionMarket",
+      "docs": [
+        "Initializes PsyOptions American option market."
+      ],
       "accounts": [
         {
           "name": "user",
@@ -577,6 +814,9 @@ export type Rfq = {
     },
     {
       "name": "initializePsyOptionsAmericanMintVault",
+      "docs": [
+        "Initializes PsyOptions American mint vault."
+      ],
       "accounts": [
         {
           "name": "authority",
@@ -618,6 +858,9 @@ export type Rfq = {
     },
     {
       "name": "mintPsyOptionsAmericanOption",
+      "docs": [
+        "Mints PsyOptions American option market."
+      ],
       "accounts": [
         {
           "name": "authority",
@@ -632,7 +875,10 @@ export type Rfq = {
         {
           "name": "vault",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The vault where the underlying assets are held. This is the PsyAmerican"
+          ]
         },
         {
           "name": "vaultAuthority",
@@ -729,6 +975,9 @@ export type Rfq = {
   "accounts": [
     {
       "name": "accessManagerState",
+      "docs": [
+        "Access manager state."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -754,75 +1003,120 @@ export type Rfq = {
     },
     {
       "name": "rfqState",
+      "docs": [
+        "RFQ state."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "accessManager",
+            "docs": [
+              "Optional access manager"
+            ],
             "type": {
               "option": "publicKey"
             }
           },
           {
             "name": "approved",
+            "docs": [
+              "Last look approved"
+            ],
             "type": {
               "option": "bool"
             }
           },
           {
             "name": "assetEscrowBump",
+            "docs": [
+              "Asset escrow bump"
+            ],
             "type": "u8"
           },
           {
             "name": "assetMint",
+            "docs": [
+              "Asset mint"
+            ],
             "type": "publicKey"
           },
           {
             "name": "authority",
+            "docs": [
+              "Authority"
+            ],
             "type": "publicKey"
           },
           {
             "name": "bestAskAmount",
+            "docs": [
+              "Best ask amount"
+            ],
             "type": {
               "option": "u64"
             }
           },
           {
             "name": "bestBidAmount",
+            "docs": [
+              "Best bid amount"
+            ],
             "type": {
               "option": "u64"
             }
           },
           {
             "name": "bestAskAddress",
+            "docs": [
+              "Best ask amount"
+            ],
             "type": {
               "option": "publicKey"
             }
           },
           {
             "name": "bestBidAddress",
+            "docs": [
+              "Best bid amount"
+            ],
             "type": {
               "option": "publicKey"
             }
           },
           {
             "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
             "type": "u8"
           },
           {
             "name": "canceled",
+            "docs": [
+              "Canceled"
+            ],
             "type": "bool"
           },
           {
             "name": "confirmed",
+            "docs": [
+              "Confirmed"
+            ],
             "type": "bool"
           },
           {
             "name": "expiry",
+            "docs": [
+              "Expiry time"
+            ],
             "type": "i64"
           },
           {
             "name": "legs",
+            "docs": [
+              "Legs"
+            ],
             "type": {
               "vec": {
                 "defined": "Leg"
@@ -831,32 +1125,53 @@ export type Rfq = {
           },
           {
             "name": "lastLook",
+            "docs": [
+              "Last look required to approve trade"
+            ],
             "type": "bool"
           },
           {
             "name": "orderAmount",
+            "docs": [
+              "Order amount"
+            ],
             "type": "u64"
           },
           {
             "name": "orderType",
+            "docs": [
+              "Order type"
+            ],
             "type": {
               "defined": "Order"
             }
           },
           {
             "name": "quoteEscrowBump",
+            "docs": [
+              "Quote escrow bump"
+            ],
             "type": "u8"
           },
           {
             "name": "quoteMint",
+            "docs": [
+              "Quote mint"
+            ],
             "type": "publicKey"
           },
           {
             "name": "settled",
+            "docs": [
+              "Settled"
+            ],
             "type": "bool"
           },
           {
             "name": "unixTimestamp",
+            "docs": [
+              "Creation time"
+            ],
             "type": "i64"
           }
         ]
@@ -864,6 +1179,9 @@ export type Rfq = {
     },
     {
       "name": "protocolState",
+      "docs": [
+        "Protocol state."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -892,6 +1210,9 @@ export type Rfq = {
     },
     {
       "name": "orderState",
+      "docs": [
+        "Order state."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -925,6 +1246,9 @@ export type Rfq = {
           },
           {
             "name": "collateralReturned",
+            "docs": [
+              "Collateral returned"
+            ],
             "type": "bool"
           },
           {
@@ -937,14 +1261,23 @@ export type Rfq = {
           },
           {
             "name": "rfq",
+            "docs": [
+              "Rfq"
+            ],
             "type": "publicKey"
           },
           {
             "name": "settled",
+            "docs": [
+              "Settled"
+            ],
             "type": "bool"
           },
           {
             "name": "unixTimestamp",
+            "docs": [
+              "Creation time"
+            ],
             "type": "i64"
           }
         ]
@@ -954,6 +1287,9 @@ export type Rfq = {
   "types": [
     {
       "name": "Leg",
+      "docs": [
+        "Leg."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1006,12 +1342,21 @@ export type Rfq = {
             "type": {
               "defined": "Venue"
             }
+          },
+          {
+            "name": "buySell",
+            "type": {
+              "defined": "BuySell"
+            }
           }
         ]
       }
     },
     {
       "name": "Instrument",
+      "docs": [
+        "Instrument."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1029,6 +1374,9 @@ export type Rfq = {
     },
     {
       "name": "Contract",
+      "docs": [
+        "Contract."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1049,6 +1397,9 @@ export type Rfq = {
     },
     {
       "name": "Venue",
+      "docs": [
+        "Venue."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1065,7 +1416,27 @@ export type Rfq = {
       }
     },
     {
+      "name": "BuySell",
+      "docs": [
+        "BuySell."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          }
+        ]
+      }
+    },
+    {
       "name": "Quote",
+      "docs": [
+        "Quote."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1080,6 +1451,9 @@ export type Rfq = {
     },
     {
       "name": "Order",
+      "docs": [
+        "Order."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1218,24 +1592,39 @@ export type Rfq = {
 export const IDL: Rfq = {
   "version": "0.1.0",
   "name": "rfq",
+  "docs": [
+    "Request for quote (RFQ) protocol module."
+  ],
   "instructions": [
     {
       "name": "initialize",
+      "docs": [
+        "Initializes."
+      ],
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana system program"
+          ]
         }
       ],
       "args": [
@@ -1251,16 +1640,25 @@ export const IDL: Rfq = {
     },
     {
       "name": "setFee",
+      "docs": [
+        "Sets fee."
+      ],
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         }
       ],
       "args": [
@@ -1276,56 +1674,89 @@ export const IDL: Rfq = {
     },
     {
       "name": "request",
+      "docs": [
+        "Requests quote (RFQ)."
+      ],
       "accounts": [
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset escrow"
+          ]
         },
         {
           "name": "assetMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana system program"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana token program"
+          ]
         }
       ],
       "args": [
@@ -1365,66 +1796,105 @@ export const IDL: Rfq = {
     },
     {
       "name": "respond",
+      "docs": [
+        "Responds to RFQ."
+      ],
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Authority"
+          ]
         },
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset wallet"
+          ]
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote wallet"
+          ]
         },
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset escrow"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token program"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         }
       ],
       "args": [
@@ -1444,108 +1914,171 @@ export const IDL: Rfq = {
     },
     {
       "name": "cancel",
+      "docs": [
+        "Cancels RFQ."
+      ],
       "accounts": [
         {
           "name": "protocol",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "lastLook",
+      "docs": [
+        "Quote last look."
+      ],
       "accounts": [
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "confirm",
+      "docs": [
+        "Confirms quote."
+      ],
       "accounts": [
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset escrow"
+          ]
         },
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset wallet"
+          ]
         },
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote wallet"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token program"
+          ]
         }
       ],
       "args": [
@@ -1559,77 +2092,122 @@ export const IDL: Rfq = {
     },
     {
       "name": "returnCollateral",
+      "docs": [
+        "Returns quote collateral."
+      ],
       "accounts": [
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset escrow"
+          ]
         },
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset wallet"
+          ]
         },
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote wallet"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana token program"
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "settle",
+      "docs": [
+        "Settles RFQ."
+      ],
       "accounts": [
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset mint"
+          ]
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Asset wallet"
+          ]
         },
         {
           "name": "assetEscrow",
@@ -1639,52 +2217,82 @@ export const IDL: Rfq = {
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Order"
+          ]
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Protocol"
+          ]
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote escrow"
+          ]
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote mint"
+          ]
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Quote wallet"
+          ]
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "RFQ"
+          ]
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Rent"
+          ]
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Solana token program"
+          ]
         },
         {
           "name": "treasuryWallet",
@@ -1696,6 +2304,9 @@ export const IDL: Rfq = {
     },
     {
       "name": "initializePsyOptionsAmericanOptionMarket",
+      "docs": [
+        "Initializes PsyOptions American option market."
+      ],
       "accounts": [
         {
           "name": "user",
@@ -1794,6 +2405,9 @@ export const IDL: Rfq = {
     },
     {
       "name": "initializePsyOptionsAmericanMintVault",
+      "docs": [
+        "Initializes PsyOptions American mint vault."
+      ],
       "accounts": [
         {
           "name": "authority",
@@ -1835,6 +2449,9 @@ export const IDL: Rfq = {
     },
     {
       "name": "mintPsyOptionsAmericanOption",
+      "docs": [
+        "Mints PsyOptions American option market."
+      ],
       "accounts": [
         {
           "name": "authority",
@@ -1849,7 +2466,10 @@ export const IDL: Rfq = {
         {
           "name": "vault",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The vault where the underlying assets are held. This is the PsyAmerican"
+          ]
         },
         {
           "name": "vaultAuthority",
@@ -1946,6 +2566,9 @@ export const IDL: Rfq = {
   "accounts": [
     {
       "name": "accessManagerState",
+      "docs": [
+        "Access manager state."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1971,75 +2594,120 @@ export const IDL: Rfq = {
     },
     {
       "name": "rfqState",
+      "docs": [
+        "RFQ state."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "accessManager",
+            "docs": [
+              "Optional access manager"
+            ],
             "type": {
               "option": "publicKey"
             }
           },
           {
             "name": "approved",
+            "docs": [
+              "Last look approved"
+            ],
             "type": {
               "option": "bool"
             }
           },
           {
             "name": "assetEscrowBump",
+            "docs": [
+              "Asset escrow bump"
+            ],
             "type": "u8"
           },
           {
             "name": "assetMint",
+            "docs": [
+              "Asset mint"
+            ],
             "type": "publicKey"
           },
           {
             "name": "authority",
+            "docs": [
+              "Authority"
+            ],
             "type": "publicKey"
           },
           {
             "name": "bestAskAmount",
+            "docs": [
+              "Best ask amount"
+            ],
             "type": {
               "option": "u64"
             }
           },
           {
             "name": "bestBidAmount",
+            "docs": [
+              "Best bid amount"
+            ],
             "type": {
               "option": "u64"
             }
           },
           {
             "name": "bestAskAddress",
+            "docs": [
+              "Best ask amount"
+            ],
             "type": {
               "option": "publicKey"
             }
           },
           {
             "name": "bestBidAddress",
+            "docs": [
+              "Best bid amount"
+            ],
             "type": {
               "option": "publicKey"
             }
           },
           {
             "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
             "type": "u8"
           },
           {
             "name": "canceled",
+            "docs": [
+              "Canceled"
+            ],
             "type": "bool"
           },
           {
             "name": "confirmed",
+            "docs": [
+              "Confirmed"
+            ],
             "type": "bool"
           },
           {
             "name": "expiry",
+            "docs": [
+              "Expiry time"
+            ],
             "type": "i64"
           },
           {
             "name": "legs",
+            "docs": [
+              "Legs"
+            ],
             "type": {
               "vec": {
                 "defined": "Leg"
@@ -2048,32 +2716,53 @@ export const IDL: Rfq = {
           },
           {
             "name": "lastLook",
+            "docs": [
+              "Last look required to approve trade"
+            ],
             "type": "bool"
           },
           {
             "name": "orderAmount",
+            "docs": [
+              "Order amount"
+            ],
             "type": "u64"
           },
           {
             "name": "orderType",
+            "docs": [
+              "Order type"
+            ],
             "type": {
               "defined": "Order"
             }
           },
           {
             "name": "quoteEscrowBump",
+            "docs": [
+              "Quote escrow bump"
+            ],
             "type": "u8"
           },
           {
             "name": "quoteMint",
+            "docs": [
+              "Quote mint"
+            ],
             "type": "publicKey"
           },
           {
             "name": "settled",
+            "docs": [
+              "Settled"
+            ],
             "type": "bool"
           },
           {
             "name": "unixTimestamp",
+            "docs": [
+              "Creation time"
+            ],
             "type": "i64"
           }
         ]
@@ -2081,6 +2770,9 @@ export const IDL: Rfq = {
     },
     {
       "name": "protocolState",
+      "docs": [
+        "Protocol state."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2109,6 +2801,9 @@ export const IDL: Rfq = {
     },
     {
       "name": "orderState",
+      "docs": [
+        "Order state."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2142,6 +2837,9 @@ export const IDL: Rfq = {
           },
           {
             "name": "collateralReturned",
+            "docs": [
+              "Collateral returned"
+            ],
             "type": "bool"
           },
           {
@@ -2154,14 +2852,23 @@ export const IDL: Rfq = {
           },
           {
             "name": "rfq",
+            "docs": [
+              "Rfq"
+            ],
             "type": "publicKey"
           },
           {
             "name": "settled",
+            "docs": [
+              "Settled"
+            ],
             "type": "bool"
           },
           {
             "name": "unixTimestamp",
+            "docs": [
+              "Creation time"
+            ],
             "type": "i64"
           }
         ]
@@ -2171,6 +2878,9 @@ export const IDL: Rfq = {
   "types": [
     {
       "name": "Leg",
+      "docs": [
+        "Leg."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2223,12 +2933,21 @@ export const IDL: Rfq = {
             "type": {
               "defined": "Venue"
             }
+          },
+          {
+            "name": "buySell",
+            "type": {
+              "defined": "BuySell"
+            }
           }
         ]
       }
     },
     {
       "name": "Instrument",
+      "docs": [
+        "Instrument."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -2246,6 +2965,9 @@ export const IDL: Rfq = {
     },
     {
       "name": "Contract",
+      "docs": [
+        "Contract."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -2266,6 +2988,9 @@ export const IDL: Rfq = {
     },
     {
       "name": "Venue",
+      "docs": [
+        "Venue."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -2282,7 +3007,27 @@ export const IDL: Rfq = {
       }
     },
     {
+      "name": "BuySell",
+      "docs": [
+        "BuySell."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          }
+        ]
+      }
+    },
+    {
       "name": "Quote",
+      "docs": [
+        "Quote."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -2297,6 +3042,9 @@ export const IDL: Rfq = {
     },
     {
       "name": "Order",
+      "docs": [
+        "Order."
+      ],
       "type": {
         "kind": "enum",
         "variants": [

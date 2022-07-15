@@ -12,6 +12,7 @@ import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import {
     PROTOCOL_SEED,
     RFQ_SEED,
+    BuySell,
     Contract,
     Instrument,
     Order,
@@ -124,7 +125,6 @@ describe('RFQ Specification', () => {
             expiry: new BN(now + 30),
             instrument: Instrument.Option,
             venue: Venue.PsyOptions,
-            // TODO: Finish
             buySell: BuySell.Buy
         }, {
             amount: new BN(5 * (10 ** ASSET_DECIMALS)),
@@ -133,7 +133,8 @@ describe('RFQ Specification', () => {
             contractQuoteAmount: null,
             expiry: null,
             instrument: Instrument.Spot,
-            venue: Venue.Convergence
+            venue: Venue.Convergence,
+            buySell: BuySell.Buy
         }]
 
         const res1 = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT2, provider, quoteToken.publicKey, requestOrder)

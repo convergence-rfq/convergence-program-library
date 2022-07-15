@@ -29,6 +29,15 @@ export const Order = {
   }
 }
 
+export const BuySell = {
+  Buy: {
+    buy: {}
+  },
+  Sell: {
+    sell: {}
+  }
+}
+
 export const Instrument = {
   Spot: {
     spot: {}
