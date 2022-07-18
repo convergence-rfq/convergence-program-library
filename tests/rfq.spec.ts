@@ -701,6 +701,7 @@ describe('RFQ Specification', () => {
     await settle(provider, taker, res1.rfqPda, res2.orderPda, takerAssetATA, takerQuoteATA)
     await settle(provider, makerA, res1.rfqPda, res2.orderPda, makerAAssetATA, makerAQuoteATA)
 
+    // TODO: Finish
     await processLegs(provider, res1.rfqPda, taker)
 
     const rfqState: any = await program.account.rfqState.fetch(res1.rfqPda)
