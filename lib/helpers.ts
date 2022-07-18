@@ -595,7 +595,6 @@ export async function getRFQs(
 
 
 export async function getMyOrders(provider: Provider, signer: PublicKey): Promise<object[]> {
-  const programId = new PublicKey(idl.metadata.address)
   const program = await getProgram(provider)
   const myOrders = await program.account.orderState.all([
     {
@@ -609,7 +608,6 @@ export async function getMyOrders(provider: Provider, signer: PublicKey): Promis
 }
 
 export async function getRfqOrders(provider: Provider, rfq: PublicKey): Promise<object[]> {
-  const programId = new PublicKey(idl.metadata.address)
   const program = await getProgram(provider)
   const rfqOrders = await program.account.orderState.all([
     {

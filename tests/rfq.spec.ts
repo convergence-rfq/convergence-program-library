@@ -25,7 +25,7 @@
   */
 
 import * as anchor from '@project-serum/anchor'
-import { Wallet } from '@project-serum/anchor'
+import { Wallet, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import * as assert from 'assert'
@@ -35,6 +35,7 @@ import {
   Order,
   Quote,
   Venue,
+  BuySell,
   calcFee,
   cancel,
   confirm,
@@ -42,6 +43,8 @@ import {
   getRFQs,
   getProgram,
   getAllOrders,
+  processLegs,
+  Contract,
   getMyOrders,
   getRfqOrders,
   initializeProtocol,
@@ -214,6 +217,7 @@ describe('RFQ Specification', () => {
     assert.ok(protocolState.feeNumerator.eq(new anchor.BN(FEE_NUMERATOR)))
   })
 
+  /*
   it(`RFQ 1: Taker requests two-way asset quote for ${TAKER_ORDER_AMOUNT1}`, async () => {
     const requestOrder = Order.TwoWay
     const now = (new Date()).getTime() / 1_000
@@ -661,5 +665,47 @@ describe('RFQ Specification', () => {
     const allOrders = await getAllOrders(provider)
     assert.equal(rfqs.length, 5)
     assert.equal(allOrders.length, 8)
+  })
+  */
+
+  it(`RFQ PsyOptions: Taker requests sell for PsyOptions American multi-leg strategy`, async () => {
+    const requestOrder = Order.Sell
+    const now = (new Date()).getTime() / 1_000
+    const expiry = now + 2
+    const legs = [{
+      amount: new anchor.BN(10),
+      contract: Contract.Call,
+      contractAssetAmount: new BN(1 * (10 ** ASSET_DECIMALS)),
+      contractQuoteAmount: new BN(1 * (10 ** QUOTE_DECIMALS)),
+      expiry: new BN(now + 30),
+      instrument: Instrument.Option,
+      venue: Venue.PsyOptions,
+      buySell: BuySell.Buy
+    }, {
+      amount: new BN(5 * (10 ** ASSET_DECIMALS)),
+      contract: null,
+      contractAssetAmount: null,
+      contractQuoteAmount: null,
+      expiry: null,
+      instrument: Instrument.Spot,
+      venue: Venue.Convergence,
+      buySell: BuySell.Buy
+    }]
+
+    const res1 = await request(null, assetToken.publicKey, taker, expiry, false, legs, TAKER_ORDER_AMOUNT2, provider, quoteToken.publicKey, requestOrder)
+    assert.equal(legs.toString(), res1.rfqState.legs.toString())
+
+    const res2 = await respond(provider, makerA, res1.rfqPda, MAKER_B_BID_AMOUNT1, MAKER_B_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA)
+
+    await confirm(provider, res1.rfqPda, res2.orderPda, taker, takerAssetATA, takerQuoteATA, Quote.Bid)
+    await settle(provider, taker, res1.rfqPda, res2.orderPda, takerAssetATA, takerQuoteATA)
+    await settle(provider, makerA, res1.rfqPda, res2.orderPda, makerAAssetATA, makerAQuoteATA)
+
+    await processLegs(provider, res1.rfqPda, taker)
+
+    const rfqState: any = await program.account.rfqState.fetch(res1.rfqPda)
+    for (let i = 0; i < rfqState.legs.length; i++) {
+      assert.ok(rfqState.legs[i].processed)
+    }
   })
 })

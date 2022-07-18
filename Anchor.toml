@@ -14,6 +14,13 @@ url = "https://anchor.projectserum.com"
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
+[[test.genesis]]
+address = "R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs"
+program = "tests/fixtures/psyoptions_american.so"
+
+[[test.genesis]]
+address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+program = "tests/fixtures/serum_dex.so"
+
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/rfq.spec.ts"
-#test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/psyamerican.spec.ts"
