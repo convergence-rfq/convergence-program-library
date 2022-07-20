@@ -1,17 +1,17 @@
 [programs.localnet]
-rfq = "47p5Rh3fDeWp8ejFxThZE2uSwkAoyySSRXLDGWzcic92"
+rfq = "3UA1aU58WxePXwtLCMb1CGPQjQQFqVPoKsEQo8vMFe3q"
        
 [programs.devnet]
-rfq = "47p5Rh3fDeWp8ejFxThZE2uSwkAoyySSRXLDGWzcic92"
+rfq = "3UA1aU58WxePXwtLCMb1CGPQjQQFqVPoKsEQo8vMFe3q"
 
 [programs.mainnet]
-rfq = "47p5Rh3fDeWp8ejFxThZE2uSwkAoyySSRXLDGWzcic92"
+rfq = "3UA1aU58WxePXwtLCMb1CGPQjQQFqVPoKsEQo8vMFe3q"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
