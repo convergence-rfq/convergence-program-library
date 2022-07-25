@@ -35,8 +35,7 @@ pub struct SetFee<'info> {
     #[account(
         mut,
         seeds = [PROTOCOL_SEED.as_bytes()],
-        bump = protocol.bump,
-        constraint = protocol.to_account_info().owner == program_id
+        bump = protocol.bump
     )]
     pub protocol: Account<'info, ProtocolState>,
 }
@@ -69,8 +68,7 @@ pub struct Request<'info> {
     #[account(
         mut,
         seeds = [PROTOCOL_SEED.as_bytes()],
-        bump = protocol.bump,
-        constraint = protocol.to_account_info().owner == program_id
+        bump = protocol.bump
     )]
     pub protocol: Account<'info, ProtocolState>,
     /// Quote escrow
@@ -119,8 +117,7 @@ pub struct Cancel<'info> {
     /// Protocol
     #[account(
         seeds = [PROTOCOL_SEED.as_bytes()],
-        bump = protocol.bump,
-        constraint = protocol.to_account_info().owner == program_id
+        bump = protocol.bump
     )]
     pub protocol: Account<'info, ProtocolState>,
     /// RFQ
@@ -175,8 +172,7 @@ pub struct Respond<'info> {
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()    
         ],
-        bump = rfq.bump,
-        constraint = rfq.to_account_info().owner == program_id
+        bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     /// Asset wallet
@@ -245,8 +241,7 @@ pub struct Confirm<'info> {
             &order.bid.unwrap_or(0).to_le_bytes(),
             &order.ask.unwrap_or(0).to_le_bytes(),
         ],
-        bump = order.bump,
-        constraint = order.to_account_info().owner == program_id
+        bump = order.bump
     )]
     pub order: Box<Account<'info, OrderState>>,
     /// Quote escrow
@@ -277,8 +272,7 @@ pub struct Confirm<'info> {
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
-        bump = rfq.bump,
-        constraint = rfq.to_account_info().owner == program_id
+        bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     /// Signer
@@ -303,8 +297,7 @@ pub struct LastLook<'info> {
             &order.bid.unwrap_or(0).to_le_bytes(),
             &order.ask.unwrap_or(0).to_le_bytes(),
         ],
-        bump = order.bump,
-        constraint = order.to_account_info().owner == program_id
+        bump = order.bump
     )]
     pub order: Box<Account<'info, OrderState>>,
     /// RFQ
@@ -318,8 +311,7 @@ pub struct LastLook<'info> {
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
-        bump = rfq.bump,
-        constraint = rfq.to_account_info().owner == program_id
+        bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     /// Signer
@@ -355,8 +347,7 @@ pub struct ReturnCollateral<'info> {
             &order.bid.unwrap_or(0).to_le_bytes(),
             &order.ask.unwrap_or(0).to_le_bytes(),
         ],
-        bump = order.bump,
-        constraint = order.to_account_info().owner == program_id
+        bump = order.bump
     )]
     pub order: Box<Account<'info, OrderState>>,
     /// Quote escrow
@@ -387,8 +378,7 @@ pub struct ReturnCollateral<'info> {
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
-        bump = rfq.bump,
-        constraint = rfq.to_account_info().owner == program_id
+        bump = rfq.bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     /// Signer
@@ -425,16 +415,14 @@ pub struct Settle<'info> {
             &order.bid.unwrap_or(0).to_le_bytes(),
             &order.ask.unwrap_or(0).to_le_bytes(),
         ],
-        bump = order.bump,
-        constraint = order.to_account_info().owner == program_id
+        bump = order.bump
     )]
     pub order: Box<Account<'info, OrderState>>,
     /// Protocol
     #[account(
         mut,
         seeds = [PROTOCOL_SEED.as_bytes()],
-        bump = protocol.bump,
-        constraint = protocol.to_account_info().owner == program_id
+        bump = protocol.bump
     )]
     pub protocol: Box<Account<'info, ProtocolState>>,
     /// Quote escrow
@@ -463,8 +451,7 @@ pub struct Settle<'info> {
             &rfq.order_amount.to_le_bytes(),
             &rfq.expiry.to_le_bytes()
         ],
-        bump = rfq.bump,
-        constraint = rfq.to_account_info().owner == program_id
+        bump = rfq.bump 
     )]
     pub rfq: Box<Account<'info, RfqState>>,
     /// Rent
