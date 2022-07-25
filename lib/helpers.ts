@@ -1,90 +1,98 @@
-import * as anchor from '@project-serum/anchor'
-import { ProgramAccount, BN, Idl, Program, Provider, Wallet } from '@project-serum/anchor'
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY, AccountMeta, TransactionInstruction, Signer, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
+import * as anchor from "@project-serum/anchor";
+import { ProgramAccount, BN, Idl, Program, Provider, Wallet } from "@project-serum/anchor";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  PublicKey,
+  SystemProgram,
+  SYSVAR_CLOCK_PUBKEY,
+  AccountMeta,
+  TransactionInstruction,
+  Signer,
+  SYSVAR_RENT_PUBKEY,
+} from "@solana/web3.js";
 
-import { default as idl } from '../target/idl/rfq.json'
-import { Rfq } from '../target/types/rfq'
+import { default as idl } from "../target/idl/rfq.json";
+import { Rfq } from "../target/types/rfq";
 
-import { default as psyAmericanIdl } from '../lib/integrations/idl/psyAmerican.json'
-import { PsyAmerican } from '../lib/integrations/types/psyAmerican'
+import { default as psyAmericanIdl } from "../lib/integrations/idl/psyAmerican.json";
+import { PsyAmerican } from "../lib/integrations/types/psyAmerican";
 
-export const RFQ_SEED = 'rfq'
-export const ORDER_SEED = 'order'
-export const PROTOCOL_SEED = 'protocol'
-export const ASSET_ESCROW_SEED = 'asset_escrow'
-export const QUOTE_ESCROW_SEED = 'quote_escrow'
+export const RFQ_SEED = "rfq";
+export const ORDER_SEED = "order";
+export const PROTOCOL_SEED = "protocol";
+export const ASSET_ESCROW_SEED = "asset_escrow";
+export const QUOTE_ESCROW_SEED = "quote_escrow";
 
 /// Types
 
 export const Order = {
   Buy: {
-    buy: {}
+    buy: {},
   },
   Sell: {
-    sell: {}
+    sell: {},
   },
   TwoWay: {
-    twoWay: {}
-  }
-}
+    twoWay: {},
+  },
+};
 
 export const BuySell = {
   Buy: {
-    buy: {}
+    buy: {},
   },
   Sell: {
-    sell: {}
-  }
-}
+    sell: {},
+  },
+};
 
 export const Instrument = {
   Spot: {
-    spot: {}
+    spot: {},
   },
   Option: {
-    option: {}
+    option: {},
   },
   Future: {
-    future: {}
-  }
-}
+    future: {},
+  },
+};
 
 export const Quote = {
   Bid: {
-    bid: {}
+    bid: {},
   },
   Ask: {
-    ask: {}
-  }
-}
+    ask: {},
+  },
+};
 
 export const Venue = {
   Convergence: {
-    convergence: {}
+    convergence: {},
   },
   PsyOptions: {
-    psyOptions: {}
+    psyOptions: {},
   },
   Sollar: {
-    sollar: {}
-  }
-}
+    sollar: {},
+  },
+};
 
 export const Contract = {
   Call: {
-    call: {}
+    call: {},
   },
   Put: {
-    put: {}
+    put: {},
   },
   Long: {
-    long: {}
+    long: {},
   },
   Short: {
-    short: {}
-  }
-}
+    short: {},
+  },
+};
 
 export const Leg = {
   Amount: null,
@@ -95,7 +103,7 @@ export const Leg = {
   Expiry: null,
   Instrument: null,
   Venue: null,
-}
+};
 
 /// Protocol methods
 
@@ -105,28 +113,29 @@ export async function initializeProtocol(
   feeDenominator: number,
   feeNumerator: number
 ): Promise<any> {
-  const program = await getProgram(provider)
+  const program = await getProgram(provider);
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
-  )
+  );
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  const tx = await program.methods.initialize(new anchor.BN(feeDenominator), new anchor.BN(feeNumerator))
+  const tx = await program.methods
+    .initialize(new anchor.BN(feeDenominator), new anchor.BN(feeNumerator))
     .accounts({
       signer: signer.publicKey,
       protocol: protocolPda,
-      systemProgram: SystemProgram.programId
+      systemProgram: SystemProgram.programId,
     })
     .signers(signers)
-    .rpc()
-  const protocolState = await program.account.protocolState.fetch(protocolPda)
+    .rpc();
+  const protocolState = await program.account.protocolState.fetch(protocolPda);
 
-  return { tx, protocolState }
+  return { tx, protocolState };
 }
 
 export async function setFee(
@@ -135,29 +144,30 @@ export async function setFee(
   feeDenominator: number,
   feeNumerator: number
 ): Promise<any> {
-  const program = await getProgram(provider)
+  const program = await getProgram(provider);
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
-  )
+  );
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  const tx = await program.methods.setFee(new anchor.BN(feeDenominator), new anchor.BN(feeNumerator))
+  const tx = await program.methods
+    .setFee(new anchor.BN(feeDenominator), new anchor.BN(feeNumerator))
     .accounts({
       signer: signer.publicKey,
       protocol: protocolPda,
-      systemProgram: SystemProgram.programId
+      systemProgram: SystemProgram.programId,
     })
     .signers(signers)
-    .rpc()
+    .rpc();
 
-  const protocolState = await program.account.protocolState.fetch(protocolPda)
+  const protocolState = await program.account.protocolState.fetch(protocolPda);
 
-  return { tx, protocolState }
+  return { tx, protocolState };
 }
 
 export async function request(
@@ -170,15 +180,14 @@ export async function request(
   orderAmount: number,
   provider: Provider,
   quoteMint: PublicKey,
-  requestOrder: object,
+  requestOrder: object
 ): Promise<any> {
-  const program = await getProgram(provider)
+  const program = await getProgram(provider);
 
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
-  )
-
+  );
 
   const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [
@@ -186,26 +195,27 @@ export async function request(
       signer.publicKey.toBuffer(),
       assetMint.toBuffer(),
       quoteMint.toBuffer(),
-      new BN(orderAmount).toArrayLike(Buffer, 'le', 8),
-      new BN(expiry).toArrayLike(Buffer, 'le', 8)
+      new BN(orderAmount).toArrayLike(Buffer, "le", 8),
+      new BN(expiry).toArrayLike(Buffer, "le", 8),
     ],
     program.programId
-  )
+  );
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
   const [quoteEscrowPda, _quoteEscrowPda] = await PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  const tx = await program.methods.request(accessManager, new BN(expiry), lastLook, legs, new BN(orderAmount), requestOrder)
+  const tx = await program.methods
+    .request(accessManager, new BN(expiry), lastLook, legs, new BN(orderAmount), requestOrder)
     .accounts({
       assetEscrow: assetEscrowPda,
       assetMint,
@@ -219,47 +229,44 @@ export async function request(
       tokenProgram: TOKEN_PROGRAM_ID,
     })
     .signers(signers)
-    .rpc()
+    .rpc();
 
-  const protocolState = await program.account.protocolState.fetch(protocolPda)
-  const rfqState = await program.account.rfqState.fetch(rfqPda)
+  const protocolState = await program.account.protocolState.fetch(protocolPda);
+  const rfqState = await program.account.rfqState.fetch(rfqPda);
 
   return {
     tx,
     protocolState,
     rfqState,
-    rfqPda
-  }
+    rfqPda,
+  };
 }
 
-export async function cancel(
-  provider: Provider,
-  signer: Wallet,
-  rfqPda: PublicKey
-): Promise<any> {
-  const program = await getProgram(provider)
+export async function cancel(provider: Provider, signer: Wallet, rfqPda: PublicKey): Promise<any> {
+  const program = await getProgram(provider);
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
-  )
+  );
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  const tx = await program.methods.cancel()
+  const tx = await program.methods
+    .cancel()
     .accounts({
       signer: signer.publicKey,
       protocol: protocolPda,
-      rfq: rfqPda
+      rfq: rfqPda,
     })
     .signers(signers)
-    .rpc()
+    .rpc();
 
-  const rfqState = await program.account.rfqState.fetch(rfqPda)
+  const rfqState = await program.account.rfqState.fetch(rfqPda);
 
-  return { tx, rfqState }
+  return { tx, rfqState };
 }
 
 export async function respond(
@@ -271,35 +278,36 @@ export async function respond(
   assetWallet: PublicKey,
   quoteWallet: PublicKey
 ): Promise<any> {
-  const program = await getProgram(provider)
+  const program = await getProgram(provider);
 
-  let rfqState: any = await program.account.rfqState.fetch(rfqPda)
+  let rfqState: any = await program.account.rfqState.fetch(rfqPda);
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
   const [quoteEscrowPda, _quoteEscrowPDA] = await PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
   const [orderPda, _orderBump] = await PublicKey.findProgramAddress(
     [
       Buffer.from(ORDER_SEED),
       rfqPda.toBuffer(),
       signer.publicKey.toBuffer(),
-      new BN(bid ? bid : 0).toArrayLike(Buffer, 'le', 8),
-      new BN(ask ? ask : 0).toArrayLike(Buffer, 'le', 8),
+      new BN(bid ? bid : 0).toArrayLike(Buffer, "le", 8),
+      new BN(ask ? ask : 0).toArrayLike(Buffer, "le", 8),
     ],
     program.programId
-  )
+  );
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  const tx = await program.methods.respond(bid ? new BN(bid) : null, ask ? new BN(ask) : null)
+  const tx = await program.methods
+    .respond(bid ? new BN(bid) : null, ask ? new BN(ask) : null)
     .accounts({
       assetMint: rfqState.assetMint,
       assetWallet,
@@ -315,17 +323,17 @@ export async function respond(
       tokenProgram: TOKEN_PROGRAM_ID,
     })
     .signers(signers)
-    .rpc()
+    .rpc();
 
-  rfqState = await program.account.rfqState.fetch(rfqPda)
-  const orderState = await program.account.orderState.fetch(orderPda)
+  rfqState = await program.account.rfqState.fetch(rfqPda);
+  const orderState = await program.account.orderState.fetch(orderPda);
 
   return {
     orderState,
     rfqState,
     orderPda,
-    tx
-  }
+    tx,
+  };
 }
 
 export async function confirm(
@@ -337,25 +345,26 @@ export async function confirm(
   quoteWallet: PublicKey,
   side: object
 ): Promise<any> {
-  const program = await getProgram(provider)
+  const program = await getProgram(provider);
 
-  let rfqState: any = await program.account.rfqState.fetch(rfqPda)
+  let rfqState: any = await program.account.rfqState.fetch(rfqPda);
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
   const [quoteEscrowPda, _quoteEscrowPda] = await PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  const tx = await program.methods.confirm(side)
+  const tx = await program.methods
+    .confirm(side)
     .accounts({
       assetMint: rfqState.assetMint,
       assetWallet,
@@ -368,19 +377,19 @@ export async function confirm(
       rent: SYSVAR_RENT_PUBKEY,
       rfq: rfqPda,
       systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID
+      tokenProgram: TOKEN_PROGRAM_ID,
     })
     .signers(signers)
-    .rpc()
+    .rpc();
 
-  rfqState = await program.account.rfqState.fetch(rfqPda)
-  const orderState = await program.account.orderState.fetch(orderPda)
+  rfqState = await program.account.rfqState.fetch(rfqPda);
+  const orderState = await program.account.orderState.fetch(orderPda);
 
   return {
     tx,
     orderState,
-    rfqState
-  }
+    rfqState,
+  };
 }
 
 export async function lastLook(
@@ -389,30 +398,31 @@ export async function lastLook(
   rfqPda: PublicKey,
   orderPda: PublicKey
 ): Promise<any> {
-  const program = await getProgram(provider)
+  const program = await getProgram(provider);
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  const tx = await program.methods.lastLook()
+  const tx = await program.methods
+    .lastLook()
     .accounts({
       signer: signer.publicKey,
       order: orderPda,
       rfq: rfqPda,
     })
     .signers(signers)
-    .rpc()
+    .rpc();
 
-  const rfqState = await program.account.rfqState.fetch(rfqPda)
-  const orderState = await program.account.orderState.fetch(orderPda)
+  const rfqState = await program.account.rfqState.fetch(rfqPda);
+  const orderState = await program.account.orderState.fetch(orderPda);
 
   return {
     tx,
     rfqState,
-    orderState
-  }
+    orderState,
+  };
 }
 
 export async function returnCollateral(
@@ -421,27 +431,28 @@ export async function returnCollateral(
   rfqPda: PublicKey,
   orderPda: PublicKey,
   assetWallet: PublicKey,
-  quoteWallet: PublicKey,
+  quoteWallet: PublicKey
 ): Promise<any> {
-  const program = await getProgram(provider)
+  const program = await getProgram(provider);
 
-  let rfqState: any = await program.account.rfqState.fetch(rfqPda)
+  let rfqState: any = await program.account.rfqState.fetch(rfqPda);
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
   const [quoteEscrowPda, _quoteEscrowPDA] = await PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  const tx = await program.methods.returnCollateral()
+  const tx = await program.methods
+    .returnCollateral()
     .accounts({
       assetEscrow: assetEscrowPda,
       assetMint: rfqState.assetMint,
@@ -454,19 +465,19 @@ export async function returnCollateral(
       rent: SYSVAR_RENT_PUBKEY,
       rfq: rfqPda,
       systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID
+      tokenProgram: TOKEN_PROGRAM_ID,
     })
     .signers(signers)
-    .rpc()
+    .rpc();
 
-  rfqState = await program.account.rfqState.fetch(rfqPda)
-  const orderState = await program.account.orderState.fetch(orderPda)
+  rfqState = await program.account.rfqState.fetch(rfqPda);
+  const orderState = await program.account.orderState.fetch(orderPda);
 
   return {
     orderState,
     rfqState,
-    tx
-  }
+    tx,
+  };
 }
 
 export async function settle(
@@ -477,32 +488,32 @@ export async function settle(
   assetWallet: PublicKey,
   quoteWallet: PublicKey
 ): Promise<any> {
-  const program = await getProgram(provider)
+  const program = await getProgram(provider);
 
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
-  )
+  );
 
-  const protocolState: any = await program.account.protocolState.fetch(protocolPda)
-  let rfqState: any = await program.account.rfqState.fetch(rfqPda)
+  const protocolState: any = await program.account.protocolState.fetch(protocolPda);
+  let rfqState: any = await program.account.rfqState.fetch(rfqPda);
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
   const [quoteEscrowPda, _quoteEscrowPDA] = await PublicKey.findProgramAddress(
     [Buffer.from(QUOTE_ESCROW_SEED), rfqPda.toBuffer()],
     program.programId
-  )
+  );
 
-  const orderState: any = await program.account.orderState.fetch(orderPda)
+  const orderState: any = await program.account.orderState.fetch(orderPda);
 
-  let treasuryMint: PublicKey
-  if (orderState?.confirmedQuote?.hasOwnProperty('ask')) {
-    treasuryMint = rfqState.assetMint
+  let treasuryMint: PublicKey;
+  if (orderState?.confirmedQuote?.hasOwnProperty("ask")) {
+    treasuryMint = rfqState.assetMint;
   } else {
-    treasuryMint = rfqState.quoteMint
+    treasuryMint = rfqState.quoteMint;
   }
 
   const treasuryWallet = await Token.getAssociatedTokenAddress(
@@ -510,31 +521,28 @@ export async function settle(
     TOKEN_PROGRAM_ID,
     treasuryMint,
     protocolState.authority
-  )
+  );
 
-  const token = new Token(
-    provider.connection,
-    treasuryMint,
-    TOKEN_PROGRAM_ID,
-    signer as unknown as Signer
-  )
+  const token = new Token(provider.connection, treasuryMint, TOKEN_PROGRAM_ID, signer as unknown as Signer);
 
-  let instructions = []
+  let instructions = [];
   try {
-    const account = await token.getAccountInfo(treasuryWallet)
+    const account = await token.getAccountInfo(treasuryWallet);
     if (account.amount.toNumber() < 0) {
-      throw new Error('Account does not exist')
+      throw new Error("Account does not exist");
     }
   } catch {
     // ATA might not exist so create it
-    instructions.push(Token.createAssociatedTokenAccountInstruction(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      treasuryMint,
-      treasuryWallet,
-      protocolState.authority,
-      signer.publicKey
-    ))
+    instructions.push(
+      Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        treasuryMint,
+        treasuryWallet,
+        protocolState.authority,
+        signer.publicKey
+      )
+    );
   }
 
   const accounts = {
@@ -552,126 +560,114 @@ export async function settle(
     protocol: protocolPda,
     treasuryWallet,
     rent: SYSVAR_RENT_PUBKEY,
-  }
+  };
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  let tx: string
+  let tx: string;
   if (instructions.length > 0) {
-    tx = await program.methods.settle()
-      .accounts(accounts)
-      .preInstructions(instructions)
-      .signers(signers)
-      .rpc()
+    tx = await program.methods.settle().accounts(accounts).preInstructions(instructions).signers(signers).rpc();
   } else {
-    tx = await program.methods.settle()
-      .accounts(accounts)
-      .signers(signers)
-      .rpc()
+    tx = await program.methods.settle().accounts(accounts).signers(signers).rpc();
   }
 
-  rfqState = await program.account.rfqState.fetch(rfqPda)
+  rfqState = await program.account.rfqState.fetch(rfqPda);
 
   return {
     tx,
-    rfqState
-  }
+    rfqState,
+  };
 }
 
 // Helpers
 
-export async function getRFQs(
-  provider: Provider,
-  page: number | null,
-  pageSize: number | null
-): Promise<object[]> {
-  const program = await getProgram(provider)
-  const rfqs: any[] = await program.account.rfqState.all()
-  return rfqs
+export async function getRFQs(provider: Provider, page: number | null, pageSize: number | null): Promise<object[]> {
+  const program = await getProgram(provider);
+  const rfqs: any[] = await program.account.rfqState.all();
+  return rfqs;
 }
 
-
 export async function getMyOrders(provider: Provider, signer: PublicKey): Promise<object[]> {
-  const programId = new PublicKey(idl.metadata.address)
-  const program = await getProgram(provider)
+  const programId = new PublicKey(idl.metadata.address);
+  const program = await getProgram(provider);
   const myOrders = await program.account.orderState.all([
     {
       memcmp: {
         offset: 8 + 10,
-        bytes: signer.toBase58()
-      }
-    }
-  ])
-  return myOrders
+        bytes: signer.toBase58(),
+      },
+    },
+  ]);
+  return myOrders;
 }
 
 export async function getRfqOrders(provider: Provider, rfq: PublicKey): Promise<object[]> {
-  const programId = new PublicKey(idl.metadata.address)
-  const program = await getProgram(provider)
+  const programId = new PublicKey(idl.metadata.address);
+  const program = await getProgram(provider);
   const rfqOrders = await program.account.orderState.all([
     {
       memcmp: {
         offset: 8 + 55,
-        bytes: rfq.toBase58()
-      }
-    }
-  ])
-  return rfqOrders
+        bytes: rfq.toBase58(),
+      },
+    },
+  ]);
+  return rfqOrders;
 }
 
 export async function getAllOrders(provider: Provider): Promise<object[]> {
-  const program = await getProgram(provider)
-  const allOrders = await program.account.orderState.all()
-  return allOrders
+  const program = await getProgram(provider);
+  const allOrders = await program.account.orderState.all();
+  return allOrders;
 }
 
 /// Integrations
 
 // PsyOptions market fee owner as hardcoded in contract code
-const FEE_OWNER = new PublicKey('6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD')
+const FEE_OWNER = new PublicKey("6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD");
 
 // Option market structure
 export type OptionMarket = {
-  optionMint: PublicKey
-  writerTokenMint: PublicKey
-  underlyingAssetMint: PublicKey
-  quoteAssetMint: PublicKey
-  underlyingAssetPool: PublicKey
-  quoteAssetPool: PublicKey
-  mintFeeAccount: PublicKey
-  exerciseFeeAccount: PublicKey
-  underlyingAmountPerContract: BN
-  quoteAmountPerContract: BN
-  expirationUnixTimestamp: BN
-  expired: boolean
-  bumpSeed: number
-}
+  optionMint: PublicKey;
+  writerTokenMint: PublicKey;
+  underlyingAssetMint: PublicKey;
+  quoteAssetMint: PublicKey;
+  underlyingAssetPool: PublicKey;
+  quoteAssetPool: PublicKey;
+  mintFeeAccount: PublicKey;
+  exerciseFeeAccount: PublicKey;
+  underlyingAmountPerContract: BN;
+  quoteAmountPerContract: BN;
+  expirationUnixTimestamp: BN;
+  expired: boolean;
+  bumpSeed: number;
+};
 
 /**
  * Gets PsyOptions American options program.
- * 
- * @param provider 
+ *
+ * @param provider
  * @returns Promise<Program>
  */
 export async function getPsyAmericanProgram(provider: Provider): Promise<Program> {
-  const programId = new PublicKey(psyAmericanIdl.metadata.address)
-  return new anchor.Program(psyAmericanIdl as Idl, programId, provider)
+  const programId = new PublicKey(psyAmericanIdl.metadata.address);
+  return new anchor.Program(psyAmericanIdl as Idl, programId, provider);
 }
 
 /**
  * Initializes the PsyOptions American option market.
- * 
- * @param assetToken 
- * @param expirationUnixTimestamp 
- * @param provider 
- * @param quoteAmountPerContract 
- * @param quoteToken 
- * @param signer 
- * @param underlyingAmountPerContract 
- * @returns Promise<any> 
+ *
+ * @param assetToken
+ * @param expirationUnixTimestamp
+ * @param provider
+ * @param quoteAmountPerContract
+ * @param quoteToken
+ * @param signer
+ * @param underlyingAmountPerContract
+ * @returns Promise<any>
  */
 export async function initializePsyAmericanOptionMarket(
   assetToken: Token,
@@ -682,54 +678,55 @@ export async function initializePsyAmericanOptionMarket(
   signer: Wallet,
   underlyingAmountPerContract: BN
 ): Promise<any> {
-  const psyAmericanProgram = await getPsyAmericanProgram(provider)
+  const psyAmericanProgram = await getPsyAmericanProgram(provider);
 
-  let signers = []
+  let signers = [];
   if (signer.payer) {
-    signers.push(signer.payer)
+    signers.push(signer.payer);
   }
 
-  const [optionMarket, optionMarketBumpSeed] = await PublicKey.findProgramAddress([
-    assetToken.publicKey.toBuffer(),
-    quoteToken.publicKey.toBuffer(),
-    underlyingAmountPerContract.toArrayLike(Buffer, 'le', 8),
-    quoteAmountPerContract.toArrayLike(Buffer, 'le', 8),
-    expirationUnixTimestamp.toArrayLike(Buffer, 'le', 8)
-  ],
+  const [optionMarket, optionMarketBumpSeed] = await PublicKey.findProgramAddress(
+    [
+      assetToken.publicKey.toBuffer(),
+      quoteToken.publicKey.toBuffer(),
+      underlyingAmountPerContract.toArrayLike(Buffer, "le", 8),
+      quoteAmountPerContract.toArrayLike(Buffer, "le", 8),
+      expirationUnixTimestamp.toArrayLike(Buffer, "le", 8),
+    ],
     psyAmericanProgram.programId
-  )
+  );
   const [optionMint, _optionMintBump] = await PublicKey.findProgramAddress(
-    [optionMarket.toBuffer(), Buffer.from('optionToken')],
+    [optionMarket.toBuffer(), Buffer.from("optionToken")],
     psyAmericanProgram.programId
-  )
+  );
   const [writerTokenMint, _writerTokenMintBump] = await PublicKey.findProgramAddress(
-    [optionMarket.toBuffer(), Buffer.from('writerToken')],
+    [optionMarket.toBuffer(), Buffer.from("writerToken")],
     psyAmericanProgram.programId
-  )
+  );
   const [quoteAssetPool, _quoteAssetPoolBump] = await PublicKey.findProgramAddress(
-    [optionMarket.toBuffer(), Buffer.from('quoteAssetPool')],
+    [optionMarket.toBuffer(), Buffer.from("quoteAssetPool")],
     psyAmericanProgram.programId
-  )
+  );
   const [underlyingAssetPool, _underlyingAssetPoolBump] = await PublicKey.findProgramAddress(
-    [optionMarket.toBuffer(), Buffer.from('underlyingAssetPool')],
+    [optionMarket.toBuffer(), Buffer.from("underlyingAssetPool")],
     psyAmericanProgram.programId
-  )
+  );
 
-  let remainingAccounts: AccountMeta[] = []
-  let instructions: TransactionInstruction[] = []
+  let remainingAccounts: AccountMeta[] = [];
+  let instructions: TransactionInstruction[] = [];
 
   const mintFeeATA = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     assetToken.publicKey,
     FEE_OWNER
-  )
+  );
   const exerciseFeeATA = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     quoteToken.publicKey,
     FEE_OWNER
-  )
+  );
 
   try {
     await assetToken.getAccountInfo(mintFeeATA);
@@ -738,16 +735,18 @@ export async function initializePsyAmericanOptionMarket(
     remainingAccounts.push({
       pubkey: mintFeeATA,
       isWritable: true,
-      isSigner: false
-    })
-    instructions.push(Token.createAssociatedTokenAccountInstruction(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      assetToken.publicKey,
-      mintFeeATA,
-      FEE_OWNER,
-      signer.publicKey
-    ))
+      isSigner: false,
+    });
+    instructions.push(
+      Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        assetToken.publicKey,
+        mintFeeATA,
+        FEE_OWNER,
+        signer.publicKey
+      )
+    );
   }
 
   try {
@@ -757,16 +756,18 @@ export async function initializePsyAmericanOptionMarket(
     remainingAccounts.push({
       pubkey: exerciseFeeATA,
       isWritable: false,
-      isSigner: false
-    })
-    instructions.push(Token.createAssociatedTokenAccountInstruction(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      quoteToken.publicKey,
-      exerciseFeeATA,
-      FEE_OWNER,
-      signer.publicKey
-    ))
+      isSigner: false,
+    });
+    instructions.push(
+      Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        quoteToken.publicKey,
+        exerciseFeeATA,
+        FEE_OWNER,
+        signer.publicKey
+      )
+    );
   }
 
   const accounts = {
@@ -784,38 +785,39 @@ export async function initializePsyAmericanOptionMarket(
     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     rent: SYSVAR_RENT_PUBKEY,
     systemProgram: SystemProgram.programId,
-    clock: SYSVAR_CLOCK_PUBKEY
-  }
+    clock: SYSVAR_CLOCK_PUBKEY,
+  };
 
-  const rfqProgram = await getProgram(provider)
-  await rfqProgram.methods.initializePsyOptionsAmericanOptionMarket(
-    underlyingAmountPerContract,
-    quoteAmountPerContract,
-    expirationUnixTimestamp,
-    optionMarketBumpSeed
-  )
+  const rfqProgram = await getProgram(provider);
+  await rfqProgram.methods
+    .initializePsyOptionsAmericanOptionMarket(
+      underlyingAmountPerContract,
+      quoteAmountPerContract,
+      expirationUnixTimestamp,
+      optionMarketBumpSeed
+    )
     .accounts(accounts)
     .preInstructions(instructions)
     .remainingAccounts(remainingAccounts)
     .signers(signers)
-    .rpc()
+    .rpc();
 
   return {
     optionMarket: accounts,
-    publicKey: optionMarket
-  }
+    publicKey: optionMarket,
+  };
 }
 
 /**
  * Mints PsyOptions American option.
- * 
- * @param assetToken 
- * @param publicKey 
- * @param optionMarket 
- * @param provider 
- * @param signer 
- * @param size 
- * @returns 
+ *
+ * @param assetToken
+ * @param publicKey
+ * @param optionMarket
+ * @param provider
+ * @param signer
+ * @param size
+ * @returns
  */
 export async function mintPsyAmericanOption(
   assetToken: Token,
@@ -827,21 +829,22 @@ export async function mintPsyAmericanOption(
   signer: Wallet,
   size: BN
 ): Promise<any> {
-  const psyAmericanProgram = await getPsyAmericanProgram(provider)
-  const rfqProgram = await getProgram(provider)
+  const psyAmericanProgram = await getPsyAmericanProgram(provider);
+  const rfqProgram = await getProgram(provider);
 
   // TODO: Is this the correct program?
   const [vault, _vaultBump] = await PublicKey.findProgramAddress(
-    [assetToken.publicKey.toBuffer(), Buffer.from('vault')],
+    [assetToken.publicKey.toBuffer(), Buffer.from("vault")],
     rfqProgram.programId
-  )
+  );
   const [vaultAuthority, vaultAuthorityBump] = await PublicKey.findProgramAddress(
-    [assetToken.publicKey.toBuffer(), Buffer.from('vaultAuthority')],
+    [assetToken.publicKey.toBuffer(), Buffer.from("vaultAuthority")],
     rfqProgram.programId
-  )
+  );
 
   // TODO: What if vault already exists?
-  await rfqProgram.methods.initializePsyOptionsAmericanMintVault()
+  await rfqProgram.methods
+    .initializePsyOptionsAmericanMintVault()
     .accounts({
       authority: signer.publicKey,
       underlyingAsset: assetToken.publicKey,
@@ -852,68 +855,72 @@ export async function mintPsyAmericanOption(
       systemProgram: SystemProgram.programId,
     })
     .signers([signer.payer])
-    .rpc()
+    .rpc();
 
   const optionToken = new Token(
     provider.connection,
     optionMarket.optionMint,
     TOKEN_PROGRAM_ID,
     signer as unknown as Signer
-  )
+  );
   const writerToken = new Token(
     provider.connection,
     optionMarket.writerTokenMint,
     TOKEN_PROGRAM_ID,
     signer as unknown as Signer
-  )
+  );
 
-  let instructions = []
+  let instructions = [];
 
   const mintedOptionDest = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     optionToken.publicKey,
     signer.publicKey
-  )
+  );
   const mintedWriterTokenDest = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     writerToken.publicKey,
     signer.publicKey
-  )
+  );
 
   try {
-    const account = await optionToken.getAccountInfo(signer.publicKey)
+    const account = await optionToken.getAccountInfo(signer.publicKey);
     if (account.amount.toNumber() < 0) {
-      throw new Error('Account does not exist')
+      throw new Error("Account does not exist");
     }
   } catch {
     // ATA might not exist so create it
-    instructions.push(Token.createAssociatedTokenAccountInstruction(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      optionToken.publicKey,
-      mintedOptionDest,
-      signer.publicKey,
-      signer.publicKey
-    ))
+    instructions.push(
+      Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        optionToken.publicKey,
+        mintedOptionDest,
+        signer.publicKey,
+        signer.publicKey
+      )
+    );
   }
 
   try {
-    const account = await writerToken.getAccountInfo(signer.publicKey)
+    const account = await writerToken.getAccountInfo(signer.publicKey);
     if (account.amount.toNumber() < 0) {
-      throw new Error('Account does not exist')
+      throw new Error("Account does not exist");
     }
   } catch {
     // ATA might not exist so create it
-    instructions.push(Token.createAssociatedTokenAccountInstruction(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      writerToken.publicKey,
-      mintedWriterTokenDest,
-      signer.publicKey,
-      signer.publicKey
-    ))
+    instructions.push(
+      Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        writerToken.publicKey,
+        mintedWriterTokenDest,
+        signer.publicKey,
+        signer.publicKey
+      )
+    );
   }
 
   const signerAssetATA = await Token.getAssociatedTokenAddress(
@@ -921,7 +928,7 @@ export async function mintPsyAmericanOption(
     TOKEN_PROGRAM_ID,
     assetToken.publicKey,
     signer.publicKey
-  )
+  );
 
   const accounts = {
     authority: signer.publicKey,
@@ -944,83 +951,73 @@ export async function mintPsyAmericanOption(
     clock: SYSVAR_CLOCK_PUBKEY,
     rent: SYSVAR_RENT_PUBKEY,
     systemProgram: SystemProgram.programId,
-  }
+  };
 
-  const tx = await rfqProgram.methods.mintPsyOptionsAmericanOption(legId, size, vaultAuthorityBump)
+  const tx = await rfqProgram.methods
+    .mintPsyOptionsAmericanOption(legId, size, vaultAuthorityBump)
     .accounts(accounts)
     .preInstructions(instructions)
     .signers([signer.payer])
-    .rpc()
+    .rpc();
 
-  return { tx }
+  return { tx };
 }
 
 /**
  * Mints PsyOptions American options for RFQ. Steps include the following.
- * 
+ *
  * - Fetches RFQ
  * - Iterates through legs
  *  - Initializes market if it does not exist
  *  - Initialized vault if it does not exist
  *  - Mints the leg option
- * 
- * @param provider 
+ *
+ * @param provider
  * @param rfqPda
- * @param signer 
+ * @param signer
  * @returns Promise<any>
  */
-export async function processLegs(
-  provider: Provider,
-  rfqPda: PublicKey,
-  signer: Wallet
-): Promise<object> {
-  const psyAmericanProgram = await getPsyAmericanProgram(provider)
-  const optionMarkets = (await psyAmericanProgram.account.optionMarket.all()) as unknown as ProgramAccount<OptionMarket>[]
+export async function processLegs(provider: Provider, rfqPda: PublicKey, signer: Wallet): Promise<object> {
+  const psyAmericanProgram = await getPsyAmericanProgram(provider);
+  const optionMarkets =
+    (await psyAmericanProgram.account.optionMarket.all()) as unknown as ProgramAccount<OptionMarket>[];
 
-  const rfqProgram = await getProgram(provider)
-  const rfqState: any = await rfqProgram.account.rfqState.fetch(rfqPda)
+  const rfqProgram = await getProgram(provider);
+  const rfqState: any = await rfqProgram.account.rfqState.fetch(rfqPda);
 
-  const assetToken = new Token(
-    provider.connection,
-    rfqState.assetMint,
-    TOKEN_PROGRAM_ID,
-    signer as unknown as Signer
-  )
-  const quoteToken = new Token(
-    provider.connection,
-    rfqState.quoteMint,
-    TOKEN_PROGRAM_ID,
-    signer as unknown as Signer
-  )
+  const assetToken = new Token(provider.connection, rfqState.assetMint, TOKEN_PROGRAM_ID, signer as unknown as Signer);
+  const quoteToken = new Token(provider.connection, rfqState.quoteMint, TOKEN_PROGRAM_ID, signer as unknown as Signer);
 
   // Check if market exists
   for (let i = 0; i < rfqState.legs.length; i++) {
-    if (!('psyOptions' in rfqState.legs[i].venue)) {
-      continue
+    if (!("psyOptions" in rfqState.legs[i].venue)) {
+      continue;
     }
 
-    let legOptionMarket: OptionMarket | null = null
-    let legOptionMarketPublicKey: PublicKey | null = null
+    let legOptionMarket: OptionMarket | null = null;
+    let legOptionMarketPublicKey: PublicKey | null = null;
 
-    const underlyingAmountPerContract = rfqState.legs[i].contractAssetAmount
-    const quoteAmountPerContract = rfqState.legs[i].contractQuoteAmount
-    const expirationUnixTimestamp = rfqState.legs[i].expiry
-    const size = rfqState.legs[i].amount
-    const legId = rfqState.legs[i].id
+    const underlyingAmountPerContract = rfqState.legs[i].contractAssetAmount;
+    const quoteAmountPerContract = rfqState.legs[i].contractQuoteAmount;
+    const expirationUnixTimestamp = rfqState.legs[i].expiry;
+    const size = rfqState.legs[i].amount;
+    const legId = rfqState.legs[i].id;
 
     for (let j = 0; j < optionMarkets.length; j++) {
-      const optionMarket = optionMarkets[j].account
-      const optionMarketPublicKey = optionMarkets[j].publicKey
+      const optionMarket = optionMarkets[j].account;
+      const optionMarketPublicKey = optionMarkets[j].publicKey;
 
-      if (assetToken.publicKey.toString() == optionMarket.underlyingAssetMint.toString() &&
+      if (
+        assetToken.publicKey.toString() == optionMarket.underlyingAssetMint.toString() &&
         quoteToken.publicKey.toString() == optionMarket.quoteAssetMint.toString() &&
         expirationUnixTimestamp.toNumber() == optionMarket.expirationUnixTimestamp.toNumber() &&
         underlyingAmountPerContract.toNumber() == optionMarket.underlyingAmountPerContract.toNumber() &&
-        quoteAmountPerContract.toNumber() == optionMarket.quoteAmountPerContract.toNumber()) {
+        quoteAmountPerContract.toNumber() == optionMarket.quoteAmountPerContract.toNumber()
+      ) {
         // Leg market exists
-        legOptionMarket = optionMarket
-        legOptionMarketPublicKey = optionMarketPublicKey
-        break
+        legOptionMarket = optionMarket;
+        legOptionMarketPublicKey = optionMarketPublicKey;
+        break;
       }
     }
 
@@ -1034,60 +1031,61 @@ export async function processLegs(
         quoteToken,
         signer,
         underlyingAmountPerContract
-      )
+      );
 
-      legOptionMarket = res.optionMarket
-      legOptionMarketPublicKey = res.publicKey
+      legOptionMarket = res.optionMarket;
+      legOptionMarketPublicKey = res.publicKey;
     }
 
     if (legOptionMarketPublicKey && legOptionMarket) {
-      await mintPsyAmericanOption(assetToken, legId, legOptionMarketPublicKey, legOptionMarket, provider, rfqPda, signer, size)
+      await mintPsyAmericanOption(
+        assetToken,
+        legId,
+        legOptionMarketPublicKey,
+        legOptionMarket,
+        provider,
+        rfqPda,
+        signer,
+        size
+      );
     }
 
-    legOptionMarket = null
-    legOptionMarketPublicKey = null
+    legOptionMarket = null;
+    legOptionMarketPublicKey = null;
   }
 
   // 🦆:
   // - Consolidate instructions into one transaction
 
-  return { rfqState }
+  return { rfqState };
 }
 
 /// Utils
 
 export async function getProgram(provider: Provider): Promise<Program> {
-  const programId = new PublicKey(idl.metadata.address)
-  return new anchor.Program(idl as Idl, programId, provider)
+  const programId = new PublicKey(idl.metadata.address);
+  return new anchor.Program(idl as Idl, programId, provider);
 }
 
-export async function getBalance(
-  provider: Provider,
-  signer: PublicKey,
-  mint: PublicKey
-) {
-  const program = await getProgram(provider)
+export async function getBalance(provider: Provider, signer: PublicKey, mint: PublicKey) {
+  const program = await getProgram(provider);
   try {
-    const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(signer, { mint })
-    return parseInt(parsedAccount.value[0].account.data.parsed.info.tokenAmount.amount, 10)
+    const parsedAccount = await program.provider.connection.getParsedTokenAccountsByOwner(signer, { mint });
+    return parseInt(parsedAccount.value[0].account.data.parsed.info.tokenAmount.amount, 10);
   } catch {
-    return null
+    return null;
   }
 }
 
 /// Testing
 
 export const calcFee = (amount: number, numerator: number, denominator: number): number => {
-  return parseInt((amount * (numerator / denominator)).toString(), 10)
-}
+  return parseInt((amount * (numerator / denominator)).toString(), 10);
+};
 
-export async function requestAirdrop(
-  provider: Provider,
-  publicKey: PublicKey,
-  lamports: number
-): Promise<void> {
+export async function requestAirdrop(provider: Provider, publicKey: PublicKey, lamports: number): Promise<void> {
   await provider.connection.confirmTransaction(
     await provider.connection.requestAirdrop(publicKey, lamports),
-    'confirmed'
-  )
+    "confirmed"
+  );
 }
