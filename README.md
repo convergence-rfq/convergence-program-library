@@ -10,6 +10,12 @@
 
 **Setup**
 
+Create an environment.
+```bash
+cp .env.sample .env
+# Fill .env with local variables
+```
+
 Build and test.
 
 ```bash
