@@ -335,9 +335,9 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
         Quote::Ask => {
             if signer == taker {
                 fee_amount = (rfq.order_amount as u128)
-                    .checked_div(protocol.fee_denominator as u128)
-                    .ok_or(ProtocolError::Math)?
                     .checked_mul(protocol.fee_numerator as u128)
+                    .ok_or(ProtocolError::Math)?
+                    .checked_div(protocol.fee_denominator as u128)
                     .ok_or(ProtocolError::Math)?
                     .to_u64()
                     .ok_or(ProtocolError::Math)?;
@@ -354,9 +354,9 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
         Quote::Bid => {
             if signer == taker {
                 fee_amount = (rfq.best_bid_amount.unwrap() as u128)
-                    .checked_div(protocol.fee_denominator as u128)
-                    .ok_or(ProtocolError::Math)?
                     .checked_mul(protocol.fee_numerator as u128)
+                    .ok_or(ProtocolError::Math)?
+                    .checked_div(protocol.fee_denominator as u128)
                     .ok_or(ProtocolError::Math)?
                     .to_u64()
                     .ok_or(ProtocolError::Math)?;
