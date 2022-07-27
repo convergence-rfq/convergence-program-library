@@ -132,10 +132,9 @@ export async function initializeProtocol(
       systemProgram: SystemProgram.programId,
     })
     .signers(signers)
-    .rpc();
-  const protocolState = await program.account.protocolState.fetch(protocolPda);
+    .rpc()
 
-  return { tx, protocolState };
+  return { tx, protocolPda }
 }
 
 export async function setFee(
@@ -165,9 +164,7 @@ export async function setFee(
     .signers(signers)
     .rpc();
 
-  const protocolState = await program.account.protocolState.fetch(protocolPda);
-
-  return { tx, protocolState };
+  return { tx, protocolPda }
 }
 
 export async function request(
@@ -187,7 +184,7 @@ export async function request(
   const [protocolPda, _protocolBump] = await PublicKey.findProgramAddress(
     [Buffer.from(PROTOCOL_SEED)],
     program.programId
-  );
+  )
 
   const [rfqPda, _rfqBump] = await PublicKey.findProgramAddress(
     [
@@ -231,15 +228,11 @@ export async function request(
     .signers(signers)
     .rpc();
 
-  const protocolState = await program.account.protocolState.fetch(protocolPda);
-  const rfqState = await program.account.rfqState.fetch(rfqPda);
-
   return {
     tx,
-    protocolState,
-    rfqState,
-    rfqPda,
-  };
+    protocolPda,
+    rfqPda
+  }
 }
 
 export async function cancel(provider: Provider, signer: Wallet, rfqPda: PublicKey): Promise<any> {
@@ -264,9 +257,7 @@ export async function cancel(provider: Provider, signer: Wallet, rfqPda: PublicK
     .signers(signers)
     .rpc();
 
-  const rfqState = await program.account.rfqState.fetch(rfqPda);
-
-  return { tx, rfqState };
+  return { tx, rfqPda, protocolPda }
 }
 
 export async function respond(
@@ -278,9 +269,8 @@ export async function respond(
   assetWallet: PublicKey,
   quoteWallet: PublicKey
 ): Promise<any> {
-  const program = await getProgram(provider);
-
-  let rfqState: any = await program.account.rfqState.fetch(rfqPda);
+  const program = await getProgram(provider)
+  const rfqState: any = await program.account.rfqState.fetch(rfqPda)
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
@@ -325,12 +315,7 @@ export async function respond(
     .signers(signers)
     .rpc();
 
-  rfqState = await program.account.rfqState.fetch(rfqPda);
-  const orderState = await program.account.orderState.fetch(orderPda);
-
   return {
-    orderState,
-    rfqState,
     orderPda,
     tx,
   };
@@ -345,9 +330,8 @@ export async function confirm(
   quoteWallet: PublicKey,
   side: object
 ): Promise<any> {
-  const program = await getProgram(provider);
-
-  let rfqState: any = await program.account.rfqState.fetch(rfqPda);
+  const program = await getProgram(provider)
+  const rfqState: any = await program.account.rfqState.fetch(rfqPda)
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
@@ -382,14 +366,9 @@ export async function confirm(
     .signers(signers)
     .rpc();
 
-  rfqState = await program.account.rfqState.fetch(rfqPda);
-  const orderState = await program.account.orderState.fetch(orderPda);
-
   return {
-    tx,
-    orderState,
-    rfqState,
-  };
+    tx
+  }
 }
 
 export async function lastLook(
@@ -415,14 +394,9 @@ export async function lastLook(
     .signers(signers)
     .rpc();
 
-  const rfqState = await program.account.rfqState.fetch(rfqPda);
-  const orderState = await program.account.orderState.fetch(orderPda);
-
   return {
-    tx,
-    rfqState,
-    orderState,
-  };
+    tx
+  }
 }
 
 export async function returnCollateral(
@@ -433,9 +407,8 @@ export async function returnCollateral(
   assetWallet: PublicKey,
   quoteWallet: PublicKey
 ): Promise<any> {
-  const program = await getProgram(provider);
-
-  let rfqState: any = await program.account.rfqState.fetch(rfqPda);
+  const program = await getProgram(provider)
+  const rfqState: any = await program.account.rfqState.fetch(rfqPda)
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
@@ -470,14 +443,9 @@ export async function returnCollateral(
     .signers(signers)
     .rpc();
 
-  rfqState = await program.account.rfqState.fetch(rfqPda);
-  const orderState = await program.account.orderState.fetch(orderPda);
-
   return {
-    orderState,
-    rfqState,
-    tx,
-  };
+    tx
+  }
 }
 
 export async function settle(
@@ -495,8 +463,8 @@ export async function settle(
     program.programId
   );
 
-  const protocolState: any = await program.account.protocolState.fetch(protocolPda);
-  let rfqState: any = await program.account.rfqState.fetch(rfqPda);
+  const protocolState: any = await program.account.protocolState.fetch(protocolPda)
+  const rfqState: any = await program.account.rfqState.fetch(rfqPda)
 
   const [assetEscrowPda, _assetEscrowBump] = await PublicKey.findProgramAddress(
     [Buffer.from(ASSET_ESCROW_SEED), rfqPda.toBuffer()],
@@ -574,25 +542,27 @@ export async function settle(
     tx = await program.methods.settle().accounts(accounts).signers(signers).rpc();
   }
 
-  rfqState = await program.account.rfqState.fetch(rfqPda);
-
   return {
     tx,
-    rfqState,
-  };
+    rfqPda,
+    orderPda
+  }
 }
 
 // Helpers
 
-export async function getRFQs(provider: Provider, page: number | null, pageSize: number | null): Promise<object[]> {
-  const program = await getProgram(provider);
-  const rfqs: any[] = await program.account.rfqState.all();
-  return rfqs;
+export async function getRfqs(
+  provider: Provider,
+  page: number | null,
+  pageSize: number | null
+): Promise<object[]> {
+  const program = await getProgram(provider)
+  const rfqs: any[] = await program.account.rfqState.all()
+  return rfqs
 }
 
 export async function getMyOrders(provider: Provider, signer: PublicKey): Promise<object[]> {
-  const programId = new PublicKey(idl.metadata.address);
-  const program = await getProgram(provider);
+  const program = await getProgram(provider)
   const myOrders = await program.account.orderState.all([
     {
       memcmp: {
@@ -605,8 +575,7 @@ export async function getMyOrders(provider: Provider, signer: PublicKey): Promis
 }
 
 export async function getRfqOrders(provider: Provider, rfq: PublicKey): Promise<object[]> {
-  const programId = new PublicKey(idl.metadata.address);
-  const program = await getProgram(provider);
+  const program = await getProgram(provider)
   const rfqOrders = await program.account.orderState.all([
     {
       memcmp: {

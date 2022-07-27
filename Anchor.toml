@@ -11,5 +11,5 @@ rfq = "3UA1aU58WxePXwtLCMb1CGPQjQQFqVPoKsEQo8vMFe3q"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
