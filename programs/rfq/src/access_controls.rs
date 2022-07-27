@@ -230,14 +230,11 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
     require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
     require!(authority == signer, ProtocolError::InvalidAuthority);
 
-    if !(rfq.confirmed || Clock::get().unwrap().unix_timestamp > rfq.expiry) {
-        if !rfq.confirmed {
-            return Err(error!(ProtocolError::RfqUnconfirmed));
-        }
-        if Clock::get().unwrap().unix_timestamp < rfq.expiry {
-            return Err(error!(ProtocolError::RfqActive));
-        }
-    }
+    let is_rfq_expired = Clock::get().unwrap().unix_timestamp > rfq.expiry;
+    require!(
+        rfq.confirmed || rfq.canceled || is_rfq_expired,
+        ProtocolError::RfqActive
+    );
 
     require!(
         !order.collateral_returned,
