@@ -80,7 +80,7 @@ pub fn request(
     rfq.best_bid_amount = None;
     rfq.bump = *ctx.bumps.get(RFQ_SEED).unwrap();
     rfq.expiry = expiry;
-    rfq.last_look = last_look;
+    rfq.last_look_approved = if last_look { Some(false) } else { None };
     rfq.legs = legs;
     rfq.order_amount = order_amount;
     rfq.quote_escrow_bump = *ctx.bumps.get(QUOTE_ESCROW_SEED).unwrap();
@@ -88,10 +88,6 @@ pub fn request(
     rfq.order_type = order_type;
     rfq.settled = false;
     rfq.unix_timestamp = Clock::get().unwrap().unix_timestamp;
-
-    if rfq.last_look {
-        rfq.approved = Some(false);
-    }
 
     Ok(())
 }
@@ -183,7 +179,7 @@ pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Res
 #[access_control(last_look_access_control(&ctx))]
 pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
     let rfq = &mut ctx.accounts.rfq;
-    rfq.approved = Some(true);
+    rfq.last_look_approved = Some(true);
 
     Ok(())
 }

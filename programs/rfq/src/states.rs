@@ -17,8 +17,6 @@ pub struct AccessManagerState {
 pub struct RfqState {
     /// Optional access manager
     pub access_manager: Option<Pubkey>,
-    /// Last look approved
-    pub approved: Option<bool>,
     /// Asset escrow bump
     pub asset_escrow_bump: u8,
     /// Asset mint
@@ -41,10 +39,10 @@ pub struct RfqState {
     pub confirmed: bool,
     /// Expiry time
     pub expiry: i64,
+    /// Last look approved, None value means last look logic is disabled
+    pub last_look_approved: Option<bool>,
     /// Legs
     pub legs: Vec<Leg>,
-    /// Last look required to approve trade
-    pub last_look: bool,
     /// Order amount
     pub order_amount: u64,
     /// Order type
@@ -148,7 +146,7 @@ pub struct Leg {
     // Venue
     pub venue: Venue,
     // Buy or Sell
-    pub buy_sell: BuySell
+    pub buy_sell: BuySell,
 }
 
 /// BuySell.

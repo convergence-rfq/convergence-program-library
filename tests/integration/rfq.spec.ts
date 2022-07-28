@@ -39,7 +39,7 @@ import {
   cancel,
   confirm,
   getBalance,
-  getRFQs,
+  getRfqs,
   getProgram,
   getAllOrders,
   getMyOrders,
@@ -117,7 +117,11 @@ let makerB: Wallet;
 let makerC: Wallet;
 let makerD: Wallet;
 
-let rfqPda: PublicKey;
+let rfqPda1: PublicKey;
+let rfqPda2: PublicKey;
+let rfqPda3: PublicKey;
+let rfqPda4: PublicKey;
+let rfqPda5: PublicKey;
 
 let orderPda1: PublicKey;
 let orderPda2: PublicKey;
@@ -205,13 +209,15 @@ describe("RFQ Specification", () => {
   });
 
   it("DAO initializes protocol with 0bps fee", async () => {
-    const { protocolState } = await initializeProtocol(provider, dao, FEE_DENOMINATOR, 0);
+    const { protocolPda } = await initializeProtocol(provider, dao, FEE_DENOMINATOR, 0);
+    const protocolState: any = await program.account.protocolState.fetch(protocolPda);
     assert.ok(protocolState.feeDenominator.eq(new anchor.BN(FEE_DENOMINATOR)));
     assert.ok(protocolState.feeNumerator.eq(new anchor.BN(0)));
   });
 
   it(`DAO sets ${FEE_NUMERATOR}bps protocol fee`, async () => {
-    const { protocolState } = await setFee(provider, dao, FEE_DENOMINATOR, FEE_NUMERATOR);
+    const { protocolPda } = await setFee(provider, dao, FEE_DENOMINATOR, FEE_NUMERATOR);
+    const protocolState: any = await program.account.protocolState.fetch(protocolPda);
     assert.ok(protocolState.feeDenominator.eq(new anchor.BN(FEE_DENOMINATOR)));
     assert.ok(protocolState.feeNumerator.eq(new anchor.BN(FEE_NUMERATOR)));
   });
@@ -240,16 +246,17 @@ describe("RFQ Specification", () => {
       quoteToken.publicKey,
       requestOrder
     );
-    assert.ok(res.rfqState.authority.toString() === taker.publicKey.toString());
+    rfqPda1 = res.rfqPda;
 
-    rfqPda = res.rfqPda;
+    const rfqState = await program.account.rfqState.fetch(res.rfqPda);
+    assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
   });
 
   it("RFQ 1: Maker A responds to two-way request then Taker confirms best bid", async () => {
     const res1 = await respond(
       provider,
       makerA,
-      rfqPda,
+      rfqPda1,
       MAKER_A_BID_AMOUNT1,
       MAKER_A_ASK_AMOUNT1,
       makerAAssetATA,
@@ -260,7 +267,7 @@ describe("RFQ Specification", () => {
     const res2 = await respond(
       provider,
       makerA,
-      rfqPda,
+      rfqPda1,
       MAKER_A_BID_AMOUNT2,
       MAKER_A_ASK_AMOUNT2,
       makerAAssetATA,
@@ -274,33 +281,36 @@ describe("RFQ Specification", () => {
     console.log("Taker quote balance:", quoteBalance);
 
     try {
-      await confirm(provider, rfqPda, res1.orderPda, taker, takerAssetATA, takerQuoteATA, Quote.Bid);
+      await confirm(provider, rfqPda1, orderPda1, taker, takerAssetATA, takerQuoteATA, Quote.Bid);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "InvalidConfirm");
     }
 
-    const { rfqState, orderState } = await confirm(
-      provider,
-      rfqPda,
-      res2.orderPda,
-      taker,
-      takerAssetATA,
-      takerQuoteATA,
-      Quote.Bid
-    );
+    const res3 = await confirm(provider, rfqPda1, orderPda2, taker, takerAssetATA, takerQuoteATA, Quote.Bid);
+
+    const orderState: any = await program.account.orderState.fetch(orderPda2);
+    const rfqState: any = await program.account.rfqState.fetch(rfqPda1);
     console.log("Order confirmed quote:", orderState.confirmedQuote);
     console.log("Best ask:", rfqState.bestAskAmount?.toNumber());
     console.log("Best bid:", rfqState.bestBidAmount?.toNumber());
 
     try {
-      await confirm(provider, rfqPda, res1.orderPda, taker, takerAssetATA, takerQuoteATA, Quote.Bid);
+      await confirm(provider, rfqPda1, orderPda1, taker, takerAssetATA, takerQuoteATA, Quote.Bid);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "RfqConfirmed");
     }
 
     try {
-      await respond(provider, makerA, rfqPda, MAKER_B_BID_AMOUNT1, MAKER_B_ASK_AMOUNT1, makerAAssetATA, makerAQuoteATA);
+      await respond(
+        provider,
+        makerA,
+        rfqPda1,
+        MAKER_B_BID_AMOUNT1,
+        MAKER_B_ASK_AMOUNT1,
+        makerAAssetATA,
+        makerAQuoteATA
+      );
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "RfqConfirmed");
@@ -324,8 +334,8 @@ describe("RFQ Specification", () => {
   });
 
   it("RFQ 1: Taker and Maker A return collateral then settle", async () => {
-    await returnCollateral(provider, makerA, rfqPda, orderPda1, makerAAssetATA, makerAQuoteATA);
-    await returnCollateral(provider, makerA, rfqPda, orderPda2, makerAAssetATA, makerAQuoteATA);
+    await returnCollateral(provider, makerA, rfqPda1, orderPda1, makerAAssetATA, makerAQuoteATA);
+    await returnCollateral(provider, makerA, rfqPda1, orderPda2, makerAAssetATA, makerAQuoteATA);
     let assetBalance = await getBalance(provider, makerA.publicKey, assetToken.publicKey);
     let quoteBalance = await getBalance(provider, makerA.publicKey, quoteToken.publicKey);
     console.log("Maker A asset balance:", assetBalance);
@@ -333,7 +343,7 @@ describe("RFQ Specification", () => {
     assert.equal(assetBalance, MINT_AIRDROP_ASSET);
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE - MAKER_A_BID_AMOUNT2);
 
-    await settle(provider, makerA, rfqPda, orderPda2, makerAAssetATA, makerAQuoteATA);
+    await settle(provider, makerA, rfqPda1, orderPda2, makerAAssetATA, makerAQuoteATA);
     assetBalance = await getBalance(provider, makerA.publicKey, assetToken.publicKey);
     quoteBalance = await getBalance(provider, makerA.publicKey, quoteToken.publicKey);
     console.log("Maker A asset balance:", assetBalance);
@@ -341,7 +351,7 @@ describe("RFQ Specification", () => {
     assert.equal(assetBalance, MINT_AIRDROP_ASSET + TAKER_ORDER_AMOUNT1);
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE - MAKER_A_BID_AMOUNT2);
 
-    await settle(provider, taker, rfqPda, orderPda2, takerAssetATA, takerQuoteATA);
+    await settle(provider, taker, rfqPda1, orderPda2, takerAssetATA, takerQuoteATA);
     assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey);
     quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey);
     console.log("Taker asset balance:", assetBalance);
@@ -375,71 +385,87 @@ describe("RFQ Specification", () => {
       quoteToken.publicKey,
       orderType
     );
-    console.log("Order type:", res.rfqState.orderType);
-    console.log("Order amount:", res.rfqState.orderAmount.toNumber());
+    rfqPda2 = res.rfqPda;
+
+    const rfqState: any = await program.account.rfqState.fetch(rfqPda2);
+    console.log("Order type:", rfqState.orderType);
+    console.log("Order amount:", rfqState.orderAmount.toNumber());
 
     const assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey);
     const quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey);
     console.log("Taker asset balance:", assetBalance);
     console.log("Taker quote balance:", quoteBalance);
 
-    assert.ok(res.rfqState.authority.toString() === taker.publicKey.toString());
-    assert.deepEqual(res.rfqState.orderType, orderType);
-    assert.equal(res.rfqState.orderAmount.toString(), TAKER_ORDER_AMOUNT2.toString());
-    assert.equal(res.rfqState.expiry.toString(), Math.floor(expiry).toString());
-
-    rfqPda = res.rfqPda;
+    assert.ok(rfqState.authority.toString() === taker.publicKey.toString());
+    assert.deepEqual(rfqState.orderType, orderType);
+    assert.equal(rfqState.orderAmount.toString(), TAKER_ORDER_AMOUNT2.toString());
+    assert.equal(rfqState.expiry.toString(), Math.floor(expiry).toString());
   });
 
-  it("RFQ 2: Maker B and C responds", async () => {
+  it("RFQ 2: Maker B and C respond", async () => {
     const res1 = await respond(
       provider,
       makerB,
-      rfqPda,
+      rfqPda2,
       MAKER_B_BID_AMOUNT1,
       MAKER_B_ASK_AMOUNT1,
       makerBAssetATA,
       makerBQuoteATA
     );
-    console.log("Response 1 best ask:", res1.rfqState.bestAskAmount?.toNumber());
-    console.log("Response 1 best bid:", res1.rfqState.bestBidAmount?.toNumber());
-
     orderPda1 = res1.orderPda;
 
+    let rfqState: any = await program.account.rfqState.fetch(rfqPda2);
+    console.log("Response 1 best ask:", rfqState.bestAskAmount?.toNumber());
+    console.log("Response 1 best bid:", rfqState.bestBidAmount?.toNumber());
+
     try {
-      await respond(provider, makerB, rfqPda, MAKER_B_BID_AMOUNT2, MAKER_B_ASK_AMOUNT2, makerBAssetATA, makerBQuoteATA);
+      await respond(
+        provider,
+        makerB,
+        rfqPda2,
+        MAKER_B_BID_AMOUNT2,
+        MAKER_B_ASK_AMOUNT2,
+        makerBAssetATA,
+        makerBQuoteATA
+      );
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "InvalidQuote");
     }
 
+    assert.equal(rfqState.bestBidAmount?.toString(), MAKER_B_BID_AMOUNT1.toString());
+
     const res2 = await respond(
       provider,
       makerC,
-      rfqPda,
+      rfqPda2,
       MAKER_C_BID_AMOUNT1,
       MAKER_C_ASK_AMOUNT1,
       makerCAssetATA,
       makerCQuoteATA
     );
-    console.log("Response 2 best ask:", res2.rfqState.bestAskAmount?.toNumber());
-    console.log("Response 2 best bid:", res2.rfqState.bestBidAmount?.toNumber());
-
     orderPda2 = res2.orderPda;
+
+    rfqState = await program.account.rfqState.fetch(rfqPda2);
+    console.log("Response 2 best ask:", rfqState.bestAskAmount?.toNumber());
+    console.log("Response 2 best bid:", rfqState.bestBidAmount?.toNumber());
+
+    assert.equal(rfqState.bestBidAmount?.toString(), MAKER_C_BID_AMOUNT1.toString());
 
     const res3 = await respond(
       provider,
       makerC,
-      rfqPda,
+      rfqPda2,
       MAKER_C_BID_AMOUNT2,
       MAKER_C_ASK_AMOUNT2,
       makerCAssetATA,
       makerCQuoteATA
     );
-    console.log("Response 3 best ask:", res3.rfqState.bestAskAmount?.toNumber());
-    console.log("Response 3 best bid:", res3.rfqState.bestBidAmount?.toNumber());
-
     orderPda3 = res3.orderPda;
+
+    rfqState = await program.account.rfqState.fetch(rfqPda2);
+    console.log("Response 3 best ask:", rfqState.bestAskAmount?.toNumber());
+    console.log("Response 3 best bid:", rfqState.bestBidAmount?.toNumber());
 
     let assetBalance = await getBalance(provider, makerB.publicKey, assetToken.publicKey);
     let quoteBalance = await getBalance(provider, makerB.publicKey, quoteToken.publicKey);
@@ -451,27 +477,26 @@ describe("RFQ Specification", () => {
     console.log("Maker C asset balance:", assetBalance);
     console.log("Maker C quote balance:", quoteBalance);
 
-    assert.equal(res1.rfqState.bestBidAmount?.toString(), MAKER_B_BID_AMOUNT1.toString());
-    assert.equal(res2.rfqState.bestBidAmount?.toString(), MAKER_C_BID_AMOUNT1.toString());
-    assert.equal(res3.rfqState.bestBidAmount?.toString(), MAKER_C_BID_AMOUNT1.toString());
+    assert.equal(rfqState.bestBidAmount?.toString(), MAKER_C_BID_AMOUNT1.toString());
   });
 
   it("RFQ 2: Taker confirms Maker B bid for 410,000", async () => {
     try {
-      await confirm(provider, rfqPda, orderPda1, taker, takerAssetATA, takerQuoteATA, Quote.Bid);
+      await confirm(provider, rfqPda2, orderPda1, taker, takerAssetATA, takerQuoteATA, Quote.Bid);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "InvalidConfirm");
     }
 
     try {
-      await confirm(provider, rfqPda, orderPda2, taker, takerAssetATA, takerQuoteATA, Quote.Ask);
+      await confirm(provider, rfqPda2, orderPda2, taker, takerAssetATA, takerQuoteATA, Quote.Ask);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "InvalidConfirm");
     }
 
-    const { rfqState } = await confirm(provider, rfqPda, orderPda2, taker, takerAssetATA, takerQuoteATA, Quote.Bid);
+    await confirm(provider, rfqPda2, orderPda2, taker, takerAssetATA, takerQuoteATA, Quote.Bid);
+    const rfqState: any = await program.account.rfqState.fetch(rfqPda2);
     console.log("Best ask:", rfqState.bestAskAmount?.toNumber());
     console.log("Best bid:", rfqState.bestBidAmount?.toNumber());
 
@@ -486,29 +511,25 @@ describe("RFQ Specification", () => {
   });
 
   it("RFQ 2: Maker B and C last looks", async () => {
-    const res1 = await lastLook(provider, makerB, rfqPda, orderPda1);
-    const res2 = await lastLook(provider, makerC, rfqPda, orderPda2);
-    const res3 = await lastLook(provider, makerC, rfqPda, orderPda3);
+    await lastLook(provider, makerC, rfqPda2, orderPda2);
 
-    console.log("Order type:", res2.rfqState.orderType);
-    console.log("Last look:", res3.rfqState.lastLook);
-
-    assert.equal(res1.rfqState.approved, true);
+    const rfqState: any = await program.account.rfqState.fetch(rfqPda2);
+    assert.equal(rfqState.lastLookApproved, true);
   });
 
   it("RFQ 2: Maker B and C return collateral", async () => {
-    await returnCollateral(provider, makerB, rfqPda, orderPda1, makerBAssetATA, makerBQuoteATA);
-    await returnCollateral(provider, makerC, rfqPda, orderPda3, makerCAssetATA, makerCQuoteATA);
+    await returnCollateral(provider, makerB, rfqPda2, orderPda1, makerBAssetATA, makerBQuoteATA);
+    await returnCollateral(provider, makerC, rfqPda2, orderPda3, makerCAssetATA, makerCQuoteATA);
 
     try {
-      await returnCollateral(provider, makerC, rfqPda, orderPda2, makerCAssetATA, makerCQuoteATA);
+      await returnCollateral(provider, makerC, rfqPda2, orderPda2, makerCAssetATA, makerCQuoteATA);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "OrderConfirmed");
     }
 
     try {
-      await returnCollateral(provider, makerC, rfqPda, orderPda3, makerCAssetATA, makerCQuoteATA);
+      await returnCollateral(provider, makerC, rfqPda2, orderPda3, makerCAssetATA, makerCQuoteATA);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "CollateralReturned");
@@ -536,26 +557,26 @@ describe("RFQ Specification", () => {
   });
 
   it("RFQ 2: Taker and Maker B settle", async () => {
-    await settle(provider, taker, rfqPda, orderPda2, takerAssetATA, takerQuoteATA);
+    await settle(provider, taker, rfqPda2, orderPda2, takerAssetATA, takerQuoteATA);
 
     try {
-      await settle(provider, makerB, rfqPda, orderPda2, makerBAssetATA, makerBQuoteATA);
+      await settle(provider, makerB, rfqPda2, orderPda2, makerBAssetATA, makerBQuoteATA);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "InvalidAuthority");
     }
 
-    await settle(provider, makerC, rfqPda, orderPda2, makerCAssetATA, makerCQuoteATA);
+    await settle(provider, makerC, rfqPda2, orderPda2, makerCAssetATA, makerCQuoteATA);
 
     try {
-      await settle(provider, makerC, rfqPda, orderPda2, makerCAssetATA, makerCQuoteATA);
+      await settle(provider, makerC, rfqPda2, orderPda2, makerCAssetATA, makerCQuoteATA);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "OrderSettled");
     }
 
     try {
-      await settle(provider, taker, rfqPda, orderPda2, takerAssetATA, takerQuoteATA);
+      await settle(provider, taker, rfqPda2, orderPda2, takerAssetATA, takerQuoteATA);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "RfqSettled");
@@ -607,12 +628,12 @@ describe("RFQ Specification", () => {
       quoteToken.publicKey,
       requestOrder
     );
-    rfqPda = res.rfqPda;
+    rfqPda3 = res.rfqPda;
 
     const res1 = await respond(
       provider,
       makerD,
-      rfqPda,
+      rfqPda3,
       MAKER_D_BID_AMOUNT1,
       MAKER_D_ASK_AMOUNT1,
       makerDAssetATA,
@@ -621,7 +642,7 @@ describe("RFQ Specification", () => {
     const res2 = await respond(
       provider,
       makerD,
-      rfqPda,
+      rfqPda3,
       MAKER_D_BID_AMOUNT2,
       MAKER_D_ASK_AMOUNT2,
       makerDAssetATA,
@@ -630,10 +651,10 @@ describe("RFQ Specification", () => {
     orderPda1 = res1.orderPda;
     orderPda2 = res2.orderPda;
 
-    await confirm(provider, rfqPda, orderPda2, taker, takerAssetATA, takerQuoteATA, Quote.Ask);
-    await returnCollateral(provider, makerD, rfqPda, orderPda1, makerDAssetATA, makerDQuoteATA);
-    await settle(provider, taker, rfqPda, orderPda2, takerAssetATA, takerQuoteATA);
-    await settle(provider, makerD, rfqPda, orderPda2, makerDAssetATA, makerDQuoteATA);
+    await confirm(provider, rfqPda3, orderPda2, taker, takerAssetATA, takerQuoteATA, Quote.Ask);
+    await returnCollateral(provider, makerD, rfqPda3, orderPda1, makerDAssetATA, makerDQuoteATA);
+    await settle(provider, taker, rfqPda3, orderPda2, takerAssetATA, takerQuoteATA);
+    await settle(provider, makerD, rfqPda3, orderPda2, makerDAssetATA, makerDQuoteATA);
 
     let assetBalance = await getBalance(provider, taker.publicKey, assetToken.publicKey);
     let quoteBalance = await getBalance(provider, taker.publicKey, quoteToken.publicKey);
@@ -680,7 +701,7 @@ describe("RFQ Specification", () => {
       quoteToken.publicKey,
       requestOrder
     );
-    rfqPda = res.rfqPda;
+    rfqPda4 = res.rfqPda;
 
     let assetBalance = await getBalance(provider, makerD.publicKey, assetToken.publicKey);
     let quoteBalance = await getBalance(provider, makerD.publicKey, quoteToken.publicKey);
@@ -692,36 +713,48 @@ describe("RFQ Specification", () => {
     const res1 = await respond(
       provider,
       makerD,
-      rfqPda,
+      rfqPda4,
       MAKER_D_BID_AMOUNT3,
       MAKER_D_ASK_AMOUNT3,
       makerDAssetATA,
       makerDQuoteATA
     );
-    console.log("Order bid:", res1.orderState.bid.toNumber());
-    console.log("Order ask:", res1.orderState.ask.toNumber());
-    assert.ok(!res1.rfqState.settled);
     orderPda1 = res1.orderPda;
+
+    let rfqState: any = await program.account.rfqState.fetch(rfqPda4);
+    let orderState: any = await program.account.orderState.fetch(orderPda1);
+
+    console.log("Order bid:", orderState.bid.toNumber());
+    console.log("Order ask:", orderState.ask.toNumber());
+    assert.ok(!rfqState.settled);
 
     console.log("Sleeping for 2s...");
     await sleep(3_000);
 
     try {
-      await respond(provider, makerD, rfqPda, MAKER_D_BID_AMOUNT2, MAKER_D_ASK_AMOUNT2, makerDAssetATA, makerDQuoteATA);
+      await respond(
+        provider,
+        makerD,
+        rfqPda4,
+        MAKER_D_BID_AMOUNT2,
+        MAKER_D_ASK_AMOUNT2,
+        makerDAssetATA,
+        makerDQuoteATA
+      );
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "RfqInactive");
     }
 
     try {
-      await confirm(provider, rfqPda, orderPda1, taker, takerAssetATA, takerQuoteATA, Quote.Ask);
+      await confirm(provider, rfqPda4, orderPda1, taker, takerAssetATA, takerQuoteATA, Quote.Ask);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "RfqInactive");
     }
 
     try {
-      await settle(provider, taker, rfqPda, orderPda1, takerAssetATA, takerQuoteATA);
+      await settle(provider, taker, rfqPda4, orderPda1, takerAssetATA, takerQuoteATA);
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "RfqUnconfirmed");
@@ -734,12 +767,15 @@ describe("RFQ Specification", () => {
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT3 - TAKER_ORDER_AMOUNT4);
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE + MAKER_D_ASK_AMOUNT2 - MAKER_D_BID_AMOUNT3);
 
-    const res2 = await returnCollateral(provider, makerD, rfqPda, orderPda1, makerDAssetATA, makerDQuoteATA);
-    console.log("Bid confirmed:", res2.orderState.bidConfirmed);
-    console.log("Ask confirmed:", res2.orderState.askConfirmed);
-    assert.ok(!res2.rfqState.confirmed);
-    assert.ok(!res2.orderState.askConfirmed);
-    assert.ok(!res2.orderState.bidConfirmed);
+    const res2 = await returnCollateral(provider, makerD, rfqPda4, orderPda1, makerDAssetATA, makerDQuoteATA);
+    rfqState = await program.account.rfqState.fetch(rfqPda4);
+    orderState = await program.account.orderState.fetch(orderPda1);
+
+    console.log("Bid confirmed:", orderState.bidConfirmed);
+    console.log("Ask confirmed:", orderState.askConfirmed);
+    assert.ok(!rfqState.confirmed);
+    assert.ok(!orderState.askConfirmed);
+    assert.ok(!orderState.bidConfirmed);
 
     assetBalance = await getBalance(provider, makerD.publicKey, assetToken.publicKey);
     quoteBalance = await getBalance(provider, makerD.publicKey, quoteToken.publicKey);
@@ -761,7 +797,7 @@ describe("RFQ Specification", () => {
       MINT_AIRDROP_QUOTE + MAKER_A_BID_AMOUNT2 - FEE1 + MAKER_C_BID_AMOUNT1 - FEE2 - MAKER_D_ASK_AMOUNT2
     );
 
-    const rfqOrders = await getRfqOrders(provider, rfqPda);
+    const rfqOrders = await getRfqOrders(provider, rfqPda4);
     assert.equal(rfqOrders.length, 1);
 
     const myOrders = await getMyOrders(provider, makerD.publicKey);
@@ -792,15 +828,25 @@ describe("RFQ Specification", () => {
       quoteToken.publicKey,
       requestOrder
     );
-    assert.ok(!res1.rfqState.canceled);
+    rfqPda5 = res1.rfqPda;
 
-    rfqPda = res1.rfqPda;
+    let rfqState: any = await program.account.rfqState.fetch(rfqPda5);
+    assert.ok(!rfqState.canceled);
 
-    const res2 = await cancel(provider, taker, rfqPda);
-    assert.ok(res2.rfqState.canceled);
+    const res2 = await cancel(provider, taker, rfqPda5);
+    rfqState = await program.account.rfqState.fetch(rfqPda5);
+    assert.ok(rfqState.canceled);
 
     try {
-      await respond(provider, makerD, rfqPda, MAKER_D_BID_AMOUNT3, MAKER_D_ASK_AMOUNT3, makerDAssetATA, makerDQuoteATA);
+      await respond(
+        provider,
+        makerD,
+        rfqPda5,
+        MAKER_D_BID_AMOUNT3,
+        MAKER_D_ASK_AMOUNT3,
+        makerDAssetATA,
+        makerDQuoteATA
+      );
       assert.ok(false);
     } catch (err) {
       assert.strictEqual(err.error.errorCode.code, "RfqCanceled");
@@ -808,7 +854,7 @@ describe("RFQ Specification", () => {
   });
 
   it("DAO views all RFQs and responses", async () => {
-    const rfqs: any = await getRFQs(provider, 1, 10);
+    const rfqs: any = await getRfqs(provider, 1, 10);
     const allOrders = await getAllOrders(provider);
     assert.equal(rfqs.length, 5);
     assert.equal(allOrders.length, 8);

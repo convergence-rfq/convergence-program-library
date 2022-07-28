@@ -155,9 +155,20 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
     let signer = ctx.accounts.signer.key();
     let authority = ctx.accounts.order.authority.key();
 
-    require!(rfq.key() == order.rfq.key(), ProtocolError::LastLookNotSet);
+    require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
     require!(authority == signer, ProtocolError::InvalidAuthority);
-    require!(rfq.last_look, ProtocolError::LastLookNotSet);
+    require!(
+        rfq.last_look_approved.is_some(),
+        ProtocolError::LastLookNotSet
+    );
+    require!(
+        rfq.last_look_approved.unwrap() == false,
+        ProtocolError::LastLookAlreadyDone
+    );
+    require!(
+        order.confirmed_quote.is_some(),
+        ProtocolError::OrderNotConfirmed
+    );
 
     Ok(())
 }
@@ -283,12 +294,10 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
         ProtocolError::InvalidAuthority
     );
 
-    if rfq.last_look {
-        match rfq.approved {
-            Some(approved) => require!(approved, ProtocolError::OrderNotApproved),
-            None => require!(false, ProtocolError::OrderNotApproved),
-        }
-    }
+    require!(
+        rfq.last_look_approved.unwrap_or(true) == true,
+        ProtocolError::OrderNotApproved
+    );
 
     require!(rfq.confirmed, ProtocolError::RfqUnconfirmed);
     require!(!rfq.canceled, ProtocolError::RfqCanceled);

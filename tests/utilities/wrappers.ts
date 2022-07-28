@@ -6,6 +6,7 @@ import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { Order as OrderType, Quote as QuoteType } from "../../lib/helpers";
 import { getTimestampInFuture } from "./helpers";
 import {
+  DAO_PRIVATE_KEY,
   DEFAULT_ASK_AMOUNT,
   DEFAULT_BID_AMOUNT,
   DEFAULT_ORDER_AMOUNT,
@@ -19,9 +20,11 @@ import { getAssetEscrowPda, getOrderPda, getProtocolPda, getQuoteEscrowPda, getR
 export class Context {
   public program: anchor.Program<RfqIdl>;
   public provider: anchor.Provider;
+  public dao: Keypair;
   public taker: Keypair;
   public assetToken: Token;
   public quoteToken: Token;
+  public protocolPda: PublicKey;
 
   constructor() {
     this.provider = anchor.AnchorProvider.env();
@@ -30,10 +33,24 @@ export class Context {
   }
 
   async initialize() {
-    this.taker = await this.createPayer();
+    await this.initializeDao();
     this.assetToken = await this.createMint();
     this.quoteToken = await this.createMint();
+    this.taker = await this.createPayer();
     await this.createTokenAccountsFor(this.taker.publicKey);
+    this.protocolPda = await getProtocolPda(this.program.programId);
+  }
+
+  async initializeDao() {
+    this.dao = Keypair.fromSecretKey(new Uint8Array(DAO_PRIVATE_KEY));
+    const connection = this.provider.connection;
+    const daoFunds = await connection.getBalance(this.dao.publicKey);
+    if (daoFunds == 0) {
+      await connection.confirmTransaction(
+        await connection.requestAirdrop(this.dao.publicKey, DEFAULT_SOL_FOR_SIGNERS),
+        "confirmed"
+      );
+    }
   }
 
   async createPayer() {
@@ -76,14 +93,7 @@ export class Context {
   }
 
   async createMint() {
-    return await Token.createMint(
-      this.provider.connection,
-      this.taker,
-      this.taker.publicKey,
-      null,
-      0,
-      TOKEN_PROGRAM_ID
-    );
+    return await Token.createMint(this.provider.connection, this.dao, this.dao.publicKey, null, 0, TOKEN_PROGRAM_ID);
   }
 
   async createPayerWithTokens() {
@@ -110,22 +120,20 @@ export class Context {
 
     amount = amount ?? DEFAULT_TOKEN_AMOUNT;
     const account = await mint.createAssociatedTokenAccount(address);
-    await mint.mintTo(account, this.taker, [], amount);
+    await mint.mintTo(account, this.dao, [], amount);
   }
 
   async initializeProtocolIfNotInitialized() {
-    const protocolPda = await getProtocolPda(this.program.programId);
-    1;
-    const currentProtocol = await this.program.account.protocolState.fetchNullable(protocolPda);
+    const currentProtocol = await this.program.account.protocolState.fetchNullable(this.protocolPda);
     if (currentProtocol === null) {
       await this.program.methods
         .initialize(new anchor.BN(FEE_DENOMINATOR), new anchor.BN(FEE_NUMERATOR))
         .accounts({
-          signer: this.taker.publicKey,
-          protocol: protocolPda,
+          signer: this.dao.publicKey,
+          protocol: this.protocolPda,
           systemProgram: SystemProgram.programId,
         })
-        .signers([this.taker])
+        .signers([this.dao])
         .rpc();
     }
   }
@@ -137,7 +145,6 @@ export class Context {
     orderAmount = DEFAULT_ORDER_AMOUNT,
     orderType = OrderType.TwoWay,
   } = {}) {
-    const protocolPda = await getProtocolPda(this.program.programId);
     const rfqPda = await getRfqPda(
       this.program.programId,
       this.taker.publicKey,
@@ -155,7 +162,7 @@ export class Context {
         assetEscrow,
         assetMint: this.assetToken.publicKey,
         signer: this.taker.publicKey,
-        protocol: protocolPda,
+        protocol: this.protocolPda,
         quoteEscrow,
         quoteMint: this.quoteToken.publicKey,
         rent: SYSVAR_RENT_PUBKEY,
@@ -173,6 +180,7 @@ export class Context {
 export class Rfq {
   public assetEscrow: PublicKey;
   public quoteEscrow: PublicKey;
+  public confirmedOrder?: [Order, any /* Quote type instance */];
 
   private constructor(public context: Context, public account: PublicKey) {}
 
@@ -195,7 +203,7 @@ export class Rfq {
       askAmount
     );
 
-    const tx = await this.context.program.methods
+    await this.context.program.methods
       .respond(bidAmount ? new BN(bidAmount) : null, askAmount ? new BN(askAmount) : null)
       .accounts({
         assetMint: this.context.assetToken.publicKey,
@@ -230,6 +238,38 @@ export class Rfq {
       .rpc();
   }
 
+  async settle(sender: Keypair) {
+    if (!this.confirmedOrder) {
+      throw new Error("Unconfirmed RFQ!");
+    }
+    const [order, quoteType] = this.confirmedOrder;
+    const treasuryMint = quoteType.hasOwnProperty("ask") ? this.context.assetToken : this.context.quoteToken;
+    const treasuryWallet = await treasuryMint.createAccount(this.context.dao.publicKey);
+
+    const assetWallet = await this.context.getAssetTokenAddress(sender.publicKey);
+    const quoteWallet = await this.context.getQuoteTokenAddress(sender.publicKey);
+    await this.context.program.methods
+      .settle()
+      .accounts({
+        assetEscrow: this.assetEscrow,
+        assetMint: this.context.assetToken.publicKey,
+        assetWallet,
+        signer: sender.publicKey,
+        order: order.account,
+        quoteEscrow: this.quoteEscrow,
+        quoteMint: this.context.quoteToken.publicKey,
+        quoteWallet,
+        rfq: this.account,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        protocol: this.context.protocolPda,
+        treasuryWallet,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([sender])
+      .rpc();
+  }
+
   async getState() {
     return this.context.program.account.rfqState.fetch(this.account);
   }
@@ -238,7 +278,7 @@ export class Rfq {
 export class Order {
   constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {}
 
-  async confirm({ quoteType = QuoteType.Bid } = {}) {
+  async confirm(quoteType = QuoteType.Bid) {
     const takerAddress = this.context.taker.publicKey;
     const assetWallet = await this.context.getAssetTokenAddress(takerAddress);
     const quoteWallet = await this.context.getQuoteTokenAddress(takerAddress);
@@ -261,6 +301,8 @@ export class Order {
       })
       .signers([this.context.taker])
       .rpc();
+
+    this.rfq.confirmedOrder = [this, quoteType];
   }
 
   async returnCollateral() {
@@ -281,6 +323,18 @@ export class Order {
         rent: SYSVAR_RENT_PUBKEY,
         rfq: this.rfq.account,
         tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([this.maker])
+      .rpc();
+  }
+
+  async lastLook() {
+    await this.context.program.methods
+      .lastLook()
+      .accounts({
+        signer: this.maker.publicKey,
+        order: this.account,
+        rfq: this.rfq.account,
       })
       .signers([this.maker])
       .rpc();
