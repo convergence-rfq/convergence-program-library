@@ -22,7 +22,7 @@ describe("Return collateral", () => {
   it("Successfully returns collateral from confirmed offer", async () => {
     const rfq = await context.request();
     const order = await rfq.respond();
-    await order.confirm({ quoteType: Quote.Bid });
+    await order.confirm(Quote.Bid);
     await order.returnCollateral();
     await assertMakerTokens(order.maker.publicKey, DEFAULT_TOKEN_AMOUNT, DEFAULT_TOKEN_AMOUNT - DEFAULT_BID_AMOUNT);
   });

@@ -26,12 +26,16 @@ pub enum ProtocolError {
     InvalidRequest,
     #[msg("Last look not set")]
     LastLookNotSet,
+    #[msg("Last look already done")]
+    LastLookAlreadyDone,
     #[msg("Math")]
     Math,
     #[msg("Not implemented")]
     NotImplemented,
     #[msg("Order confirmed")]
     OrderConfirmed,
+    #[msg("Order not confirmed")]
+    OrderNotConfirmed,
     #[msg("Order not approved via last look")]
     OrderNotApproved,
     #[msg("Order settled")]
