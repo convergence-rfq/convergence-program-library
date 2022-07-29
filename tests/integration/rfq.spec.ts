@@ -330,7 +330,7 @@ describe("RFQ Specification", () => {
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT1 - TAKER_ORDER_AMOUNT1);
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE - MAKER_A_BID_AMOUNT1 - MAKER_A_BID_AMOUNT2);
 
-    assert.equal(rfqState.confirmed, true);
+    assert.ok(rfqState.confirmedOrder);
   });
 
   it("RFQ 1: Taker and Maker A return collateral then settle", async () => {
@@ -507,7 +507,7 @@ describe("RFQ Specification", () => {
 
     assert.equal(assetBalance, MINT_AIRDROP_ASSET - TAKER_ORDER_AMOUNT2 - TAKER_ORDER_AMOUNT1);
     assert.equal(quoteBalance, MINT_AIRDROP_QUOTE + MAKER_A_BID_AMOUNT2 - FEE1);
-    assert.equal(rfqState.confirmed, true);
+    assert.ok(rfqState.confirmedOrder);
   });
 
   it("RFQ 2: Maker B and C last looks", async () => {
@@ -525,7 +525,7 @@ describe("RFQ Specification", () => {
       await returnCollateral(provider, makerC, rfqPda2, orderPda2, makerCAssetATA, makerCQuoteATA);
       assert.ok(false);
     } catch (err) {
-      assert.strictEqual(err.error.errorCode.code, "OrderConfirmed");
+      assert.strictEqual(err.error.errorCode.code, "NoCollateralToReturn");
     }
 
     try {

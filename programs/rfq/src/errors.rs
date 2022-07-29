@@ -32,8 +32,8 @@ pub enum ProtocolError {
     Math,
     #[msg("Not implemented")]
     NotImplemented,
-    #[msg("Order confirmed")]
-    OrderConfirmed,
+    #[msg("No collateral to return")]
+    NoCollateralToReturn,
     #[msg("Order not confirmed")]
     OrderNotConfirmed,
     #[msg("Order not approved via last look")]

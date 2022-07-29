@@ -22,6 +22,7 @@ export class Context {
   public provider: anchor.Provider;
   public dao: Keypair;
   public taker: Keypair;
+  public maker: Keypair;
   public assetToken: Token;
   public quoteToken: Token;
   public protocolPda: PublicKey;
@@ -36,8 +37,11 @@ export class Context {
     await this.initializeDao();
     this.assetToken = await this.createMint();
     this.quoteToken = await this.createMint();
+    await this.createTokenAccountsFor(this.dao.publicKey);
     this.taker = await this.createPayer();
     await this.createTokenAccountsFor(this.taker.publicKey);
+    this.maker = await this.createPayer();
+    await this.createTokenAccountsFor(this.maker.publicKey);
     this.protocolPda = await getProtocolPda(this.program.programId);
   }
 
@@ -139,7 +143,7 @@ export class Context {
   }
 
   async request({
-    expiry = getTimestampInFuture(100),
+    expiry = getTimestampInFuture(100 + Math.random() * 100_000_000), // Random expiry to avoid account collisions
     lastLook = false,
     legs = [],
     orderAmount = DEFAULT_ORDER_AMOUNT,
@@ -191,13 +195,12 @@ export class Rfq {
     return result;
   }
 
-  async respond({ maker = null, bidAmount = DEFAULT_BID_AMOUNT, askAmount = DEFAULT_ASK_AMOUNT } = {}) {
-    maker = maker ?? (await this.context.createPayerWithTokens());
-    const assetWallet = await this.context.getAssetTokenAddress(maker.publicKey);
-    const quoteWallet = await this.context.getQuoteTokenAddress(maker.publicKey);
+  async respond({ bidAmount = DEFAULT_BID_AMOUNT, askAmount = DEFAULT_ASK_AMOUNT } = {}) {
+    const assetWallet = await this.context.getAssetTokenAddress(this.context.maker.publicKey);
+    const quoteWallet = await this.context.getQuoteTokenAddress(this.context.maker.publicKey);
     const orderPda = await getOrderPda(
       this.context.program.programId,
-      maker.publicKey,
+      this.context.maker.publicKey,
       this.account,
       bidAmount,
       askAmount
@@ -208,7 +211,7 @@ export class Rfq {
       .accounts({
         assetMint: this.context.assetToken.publicKey,
         assetWallet,
-        signer: maker.publicKey,
+        signer: this.context.maker.publicKey,
         assetEscrow: this.assetEscrow,
         quoteEscrow: this.quoteEscrow,
         order: orderPda,
@@ -219,10 +222,10 @@ export class Rfq {
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([maker])
+      .signers([this.context.maker])
       .rpc();
 
-    return new Order(this.context, this, maker, orderPda);
+    return new Order(this.context, this, orderPda);
   }
 
   async cancel() {
@@ -238,13 +241,15 @@ export class Rfq {
       .rpc();
   }
 
-  async settle(sender: Keypair) {
-    if (!this.confirmedOrder) {
+  async settle(sender: Keypair, confirmedOrder?: [Order, any]) {
+    confirmedOrder = confirmedOrder ?? this.confirmedOrder;
+    if (!confirmedOrder) {
       throw new Error("Unconfirmed RFQ!");
     }
-    const [order, quoteType] = this.confirmedOrder;
-    const treasuryMint = quoteType.hasOwnProperty("ask") ? this.context.assetToken : this.context.quoteToken;
-    const treasuryWallet = await treasuryMint.createAccount(this.context.dao.publicKey);
+    const [order, quoteType] = confirmedOrder;
+    const treasuryWallet = quoteType.hasOwnProperty("ask")
+      ? await context.getAssetTokenAddress(this.context.dao.publicKey)
+      : await context.getQuoteTokenAddress(this.context.dao.publicKey);
 
     const assetWallet = await this.context.getAssetTokenAddress(sender.publicKey);
     const quoteWallet = await this.context.getQuoteTokenAddress(sender.publicKey);
@@ -276,9 +281,9 @@ export class Rfq {
 }
 
 export class Order {
-  constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {}
+  constructor(public context: Context, public rfq: Rfq, public account: PublicKey) {}
 
-  async confirm(quoteType = QuoteType.Bid) {
+  async confirm(quoteType: any = QuoteType.Bid) {
     const takerAddress = this.context.taker.publicKey;
     const assetWallet = await this.context.getAssetTokenAddress(takerAddress);
     const quoteWallet = await this.context.getQuoteTokenAddress(takerAddress);
@@ -306,8 +311,8 @@ export class Order {
   }
 
   async returnCollateral() {
-    const assetWallet = await this.context.getAssetTokenAddress(this.maker.publicKey);
-    const quoteWallet = await this.context.getQuoteTokenAddress(this.maker.publicKey);
+    const assetWallet = await this.context.getAssetTokenAddress(this.context.maker.publicKey);
+    const quoteWallet = await this.context.getQuoteTokenAddress(this.context.maker.publicKey);
 
     await this.context.program.methods
       .returnCollateral()
@@ -315,7 +320,7 @@ export class Order {
         assetEscrow: this.rfq.assetEscrow,
         assetMint: this.context.assetToken.publicKey,
         assetWallet,
-        signer: this.maker.publicKey,
+        signer: this.context.maker.publicKey,
         order: this.account,
         quoteEscrow: this.rfq.quoteEscrow,
         quoteWallet,
@@ -324,7 +329,7 @@ export class Order {
         rfq: this.rfq.account,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([this.maker])
+      .signers([this.context.maker])
       .rpc();
   }
 
@@ -332,15 +337,27 @@ export class Order {
     await this.context.program.methods
       .lastLook()
       .accounts({
-        signer: this.maker.publicKey,
+        signer: this.context.maker.publicKey,
         order: this.account,
         rfq: this.rfq.account,
       })
-      .signers([this.maker])
+      .signers([this.context.maker])
       .rpc();
   }
 
   async getState() {
     return this.context.program.account.orderState.fetch(this.account);
   }
+}
+
+let context: Context | null = null;
+export async function getContext() {
+  if (context !== null) {
+    return context;
+  }
+
+  context = new Context();
+  await context.initialize();
+  await context.initializeProtocolIfNotInitialized();
+  return context;
 }

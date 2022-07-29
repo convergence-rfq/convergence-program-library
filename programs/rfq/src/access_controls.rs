@@ -113,9 +113,7 @@ pub fn respond_access_control<'info>(
         return Err(error!(ProtocolError::RfqInactive));
     }
 
-    if rfq.confirmed {
-        return Err(error!(ProtocolError::RfqConfirmed));
-    }
+    require!(rfq.confirmed_order.is_none(), ProtocolError::RfqConfirmed);
 
     if rfq.canceled {
         return Err(error!(ProtocolError::RfqCanceled));
@@ -166,7 +164,8 @@ pub fn last_look_access_control<'info>(ctx: &Context<LastLook<'info>>) -> Result
         ProtocolError::LastLookAlreadyDone
     );
     require!(
-        order.confirmed_quote.is_some(),
+        rfq.confirmed_order
+            .map_or(false, |x| x.order == order.key()),
         ProtocolError::OrderNotConfirmed
     );
 
@@ -191,7 +190,7 @@ pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>, quote: Quote
 
     require!(rfq.key() == order.rfq.key(), ProtocolError::InvalidRfq);
     require!(taker == signer, ProtocolError::InvalidTaker);
-    require!(!rfq.confirmed, ProtocolError::RfqConfirmed);
+    require!(rfq.confirmed_order.is_none(), ProtocolError::RfqConfirmed);
     require!(
         rfq.expiry > Clock::get().unwrap().unix_timestamp,
         ProtocolError::RfqInactive
@@ -205,14 +204,12 @@ pub fn confirm_access_control<'info>(ctx: &Context<Confirm<'info>>, quote: Quote
 
     match quote {
         Quote::Ask => {
-            require!(!order.ask_confirmed, ProtocolError::OrderConfirmed);
             require!(
                 rfq.best_ask_amount.unwrap() == order.ask.unwrap(),
                 ProtocolError::InvalidConfirm
             );
         }
         Quote::Bid => {
-            require!(!order.bid_confirmed, ProtocolError::OrderConfirmed);
             require!(
                 rfq.best_bid_amount.unwrap() == order.bid.unwrap(),
                 ProtocolError::InvalidConfirm
@@ -243,7 +240,7 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
 
     let is_rfq_expired = Clock::get().unwrap().unix_timestamp > rfq.expiry;
     require!(
-        rfq.confirmed || rfq.canceled || is_rfq_expired,
+        rfq.confirmed_order.is_some() || rfq.canceled || is_rfq_expired,
         ProtocolError::RfqActive
     );
 
@@ -252,9 +249,16 @@ pub fn return_collateral_access_control<'info>(ctx: &Context<ReturnCollateral>) 
         ProtocolError::CollateralReturned
     );
 
+    let is_this_order_confirmed = rfq
+        .confirmed_order
+        .map_or(false, |x| x.order == order.key());
     match rfq.order_type {
-        Order::Buy => require!(!order.ask_confirmed, ProtocolError::OrderConfirmed),
-        Order::Sell => require!(!order.bid_confirmed, ProtocolError::OrderConfirmed),
+        Order::Buy | Order::Sell => {
+            require!(
+                !is_this_order_confirmed,
+                ProtocolError::NoCollateralToReturn
+            )
+        }
         _ => (),
     }
 
@@ -299,14 +303,12 @@ pub fn settle_access_control<'info>(ctx: &Context<Settle<'info>>) -> Result<()> 
         ProtocolError::OrderNotApproved
     );
 
-    require!(rfq.confirmed, ProtocolError::RfqUnconfirmed);
+    require!(
+        rfq.confirmed_order
+            .map_or(false, |x| x.order == order.key()),
+        ProtocolError::RfqUnconfirmed
+    );
     require!(!rfq.canceled, ProtocolError::RfqCanceled);
-
-    match order.confirmed_quote {
-        Some(Quote::Ask) => require!(order.ask_confirmed, ProtocolError::OrderConfirmed),
-        Some(Quote::Bid) => require!(order.bid_confirmed, ProtocolError::OrderConfirmed),
-        None => return Err(error!(ProtocolError::InvalidConfirm)),
-    }
 
     Ok(())
 }

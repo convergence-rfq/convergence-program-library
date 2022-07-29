@@ -117,9 +117,7 @@ pub fn respond(ctx: Context<Respond>, bid: Option<u64>, ask: Option<u64>) -> Res
     let rfq = &mut ctx.accounts.rfq;
 
     let order = &mut ctx.accounts.order;
-    order.ask_confirmed = false;
     order.authority = ctx.accounts.signer.key();
-    order.bid_confirmed = false;
     order.bump = *ctx.bumps.get(ORDER_SEED).unwrap();
     order.rfq = rfq.key();
     order.unix_timestamp = Clock::get().unwrap().unix_timestamp;
@@ -192,10 +190,8 @@ pub fn last_look(ctx: Context<LastLook>) -> Result<()> {
 /// quote
 #[access_control(confirm_access_control(&ctx, quote))]
 pub fn confirm(ctx: Context<Confirm>, quote: Quote) -> Result<()> {
-    let order = &mut ctx.accounts.order;
-    order.confirmed_quote = Some(quote);
-
     let rfq = &mut ctx.accounts.rfq;
+    let order = &mut ctx.accounts.order;
 
     let order_amount;
     let from;
@@ -203,13 +199,11 @@ pub fn confirm(ctx: Context<Confirm>, quote: Quote) -> Result<()> {
 
     match quote {
         Quote::Ask => {
-            order.ask_confirmed = true;
             from = ctx.accounts.quote_wallet.to_account_info();
             to = ctx.accounts.quote_escrow.to_account_info();
             order_amount = rfq.best_ask_amount.unwrap();
         }
         Quote::Bid => {
-            order.bid_confirmed = true;
             from = ctx.accounts.asset_wallet.to_account_info();
             to = ctx.accounts.asset_escrow.to_account_info();
             order_amount = rfq.order_amount;
@@ -228,7 +222,10 @@ pub fn confirm(ctx: Context<Confirm>, quote: Quote) -> Result<()> {
         order_amount,
     )?;
 
-    rfq.confirmed = true;
+    rfq.confirmed_order = Some(ConfirmedOrder {
+        order: order.key(),
+        quote,
+    });
 
     Ok(())
 }
@@ -242,8 +239,12 @@ pub fn confirm(ctx: Context<Confirm>, quote: Quote) -> Result<()> {
 pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
     let order = &mut ctx.accounts.order;
+    let confirmed_quote = rfq
+        .confirmed_order
+        .filter(|x| x.order == order.key())
+        .map(|x| x.quote);
 
-    if order.ask.is_some() && !order.ask_confirmed {
+    if order.ask.is_some() && confirmed_quote != Some(Quote::Ask) {
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -266,7 +267,7 @@ pub fn return_collateral(ctx: Context<ReturnCollateral>) -> Result<()> {
         )?;
     }
 
-    if order.bid.is_some() && !order.bid_confirmed {
+    if order.bid.is_some() && confirmed_quote != Some(Quote::Bid) {
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -313,7 +314,7 @@ pub fn settle(ctx: Context<Settle>) -> Result<()> {
     let mut asset_amount = 0;
     let mut fee_amount = 0;
 
-    match order.confirmed_quote.unwrap() {
+    match rfq.confirmed_order.unwrap().quote {
         Quote::Ask => {
             if signer == taker {
                 fee_amount = (rfq.order_amount as u128)
