@@ -36,7 +36,7 @@ pub struct RfqState {
     /// Canceled
     pub canceled: bool,
     /// Confirmed
-    pub confirmed: bool,
+    pub confirmed_order: Option<ConfirmedOrder>,
     /// Expiry time
     pub expiry: i64,
     /// Last look approved, None value means last look logic is disabled
@@ -77,20 +77,14 @@ pub struct ProtocolState {
 pub struct OrderState {
     // Optional ask
     pub ask: Option<u64>,
-    // Order ask confirmed
-    pub ask_confirmed: bool,
     // Order athority
     pub authority: Pubkey,
     // Optional bid
     pub bid: Option<u64>,
-    // Order bid confirmed
-    pub bid_confirmed: bool,
     // PDA bump
     pub bump: u8,
     /// Collateral returned
     pub collateral_returned: bool,
-    // Confirmed quote
-    pub confirmed_quote: Option<Quote>,
     /// Rfq
     pub rfq: Pubkey,
     /// Settled
@@ -154,6 +148,12 @@ pub struct Leg {
 pub enum BuySell {
     Buy,
     Sell,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct ConfirmedOrder {
+    pub order: Pubkey,
+    pub quote: Quote,
 }
 
 /// Quote.

@@ -3,8 +3,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use psy_american::OptionMarket;
 
-use crate::states::RfqState;
 use crate::constants::RFQ_SEED;
+use crate::states::RfqState;
 
 #[derive(Accounts)]
 pub struct InitializeAmericanOptionMarket<'info> {
@@ -68,7 +68,7 @@ pub struct MintAmericanOption<'info> {
     pub authority: Signer<'info>,
     /// CHECK: TODO
     pub psy_american_program: AccountInfo<'info>,
-    /// The vault where the underlying assets are held. This is the PsyAmerican 
+    /// The vault where the underlying assets are held. This is the PsyAmerican
     #[account(mut)]
     pub vault: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
