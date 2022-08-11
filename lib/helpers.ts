@@ -740,7 +740,7 @@ export async function initializePsyAmericanOptionMarket(
   }
 
   const accounts = {
-    user: signer.payer.publicKey,
+    user: signer.publicKey,
     underlyingAssetMint: assetToken.publicKey,
     quoteAssetMint: quoteToken.publicKey,
     psyAmericanProgram: psyAmericanProgram.programId,
@@ -811,6 +811,11 @@ export async function mintPsyAmericanOption(
     rfqProgram.programId
   );
 
+  let signers = [];
+  if (signer.payer) {
+    signers.push(signer.payer);
+  }
+
   // TODO: What if vault already exists?
   await rfqProgram.methods
     .initializePsyOptionsAmericanMintVault()
@@ -823,7 +828,7 @@ export async function mintPsyAmericanOption(
       rent: SYSVAR_RENT_PUBKEY,
       systemProgram: SystemProgram.programId,
     })
-    .signers([signer.payer])
+    .signers(signers)
     .rpc();
 
   const optionToken = new Token(
