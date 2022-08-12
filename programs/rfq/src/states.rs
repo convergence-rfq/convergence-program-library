@@ -1,172 +1,182 @@
-///! State
+use std::collections::HashSet;
+
 use anchor_lang::prelude::*;
 
-/// Access manager state.
-#[account]
-pub struct AccessManagerState {
-    // Authority
-    pub authority: Pubkey,
-    // Id
-    pub id: u64,
-    // Wallets
-    pub wallets: [Pubkey; 25],
-}
-
-/// RFQ state.
-#[account]
-pub struct RfqState {
-    /// Optional access manager
-    pub access_manager: Option<Pubkey>,
-    /// Asset escrow bump
-    pub asset_escrow_bump: u8,
-    /// Asset mint
-    pub asset_mint: Pubkey,
-    /// Authority
-    pub authority: Pubkey,
-    /// Best ask amount
-    pub best_ask_amount: Option<u64>,
-    /// Best bid amount
-    pub best_bid_amount: Option<u64>,
-    /// Best ask amount
-    pub best_ask_address: Option<Pubkey>,
-    /// Best bid amount
-    pub best_bid_address: Option<Pubkey>,
-    /// PDA bump
-    pub bump: u8,
-    /// Canceled
-    pub canceled: bool,
-    /// Confirmed
-    pub confirmed: bool,
-    /// Expiry time
-    pub expiry: i64,
-    /// Last look approved, None value means last look logic is disabled
-    pub last_look_approved: Option<bool>,
-    /// Legs
-    pub legs: Vec<Leg>,
-    /// Order amount
-    pub order_amount: u64,
-    /// Order type
-    pub order_type: Order,
-    /// Quote escrow bump
-    pub quote_escrow_bump: u8,
-    /// Quote mint
-    pub quote_mint: Pubkey,
-    /// Settled
-    pub settled: bool,
-    /// Creation time
-    pub unix_timestamp: i64,
-}
-
-/// Protocol state.
 #[account]
 pub struct ProtocolState {
-    // Protocol authority
+    // Protocol initiator
     pub authority: Pubkey,
-    // PDA bump
     pub bump: u8,
-    // Fee denominator
-    pub fee_denominator: u64,
-    // Fee numerator
-    pub fee_numerator: u64,
-    // Treasury wallet
-    pub treasury_wallet: Pubkey,
+
+    // Active protocol means all instructions are executable
+    pub active: bool,
+
+    pub settle_fees: FeeParameters,
+    pub default_fees: FeeParameters,
+
+    pub risk_engine: Pubkey,
+    pub risk_engine_register: Pubkey,
+    pub collateral_mint: Pubkey,
+    pub instruments: HashSet<Pubkey>,
 }
 
-/// Order state.
+impl ProtocolState {
+    pub const INSTRUMENT_SIZE: usize = 32;
+    pub const MAX_INSTRUMENTS: usize = 50;
+}
+
 #[account]
-pub struct OrderState {
-    // Optional ask
-    pub ask: Option<u64>,
-    // Order ask confirmed
-    pub ask_confirmed: bool,
-    // Order athority
-    pub authority: Pubkey,
-    // Optional bid
-    pub bid: Option<u64>,
-    // Order bid confirmed
-    pub bid_confirmed: bool,
-    // PDA bump
+pub struct Rfq {
+    pub taker: Pubkey,
     pub bump: u8,
-    /// Collateral returned
-    pub collateral_returned: bool,
-    // Confirmed quote
-    pub confirmed_quote: Option<Quote>,
-    /// Rfq
+
+    pub order_type: OrderType,
+    pub last_look_enabled: bool,
+    pub fixed_size: FixedSize,
+    pub quote_mint: Pubkey,
+    pub access_manager: Option<Pubkey>, // replase with nullable wrapper
+
+    pub creation_timestamp: i64,
+    pub active_window: u32,
+    pub settling_window: u32,
+
+    pub state: StoredRfqState,
+    pub non_response_taker_collateral_locked: u64,
+    pub total_taker_collateral_locked: u64,
+    pub total_responses: u32,
+    pub cleared_responses: u32,
+    pub confirmed_responses: u32,
+
+    pub legs: Vec<Leg>,
+}
+
+impl Rfq {
+    pub fn get_state(&self) -> RfqState {
+        todo!()
+    }
+}
+
+#[account]
+pub struct Response {
+    pub maker: Pubkey,
+    pub bump: u8,
     pub rfq: Pubkey,
-    /// Settled
-    pub settled: bool,
-    /// Creation time
-    pub unix_timestamp: i64,
+
+    pub creation_timestamp: i64,
+    pub maker_collateral_locked: u64,
+    pub taker_collateral_locked: u64,
+    pub state: StoredResponseState,
+
+    pub confirmed: Option<Side>,
+    pub ask: Quote,
+    pub bid: Quote,
 }
 
-/// Instrument.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Instrument {
-    Option,
-    Future,
-    Spot,
+impl Response {
+    pub fn get_state(&self) -> ResponseState {
+        todo!()
+    }
 }
 
-/// Contract.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Contract {
-    Call,
-    Put,
-    Long,
-    Short,
+#[account]
+pub struct CollateralInfo {
+    pub bump: u8,
+    pub token_account_bump: u8,
+    pub locked_tokens_amount: u64,
 }
 
-/// Venue.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Venue {
-    Convergence,
-    PsyOptions,
-    Sollar,
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub struct FeeParameters {
+    taker_bps: u64,
+    maker_bps: u64,
 }
 
-/// Leg.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Leg {
-    // Amount
-    pub amount: u64,
-    // Contract
-    pub contract: Option<Contract>,
-    // Contract asset amount
-    pub contract_asset_amount: Option<u64>,
-    // Contract quote amount
-    pub contract_quote_amount: Option<u64>,
-    // Processed
-    pub processed: bool,
-    // Expiry
-    pub expiry: Option<i64>,
-    // Id
-    pub id: u64,
-    // Instrument
-    pub instrument: Instrument,
-    // Venue
-    pub venue: Venue,
-    // Buy or Sell
-    pub buy_sell: BuySell,
+impl FeeParameters {
+    pub const BPS_DECIMALS: usize = 9;
 }
 
-/// BuySell.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum BuySell {
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum FixedSize {
+    None { padding: u64 }, // for consistent serialization purposes
+    BaseAsset { legs_multiplier_bps: u64 },
+    QuoteAsset { quote_amount: u64 },
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum OrderType {
     Buy,
     Sell,
+    TwoWay,
 }
 
-/// Quote.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum Quote {
+    Standart {
+        price_quote: PriceQuote,
+        legs_multiplier_bps: u64,
+    },
+    FixedSize {
+        price_quote: PriceQuote,
+    },
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum PriceQuote {
+    AbsolutePrice { amount_bps: u128 },
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum StoredRfqState {
+    Constructed,
+    Active,
+    Canceled,
+}
+
+pub enum RfqState {
+    Constructed,
+    Active,
+    Canceled,
+    Expired,
+    Settling,
+    SettlingEnded,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct Leg {
+    pub instrument: Pubkey,
+    pub instrument_data: Vec<u8>,
+    pub instrument_amount: u64,
+    pub side: Side,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum Side {
     Bid,
     Ask,
 }
 
-/// Order.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Order {
-    Buy,
-    Sell,
-    TwoWay,
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum StoredResponseState {
+    Active,
+    Canceled,
+    WaitingForLastLook,
+    SettlingPreparations,
+    OnlyMakerPrepared,
+    OnlyTakerPrepared,
+    ReadyForSettling,
+    Settled,
+    Defaulted,
+}
+
+pub enum ResponseState {
+    Active,
+    Canceled,
+    WaitingForLastLook,
+    SettlingPreparations,
+    OnlyMakerPrepared,
+    OnlyTakerPrepared,
+    ReadyForSettling,
+    Settled,
+    Defaulted,
+    Expired,
 }

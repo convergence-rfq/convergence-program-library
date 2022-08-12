@@ -4,54 +4,22 @@ use anchor_lang::prelude::*;
 /// Error codes.
 #[error_code]
 pub enum ProtocolError {
-    #[msg("Collateral returned")]
-    CollateralReturned,
-    #[msg("CPI error")]
-    CpiError,
-    #[msg("Invalid cancel")]
-    InvalidCancel,
-    #[msg("Invalid confirm")]
-    InvalidConfirm,
-    #[msg("Invalid fee")]
-    InvalidFee,
-    #[msg("Invalid quote")]
-    InvalidQuote,
-    #[msg("Invalid RFQ")]
-    InvalidRfq,
-    #[msg("Invalid taker")]
-    InvalidTaker,
-    #[msg("Invalid authority")]
-    InvalidAuthority,
-    #[msg("Invalid request")]
-    InvalidRequest,
-    #[msg("Last look not set")]
-    LastLookNotSet,
-    #[msg("Last look already done")]
-    LastLookAlreadyDone,
-    #[msg("Math")]
-    Math,
-    #[msg("Not implemented")]
-    NotImplemented,
-    #[msg("Order confirmed")]
-    OrderConfirmed,
-    #[msg("Order not confirmed")]
-    OrderNotConfirmed,
-    #[msg("Order not approved via last look")]
-    OrderNotApproved,
-    #[msg("Order settled")]
-    OrderSettled,
-    #[msg("RFQ active")]
-    RfqActive,
-    #[msg("RFQ inactive")]
-    RfqInactive,
-    #[msg("RFQ confirmed")]
-    RfqConfirmed,
-    #[msg("RFQ unconfirmed")]
-    RfqUnconfirmed,
-    #[msg("RFQ canceled")]
-    RfqCanceled,
-    #[msg("RFQ settled")]
-    RfqSettled,
-    #[msg("Error creating a dex instruction")]
-    DexIxError,
+    #[msg("Require protocol authority")]
+    NotAProtocolAuthority,
+    #[msg("Instrument already added")]
+    InstrumentAlreadyAdded,
+    #[msg("Invalid risk engine register")]
+    InvalidRiskEngineRegister,
+    #[msg("Passed mint is not a collateral mint")]
+    NotACollateralMint,
+    #[msg("Passed token account does not belong to collateral mint")]
+    NotACollateralTokenAccount,
+    #[msg("Passed account is not a risk engine in the protocol")]
+    NotARiskEngine,
+    #[msg("Passed account is not a risk engine register in the protocol")]
+    NotARiskEngineRegister,
+    #[msg("Not enough tokens")]
+    NotEnoughTokens,
+    #[msg("Not enough collateral")]
+    NotEnoughCollateral,
 }
