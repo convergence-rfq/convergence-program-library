@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashMap, mem};
 
 use anchor_lang::prelude::*;
 
@@ -17,18 +17,18 @@ pub struct ProtocolState {
     pub risk_engine: Pubkey,
     pub risk_engine_register: Pubkey,
     pub collateral_mint: Pubkey,
-    pub instruments: HashSet<Pubkey>,
+    pub instruments: HashMap<Pubkey, InstrumentParameters>,
 }
 
 impl ProtocolState {
-    pub const INSTRUMENT_SIZE: usize = 32;
+    pub const INSTRUMENT_SIZE: usize =
+        mem::size_of::<Pubkey>() + mem::size_of::<InstrumentParameters>();
     pub const MAX_INSTRUMENTS: usize = 50;
 }
 
 #[account]
 pub struct Rfq {
     pub taker: Pubkey,
-    pub bump: u8,
 
     pub order_type: OrderType,
     pub last_look_enabled: bool,
@@ -51,15 +51,34 @@ pub struct Rfq {
 }
 
 impl Rfq {
-    pub fn get_state(&self) -> RfqState {
-        todo!()
+    pub fn get_state(&self) -> Result<RfqState> {
+        let state = match self.state {
+            StoredRfqState::Constructed => RfqState::Constructed,
+            StoredRfqState::Active => {
+                let current_time = Clock::get()?.unix_timestamp;
+                if current_time < self.creation_timestamp + self.active_window as i64 {
+                    RfqState::Active
+                } else if self.confirmed_responses == 0 {
+                    RfqState::Expired
+                } else if current_time
+                    < self.creation_timestamp
+                        + self.active_window as i64
+                        + self.settling_window as i64
+                {
+                    RfqState::Settling
+                } else {
+                    RfqState::SettlingEnded
+                }
+            }
+            StoredRfqState::Canceled => RfqState::Canceled,
+        };
+        Ok(state)
     }
 }
 
 #[account]
 pub struct Response {
     pub maker: Pubkey,
-    pub bump: u8,
     pub rfq: Pubkey,
 
     pub creation_timestamp: i64,
@@ -68,8 +87,8 @@ pub struct Response {
     pub state: StoredResponseState,
 
     pub confirmed: Option<Side>,
-    pub ask: Quote,
-    pub bid: Quote,
+    pub bid: Option<Quote>,
+    pub ask: Option<Quote>,
 }
 
 impl Response {
@@ -83,6 +102,11 @@ pub struct CollateralInfo {
     pub bump: u8,
     pub token_account_bump: u8,
     pub locked_tokens_amount: u64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub struct InstrumentParameters {
+    pub validate_data_accounts: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -132,6 +156,7 @@ pub enum StoredRfqState {
     Canceled,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RfqState {
     Constructed,
     Active,
@@ -168,6 +193,7 @@ pub enum StoredResponseState {
     Defaulted,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ResponseState {
     Active,
     Canceled,

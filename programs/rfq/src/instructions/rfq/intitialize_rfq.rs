@@ -3,7 +3,9 @@ use std::mem;
 use crate::{
     constants::{COLLATERAL_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
-    interfaces::risk_engine::calculate_required_collateral_for_rfq,
+    interfaces::{
+        instrument::validate_instrument_data, risk_engine::calculate_required_collateral_for_rfq,
+    },
     states::{CollateralInfo, FixedSize, Leg, OrderType, ProtocolState, Rfq, StoredRfqState},
 };
 use anchor_lang::prelude::*;
@@ -35,6 +37,22 @@ pub struct InitializeRfqAccounts<'info> {
     pub system_program: Program<'info, System>,
 }
 
+fn validate_legs(ctx: &Context<InitializeRfqAccounts>, legs: &[Leg]) -> Result<()> {
+    let InitializeRfqAccounts { protocol, .. } = &ctx.accounts;
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
+
+    for leg in legs.iter() {
+        let instruction_parameters = protocol
+            .instruments
+            .get(&leg.instrument)
+            .ok_or(ProtocolError::NotAWhitelistedInstrument)?;
+
+        validate_instrument_data(leg, *instruction_parameters, &mut remaining_accounts)?;
+    }
+
+    Ok(())
+}
+
 pub fn initialize_rfq_instruction(
     ctx: Context<InitializeRfqAccounts>,
     legs: Vec<Leg>,
@@ -42,6 +60,8 @@ pub fn initialize_rfq_instruction(
     active_window: u32,
     settling_window: u32,
 ) -> Result<()> {
+    validate_legs(&ctx, &legs)?;
+
     let InitializeRfqAccounts {
         taker,
         rfq,
@@ -53,8 +73,6 @@ pub fn initialize_rfq_instruction(
         ..
     } = ctx.accounts;
 
-    // TODO add legs instrument and data check
-
     let required_collateral =
         calculate_required_collateral_for_rfq(risk_engine, risk_engine_register, &legs)?;
     require!(
@@ -65,7 +83,6 @@ pub fn initialize_rfq_instruction(
     collateral_info.locked_tokens_amount += required_collateral;
     rfq.set_inner(Rfq {
         taker: taker.key(),
-        bump: *ctx.bumps.get("rfq").unwrap(),
         order_type,
         last_look_enabled: false,                   // TODO add logic later
         fixed_size: FixedSize::None { padding: 0 }, // TODO add logic later

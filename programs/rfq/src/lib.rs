@@ -15,6 +15,8 @@ use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::initialize_protocol::*;
+use instructions::rfq::intitialize_rfq::*;
+use instructions::rfq::respond_to_rfq::*;
 use states::*;
 
 security_txt! {
@@ -42,8 +44,11 @@ pub mod rfq {
         initialize_protocol_instruction(ctx, settle_fees, default_fees)
     }
 
-    pub fn add_instrument_protocol(ctx: Context<AddInstrumentAccounts>) -> Result<()> {
-        add_instrument_instruction(ctx)
+    pub fn add_instrument_protocol(
+        ctx: Context<AddInstrumentAccounts>,
+        parameters: InstrumentParameters,
+    ) -> Result<()> {
+        add_instrument_instruction(ctx, parameters)
     }
 
     pub fn initialize_collateral(ctx: Context<InitializeCollateralAccounts>) -> Result<()> {
@@ -52,5 +57,23 @@ pub mod rfq {
 
     pub fn fund_collateral(ctx: Context<FundCollateralAccounts>, amount: u64) -> Result<()> {
         fund_collateral_instruction(ctx, amount)
+    }
+
+    pub fn intitialize_rfq(
+        ctx: Context<InitializeRfqAccounts>,
+        legs: Vec<Leg>,
+        order_type: OrderType,
+        active_window: u32,
+        settling_window: u32,
+    ) -> Result<()> {
+        initialize_rfq_instruction(ctx, legs, order_type, active_window, settling_window)
+    }
+
+    pub fn respond_to_rfq(
+        ctx: Context<RespondToRfqAccounts>,
+        bid: Option<Quote>,
+        ask: Option<Quote>,
+    ) -> Result<()> {
+        respond_to_rfq_instruction(ctx, bid, ask)
     }
 }

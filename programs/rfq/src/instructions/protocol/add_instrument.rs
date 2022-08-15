@@ -1,4 +1,8 @@
-use crate::{constants::PROTOCOL_SEED, errors::ProtocolError, states::ProtocolState};
+use crate::{
+    constants::PROTOCOL_SEED,
+    errors::ProtocolError,
+    states::{InstrumentParameters, ProtocolState},
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -19,14 +23,17 @@ fn validate(ctx: &Context<AddInstrumentAccounts>) -> Result<()> {
     } = &ctx.accounts;
 
     require!(
-        !protocol.instruments.contains(&instrument.key()),
+        !protocol.instruments.contains_key(&instrument.key()),
         ProtocolError::InstrumentAlreadyAdded
     );
 
     Ok(())
 }
 
-pub fn add_instrument_instruction(ctx: Context<AddInstrumentAccounts>) -> Result<()> {
+pub fn add_instrument_instruction(
+    ctx: Context<AddInstrumentAccounts>,
+    parameters: InstrumentParameters,
+) -> Result<()> {
     validate(&ctx)?;
 
     let AddInstrumentAccounts {
@@ -35,7 +42,7 @@ pub fn add_instrument_instruction(ctx: Context<AddInstrumentAccounts>) -> Result
         ..
     } = ctx.accounts;
 
-    protocol.instruments.insert(instrument.key());
+    protocol.instruments.insert(instrument.key(), parameters);
 
     Ok(())
 }

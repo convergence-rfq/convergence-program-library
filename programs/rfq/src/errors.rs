@@ -22,4 +22,12 @@ pub enum ProtocolError {
     NotEnoughTokens,
     #[msg("Not enough collateral")]
     NotEnoughCollateral,
+    #[msg("Not a whitelisted instrument")]
+    NotAWhitelistedInstrument,
+    #[msg("Invalid accounts list for a leg data verification")]
+    InvalidAccountsForLegDataVerification,
+    #[msg("Rfq is not in active state")]
+    RfqIsNotActive,
+    #[msg("Response does not match order type")]
+    ResponseDoesNotMatchOrderType,
 }

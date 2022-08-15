@@ -1,7 +1,7 @@
 use std::mem;
 
 use anchor_lang::prelude::*;
-use rfq::states::Leg;
+use rfq::states::{Leg, Quote, Rfq};
 use state::Register;
 
 pub mod state;
@@ -22,6 +22,16 @@ pub mod dummy_risk_engine {
     ) -> Result<()> {
         let register = &mut ctx.accounts.register;
         register.required_collateral = 1_000_000_000;
+        Ok(())
+    }
+
+    pub fn calculate_collateral_for_response(
+        ctx: Context<CalculateRequiredCollateralForResponse>,
+        _bid: Option<Quote>,
+        _ask: Option<Quote>,
+    ) -> Result<()> {
+        let register = &mut ctx.accounts.register;
+        register.required_collateral = 2_000_000_000;
         Ok(())
     }
 }
@@ -45,4 +55,11 @@ pub struct InitializeRegister<'info> {
 pub struct CalculateRequiredCollateralForRfq<'info> {
     #[account(mut)]
     pub register: Account<'info, Register>,
+}
+
+#[derive(Accounts)]
+pub struct CalculateRequiredCollateralForResponse<'info> {
+    #[account(mut)]
+    pub register: Account<'info, Register>,
+    pub rfq: Account<'info, Rfq>,
 }
