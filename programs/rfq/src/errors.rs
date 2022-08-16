@@ -30,4 +30,14 @@ pub enum ProtocolError {
     RfqIsNotActive,
     #[msg("Response does not match order type")]
     ResponseDoesNotMatchOrderType,
+    #[msg("Invalid quote type")]
+    InvalidQuoteType,
+    #[msg("Response is for another Rfq")]
+    ResponseForAnotherRfq,
+    #[msg("Caller is not a taker")]
+    NotATaker,
+    #[msg("Response is not active")]
+    ResponseIsNotActive,
+    #[msg("Confirmed side is missing in a response")]
+    ConfirmedSideMissing,
 }

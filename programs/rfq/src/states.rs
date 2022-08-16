@@ -1,6 +1,9 @@
 use std::{collections::HashMap, mem};
 
 use anchor_lang::prelude::*;
+use anchor_spl::token::TokenAccount;
+
+use crate::errors::ProtocolError;
 
 #[account]
 pub struct ProtocolState {
@@ -56,15 +59,11 @@ impl Rfq {
             StoredRfqState::Constructed => RfqState::Constructed,
             StoredRfqState::Active => {
                 let current_time = Clock::get()?.unix_timestamp;
-                if current_time < self.creation_timestamp + self.active_window as i64 {
+                if self.active_window_ended(current_time) {
                     RfqState::Active
                 } else if self.confirmed_responses == 0 {
                     RfqState::Expired
-                } else if current_time
-                    < self.creation_timestamp
-                        + self.active_window as i64
-                        + self.settling_window as i64
-                {
+                } else if self.settle_window_ended(current_time) {
                     RfqState::Settling
                 } else {
                     RfqState::SettlingEnded
@@ -73,6 +72,15 @@ impl Rfq {
             StoredRfqState::Canceled => RfqState::Canceled,
         };
         Ok(state)
+    }
+
+    pub fn active_window_ended(&self, current_time: i64) -> bool {
+        current_time >= self.creation_timestamp + self.active_window as i64
+    }
+
+    pub fn settle_window_ended(&self, current_time: i64) -> bool {
+        current_time
+            >= self.creation_timestamp + self.active_window as i64 + self.settling_window as i64
     }
 }
 
@@ -92,8 +100,52 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn get_state(&self) -> ResponseState {
-        todo!()
+    pub fn get_state(&self, rfq: &Rfq) -> Result<ResponseState> {
+        let current_time = Clock::get()?.unix_timestamp;
+        let active_window_ended = rfq.active_window_ended(current_time);
+        let settle_window_ended = rfq.settle_window_ended(current_time);
+        let state = match self.state {
+            StoredResponseState::Active => {
+                if !active_window_ended {
+                    ResponseState::Active
+                } else {
+                    ResponseState::Expired
+                }
+            }
+            StoredResponseState::Canceled => ResponseState::Canceled,
+            StoredResponseState::WaitingForLastLook => {
+                if !active_window_ended {
+                    ResponseState::WaitingForLastLook
+                } else {
+                    ResponseState::Expired
+                }
+            }
+            StoredResponseState::SettlingPreparations => {
+                if !settle_window_ended {
+                    ResponseState::SettlingPreparations
+                } else {
+                    ResponseState::Defaulted
+                }
+            }
+            StoredResponseState::OnlyMakerPrepared => {
+                if !settle_window_ended {
+                    ResponseState::OnlyMakerPrepared
+                } else {
+                    ResponseState::Defaulted
+                }
+            }
+            StoredResponseState::OnlyTakerPrepared => {
+                if !settle_window_ended {
+                    ResponseState::OnlyTakerPrepared
+                } else {
+                    ResponseState::Defaulted
+                }
+            }
+            StoredResponseState::ReadyForSettling => ResponseState::ReadyForSettling,
+            StoredResponseState::Settled => ResponseState::Settled,
+            StoredResponseState::Defaulted => ResponseState::Defaulted,
+        };
+        Ok(state)
     }
 }
 
@@ -102,6 +154,17 @@ pub struct CollateralInfo {
     pub bump: u8,
     pub token_account_bump: u8,
     pub locked_tokens_amount: u64,
+}
+
+impl CollateralInfo {
+    pub fn lock_collateral(&mut self, token_account: &TokenAccount, amount: u64) -> Result<()> {
+        require!(
+            amount <= token_account.amount - self.locked_tokens_amount,
+            ProtocolError::NotEnoughCollateral
+        );
+        self.locked_tokens_amount += amount;
+        Ok(())
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

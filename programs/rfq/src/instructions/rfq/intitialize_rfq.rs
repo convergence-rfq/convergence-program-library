@@ -20,9 +20,10 @@ pub struct InitializeRfqAccounts<'info> {
     pub protocol: Account<'info, ProtocolState>,
     #[account(init, payer = taker, space = 8 + mem::size_of::<Rfq>())]
     pub rfq: Account<'info, Rfq>,
-    #[account(seeds = [COLLATERAL_SEED.as_bytes(), taker.key().as_ref()], bump = collateral_info.bump)]
-    pub collateral_info: Account<'info, CollateralInfo>,
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), taker.key().as_ref()],
+                bump = collateral_info.bump)]
+    pub collateral_info: Account<'info, CollateralInfo>,
+    #[account(seeds = [COLLATERAL_SEED.as_bytes(), taker.key().as_ref()],
                 bump = collateral_info.token_account_bump)]
     pub collateral_token: Account<'info, TokenAccount>,
 
@@ -73,26 +74,28 @@ pub fn initialize_rfq_instruction(
         ..
     } = ctx.accounts;
 
-    let required_collateral =
-        calculate_required_collateral_for_rfq(risk_engine, risk_engine_register, &legs)?;
-    require!(
-        required_collateral <= collateral_token.amount - collateral_info.locked_tokens_amount,
-        ProtocolError::NotEnoughCollateral
-    );
+    let fixed_size = FixedSize::None { padding: 0 };
+    let required_collateral = calculate_required_collateral_for_rfq(
+        &taker.key(),
+        risk_engine,
+        risk_engine_register,
+        &legs,
+        &fixed_size,
+    )?;
+    collateral_info.lock_collateral(collateral_token, required_collateral)?;
 
-    collateral_info.locked_tokens_amount += required_collateral;
     rfq.set_inner(Rfq {
         taker: taker.key(),
         order_type,
-        last_look_enabled: false,                   // TODO add logic later
-        fixed_size: FixedSize::None { padding: 0 }, // TODO add logic later
+        last_look_enabled: false, // TODO add logic later
+        fixed_size,               // TODO add logic later
         quote_mint: quote_mint.key(),
         access_manager: None, // TODO add logic later
         creation_timestamp: Clock::get()?.unix_timestamp,
         active_window,
         settling_window,
         state: StoredRfqState::Active,
-        non_response_taker_collateral_locked: 0,
+        non_response_taker_collateral_locked: required_collateral,
         total_taker_collateral_locked: required_collateral,
         total_responses: 0,
         cleared_responses: 0,

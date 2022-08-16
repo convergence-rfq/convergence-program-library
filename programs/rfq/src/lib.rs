@@ -15,6 +15,7 @@ use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::initialize_protocol::*;
+use instructions::rfq::confirm_response::*;
 use instructions::rfq::intitialize_rfq::*;
 use instructions::rfq::respond_to_rfq::*;
 use states::*;
@@ -75,5 +76,9 @@ pub mod rfq {
         ask: Option<Quote>,
     ) -> Result<()> {
         respond_to_rfq_instruction(ctx, bid, ask)
+    }
+
+    pub fn confirm_rfq(ctx: Context<ConfirmResponseAccounts>, side: Side) -> Result<()> {
+        confirm_response_instruction(ctx, side)
     }
 }

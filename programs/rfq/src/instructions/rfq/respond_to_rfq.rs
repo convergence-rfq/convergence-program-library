@@ -5,7 +5,7 @@ use crate::{
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_response,
     states::{
-        CollateralInfo, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
+        CollateralInfo, FixedSize, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
         StoredResponseState,
     },
 };
@@ -23,9 +23,10 @@ pub struct RespondToRfqAccounts<'info> {
     pub rfq: Account<'info, Rfq>,
     #[account(init, payer = maker, space = 8 + mem::size_of::<Response>())]
     pub response: Account<'info, Response>,
-    #[account(seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()], bump = collateral_info.bump)]
-    pub collateral_info: Account<'info, CollateralInfo>,
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
+                bump = collateral_info.bump)]
+    pub collateral_info: Account<'info, CollateralInfo>,
+    #[account(seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
                 bump = collateral_info.token_account_bump)]
     pub collateral_token: Account<'info, TokenAccount>,
 
@@ -64,6 +65,22 @@ fn validate(
             bid.is_some() || ask.is_some(),
             ProtocolError::ResponseDoesNotMatchOrderType
         ),
+    };
+
+    let is_rfq_fixed_sized = !matches!(rfq.fixed_size, FixedSize::None { padding: _ });
+    if let Some(quote) = bid {
+        let is_quote_fixed_size = matches!(quote, Quote::FixedSize { price_quote: _ });
+        require!(
+            is_rfq_fixed_sized == is_quote_fixed_size,
+            ProtocolError::InvalidQuoteType
+        );
+    }
+    if let Some(quote) = ask {
+        let is_quote_fixed_size = matches!(quote, Quote::FixedSize { price_quote: _ });
+        require!(
+            is_rfq_fixed_sized == is_quote_fixed_size,
+            ProtocolError::InvalidQuoteType
+        );
     }
 
     Ok(())
@@ -88,17 +105,14 @@ pub fn respond_to_rfq_instruction(
     } = ctx.accounts;
 
     let required_collateral = calculate_required_collateral_for_response(
+        &maker.key(),
         &rfq.to_account_info(),
         risk_engine,
         risk_engine_register,
         bid,
         ask,
     )?;
-    require!(
-        required_collateral <= collateral_token.amount - collateral_info.locked_tokens_amount,
-        ProtocolError::NotEnoughCollateral
-    );
-    collateral_info.locked_tokens_amount += required_collateral;
+    collateral_info.lock_collateral(collateral_token, required_collateral)?;
 
     response.set_inner(Response {
         maker: maker.key(),
