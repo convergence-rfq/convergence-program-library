@@ -45,7 +45,9 @@ fn validate(
     bid: Option<Quote>,
     ask: Option<Quote>,
 ) -> Result<()> {
-    let RespondToRfqAccounts { rfq, .. } = &ctx.accounts;
+    let RespondToRfqAccounts { maker, rfq, .. } = &ctx.accounts;
+
+    require!(maker.key() != rfq.taker, ProtocolError::TakerCanNotRespond);
 
     require!(
         rfq.get_state()? == RfqState::Active,

@@ -12,7 +12,7 @@ use anchor_spl::token::TokenAccount;
 
 #[derive(Accounts)]
 pub struct ConfirmResponseAccounts<'info> {
-    #[account(mut, constraint = taker.key() == rfq.taker @ ProtocolError::NotATaker)]
+    #[account(constraint = taker.key() == rfq.taker @ ProtocolError::NotATaker)]
     pub taker: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]

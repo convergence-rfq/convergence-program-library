@@ -10,6 +10,7 @@ pub mod errors;
 pub mod instructions;
 pub mod interfaces;
 pub mod states;
+pub mod utils;
 
 use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;

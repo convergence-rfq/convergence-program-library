@@ -100,6 +100,16 @@ pub struct Response {
 }
 
 impl Response {
+    pub fn get_authority_side(&self, rfq: &Rfq, caller: &Pubkey) -> Option<AuthoritySide> {
+        if caller == &self.maker {
+            Some(AuthoritySide::Maker)
+        } else if caller == &rfq.taker {
+            Some(AuthoritySide::Taker)
+        } else {
+            None
+        }
+    }
+
     pub fn get_state(&self, rfq: &Rfq) -> Result<ResponseState> {
         let current_time = Clock::get()?.unix_timestamp;
         let active_window_ended = rfq.active_window_ended(current_time);
@@ -147,6 +157,75 @@ impl Response {
         };
         Ok(state)
     }
+
+    pub fn get_leg_amount_to_transfer(&self, rfq: &Rfq, leg_index: u8, side: AuthoritySide) -> i64 {
+        let leg = &rfq.legs[leg_index as usize];
+        let quote_side = self.confirmed.unwrap();
+        let quote = match quote_side {
+            Side::Bid => self.bid.unwrap(),
+            Side::Ask => self.ask.unwrap(),
+        };
+        let leg_multiplier_bps = match quote {
+            Quote::Standart {
+                price_quote: _,
+                legs_multiplier_bps,
+            } => legs_multiplier_bps,
+            Quote::FixedSize { price_quote: _ } => todo!(),
+        };
+
+        let result = leg.instrument_amount as u128 * leg_multiplier_bps as u128
+            / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS);
+        let mut result = result as i64;
+
+        if let Side::Ask = leg.side {
+            result = -result;
+        }
+        if let Side::Ask = quote_side {
+            result = -result;
+        }
+        if let AuthoritySide::Taker = side {
+            result = -result;
+        }
+
+        result
+    }
+
+    pub fn get_quote_amount_to_transfer(&self, _rfq: &Rfq, side: AuthoritySide) -> i64 {
+        let quote_side = self.confirmed.unwrap();
+        let quote = match quote_side {
+            Side::Bid => self.bid.unwrap(),
+            Side::Ask => self.ask.unwrap(),
+        };
+        let legs_multiplier = match quote {
+            Quote::Standart {
+                price_quote: _,
+                legs_multiplier_bps,
+            } => legs_multiplier_bps,
+            Quote::FixedSize { price_quote: _ } => todo!(),
+        };
+        let price_bps = match quote {
+            Quote::Standart {
+                price_quote: PriceQuote::AbsolutePrice { amount_bps },
+                legs_multiplier_bps: _,
+            } => amount_bps,
+            Quote::FixedSize {
+                price_quote: PriceQuote::AbsolutePrice { amount_bps },
+            } => amount_bps,
+        };
+
+        let result =
+            legs_multiplier as u128 * price_bps / 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS);
+        let mut result = result as i64;
+
+        if let Side::Ask = quote_side {
+            result = -result;
+        }
+        if let AuthoritySide::Maker = side {
+            result = -result;
+        }
+
+        result
+    }
 }
 
 #[account]
@@ -169,7 +248,8 @@ impl CollateralInfo {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct InstrumentParameters {
-    pub validate_data_accounts: u8,
+    pub validate_data_account_amount: u8,
+    pub prepare_to_settle_account_amount: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -207,9 +287,17 @@ pub enum Quote {
     },
 }
 
+impl Quote {
+    const LEG_MULTIPLIER_DECIMALS: u32 = 9;
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum PriceQuote {
     AbsolutePrice { amount_bps: u128 },
+}
+
+impl PriceQuote {
+    const ABSOLUTE_PRICE_DECIMALS: u32 = 9;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -268,4 +356,10 @@ pub enum ResponseState {
     Settled,
     Defaulted,
     Expired,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+pub enum AuthoritySide {
+    Taker,
+    Maker,
 }

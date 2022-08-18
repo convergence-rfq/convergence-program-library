@@ -24,8 +24,8 @@ pub enum ProtocolError {
     NotEnoughCollateral,
     #[msg("Not a whitelisted instrument")]
     NotAWhitelistedInstrument,
-    #[msg("Invalid accounts list for a leg data verification")]
-    InvalidAccountsForLegDataVerification,
+    #[msg("Not enough accounts")]
+    NotEnoughAccounts,
     #[msg("Rfq is not in active state")]
     RfqIsNotActive,
     #[msg("Response does not match order type")]
@@ -40,4 +40,12 @@ pub enum ProtocolError {
     ResponseIsNotActive,
     #[msg("Confirmed side is missing in a response")]
     ConfirmedSideMissing,
+    #[msg("Caller is not a authority passed in parameters")]
+    NotAPassedAuthority,
+    #[msg("Response is not a valid state to prepare for this caller")]
+    ResponseIsNotAValidStateToPrepare,
+    #[msg("Taker can not respond to rfq he had created")]
+    TakerCanNotRespond,
+    #[msg("Not a quote mint")]
+    NotAQuoteMint,
 }
