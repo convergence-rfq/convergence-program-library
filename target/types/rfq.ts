@@ -1019,15 +1019,6 @@ export type Rfq = {
             }
           },
           {
-            "name": "approved",
-            "docs": [
-              "Last look approved"
-            ],
-            "type": {
-              "option": "bool"
-            }
-          },
-          {
             "name": "assetEscrowBump",
             "docs": [
               "Asset escrow bump"
@@ -1099,11 +1090,15 @@ export type Rfq = {
             "type": "bool"
           },
           {
-            "name": "confirmed",
+            "name": "confirmedOrder",
             "docs": [
               "Confirmed"
             ],
-            "type": "bool"
+            "type": {
+              "option": {
+                "defined": "ConfirmedOrder"
+              }
+            }
           },
           {
             "name": "expiry",
@@ -1111,6 +1106,15 @@ export type Rfq = {
               "Expiry time"
             ],
             "type": "i64"
+          },
+          {
+            "name": "lastLookApproved",
+            "docs": [
+              "Last look approved, None value means last look logic is disabled"
+            ],
+            "type": {
+              "option": "bool"
+            }
           },
           {
             "name": "legs",
@@ -1122,13 +1126,6 @@ export type Rfq = {
                 "defined": "Leg"
               }
             }
-          },
-          {
-            "name": "lastLook",
-            "docs": [
-              "Last look required to approve trade"
-            ],
-            "type": "bool"
           },
           {
             "name": "orderAmount",
@@ -1223,10 +1220,6 @@ export type Rfq = {
             }
           },
           {
-            "name": "askConfirmed",
-            "type": "bool"
-          },
-          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -1235,10 +1228,6 @@ export type Rfq = {
             "type": {
               "option": "u64"
             }
-          },
-          {
-            "name": "bidConfirmed",
-            "type": "bool"
           },
           {
             "name": "bump",
@@ -1250,14 +1239,6 @@ export type Rfq = {
               "Collateral returned"
             ],
             "type": "bool"
-          },
-          {
-            "name": "confirmedQuote",
-            "type": {
-              "option": {
-                "defined": "Quote"
-              }
-            }
           },
           {
             "name": "rfq",
@@ -1347,6 +1328,24 @@ export type Rfq = {
             "name": "buySell",
             "type": {
               "defined": "BuySell"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfirmedOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "order",
+            "type": "publicKey"
+          },
+          {
+            "name": "quote",
+            "type": {
+              "defined": "Quote"
             }
           }
         ]
@@ -1528,61 +1527,71 @@ export type Rfq = {
     },
     {
       "code": 6011,
+      "name": "LastLookAlreadyDone",
+      "msg": "Last look already done"
+    },
+    {
+      "code": 6012,
       "name": "Math",
       "msg": "Math"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6013,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
+      "code": 6014,
+      "name": "NoCollateralToReturn",
+      "msg": "No collateral to return"
     },
     {
-      "code": 6014,
+      "code": 6015,
+      "name": "OrderNotConfirmed",
+      "msg": "Order not confirmed"
+    },
+    {
+      "code": 6016,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6015,
+      "code": 6017,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6016,
+      "code": 6018,
       "name": "RfqActive",
       "msg": "RFQ active"
     },
     {
-      "code": 6017,
+      "code": 6019,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6018,
+      "code": 6020,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6019,
+      "code": 6021,
       "name": "RfqUnconfirmed",
       "msg": "RFQ unconfirmed"
     },
     {
-      "code": 6020,
+      "code": 6022,
       "name": "RfqCanceled",
       "msg": "RFQ canceled"
     },
     {
-      "code": 6021,
+      "code": 6023,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     },
     {
-      "code": 6022,
+      "code": 6024,
       "name": "DexIxError",
       "msg": "Error creating a dex instruction"
     }
@@ -2610,15 +2619,6 @@ export const IDL: Rfq = {
             }
           },
           {
-            "name": "approved",
-            "docs": [
-              "Last look approved"
-            ],
-            "type": {
-              "option": "bool"
-            }
-          },
-          {
             "name": "assetEscrowBump",
             "docs": [
               "Asset escrow bump"
@@ -2690,11 +2690,15 @@ export const IDL: Rfq = {
             "type": "bool"
           },
           {
-            "name": "confirmed",
+            "name": "confirmedOrder",
             "docs": [
               "Confirmed"
             ],
-            "type": "bool"
+            "type": {
+              "option": {
+                "defined": "ConfirmedOrder"
+              }
+            }
           },
           {
             "name": "expiry",
@@ -2702,6 +2706,15 @@ export const IDL: Rfq = {
               "Expiry time"
             ],
             "type": "i64"
+          },
+          {
+            "name": "lastLookApproved",
+            "docs": [
+              "Last look approved, None value means last look logic is disabled"
+            ],
+            "type": {
+              "option": "bool"
+            }
           },
           {
             "name": "legs",
@@ -2713,13 +2726,6 @@ export const IDL: Rfq = {
                 "defined": "Leg"
               }
             }
-          },
-          {
-            "name": "lastLook",
-            "docs": [
-              "Last look required to approve trade"
-            ],
-            "type": "bool"
           },
           {
             "name": "orderAmount",
@@ -2814,10 +2820,6 @@ export const IDL: Rfq = {
             }
           },
           {
-            "name": "askConfirmed",
-            "type": "bool"
-          },
-          {
             "name": "authority",
             "type": "publicKey"
           },
@@ -2826,10 +2828,6 @@ export const IDL: Rfq = {
             "type": {
               "option": "u64"
             }
-          },
-          {
-            "name": "bidConfirmed",
-            "type": "bool"
           },
           {
             "name": "bump",
@@ -2841,14 +2839,6 @@ export const IDL: Rfq = {
               "Collateral returned"
             ],
             "type": "bool"
-          },
-          {
-            "name": "confirmedQuote",
-            "type": {
-              "option": {
-                "defined": "Quote"
-              }
-            }
           },
           {
             "name": "rfq",
@@ -2938,6 +2928,24 @@ export const IDL: Rfq = {
             "name": "buySell",
             "type": {
               "defined": "BuySell"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfirmedOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "order",
+            "type": "publicKey"
+          },
+          {
+            "name": "quote",
+            "type": {
+              "defined": "Quote"
             }
           }
         ]
@@ -3119,61 +3127,71 @@ export const IDL: Rfq = {
     },
     {
       "code": 6011,
+      "name": "LastLookAlreadyDone",
+      "msg": "Last look already done"
+    },
+    {
+      "code": 6012,
       "name": "Math",
       "msg": "Math"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "NotImplemented",
       "msg": "Not implemented"
     },
     {
-      "code": 6013,
-      "name": "OrderConfirmed",
-      "msg": "Order confirmed"
+      "code": 6014,
+      "name": "NoCollateralToReturn",
+      "msg": "No collateral to return"
     },
     {
-      "code": 6014,
+      "code": 6015,
+      "name": "OrderNotConfirmed",
+      "msg": "Order not confirmed"
+    },
+    {
+      "code": 6016,
       "name": "OrderNotApproved",
       "msg": "Order not approved via last look"
     },
     {
-      "code": 6015,
+      "code": 6017,
       "name": "OrderSettled",
       "msg": "Order settled"
     },
     {
-      "code": 6016,
+      "code": 6018,
       "name": "RfqActive",
       "msg": "RFQ active"
     },
     {
-      "code": 6017,
+      "code": 6019,
       "name": "RfqInactive",
       "msg": "RFQ inactive"
     },
     {
-      "code": 6018,
+      "code": 6020,
       "name": "RfqConfirmed",
       "msg": "RFQ confirmed"
     },
     {
-      "code": 6019,
+      "code": 6021,
       "name": "RfqUnconfirmed",
       "msg": "RFQ unconfirmed"
     },
     {
-      "code": 6020,
+      "code": 6022,
       "name": "RfqCanceled",
       "msg": "RFQ canceled"
     },
     {
-      "code": 6021,
+      "code": 6023,
       "name": "RfqSettled",
       "msg": "RFQ settled"
     },
     {
-      "code": 6022,
+      "code": 6024,
       "name": "DexIxError",
       "msg": "Error creating a dex instruction"
     }

@@ -328,7 +328,7 @@ export async function confirm(
   signer: Wallet,
   assetWallet: PublicKey,
   quoteWallet: PublicKey,
-  side: object
+  quote: any = Quote.Bid
 ): Promise<any> {
   const program = await getProgram(provider);
   const rfqState: any = await program.account.rfqState.fetch(rfqPda);
@@ -348,7 +348,7 @@ export async function confirm(
   }
 
   const tx = await program.methods
-    .confirm(side)
+    .confirm(quote)
     .accounts({
       assetMint: rfqState.assetMint,
       assetWallet,
@@ -1003,6 +1003,8 @@ export async function processLegs(provider: Provider, rfqPda: PublicKey, signer:
 
       legOptionMarket = res.optionMarket;
       legOptionMarketPublicKey = res.publicKey;
+
+      console.log("Created market!")
     }
 
     if (legOptionMarketPublicKey && legOptionMarket) {

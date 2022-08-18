@@ -19,6 +19,7 @@
     },
     "scripts": {
         "ts-check": "prettier --config .prettierrc '**/*.ts' --check",
-        "ts-format": "prettier --config .prettierrc '**/*.ts' --write"
+        "ts-format": "prettier --config .prettierrc '**/*.ts' --write",
+        "ts-test": "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/psyamerican.spec.ts"
     }
 }

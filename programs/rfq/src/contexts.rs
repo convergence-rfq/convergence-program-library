@@ -98,7 +98,7 @@ pub struct Request<'info> {
             &order_amount.to_le_bytes(),
             &expiry.to_le_bytes()
         ],
-        space = 8 + mem::size_of::<RfqState>(),
+        space = 8 + mem::size_of::<RfqState>() + 255, // TODO: Add legs
         bump
     )]
     pub rfq: Box<Account<'info, RfqState>>,

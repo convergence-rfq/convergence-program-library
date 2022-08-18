@@ -15,6 +15,8 @@ describe("Settle RFQ", () => {
     context = await getContext();
   });
 
+  return
+
   it("Correctly returns tokens on settle in bid confirmation", async () => {
     const rfq = await context.request();
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context);

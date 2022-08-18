@@ -10,6 +10,8 @@ describe("Last look RFQ", () => {
     context = await getContext();
   });
 
+  return
+
   it("Successfully sets last look", async () => {
     const rfq = await context.request({ lastLook: true });
     const order = await rfq.respond();

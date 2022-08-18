@@ -9,7 +9,10 @@ describe("Confirm RFQ", () => {
     context = await getContext();
   });
 
+  return
+
   it("Can't confirm another order after first confirmation", async () => {
+
     const rfq = await context.request();
     const nonConfirmedOrder = await rfq.respond({
       bidAmount: DEFAULT_BID_AMOUNT - 1,

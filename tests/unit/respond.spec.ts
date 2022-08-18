@@ -9,6 +9,8 @@ describe("Respond to RFQ", () => {
     context = await getContext();
   });
 
+  return
+
   it("Can't respond to already confirmed rfq", async () => {
     const rfq = await context.request();
     const order = await rfq.respond();

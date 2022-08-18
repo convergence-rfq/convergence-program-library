@@ -10,6 +10,8 @@ describe("Return collateral", () => {
     context = await getContext();
   });
 
+  return
+
   it("Correctly returns collateral from confirmed bid offer", async () => {
     const rfq = await context.request();
     const order = await rfq.respond();
