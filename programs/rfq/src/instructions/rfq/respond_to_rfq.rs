@@ -33,9 +33,6 @@ pub struct RespondToRfqAccounts<'info> {
     #[account(constraint = risk_engine.key() == protocol.risk_engine
         @ ProtocolError::NotARiskEngine)]
     pub risk_engine: AccountInfo<'info>,
-    #[account(constraint = risk_engine_register.key() == protocol.risk_engine_register
-        @ ProtocolError::NotARiskEngineRegister)]
-    pub risk_engine_register: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
 }
@@ -102,7 +99,6 @@ pub fn respond_to_rfq_instruction(
         collateral_info,
         collateral_token,
         risk_engine,
-        risk_engine_register,
         ..
     } = ctx.accounts;
 
@@ -110,7 +106,6 @@ pub fn respond_to_rfq_instruction(
         &maker.key(),
         &rfq.to_account_info(),
         risk_engine,
-        risk_engine_register,
         bid,
         ask,
     )?;
@@ -123,6 +118,7 @@ pub fn respond_to_rfq_instruction(
         maker_collateral_locked: required_collateral,
         taker_collateral_locked: 0,
         state: StoredResponseState::Active,
+        first_to_prepare: None,
         confirmed: None,
         bid,
         ask,

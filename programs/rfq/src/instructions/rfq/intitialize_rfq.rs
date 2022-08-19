@@ -31,9 +31,6 @@ pub struct InitializeRfqAccounts<'info> {
     #[account(constraint = risk_engine.key() == protocol.risk_engine
         @ ProtocolError::NotARiskEngine)]
     pub risk_engine: AccountInfo<'info>,
-    #[account(constraint = risk_engine_register.key() == protocol.risk_engine_register
-        @ ProtocolError::NotARiskEngineRegister)]
-    pub risk_engine_register: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
 }
@@ -48,7 +45,12 @@ fn validate_legs(ctx: &Context<InitializeRfqAccounts>, legs: &[Leg]) -> Result<(
             .get(&leg.instrument)
             .ok_or(ProtocolError::NotAWhitelistedInstrument)?;
 
-        validate_instrument_data(leg, *instruction_parameters, &mut remaining_accounts)?;
+        validate_instrument_data(
+            leg,
+            &leg.instrument.key(),
+            *instruction_parameters,
+            &mut remaining_accounts,
+        )?;
     }
 
     Ok(())
@@ -70,18 +72,12 @@ pub fn initialize_rfq_instruction(
         collateral_token,
         quote_mint,
         risk_engine,
-        risk_engine_register,
         ..
     } = ctx.accounts;
 
     let fixed_size = FixedSize::None { padding: 0 };
-    let required_collateral = calculate_required_collateral_for_rfq(
-        &taker.key(),
-        risk_engine,
-        risk_engine_register,
-        &legs,
-        &fixed_size,
-    )?;
+    let required_collateral =
+        calculate_required_collateral_for_rfq(&taker.key(), risk_engine, &legs, &fixed_size)?;
     collateral_info.lock_collateral(collateral_token, required_collateral)?;
 
     rfq.set_inner(Rfq {

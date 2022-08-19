@@ -26,6 +26,8 @@ pub enum ProtocolError {
     NotAWhitelistedInstrument,
     #[msg("Not enough accounts")]
     NotEnoughAccounts,
+    #[msg("Passed program id differs from an instrument")]
+    PassedProgramIdDiffersFromAnInstrument,
     #[msg("Rfq is not in active state")]
     RfqIsNotActive,
     #[msg("Response does not match order type")]
@@ -42,10 +44,12 @@ pub enum ProtocolError {
     ConfirmedSideMissing,
     #[msg("Caller is not a authority passed in parameters")]
     NotAPassedAuthority,
-    #[msg("Response is not a valid state to prepare for this caller")]
-    ResponseIsNotAValidStateToPrepare,
+    #[msg("Response is not a valid state")]
+    ResponseIsNotAValidState,
     #[msg("Taker can not respond to rfq he had created")]
     TakerCanNotRespond,
     #[msg("Not a quote mint")]
     NotAQuoteMint,
+    #[msg("Quote receiver account is not a receiver associated token account")]
+    WrongQuoteReceiver,
 }

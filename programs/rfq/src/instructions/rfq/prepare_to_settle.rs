@@ -17,15 +17,14 @@ pub struct PrepareToSettleAccounts<'info> {
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
-    #[account(mut)]
     pub rfq: Account<'info, Rfq>,
     #[account(mut, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
     pub response: Account<'info, Response>,
 
     #[account(constraint = quote_mint.key() == rfq.quote_mint @ ProtocolError::NotAQuoteMint)]
     pub quote_mint: Account<'info, TokenAccount>,
-    #[account(init, payer = caller, token::mint = quote_mint, token::authority = quote_escrow,
-        seeds = [QUOTE_ESCROW_SEED.as_bytes(), response.key().as_ref(), &[side as u8]], bump)]
+    #[account(init_if_needed, payer = caller, token::mint = quote_mint, token::authority = quote_escrow,
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), response.key().as_ref()], bump)]
     pub quote_escrow: Account<'info, TokenAccount>,
 
     pub system_program: Program<'info, System>,
@@ -54,14 +53,14 @@ fn validate(ctx: &Context<PrepareToSettleAccounts>, side: AuthoritySide) -> Resu
                 response_state,
                 ResponseState::ReadyForSettling | ResponseState::OnlyMakerPrepared
             ),
-            ProtocolError::ResponseIsNotAValidStateToPrepare
+            ProtocolError::ResponseIsNotAValidState
         ),
         AuthoritySide::Maker => require!(
             matches!(
                 response_state,
                 ResponseState::ReadyForSettling | ResponseState::OnlyTakerPrepared
             ),
-            ProtocolError::ResponseIsNotAValidStateToPrepare
+            ProtocolError::ResponseIsNotAValidState
         ),
     }
 
@@ -97,6 +96,7 @@ pub fn prepare_to_settle_instruction(
         prepare_to_settle(
             index as u8,
             side,
+            &leg.instrument.key(),
             *instruction_parameters,
             &mut remaining_accounts,
         )?;
@@ -113,6 +113,7 @@ pub fn prepare_to_settle_instruction(
         transfer(transfer_ctx, quote_amount as u64)?;
     }
 
+    response.first_to_prepare = response.first_to_prepare.or(Some(side));
     response.state = match (side, response.get_state(rfq)?) {
         (AuthoritySide::Taker, ResponseState::ReadyForSettling) => {
             StoredResponseState::OnlyTakerPrepared

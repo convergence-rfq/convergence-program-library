@@ -18,7 +18,6 @@ pub struct ProtocolState {
     pub default_fees: FeeParameters,
 
     pub risk_engine: Pubkey,
-    pub risk_engine_register: Pubkey,
     pub collateral_mint: Pubkey,
     pub instruments: HashMap<Pubkey, InstrumentParameters>,
 }
@@ -95,6 +94,7 @@ pub struct Response {
     pub state: StoredResponseState,
 
     pub confirmed: Option<Side>,
+    pub first_to_prepare: Option<AuthoritySide>,
     pub bid: Option<Quote>,
     pub ask: Option<Quote>,
 }
@@ -226,6 +226,24 @@ impl Response {
 
         result
     }
+
+    pub fn get_leg_assets_receiver(&self, rfq: &Rfq, leg_index: u8) -> AuthoritySide {
+        let taker_amount = self.get_leg_amount_to_transfer(rfq, leg_index, AuthoritySide::Taker);
+        if taker_amount > 0 {
+            AuthoritySide::Maker
+        } else {
+            AuthoritySide::Taker
+        }
+    }
+
+    pub fn get_quote_tokens_receiver(&self, rfq: &Rfq) -> AuthoritySide {
+        let taker_amount = self.get_quote_amount_to_transfer(rfq, AuthoritySide::Taker);
+        if taker_amount > 0 {
+            AuthoritySide::Maker
+        } else {
+            AuthoritySide::Taker
+        }
+    }
 }
 
 #[account]
@@ -250,6 +268,7 @@ impl CollateralInfo {
 pub struct InstrumentParameters {
     pub validate_data_account_amount: u8,
     pub prepare_to_settle_account_amount: u8,
+    pub settle_account_amount: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

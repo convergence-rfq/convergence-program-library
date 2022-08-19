@@ -31,9 +31,6 @@ pub struct ConfirmResponseAccounts<'info> {
     #[account(constraint = risk_engine.key() == protocol.risk_engine
         @ ProtocolError::NotARiskEngine)]
     pub risk_engine: AccountInfo<'info>,
-    #[account(constraint = risk_engine_register.key() == protocol.risk_engine_register
-        @ ProtocolError::NotARiskEngineRegister)]
-    pub risk_engine_register: AccountInfo<'info>,
 }
 
 fn validate(ctx: &Context<ConfirmResponseAccounts>, side: Side) -> Result<()> {
@@ -68,7 +65,6 @@ pub fn confirm_response_instruction(
         collateral_info,
         collateral_token,
         risk_engine,
-        risk_engine_register,
         ..
     } = ctx.accounts;
 
@@ -76,7 +72,6 @@ pub fn confirm_response_instruction(
         &rfq.to_account_info(),
         &risk_engine.to_account_info(),
         risk_engine,
-        risk_engine_register,
         &side,
     )?;
     let collateral_taken_from_already_deposited = u64::min(
