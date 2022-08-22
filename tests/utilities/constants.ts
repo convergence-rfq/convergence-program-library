@@ -1,14 +1,11 @@
-export const DEFAULT_SOL_FOR_SIGNERS = 10_000 * 10 ** 9;
-export const FEE_NUMERATOR = 1;
-export const FEE_DENOMINATOR = 1_000;
-export const DEFAULT_ORDER_AMOUNT = 5 * 10 ** 9;
-export const DEFAULT_BID_AMOUNT = 80 * 10 ** 9;
-export const DEFAULT_BID_FEE = (DEFAULT_BID_AMOUNT * FEE_NUMERATOR) / FEE_DENOMINATOR;
-export const DEFAULT_ASK_AMOUNT = 100 * 10 ** 9;
-export const DEFAULT_ASK_FEE = (DEFAULT_ASK_AMOUNT * FEE_NUMERATOR) / FEE_DENOMINATOR;
-export const DEFAULT_TOKEN_AMOUNT = 1_000_000 * 10 ** 9;
-export const DAO_PRIVATE_KEY = [
-  4, 174, 145, 65, 221, 233, 28, 201, 190, 157, 118, 85, 178, 188, 236, 35, 233, 150, 119, 24, 65, 6, 29, 44, 248, 103,
-  38, 55, 73, 96, 241, 227, 162, 244, 0, 108, 144, 48, 145, 210, 64, 49, 77, 149, 188, 63, 203, 74, 132, 154, 225, 28,
-  35, 245, 171, 231, 50, 66, 39, 97, 211, 222, 12, 151,
-];
+import { BN } from "@project-serum/anchor";
+
+export const PROTOCOL_SEED = "protocol";
+export const COLLATERAL_SEED = "collateral_info";
+export const COLLATERAL_TOKEN_SEED = "collateral_token";
+export const QUOTE_ESCROW_SEED = "quote_escrow";
+
+export const DEFAULT_SOL_FOR_SIGNERS = 100_000_000_000;
+export const DEFAULT_TOKEN_AMOUNT = 200_000_000_000;
+
+export const DEFAULT_FEES = { takerBps: new BN(0), makerBps: new BN(0) };

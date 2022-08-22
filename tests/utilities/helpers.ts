@@ -19,8 +19,3 @@ export const expectError = async (promise: Promise<any>, errorText: string) => {
 export const sleep = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
-
-export function getTimestampInFuture(afterSeconds: number) {
-  const now = new Date().getTime() / 1_000;
-  return now + afterSeconds;
-}

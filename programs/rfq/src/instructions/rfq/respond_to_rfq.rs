@@ -30,9 +30,10 @@ pub struct RespondToRfqAccounts<'info> {
                 bump = collateral_info.token_account_bump)]
     pub collateral_token: Account<'info, TokenAccount>,
 
+    /// CHECK: is a valid risk engine program id
     #[account(constraint = risk_engine.key() == protocol.risk_engine
         @ ProtocolError::NotARiskEngine)]
-    pub risk_engine: AccountInfo<'info>,
+    pub risk_engine: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 }

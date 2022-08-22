@@ -28,9 +28,10 @@ pub struct InitializeRfqAccounts<'info> {
     pub collateral_token: Account<'info, TokenAccount>,
 
     pub quote_mint: Account<'info, Mint>,
+    /// CHECK: is a valid risk engine program id
     #[account(constraint = risk_engine.key() == protocol.risk_engine
         @ ProtocolError::NotARiskEngine)]
-    pub risk_engine: AccountInfo<'info>,
+    pub risk_engine: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 }

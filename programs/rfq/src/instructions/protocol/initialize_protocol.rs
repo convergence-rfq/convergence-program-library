@@ -20,6 +20,7 @@ pub struct InitializeProtocolAccounts<'info> {
         bump
     )]
     pub protocol: Account<'info, ProtocolState>,
+    /// CHECK: is a valid risk engine program id
     #[account(executable)]
     pub risk_engine: AccountInfo<'info>,
     pub collateral_mint: Account<'info, Mint>,

@@ -11,8 +11,9 @@ pub struct AddInstrumentAccounts<'info> {
     pub authority: Signer<'info>,
     #[account(mut, seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
+    /// CHECK: is a valid instrument program id
     #[account(executable)]
-    pub instrument: AccountInfo<'info>,
+    pub instrument: UncheckedAccount<'info>,
 }
 
 fn validate(ctx: &Context<AddInstrumentAccounts>) -> Result<()> {
