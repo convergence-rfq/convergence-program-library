@@ -1,4 +1,4 @@
-use std::{collections::HashMap, mem};
+use std::mem;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
@@ -19,20 +19,17 @@ pub struct ProtocolState {
 
     pub risk_engine: Pubkey,
     pub collateral_mint: Pubkey,
-    pub instruments: HashMap<Pubkey, InstrumentParameters>,
+    pub instruments: Vec<Instrument>,
 }
 
 impl ProtocolState {
-    pub const INSTRUMENT_SIZE: usize =
-        mem::size_of::<Pubkey>() + mem::size_of::<InstrumentParameters>();
+    pub const INSTRUMENT_SIZE: usize = mem::size_of::<Pubkey>() + mem::size_of::<Instrument>();
     pub const MAX_INSTRUMENTS: usize = 50;
 
-    pub fn get_instrument_parameters(
-        &self,
-        instrument_key: Pubkey,
-    ) -> Result<&InstrumentParameters> {
+    pub fn get_instrument_parameters(&self, instrument_key: Pubkey) -> Result<&Instrument> {
         self.instruments
-            .get(&instrument_key)
+            .iter()
+            .find(|x| x.program_key == instrument_key)
             .ok_or(error!(ProtocolError::NotAWhitelistedInstrument))
     }
 }
@@ -274,7 +271,8 @@ impl CollateralInfo {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub struct InstrumentParameters {
+pub struct Instrument {
+    pub program_key: Pubkey,
     pub validate_data_account_amount: u8,
     pub prepare_to_settle_account_amount: u8,
     pub settle_account_amount: u8,

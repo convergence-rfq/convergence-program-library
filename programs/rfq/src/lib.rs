@@ -48,9 +48,16 @@ pub mod rfq {
 
     pub fn add_instrument_protocol(
         ctx: Context<AddInstrumentAccounts>,
-        parameters: InstrumentParameters,
+        validate_data_account_amount: u8,
+        prepare_to_settle_account_amount: u8,
+        settle_account_amount: u8,
     ) -> Result<()> {
-        add_instrument_instruction(ctx, parameters)
+        add_instrument_instruction(
+            ctx,
+            validate_data_account_amount,
+            prepare_to_settle_account_amount,
+            settle_account_amount,
+        )
     }
 
     pub fn initialize_collateral(ctx: Context<InitializeCollateralAccounts>) -> Result<()> {

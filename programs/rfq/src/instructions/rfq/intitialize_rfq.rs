@@ -70,10 +70,6 @@ pub fn initialize_rfq_instruction<'info>(
     } = ctx.accounts;
 
     let fixed_size = FixedSize::None { padding: 0 };
-    let required_collateral =
-        calculate_required_collateral_for_rfq(&taker.key(), risk_engine, &legs, &fixed_size)?;
-    collateral_info.lock_collateral(collateral_token, required_collateral)?;
-
     rfq.set_inner(Rfq {
         taker: taker.key(),
         order_type,
@@ -85,13 +81,21 @@ pub fn initialize_rfq_instruction<'info>(
         active_window,
         settling_window,
         state: StoredRfqState::Active,
-        non_response_taker_collateral_locked: required_collateral,
-        total_taker_collateral_locked: required_collateral,
+        non_response_taker_collateral_locked: 0,
+        total_taker_collateral_locked: 0,
         total_responses: 0,
         cleared_responses: 0,
         confirmed_responses: 0,
         legs,
     });
+    rfq.exit(ctx.program_id)?;
+
+    let required_collateral =
+        calculate_required_collateral_for_rfq(&rfq.to_account_info(), risk_engine)?;
+
+    collateral_info.lock_collateral(collateral_token, required_collateral)?;
+    rfq.non_response_taker_collateral_locked = required_collateral;
+    rfq.total_taker_collateral_locked = required_collateral;
 
     Ok(())
 }

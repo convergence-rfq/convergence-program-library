@@ -1,10 +1,12 @@
 use crate::errors::SpotError;
+use crate::state::AuthoritySideDuplicate;
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
 mod errors;
+mod state;
 
 declare_id!("A5mS5KjyhgZ5yP9ff3psQb7KsQfBJYTfiwGczE2kVNMM");
 
@@ -25,7 +27,7 @@ pub mod spot_instrument {
     pub fn prepare_to_settle(
         ctx: Context<PrepareToSettle>,
         leg_index: u8,
-        side: AuthoritySide,
+        side: AuthoritySideDuplicate,
     ) -> Result<()> {
         let PrepareToSettle {
             caller,
@@ -44,7 +46,7 @@ pub mod spot_instrument {
             SpotError::PassedMintDoesNotMatch
         );
 
-        let token_amount = response.get_leg_amount_to_transfer(rfq, leg_index, side);
+        let token_amount = response.get_leg_amount_to_transfer(rfq, leg_index, side.into());
 
         if token_amount > 0 {
             let transfer_accounts = Transfer {

@@ -69,11 +69,14 @@ pub fn confirm_response_instruction(
         ..
     } = ctx.accounts;
 
+    response.confirmed = Some(side);
+    response.state = StoredResponseState::SettlingPreparations;
+    response.exit(ctx.program_id)?;
+
     let required_collateral = calculate_required_collateral_for_confirmation(
         &rfq.to_account_info(),
         &risk_engine.to_account_info(),
         risk_engine,
-        &side,
     )?;
     let collateral_taken_from_already_deposited = u64::min(
         required_collateral,
@@ -85,8 +88,6 @@ pub fn confirm_response_instruction(
     if locked_collateral > 0 {
         collateral_info.lock_collateral(collateral_token, required_collateral)?;
     }
-
-    response.state = StoredResponseState::SettlingPreparations;
 
     Ok(())
 }

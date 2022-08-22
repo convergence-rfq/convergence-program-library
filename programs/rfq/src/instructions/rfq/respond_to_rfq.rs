@@ -103,20 +103,11 @@ pub fn respond_to_rfq_instruction(
         ..
     } = ctx.accounts;
 
-    let required_collateral = calculate_required_collateral_for_response(
-        &maker.key(),
-        &rfq.to_account_info(),
-        risk_engine,
-        bid,
-        ask,
-    )?;
-    collateral_info.lock_collateral(collateral_token, required_collateral)?;
-
     response.set_inner(Response {
         maker: maker.key(),
         rfq: rfq.key(),
         creation_timestamp: Clock::get()?.unix_timestamp,
-        maker_collateral_locked: required_collateral,
+        maker_collateral_locked: 0,
         taker_collateral_locked: 0,
         state: StoredResponseState::Active,
         first_to_prepare: None,
@@ -124,6 +115,14 @@ pub fn respond_to_rfq_instruction(
         bid,
         ask,
     });
+
+    let required_collateral = calculate_required_collateral_for_response(
+        &rfq.to_account_info(),
+        &response.to_account_info(),
+        risk_engine,
+    )?;
+    collateral_info.lock_collateral(collateral_token, required_collateral)?;
+    response.maker_collateral_locked = required_collateral;
 
     rfq.total_responses += 1;
 

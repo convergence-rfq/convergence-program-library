@@ -1,7 +1,7 @@
 use crate::{
     constants::PROTOCOL_SEED,
     errors::ProtocolError,
-    states::{InstrumentParameters, ProtocolState},
+    states::{Instrument, ProtocolState},
 };
 use anchor_lang::prelude::*;
 
@@ -13,18 +13,22 @@ pub struct AddInstrumentAccounts<'info> {
     pub protocol: Account<'info, ProtocolState>,
     /// CHECK: is a valid instrument program id
     #[account(executable)]
-    pub instrument: UncheckedAccount<'info>,
+    pub instrument_program: UncheckedAccount<'info>,
 }
 
 fn validate(ctx: &Context<AddInstrumentAccounts>) -> Result<()> {
     let AddInstrumentAccounts {
         protocol,
-        instrument,
+        instrument_program,
         ..
     } = &ctx.accounts;
 
     require!(
-        !protocol.instruments.contains_key(&instrument.key()),
+        protocol
+            .instruments
+            .iter()
+            .find(|x| x.program_key == instrument_program.key())
+            .is_none(),
         ProtocolError::InstrumentAlreadyAdded
     );
 
@@ -33,17 +37,24 @@ fn validate(ctx: &Context<AddInstrumentAccounts>) -> Result<()> {
 
 pub fn add_instrument_instruction(
     ctx: Context<AddInstrumentAccounts>,
-    parameters: InstrumentParameters,
+    validate_data_account_amount: u8,
+    prepare_to_settle_account_amount: u8,
+    settle_account_amount: u8,
 ) -> Result<()> {
     validate(&ctx)?;
 
     let AddInstrumentAccounts {
         protocol,
-        instrument,
+        instrument_program,
         ..
     } = ctx.accounts;
 
-    protocol.instruments.insert(instrument.key(), parameters);
+    protocol.instruments.push(Instrument {
+        program_key: instrument_program.key(),
+        validate_data_account_amount,
+        prepare_to_settle_account_amount,
+        settle_account_amount,
+    });
 
     Ok(())
 }
