@@ -61,8 +61,8 @@ pub mod rfq {
         fund_collateral_instruction(ctx, amount)
     }
 
-    pub fn intitialize_rfq(
-        ctx: Context<InitializeRfqAccounts>,
+    pub fn intitialize_rfq<'info>(
+        ctx: Context<'_, '_, '_, 'info, InitializeRfqAccounts<'info>>,
         legs: Vec<Leg>,
         order_type: OrderType,
         active_window: u32,

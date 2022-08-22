@@ -35,29 +35,22 @@ pub struct InitializeRfqAccounts<'info> {
     pub system_program: Program<'info, System>,
 }
 
-fn validate_legs(ctx: &Context<InitializeRfqAccounts>, legs: &[Leg]) -> Result<()> {
+fn validate_legs<'info>(
+    ctx: &Context<'_, '_, '_, 'info, InitializeRfqAccounts<'info>>,
+    legs: &[Leg],
+) -> Result<()> {
     let InitializeRfqAccounts { protocol, .. } = &ctx.accounts;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
     for leg in legs.iter() {
-        let instruction_parameters = protocol
-            .instruments
-            .get(&leg.instrument)
-            .ok_or(ProtocolError::NotAWhitelistedInstrument)?;
-
-        validate_instrument_data(
-            leg,
-            &leg.instrument.key(),
-            *instruction_parameters,
-            &mut remaining_accounts,
-        )?;
+        validate_instrument_data(leg, protocol, &mut remaining_accounts)?;
     }
 
     Ok(())
 }
 
-pub fn initialize_rfq_instruction(
-    ctx: Context<InitializeRfqAccounts>,
+pub fn initialize_rfq_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, InitializeRfqAccounts<'info>>,
     legs: Vec<Leg>,
     order_type: OrderType,
     active_window: u32,

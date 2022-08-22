@@ -67,8 +67,8 @@ fn validate(ctx: &Context<PrepareToSettleAccounts>, side: AuthoritySide) -> Resu
     Ok(())
 }
 
-pub fn prepare_to_settle_instruction(
-    ctx: Context<PrepareToSettleAccounts>,
+pub fn prepare_to_settle_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, PrepareToSettleAccounts<'info>>,
     side: AuthoritySide,
 ) -> Result<()> {
     validate(&ctx, side)?;
@@ -88,18 +88,7 @@ pub fn prepare_to_settle_instruction(
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
     for (index, leg) in rfq.legs.iter().enumerate() {
-        let instruction_parameters = protocol
-            .instruments
-            .get(&leg.instrument)
-            .ok_or(ProtocolError::NotAWhitelistedInstrument)?;
-
-        prepare_to_settle(
-            index as u8,
-            side,
-            &leg.instrument.key(),
-            *instruction_parameters,
-            &mut remaining_accounts,
-        )?;
+        prepare_to_settle(leg, index as u8, side, protocol, &mut remaining_accounts)?;
     }
 
     let quote_amount = response.get_quote_amount_to_transfer(rfq, side);

@@ -2,7 +2,7 @@ use crate::errors::SpotError;
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
-use rfq::states::{AuthoritySide, Response, Rfq};
+use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
 mod errors;
 
@@ -107,12 +107,16 @@ pub mod spot_instrument {
 
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
     pub mint: Account<'info, Mint>,
 }
 
 #[derive(Accounts)]
 #[instruction(leg_index: u8, side: AuthoritySide)]
 pub struct PrepareToSettle<'info> {
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
     pub caller: Signer<'info>,
     #[account(mut, constraint = caller_tokens.mint == mint.key() @ SpotError::PassedMintDoesNotMatch)]
@@ -134,6 +138,8 @@ pub struct PrepareToSettle<'info> {
 #[derive(Accounts)]
 #[instruction(leg_index: u8)]
 pub struct Settle<'info> {
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
     pub rfq: Account<'info, Rfq>,
     pub response: Account<'info, Response>,
 

@@ -51,7 +51,9 @@ fn validate(ctx: &Context<SettleAccounts>) -> Result<()> {
     Ok(())
 }
 
-pub fn settle_instruction(ctx: Context<SettleAccounts>) -> Result<()> {
+pub fn settle_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>,
+) -> Result<()> {
     validate(&ctx)?;
 
     settle_quote_asset(&ctx)?;
@@ -65,17 +67,7 @@ pub fn settle_instruction(ctx: Context<SettleAccounts>) -> Result<()> {
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
     for (index, leg) in rfq.legs.iter().enumerate() {
-        let instruction_parameters = protocol
-            .instruments
-            .get(&leg.instrument)
-            .ok_or(ProtocolError::NotAWhitelistedInstrument)?;
-
-        settle(
-            index as u8,
-            &leg.instrument.key(),
-            *instruction_parameters,
-            &mut remaining_accounts,
-        )?;
+        settle(leg, index as u8, &protocol, &mut remaining_accounts)?;
     }
 
     response.state = StoredResponseState::Settled;

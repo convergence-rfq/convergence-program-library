@@ -26,6 +26,15 @@ impl ProtocolState {
     pub const INSTRUMENT_SIZE: usize =
         mem::size_of::<Pubkey>() + mem::size_of::<InstrumentParameters>();
     pub const MAX_INSTRUMENTS: usize = 50;
+
+    pub fn get_instrument_parameters(
+        &self,
+        instrument_key: Pubkey,
+    ) -> Result<&InstrumentParameters> {
+        self.instruments
+            .get(&instrument_key)
+            .ok_or(error!(ProtocolError::NotAWhitelistedInstrument))
+    }
 }
 
 #[account]

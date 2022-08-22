@@ -1,9 +1,10 @@
 use anchor_lang::prelude::*;
-use solana_program::{instruction::Instruction, program::invoke};
+use solana_program::{instruction::Instruction, program::invoke_signed};
 
 use crate::{
+    constants::PROTOCOL_SEED,
     errors::ProtocolError,
-    states::{AuthoritySide, InstrumentParameters, Leg},
+    states::{AuthoritySide, Leg, ProtocolState},
     utils::ToAccountMeta,
 };
 
@@ -13,52 +14,63 @@ const SETTLE_SELECTOR: [u8; 8] = [175, 42, 185, 87, 144, 131, 102, 212];
 
 pub fn validate_instrument_data<'a, 'info: 'a>(
     leg: &Leg,
-    instrument_key: &Pubkey,
-    instrument_parameters: InstrumentParameters,
+    protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = VALIDATE_DATA_SELECTOR.to_vec();
     AnchorSerialize::serialize(leg.instrument_data.as_slice(), &mut data)?;
 
+    let instrument_key = leg.instrument;
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+
     call_instrument(
         data,
-        instrument_key,
+        protocol,
+        &instrument_key,
         instrument_parameters.validate_data_account_amount as usize,
         remaining_accounts,
     )
 }
 
 pub fn prepare_to_settle<'a, 'info: 'a>(
+    leg: &Leg,
     leg_index: u8,
     side: AuthoritySide,
-    instrument_key: &Pubkey,
-    instrument_parameters: InstrumentParameters,
+    protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = PREPARE_TO_SETTLE_SELECTOR.to_vec();
     AnchorSerialize::serialize(&leg_index, &mut data)?;
     AnchorSerialize::serialize(&side, &mut data)?;
 
+    let instrument_key = leg.instrument;
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+
     call_instrument(
         data,
-        instrument_key,
+        protocol,
+        &instrument_key,
         instrument_parameters.prepare_to_settle_account_amount as usize,
         remaining_accounts,
     )
 }
 
 pub fn settle<'a, 'info: 'a>(
+    leg: &Leg,
     leg_index: u8,
-    instrument_key: &Pubkey,
-    instrument_parameters: InstrumentParameters,
+    protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = SETTLE_SELECTOR.to_vec();
     AnchorSerialize::serialize(&leg_index, &mut data)?;
 
+    let instrument_key = leg.instrument;
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+
     call_instrument(
         data,
-        instrument_key,
+        protocol,
+        &instrument_key,
         instrument_parameters.settle_account_amount as usize,
         remaining_accounts,
     )
@@ -66,6 +78,7 @@ pub fn settle<'a, 'info: 'a>(
 
 fn call_instrument<'a, 'info: 'a>(
     data: Vec<u8>,
+    protocol: &Account<'info, ProtocolState>,
     instrument_key: &Pubkey,
     accounts_number: usize,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
@@ -78,19 +91,23 @@ fn call_instrument<'a, 'info: 'a>(
         ProtocolError::PassedProgramIdDiffersFromAnInstrument
     );
 
-    let accounts: Vec<AccountInfo> = remaining_accounts.take(accounts_number).cloned().collect();
+    let mut accounts = vec![protocol.to_account_info()];
+    accounts.extend(remaining_accounts.take(accounts_number).cloned());
     require!(
-        accounts.len() == accounts_number,
+        accounts.len() == accounts_number + 1,
         ProtocolError::NotEnoughAccounts
     );
 
     let account_metas: Vec<AccountMeta> = accounts.iter().map(|x| x.to_account_meta()).collect();
+
     let instruction = Instruction {
         program_id: program.key(),
         accounts: account_metas,
         data,
     };
-    invoke(&instruction, &accounts)?;
+    let bump_seed = [protocol.bump];
+    let protocol_seed = &[&[PROTOCOL_SEED.as_bytes(), &bump_seed][..]];
+    invoke_signed(&instruction, &accounts, protocol_seed)?;
 
     Ok(())
 }
