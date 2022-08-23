@@ -5,8 +5,19 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/sp
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { DummyRiskEngine } from "../../target/types/dummy_risk_engine";
 import { SpotInstrument } from "../../target/types/spot_instrument";
-import { getProtocolPda } from "./pdas";
-import { DEFAULT_FEES, DEFAULT_SOL_FOR_SIGNERS, DEFAULT_TOKEN_AMOUNT } from "./constants";
+import { getCollateralInfoPda, getCollateralTokenPda, getProtocolPda } from "./pdas";
+import {
+  DEFAULT_ACTIVE_WINDOW,
+  DEFAULT_COLLATERAL_FUNDED,
+  DEFAULT_FEES,
+  DEFAULT_ORDER_TYPE,
+  DEFAULT_SETTLING_WINDOW,
+  DEFAULT_SOL_FOR_SIGNERS,
+  DEFAULT_INSTRUMENT_AMOUNT,
+  DEFAULT_TOKEN_AMOUNT,
+  DEFAULT_INSTRUMENT_SIDE,
+} from "./constants";
+import { OrderType } from "./types";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
@@ -25,12 +36,13 @@ export class Context {
     this.provider = anchor.AnchorProvider.env();
     anchor.setProvider(this.provider);
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
-    // this.riskEngine = anchor.workspace.DummyRiskEngine as anchor.Program<DummyRiskEngine>;
-    // this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrument>;
+    this.riskEngine = anchor.workspace.DummyRiskEngine as anchor.Program<DummyRiskEngine>;
+    this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrument>;
   }
 
   async initialize() {
     this.dao = await this.createPayer();
+    this.protocolPda = await getProtocolPda(this.program.programId);
 
     this.assetToken = await this.createMint();
     this.quoteToken = await this.createMint();
@@ -40,14 +52,15 @@ export class Context {
     await this.createTokenAccountsFor(this.taker.publicKey);
     this.maker = await this.createPayer();
     await this.createTokenAccountsFor(this.maker.publicKey);
-
-    this.protocolPda = await getProtocolPda(this.program.programId);
   }
 
   async createPayer() {
     const payer = Keypair.generate();
 
-    await this.provider.connection.requestAirdrop(payer.publicKey, DEFAULT_SOL_FOR_SIGNERS);
+    await this.provider.connection.confirmTransaction(
+      await this.provider.connection.requestAirdrop(payer.publicKey, DEFAULT_SOL_FOR_SIGNERS),
+      "confirmed"
+    );
 
     return payer;
   }
@@ -61,6 +74,24 @@ export class Context {
     );
   }
 
+  async getQuoteTokenAddress(address: PublicKey) {
+    return await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      this.quoteToken.publicKey,
+      address
+    );
+  }
+
+  async getCollateralTokenAddress(address: PublicKey) {
+    return await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      this.collateralToken.publicKey,
+      address
+    );
+  }
+
   async getAssetTokenBalance(address: PublicKey) {
     const account = await this.assetToken.getAccountInfo(await this.getAssetTokenAddress(address));
     return account.amount.toNumber();
@@ -69,15 +100,6 @@ export class Context {
   async getQuoteTokenBalance(address: PublicKey) {
     const account = await this.quoteToken.getAccountInfo(await this.getQuoteTokenAddress(address));
     return account.amount.toNumber();
-  }
-
-  async getQuoteTokenAddress(address: PublicKey) {
-    return await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      this.quoteToken.publicKey,
-      address
-    );
   }
 
   async createMint() {
@@ -94,14 +116,17 @@ export class Context {
   async createTokenAccountsFor(address: PublicKey) {
     await this.createAccountAndMintTokens(address, "asset");
     await this.createAccountAndMintTokens(address, "quote");
+    await this.createAccountAndMintTokens(address, "collateral");
   }
 
-  async createAccountAndMintTokens(address: PublicKey, type: "asset" | "quote", amount?: number) {
+  async createAccountAndMintTokens(address: PublicKey, type: "asset" | "quote" | "collateral", amount?: number) {
     let mint: Token;
     if (type == "asset") {
       mint = this.assetToken;
     } else if (type == "quote") {
       mint = this.quoteToken;
+    } else if (type == "collateral") {
+      mint = this.collateralToken;
     } else {
       throw new Error("Unsuported type");
     }
@@ -125,43 +150,85 @@ export class Context {
       .rpc();
   }
 
-  // async request({
-  //   expiry = getTimestampInFuture(100),
-  //   lastLook = false,
-  //   legs = [],
-  //   orderAmount = DEFAULT_ORDER_AMOUNT,
-  //   orderType = OrderType.TwoWay,
-  // } = {}) {
-  //   const rfqPda = await getRfqPda(
-  //     this.program.programId,
-  //     this.taker.publicKey,
-  //     this.assetToken.publicKey,
-  //     this.quoteToken.publicKey,
-  //     orderAmount,
-  //     expiry
-  //   );
-  //   const assetEscrow = await getAssetEscrowPda(this.program.programId, rfqPda);
-  //   const quoteEscrow = await getQuoteEscrowPda(this.program.programId, rfqPda);
+  async addSpotInstrument() {
+    await this.program.methods
+      .addInstrument(1, 9, 5)
+      .accounts({
+        authority: this.dao.publicKey,
+        protocol: this.protocolPda,
+        instrumentProgram: this.spotInstrument.programId,
+      })
+      .signers([this.dao])
+      .rpc();
+  }
 
-  //   await this.program.methods
-  //     .request(null, new BN(expiry), lastLook, legs, new BN(orderAmount), orderType)
-  //     .accounts({
-  //       assetEscrow,
-  //       assetMint: this.assetToken.publicKey,
-  //       signer: this.taker.publicKey,
-  //       protocol: this.protocolPda,
-  //       quoteEscrow,
-  //       quoteMint: this.quoteToken.publicKey,
-  //       rent: SYSVAR_RENT_PUBKEY,
-  //       rfq: rfqPda,
-  //       systemProgram: SystemProgram.programId,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //     })
-  //     .signers([this.taker])
-  //     .rpc();
+  async initializeCollateral(user: Keypair) {
+    await this.program.methods
+      .initializeCollateral()
+      .accounts({
+        user: user.publicKey,
+        protocol: this.protocolPda,
+        collateralInfo: await getCollateralInfoPda(user.publicKey, this.program.programId),
+        collateralToken: await getCollateralTokenPda(user.publicKey, this.program.programId),
+        collateralMint: this.collateralToken.publicKey,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([user])
+      .rpc();
+  }
 
-  //   return await Rfq.create(this, rfqPda);
-  // }
+  async fundCollateral(user: Keypair, amount: number) {
+    await this.program.methods
+      .fundCollateral(new BN(amount))
+      .accounts({
+        user: user.publicKey,
+        userTokens: await this.getCollateralTokenAddress(user.publicKey),
+        protocol: this.protocolPda,
+        collateralInfo: await getCollateralInfoPda(user.publicKey, this.program.programId),
+        collateralToken: await getCollateralTokenPda(user.publicKey, this.program.programId),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([user])
+      .rpc();
+  }
+
+  async initializeRfq({
+    legs = null,
+    orderType = DEFAULT_ORDER_TYPE,
+    activeWindow = DEFAULT_ACTIVE_WINDOW,
+    settlingWindow = DEFAULT_SETTLING_WINDOW,
+  } = {}) {
+    legs = legs ?? [
+      {
+        instrument: this.spotInstrument.programId,
+        instrumentData: this.assetToken.publicKey.toBytes(),
+        instrument_amount: new BN(DEFAULT_INSTRUMENT_AMOUNT),
+        side: DEFAULT_INSTRUMENT_SIDE,
+      },
+    ];
+
+    const rfq = new Keypair();
+    await this.program.methods
+      .intitializeRfq(legs, orderType, activeWindow, settlingWindow)
+      .accounts({
+        taker: this.taker.publicKey,
+        protocol: this.protocolPda,
+        rfq: rfq.publicKey,
+        collateralInfo: await getCollateralInfoPda(this.taker.publicKey, this.program.programId),
+        collateralToken: await getCollateralTokenPda(this.taker.publicKey, this.program.programId),
+        quoteMint: this.quoteToken.publicKey,
+        riskEngine: this.riskEngine.programId,
+        systemProgram: SystemProgram.programId,
+      })
+      .remainingAccounts([
+        { pubkey: this.spotInstrument.programId, isSigner: false, isWritable: false },
+        { pubkey: this.assetToken.publicKey, isSigner: false, isWritable: false },
+      ])
+      .signers([this.taker, rfq])
+      .rpc();
+  }
 }
 
 // export class Rfq {
@@ -341,5 +408,11 @@ export async function getContext() {
   context = new Context();
   await context.initialize();
   await context.initializeProtocol();
+  await context.addSpotInstrument();
+
+  await context.initializeCollateral(context.taker);
+  await context.fundCollateral(context.taker, DEFAULT_COLLATERAL_FUNDED);
+  await context.initializeCollateral(context.maker);
+  await context.fundCollateral(context.maker, DEFAULT_COLLATERAL_FUNDED);
   return context;
 }

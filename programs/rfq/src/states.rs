@@ -351,6 +351,10 @@ pub struct Leg {
     pub side: Side,
 }
 
+impl Leg {
+    pub const EMPTY_SIZE: usize = 32 + 4 + 8 + 1;
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum Side {
     Bid,

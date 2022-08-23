@@ -46,7 +46,7 @@ pub mod rfq {
         initialize_protocol_instruction(ctx, settle_fees, default_fees)
     }
 
-    pub fn add_instrument_protocol(
+    pub fn add_instrument(
         ctx: Context<AddInstrumentAccounts>,
         validate_data_account_amount: u8,
         prepare_to_settle_account_amount: u8,

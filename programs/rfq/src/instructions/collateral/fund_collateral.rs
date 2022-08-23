@@ -4,7 +4,7 @@ use crate::{
     states::{CollateralInfo, ProtocolState},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 
 #[derive(Accounts)]
 pub struct FundCollateralAccounts<'info> {
@@ -20,10 +20,6 @@ pub struct FundCollateralAccounts<'info> {
     #[account(mut, seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), user.key().as_ref()],
                 bump = collateral_info.token_account_bump)]
     pub collateral_token: Account<'info, TokenAccount>,
-
-    #[account(constraint = collateral_mint.key() == protocol.collateral_mint
-                @ ProtocolError::NotACollateralMint)]
-    pub collateral_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
 }

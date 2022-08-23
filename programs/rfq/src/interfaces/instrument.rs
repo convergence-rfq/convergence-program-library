@@ -18,7 +18,7 @@ pub fn validate_instrument_data<'a, 'info: 'a>(
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = VALIDATE_DATA_SELECTOR.to_vec();
-    AnchorSerialize::serialize(leg.instrument_data.as_slice(), &mut data)?;
+    AnchorSerialize::serialize(&leg.instrument_data, &mut data)?;
 
     let instrument_key = leg.instrument;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
@@ -91,7 +91,9 @@ fn call_instrument<'a, 'info: 'a>(
         ProtocolError::PassedProgramIdDiffersFromAnInstrument
     );
 
-    let mut accounts = vec![protocol.to_account_info()];
+    let mut protocol_info = protocol.to_account_info();
+    protocol_info.is_signer = true;
+    let mut accounts = vec![protocol_info];
     accounts.extend(remaining_accounts.take(accounts_number).cloned());
     require!(
         accounts.len() == accounts_number + 1,

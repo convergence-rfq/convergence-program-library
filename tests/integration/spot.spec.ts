@@ -7,7 +7,7 @@ describe("RFQ Spot instrument integration tests", () => {
     context = await getContext();
   });
 
-  it("Always succeds", async () => {
-    assert.ok(true);
+  it("Create, respond and settle an rfq", async () => {
+    await context.initializeRfq();
   });
 });

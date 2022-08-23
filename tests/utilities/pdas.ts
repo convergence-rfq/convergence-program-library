@@ -1,9 +1,19 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { ASSET_ESCROW_SEED, ORDER_SEED, PROTOCOL_SEED, QUOTE_ESCROW_SEED, RFQ_SEED } from "../../lib/helpers";
+import { COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED } from "./constants";
 
 export async function getProtocolPda(programId: PublicKey) {
   const [pda] = await PublicKey.findProgramAddress([Buffer.from(PROTOCOL_SEED)], programId);
+  return pda;
+}
+
+export async function getCollateralTokenPda(user: PublicKey, programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress([Buffer.from(COLLATERAL_TOKEN_SEED), user.toBuffer()], programId);
+  return pda;
+}
+
+export async function getCollateralInfoPda(user: PublicKey, programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress([Buffer.from(COLLATERAL_SEED), user.toBuffer()], programId);
   return pda;
 }
 

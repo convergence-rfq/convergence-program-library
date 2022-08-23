@@ -16,7 +16,15 @@ const ESCROW_SEED: &str = "escrow";
 pub mod spot_instrument {
     use super::*;
 
-    pub fn validate_data(ctx: Context<ValidateData>, mint_address: Pubkey) -> Result<()> {
+    pub fn validate_data(
+        ctx: Context<ValidateData>,
+        data_size: u32,
+        mint_address: Pubkey,
+    ) -> Result<()> {
+        require!(
+            data_size as usize == std::mem::size_of::<Pubkey>(),
+            SpotError::InvalidDataSize
+        );
         require!(
             mint_address == ctx.accounts.mint.key(),
             SpotError::PassedMintDoesNotMatch

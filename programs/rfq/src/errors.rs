@@ -16,8 +16,8 @@ pub enum ProtocolError {
     NotACollateralTokenAccount,
     #[msg("Passed account is not a risk engine in the protocol")]
     NotARiskEngine,
-    #[msg("Passed account is not a risk engine register in the protocol")]
-    NotARiskEngineRegister,
+    #[msg("An Rfq without legs is not supported")]
+    EmptyLegsNotSupported,
     #[msg("Not enough tokens")]
     NotEnoughTokens,
     #[msg("Not enough collateral")]

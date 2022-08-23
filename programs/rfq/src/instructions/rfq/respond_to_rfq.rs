@@ -1,7 +1,7 @@
 use std::mem;
 
 use crate::{
-    constants::{COLLATERAL_SEED, PROTOCOL_SEED},
+    constants::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_response,
     states::{
@@ -26,7 +26,7 @@ pub struct RespondToRfqAccounts<'info> {
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
                 bump = collateral_info.bump)]
     pub collateral_info: Account<'info, CollateralInfo>,
-    #[account(seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
+    #[account(seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), maker.key().as_ref()],
                 bump = collateral_info.token_account_bump)]
     pub collateral_token: Account<'info, TokenAccount>,
 
