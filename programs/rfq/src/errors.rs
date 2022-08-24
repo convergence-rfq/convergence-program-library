@@ -28,8 +28,8 @@ pub enum ProtocolError {
     NotEnoughAccounts,
     #[msg("Passed program id differs from an instrument")]
     PassedProgramIdDiffersFromAnInstrument,
-    #[msg("Rfq is not in active state")]
-    RfqIsNotActive,
+    #[msg("Rfq is not in required state")]
+    RfqIsNotInRequiredState,
     #[msg("Response does not match order type")]
     ResponseDoesNotMatchOrderType,
     #[msg("Invalid quote type")]
@@ -38,14 +38,12 @@ pub enum ProtocolError {
     ResponseForAnotherRfq,
     #[msg("Caller is not a taker")]
     NotATaker,
-    #[msg("Response is not active")]
-    ResponseIsNotActive,
+    #[msg("Response is not required state")]
+    ResponseIsNotInRequiredState,
     #[msg("Confirmed side is missing in a response")]
     ConfirmedSideMissing,
     #[msg("Caller is not a authority passed in parameters")]
     NotAPassedAuthority,
-    #[msg("Response is not a valid state")]
-    ResponseIsNotAValidState,
     #[msg("Taker can not respond to rfq he had created")]
     TakerCanNotRespond,
     #[msg("Not a quote mint")]

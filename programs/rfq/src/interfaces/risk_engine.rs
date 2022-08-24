@@ -4,8 +4,6 @@ use solana_program::{
     program::{get_return_data, invoke},
 };
 
-use crate::states::{FixedSize, Leg, Quote, Side};
-
 const CALCULATE_REQUIRED_COLLATERAL_FOR_RFQ_SELECTOR: [u8; 8] =
     [3, 154, 182, 192, 204, 235, 214, 151];
 const CALCULATE_REQUIRED_COLLATERAL_FOR_RESPONSE_SELECTOR: [u8; 8] =

@@ -64,11 +64,11 @@ impl Rfq {
             StoredRfqState::Constructed => RfqState::Constructed,
             StoredRfqState::Active => {
                 let current_time = Clock::get()?.unix_timestamp;
-                if self.active_window_ended(current_time) {
+                if !self.active_window_ended(current_time) {
                     RfqState::Active
                 } else if self.confirmed_responses == 0 {
                     RfqState::Expired
-                } else if self.settle_window_ended(current_time) {
+                } else if !self.settle_window_ended(current_time) {
                     RfqState::Settling
                 } else {
                     RfqState::SettlingEnded
@@ -333,7 +333,7 @@ pub enum StoredRfqState {
     Canceled,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RfqState {
     Constructed,
     Active,
@@ -341,6 +341,21 @@ pub enum RfqState {
     Expired,
     Settling,
     SettlingEnded,
+}
+
+impl RfqState {
+    pub fn assert_state_is(&self, expected_state: Self) -> Result<()> {
+        if self != &expected_state {
+            msg!(
+                "Rfq state: {:?}, expected state: {:?}",
+                self,
+                expected_state
+            );
+            err!(ProtocolError::RfqIsNotInRequiredState)
+        } else {
+            Ok(())
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -374,7 +389,7 @@ pub enum StoredResponseState {
     Defaulted,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ResponseState {
     Active,
     Canceled,
@@ -386,6 +401,21 @@ pub enum ResponseState {
     Settled,
     Defaulted,
     Expired,
+}
+
+impl ResponseState {
+    pub fn assert_state_in<const N: usize>(&self, expected_states: [Self; N]) -> Result<()> {
+        if !expected_states.contains(self) {
+            msg!(
+                "Rfq state: {:?}, expected states: {:?}",
+                self,
+                expected_states
+            );
+            err!(ProtocolError::ResponseIsNotInRequiredState)
+        } else {
+            Ok(())
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]

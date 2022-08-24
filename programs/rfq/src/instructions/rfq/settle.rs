@@ -33,10 +33,9 @@ fn validate(ctx: &Context<SettleAccounts>) -> Result<()> {
         ..
     } = &ctx.accounts;
 
-    require!(
-        response.get_state(rfq)? == ResponseState::ReadyForSettling,
-        ProtocolError::ResponseIsNotAValidState
-    );
+    response
+        .get_state(rfq)?
+        .assert_state_in([ResponseState::ReadyForSettling])?;
 
     let quote_receiver = response.get_quote_tokens_receiver(rfq);
     let receiver = match quote_receiver {

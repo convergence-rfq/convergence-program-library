@@ -47,10 +47,7 @@ fn validate(
 
     require!(maker.key() != rfq.taker, ProtocolError::TakerCanNotRespond);
 
-    require!(
-        rfq.get_state()? == RfqState::Active,
-        ProtocolError::RfqIsNotActive
-    );
+    rfq.get_state()?.assert_state_is(RfqState::Active)?;
 
     match rfq.order_type {
         OrderType::Buy => require!(
@@ -115,6 +112,7 @@ pub fn respond_to_rfq_instruction(
         bid,
         ask,
     });
+    response.exit(ctx.program_id)?;
 
     let required_collateral = calculate_required_collateral_for_response(
         &rfq.to_account_info(),

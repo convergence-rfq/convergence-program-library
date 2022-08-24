@@ -5,10 +5,9 @@ use crate::{
     states::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
+use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(side: AuthoritySide)]
 pub struct PrepareToSettleAccounts<'info> {
     #[account(mut)]
     pub caller: Signer<'info>,
@@ -22,7 +21,7 @@ pub struct PrepareToSettleAccounts<'info> {
     pub response: Account<'info, Response>,
 
     #[account(constraint = quote_mint.key() == rfq.quote_mint @ ProtocolError::NotAQuoteMint)]
-    pub quote_mint: Account<'info, TokenAccount>,
+    pub quote_mint: Account<'info, Mint>,
     #[account(init_if_needed, payer = caller, token::mint = quote_mint, token::authority = quote_escrow,
         seeds = [QUOTE_ESCROW_SEED.as_bytes(), response.key().as_ref()], bump)]
     pub quote_escrow: Account<'info, TokenAccount>,
@@ -48,21 +47,15 @@ fn validate(ctx: &Context<PrepareToSettleAccounts>, side: AuthoritySide) -> Resu
 
     let response_state = response.get_state(rfq)?;
     match side {
-        AuthoritySide::Taker => require!(
-            matches!(
-                response_state,
-                ResponseState::ReadyForSettling | ResponseState::OnlyMakerPrepared
-            ),
-            ProtocolError::ResponseIsNotAValidState
-        ),
-        AuthoritySide::Maker => require!(
-            matches!(
-                response_state,
-                ResponseState::ReadyForSettling | ResponseState::OnlyTakerPrepared
-            ),
-            ProtocolError::ResponseIsNotAValidState
-        ),
-    }
+        AuthoritySide::Taker => response_state.assert_state_in([
+            ResponseState::SettlingPreparations,
+            ResponseState::OnlyMakerPrepared,
+        ])?,
+        AuthoritySide::Maker => response_state.assert_state_in([
+            ResponseState::SettlingPreparations,
+            ResponseState::OnlyTakerPrepared,
+        ])?,
+    };
 
     Ok(())
 }
@@ -104,13 +97,13 @@ pub fn prepare_to_settle_instruction<'info>(
 
     response.first_to_prepare = response.first_to_prepare.or(Some(side));
     response.state = match (side, response.get_state(rfq)?) {
-        (AuthoritySide::Taker, ResponseState::ReadyForSettling) => {
+        (AuthoritySide::Taker, ResponseState::SettlingPreparations) => {
             StoredResponseState::OnlyTakerPrepared
         }
         (AuthoritySide::Taker, ResponseState::OnlyMakerPrepared) => {
             StoredResponseState::ReadyForSettling
         }
-        (AuthoritySide::Maker, ResponseState::ReadyForSettling) => {
+        (AuthoritySide::Maker, ResponseState::SettlingPreparations) => {
             StoredResponseState::OnlyMakerPrepared
         }
         (AuthoritySide::Maker, ResponseState::OnlyTakerPrepared) => {

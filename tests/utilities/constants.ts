@@ -16,3 +16,6 @@ export const DEFAULT_INSTRUMENT_AMOUNT = 1_000_000_000;
 export const DEFAULT_INSTRUMENT_SIDE = Side.Bid;
 export const DEFAULT_ACTIVE_WINDOW = 10;
 export const DEFAULT_SETTLING_WINDOW = 60;
+
+/// Spot
+export const SPOT_ESCROW_SEED = "escrow";

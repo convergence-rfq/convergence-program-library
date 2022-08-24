@@ -132,7 +132,7 @@ pub struct PrepareToSettle<'info> {
     #[account(mut, constraint = caller_tokens.mint == mint.key() @ SpotError::PassedMintDoesNotMatch)]
     pub caller_tokens: Account<'info, TokenAccount>,
 
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
     pub mint: Account<'info, Mint>,
 

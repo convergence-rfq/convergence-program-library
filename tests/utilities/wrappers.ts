@@ -5,7 +5,13 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/sp
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { DummyRiskEngine } from "../../target/types/dummy_risk_engine";
 import { SpotInstrument } from "../../target/types/spot_instrument";
-import { getCollateralInfoPda, getCollateralTokenPda, getProtocolPda } from "./pdas";
+import {
+  getCollateralInfoPda,
+  getCollateralTokenPda,
+  getProtocolPda,
+  getQuoteEscrowPda,
+  getSpotEscrowPda,
+} from "./pdas";
 import {
   DEFAULT_ACTIVE_WINDOW,
   DEFAULT_COLLATERAL_FUNDED,
@@ -17,7 +23,7 @@ import {
   DEFAULT_TOKEN_AMOUNT,
   DEFAULT_INSTRUMENT_SIDE,
 } from "./constants";
-import { OrderType } from "./types";
+import { AuthoritySide, getStandartQuote, OrderType, Side } from "./types";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
@@ -228,176 +234,171 @@ export class Context {
       ])
       .signers([this.taker, rfq])
       .rpc();
+
+    return new Rfq(this, rfq.publicKey);
   }
 }
 
-// export class Rfq {
-//   public assetEscrow: PublicKey;
-//   public quoteEscrow: PublicKey;
-//   public confirmedOrder?: [Order, any /* Quote type instance */];
+export class Rfq {
+  public constructor(public context: Context, public account: PublicKey) {}
 
-//   private constructor(public context: Context, public account: PublicKey) {}
+  async respond({ bid = getStandartQuote(new BN(1), new BN(1)), ask = null } = {}) {
+    const response = new Keypair();
 
-//   static async create(context: Context, account: PublicKey) {
-//     const result = new Rfq(context, account);
-//     result.assetEscrow = await getAssetEscrowPda(context.program.programId, account);
-//     result.quoteEscrow = await getQuoteEscrowPda(context.program.programId, account);
-//     return result;
-//   }
+    await this.context.program.methods // @ts-ignore
+      .respondToRfq(bid, ask)
+      .accounts({
+        maker: this.context.maker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+        response: response.publicKey,
+        collateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
+        collateralToken: await getCollateralTokenPda(this.context.maker.publicKey, this.context.program.programId),
+        riskEngine: this.context.riskEngine.programId,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.maker, response])
+      .rpc();
 
-//   async respond({ maker = null, bidAmount = DEFAULT_BID_AMOUNT, askAmount = DEFAULT_ASK_AMOUNT } = {}) {
-//     maker = maker ?? (await this.context.createPayerWithTokens());
-//     const assetWallet = await this.context.getAssetTokenAddress(maker.publicKey);
-//     const quoteWallet = await this.context.getQuoteTokenAddress(maker.publicKey);
-//     const orderPda = await getOrderPda(
-//       this.context.program.programId,
-//       maker.publicKey,
-//       this.account,
-//       bidAmount,
-//       askAmount
-//     );
+    return new Order(this.context, this, this.context.maker, response.publicKey);
+  }
 
-//     await this.context.program.methods
-//       .respond(bidAmount ? new BN(bidAmount) : null, askAmount ? new BN(askAmount) : null)
-//       .accounts({
-//         assetMint: this.context.assetToken.publicKey,
-//         assetWallet,
-//         signer: maker.publicKey,
-//         assetEscrow: this.assetEscrow,
-//         quoteEscrow: this.quoteEscrow,
-//         order: orderPda,
-//         quoteMint: this.context.quoteToken.publicKey,
-//         quoteWallet,
-//         rent: SYSVAR_RENT_PUBKEY,
-//         rfq: this.account,
-//         systemProgram: SystemProgram.programId,
-//         tokenProgram: TOKEN_PROGRAM_ID,
-//       })
-//       .signers([maker])
-//       .rpc();
+  // async cancel() {
+  //   const protocolPda = await getProtocolPda(this.context.program.programId);
+  //   await this.context.program.methods
+  //     .cancel()
+  //     .accounts({
+  //       signer: this.context.taker.publicKey,
+  //       protocol: protocolPda,
+  //       rfq: this.account,
+  //     })
+  //     .signers([this.context.taker])
+  //     .rpc();
+  // }
 
-//     return new Order(this.context, this, maker, orderPda);
-//   }
+  // async settle(sender: Keypair) {
+  //   if (!this.confirmedOrder) {
+  //     throw new Error("Unconfirmed RFQ!");
+  //   }
+  //   const [order, quoteType] = this.confirmedOrder;
+  //   const treasuryMint = quoteType.hasOwnProperty("ask") ? this.context.assetToken : this.context.quoteToken;
+  //   const treasuryWallet = await treasuryMint.createAccount(this.context.dao.publicKey);
 
-//   async cancel() {
-//     const protocolPda = await getProtocolPda(this.context.program.programId);
-//     await this.context.program.methods
-//       .cancel()
-//       .accounts({
-//         signer: this.context.taker.publicKey,
-//         protocol: protocolPda,
-//         rfq: this.account,
-//       })
-//       .signers([this.context.taker])
-//       .rpc();
-//   }
+  //   const assetWallet = await this.context.getAssetTokenAddress(sender.publicKey);
+  //   const quoteWallet = await this.context.getQuoteTokenAddress(sender.publicKey);
+  //   await this.context.program.methods
+  //     .settle()
+  //     .accounts({
+  //       assetEscrow: this.assetEscrow,
+  //       assetMint: this.context.assetToken.publicKey,
+  //       assetWallet,
+  //       signer: sender.publicKey,
+  //       order: order.account,
+  //       quoteEscrow: this.quoteEscrow,
+  //       quoteMint: this.context.quoteToken.publicKey,
+  //       quoteWallet,
+  //       rfq: this.account,
+  //       systemProgram: SystemProgram.programId,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       protocol: this.context.protocolPda,
+  //       treasuryWallet,
+  //       rent: SYSVAR_RENT_PUBKEY,
+  //     })
+  //     .signers([sender])
+  //     .rpc();
+  // }
 
-//   async settle(sender: Keypair) {
-//     if (!this.confirmedOrder) {
-//       throw new Error("Unconfirmed RFQ!");
-//     }
-//     const [order, quoteType] = this.confirmedOrder;
-//     const treasuryMint = quoteType.hasOwnProperty("ask") ? this.context.assetToken : this.context.quoteToken;
-//     const treasuryWallet = await treasuryMint.createAccount(this.context.dao.publicKey);
+  // async getState() {
+  //   return this.context.program.account.rfqState.fetch(this.account);
+  // }
+}
 
-//     const assetWallet = await this.context.getAssetTokenAddress(sender.publicKey);
-//     const quoteWallet = await this.context.getQuoteTokenAddress(sender.publicKey);
-//     await this.context.program.methods
-//       .settle()
-//       .accounts({
-//         assetEscrow: this.assetEscrow,
-//         assetMint: this.context.assetToken.publicKey,
-//         assetWallet,
-//         signer: sender.publicKey,
-//         order: order.account,
-//         quoteEscrow: this.quoteEscrow,
-//         quoteMint: this.context.quoteToken.publicKey,
-//         quoteWallet,
-//         rfq: this.account,
-//         systemProgram: SystemProgram.programId,
-//         tokenProgram: TOKEN_PROGRAM_ID,
-//         protocol: this.context.protocolPda,
-//         treasuryWallet,
-//         rent: SYSVAR_RENT_PUBKEY,
-//       })
-//       .signers([sender])
-//       .rpc();
-//   }
+export class Order {
+  constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {}
 
-//   async getState() {
-//     return this.context.program.account.rfqState.fetch(this.account);
-//   }
-// }
+  async confirm(side = Side.Bid) {
+    await this.context.program.methods
+      .confirmResponse(side)
+      .accounts({
+        taker: this.context.taker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+        collateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
+        collateralToken: await getCollateralTokenPda(this.context.taker.publicKey, this.context.program.programId),
+        riskEngine: this.context.riskEngine.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
 
-// export class Order {
-//   constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {}
+  async prepareToSettle(side) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
-//   async confirm(quoteType = QuoteType.Bid) {
-//     const takerAddress = this.context.taker.publicKey;
-//     const assetWallet = await this.context.getAssetTokenAddress(takerAddress);
-//     const quoteWallet = await this.context.getQuoteTokenAddress(takerAddress);
+    await this.context.program.methods
+      .prepareToSettle(side)
+      .accounts({
+        caller: caller.publicKey,
+        quoteTokens: await this.context.getQuoteTokenAddress(caller.publicKey),
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+        quoteMint: this.context.quoteToken.publicKey,
+        quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([caller])
+      .remainingAccounts([
+        { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
+        { pubkey: caller.publicKey, isSigner: true, isWritable: true },
+        { pubkey: await this.context.getAssetTokenAddress(caller.publicKey), isSigner: false, isWritable: true },
+        { pubkey: this.rfq.account, isSigner: false, isWritable: false },
+        { pubkey: this.account, isSigner: false, isWritable: false },
+        { pubkey: this.context.assetToken.publicKey, isSigner: false, isWritable: false },
+        {
+          pubkey: await getSpotEscrowPda(this.account, 0, this.context.spotInstrument.programId),
+          isSigner: false,
+          isWritable: true,
+        },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+      ])
+      .rpc();
+  }
 
-//     await this.context.program.methods
-//       .confirm(quoteType)
-//       .accounts({
-//         assetMint: this.context.assetToken.publicKey,
-//         assetWallet,
-//         signer: this.context.taker.publicKey,
-//         assetEscrow: this.rfq.assetEscrow,
-//         order: this.account,
-//         quoteWallet,
-//         quoteEscrow: this.rfq.quoteEscrow,
-//         quoteMint: this.context.quoteToken.publicKey,
-//         rent: SYSVAR_RENT_PUBKEY,
-//         rfq: this.rfq.account,
-//         systemProgram: SystemProgram.programId,
-//         tokenProgram: TOKEN_PROGRAM_ID,
-//       })
-//       .signers([this.context.taker])
-//       .rpc();
-
-//     this.rfq.confirmedOrder = [this, quoteType];
-//   }
-
-//   async returnCollateral() {
-//     const assetWallet = await this.context.getAssetTokenAddress(this.maker.publicKey);
-//     const quoteWallet = await this.context.getQuoteTokenAddress(this.maker.publicKey);
-
-//     await this.context.program.methods
-//       .returnCollateral()
-//       .accounts({
-//         assetEscrow: this.rfq.assetEscrow,
-//         assetMint: this.context.assetToken.publicKey,
-//         assetWallet,
-//         signer: this.maker.publicKey,
-//         order: this.account,
-//         quoteEscrow: this.rfq.quoteEscrow,
-//         quoteWallet,
-//         quoteMint: this.context.quoteToken.publicKey,
-//         rent: SYSVAR_RENT_PUBKEY,
-//         rfq: this.rfq.account,
-//         tokenProgram: TOKEN_PROGRAM_ID,
-//       })
-//       .signers([this.maker])
-//       .rpc();
-//   }
-
-//   async lastLook() {
-//     await this.context.program.methods
-//       .lastLook()
-//       .accounts({
-//         signer: this.maker.publicKey,
-//         order: this.account,
-//         rfq: this.rfq.account,
-//       })
-//       .signers([this.maker])
-//       .rpc();
-//   }
-
-//   async getState() {
-//     return this.context.program.account.orderState.fetch(this.account);
-//   }
-// }
+  async settle(quoteReceiver: PublicKey, assetReceiver: PublicKey) {
+    await this.context.program.methods
+      .settle()
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+        quoteReceiverTokens: await this.context.getQuoteTokenAddress(quoteReceiver),
+        quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts([
+        { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
+        { pubkey: this.rfq.account, isSigner: false, isWritable: false },
+        { pubkey: this.account, isSigner: false, isWritable: false },
+        {
+          pubkey: await getSpotEscrowPda(this.account, 0, this.context.spotInstrument.programId),
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: await this.context.getAssetTokenAddress(assetReceiver),
+          isSigner: false,
+          isWritable: true,
+        },
+        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      ])
+      .rpc();
+  }
+}
 
 let context: Context | null = null;
 export async function getContext() {

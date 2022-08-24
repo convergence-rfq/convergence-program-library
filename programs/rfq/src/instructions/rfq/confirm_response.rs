@@ -39,12 +39,11 @@ fn validate(ctx: &Context<ConfirmResponseAccounts>, side: Side) -> Result<()> {
 
     require!(
         rfq.get_state()? == RfqState::Active,
-        ProtocolError::RfqIsNotActive
+        ProtocolError::RfqIsNotInRequiredState
     );
-    require!(
-        response.get_state(rfq)? == ResponseState::Active,
-        ProtocolError::ResponseIsNotActive
-    );
+    response
+        .get_state(rfq)?
+        .assert_state_in([ResponseState::Active])?;
 
     match side {
         Side::Bid => require!(response.bid.is_some(), ProtocolError::ConfirmedSideMissing),
@@ -75,7 +74,7 @@ pub fn confirm_response_instruction(
 
     let required_collateral = calculate_required_collateral_for_confirmation(
         &rfq.to_account_info(),
-        &risk_engine.to_account_info(),
+        &response.to_account_info(),
         risk_engine,
     )?;
     let collateral_taken_from_already_deposited = u64::min(

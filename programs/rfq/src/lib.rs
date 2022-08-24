@@ -18,7 +18,9 @@ use instructions::protocol::add_instrument::*;
 use instructions::protocol::initialize_protocol::*;
 use instructions::rfq::confirm_response::*;
 use instructions::rfq::intitialize_rfq::*;
+use instructions::rfq::prepare_to_settle::*;
 use instructions::rfq::respond_to_rfq::*;
+use instructions::rfq::settle::*;
 use states::*;
 
 security_txt! {
@@ -86,7 +88,18 @@ pub mod rfq {
         respond_to_rfq_instruction(ctx, bid, ask)
     }
 
-    pub fn confirm_rfq(ctx: Context<ConfirmResponseAccounts>, side: Side) -> Result<()> {
+    pub fn confirm_response(ctx: Context<ConfirmResponseAccounts>, side: Side) -> Result<()> {
         confirm_response_instruction(ctx, side)
+    }
+
+    pub fn prepare_to_settle<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareToSettleAccounts<'info>>,
+        side: AuthoritySide,
+    ) -> Result<()> {
+        prepare_to_settle_instruction(ctx, side)
+    }
+
+    pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {
+        settle_instruction(ctx)
     }
 }
