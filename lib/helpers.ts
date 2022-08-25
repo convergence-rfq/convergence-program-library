@@ -784,7 +784,7 @@ export async function initializePsyAmericanOptionMarket(
  */
 export async function mintPsyAmericanOption(
   assetToken: Token,
-  legId: number,
+  legId: BN,
   publicKey: PublicKey,
   optionMarket: OptionMarket,
   provider: Provider,
@@ -811,7 +811,7 @@ export async function mintPsyAmericanOption(
   }
 
   // TODO: What if vault already exists?
-  await rfqProgram.methods
+  const vaultTx: any = await rfqProgram.methods
     .initializePsyOptionsAmericanMintVault()
     .accounts({
       authority: signer.publicKey,
@@ -898,12 +898,29 @@ export async function mintPsyAmericanOption(
     signer.publicKey
   );
 
+  const psyAccounts = {
+    userAuthority: signer.publicKey,
+    underlyingAssetSrc: signerAssetATA,
+    vaultAuthority: signer.publicKey,
+    underlyingAssetMint: assetToken.publicKey,
+    underlyingAssetPool: optionMarket.underlyingAssetPool,
+    optionMint: optionMarket.optionMint,
+    mintedOptionDest,
+    writerTokenMint: optionMarket.writerTokenMint,
+    mintedWriterTokenDest,
+    optionMarket: publicKey,
+    feeOwner: FEE_OWNER,
+    tokenProgram: TOKEN_PROGRAM_ID,
+    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    clock: SYSVAR_CLOCK_PUBKEY,
+    rent: SYSVAR_RENT_PUBKEY,
+    systemProgram: SystemProgram.programId,
+  };
+
   const accounts = {
     authority: signer.publicKey,
     psyAmericanProgram: psyAmericanProgram.programId,
-    // TODO: Is this correct?
     vault: signerAssetATA,
-    // TODO: Is this correct?
     vaultAuthority: signer.publicKey,
     underlyingAssetMint: assetToken.publicKey,
     underlyingAssetPool: optionMarket.underlyingAssetPool,
@@ -921,14 +938,26 @@ export async function mintPsyAmericanOption(
     systemProgram: SystemProgram.programId,
   };
 
-  const tx = await rfqProgram.methods
-    .mintPsyOptionsAmericanOption(legId, size, vaultAuthorityBump)
-    .accounts(accounts)
+  const psyTx = await psyAmericanProgram.methods
+    .mintOptionV2(size)
+    .accounts(psyAccounts)
     .preInstructions(instructions)
     .signers([signer.payer])
     .rpc();
+  console.log("PsyOptions:", psyTx);
 
-  return { tx };
+  console.log("Leg Id:", legId);
+  console.log("Size:", size);
+  console.log("Bump:", vaultAuthorityBump);
+
+  const mintTx = await rfqProgram.methods
+    .mintPsyOptionsAmericanOption(legId, size, vaultAuthorityBump)
+    .accounts(accounts)
+    .signers([signer.payer])
+    .rpc();
+  console.log("Convergence:", mintTx);
+
+  return { mintTx, vaultTx };
 }
 
 /**
@@ -1003,8 +1032,6 @@ export async function processLegs(provider: Provider, rfqPda: PublicKey, signer:
 
       legOptionMarket = res.optionMarket;
       legOptionMarketPublicKey = res.publicKey;
-
-      console.log("Created market!")
     }
 
     if (legOptionMarketPublicKey && legOptionMarket) {
