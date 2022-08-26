@@ -14,11 +14,11 @@ export class SpotInstrument implements Instrument {
 
   constructor(
     private context: Context,
-    { mint = context.assetToken, amount = DEFAULT_INSTRUMENT_AMOUNT, side = DEFAULT_INSTRUMENT_SIDE } = {}
+    { mint = context.assetToken, amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ) {
     this.mint = mint;
     this.amount = amount;
-    this.side = side;
+    this.side = side ?? DEFAULT_INSTRUMENT_SIDE;
   }
 
   async toLegData() {

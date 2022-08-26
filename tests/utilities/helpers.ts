@@ -33,12 +33,16 @@ export function toAbsolutePrice(value: BN) {
   return new BN(10).pow(new BN(ABSOLUTE_PRICE_DECIMALS)).mul(value);
 }
 
-export function toLegMultiplier(value: BN) {
-  return new BN(10).pow(new BN(LEG_MULTIPLIER_DECIMALS)).mul(value);
+export function toLegMultiplier(value: number) {
+  return new BN(10).pow(new BN(LEG_MULTIPLIER_DECIMALS)).muln(value);
 }
 
 export function withTokenDecimals(value: number) {
   return new BN(10).pow(new BN(9)).muln(value);
+}
+
+export function executeInParallel(...fns: (() => Promise<any>)[]) {
+  return Promise.all(fns.map((x) => x()));
 }
 
 export class TokenChangeMeasurer {
@@ -50,11 +54,14 @@ export class TokenChangeMeasurer {
     }[]
   ) {}
 
-  static async takeSnapshot(
-    context: Context,
-    mints = [context.quoteToken, context.assetToken],
-    users = [context.taker.publicKey, context.maker.publicKey]
-  ) {
+  static takeDefaultSnapshot(context: Context) {
+    return this.takeSnapshot(
+      [context.quoteToken, context.assetToken],
+      [context.taker.publicKey, context.maker.publicKey]
+    );
+  }
+
+  static async takeSnapshot(mints: Mint[], users: PublicKey[]) {
     const snapshots = await Promise.all(
       mints.map(async (mint) => {
         return await Promise.all(
@@ -80,14 +87,21 @@ export class TokenChangeMeasurer {
       delta: BN;
     }[]
   ) {
-    for (const change of changes) {
+    let extendedChanges = await Promise.all(
+      changes.map(async (change) => {
+        return {
+          currentBalance: await change.mint.getAssociatedBalance(change.user),
+          ...change,
+        };
+      })
+    );
+    for (const change of extendedChanges) {
       const snapshot = this.snapshots.find(
         (x) => x.mint.publicKey.equals(change.mint.publicKey) && x.user.equals(change.user)
       );
-      const currentBalance = await change.mint.getAssociatedBalance(change.user);
       expect(change.delta).to.be.bignumber.equal(
-        currentBalance.sub(snapshot.balance),
-        `Balance change differs from expected! Mint: ${change.mint.publicKey.toString()}, user: ${change.user.toString()}, balance before: ${snapshot.balance.toString()}, balance currenty: ${currentBalance.toString()}, expected change: ${change.delta.toString()}`
+        change.currentBalance.sub(snapshot.balance),
+        `Balance change differs from expected! Mint: ${change.mint.publicKey.toString()}, user: ${change.user.toString()}, balance before: ${snapshot.balance.toString()}, balance currenty: ${change.currentBalance.toString()}, expected change: ${change.delta.toString()}`
       );
     }
   }

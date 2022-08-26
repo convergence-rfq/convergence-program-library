@@ -20,6 +20,7 @@ import {
 import { AuthoritySide, getStandartQuote, OrderType, Side } from "./types";
 import { SpotInstrument } from "./spotInstrument";
 import { Instrument } from "./instrument";
+import { executeInParallel } from "./helpers";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
@@ -43,15 +44,19 @@ export class Context {
   }
 
   async initialize() {
-    this.dao = await this.createPayer();
-    this.taker = await this.createPayer();
-    this.maker = await this.createPayer();
+    await executeInParallel(
+      async () => (this.dao = await this.createPayer()),
+      async () => (this.taker = await this.createPayer()),
+      async () => (this.maker = await this.createPayer())
+    );
 
     this.protocolPda = await getProtocolPda(this.program.programId);
 
-    this.assetToken = await Mint.create(this);
-    this.quoteToken = await Mint.create(this);
-    this.collateralToken = await Mint.create(this);
+    await executeInParallel(
+      async () => (this.assetToken = await Mint.create(this)),
+      async () => (this.quoteToken = await Mint.create(this)),
+      async () => (this.collateralToken = await Mint.create(this))
+    );
   }
 
   async createPayer() {
@@ -129,7 +134,7 @@ export class Context {
 
   async initializeRfq({
     legs = [new SpotInstrument(this)],
-    orderType = DEFAULT_ORDER_TYPE,
+    orderType = null,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
   } = {}) {
@@ -138,7 +143,7 @@ export class Context {
 
     const rfq = new Keypair();
     await this.program.methods
-      .intitializeRfq(legData, orderType, activeWindow, settlingWindow)
+      .intitializeRfq(legData, orderType ?? DEFAULT_ORDER_TYPE, activeWindow, settlingWindow)
       .accounts({
         taker: this.taker.publicKey,
         protocol: this.protocolPda,
@@ -167,8 +172,10 @@ export class Mint {
   public static async create(context: Context) {
     const token = await context.createMint();
     const mint = new Mint(context, token);
-    await mint.createAssociatedAccountWithTokens(context.taker.publicKey);
-    await mint.createAssociatedAccountWithTokens(context.maker.publicKey);
+    await executeInParallel(
+      async () => await mint.createAssociatedAccountWithTokens(context.taker.publicKey),
+      async () => await mint.createAssociatedAccountWithTokens(context.maker.publicKey)
+    );
 
     return mint;
   }
@@ -225,9 +232,9 @@ export class Rfq {
 export class Response {
   constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {}
 
-  async confirm(side = Side.Bid) {
+  async confirm(side = null) {
     await this.context.program.methods
-      .confirmResponse(side)
+      .confirmResponse(side ?? Side.Bid)
       .accounts({
         taker: this.context.taker.publicKey,
         protocol: this.context.protocolPda,
@@ -268,7 +275,7 @@ export class Response {
       .rpc();
   }
 
-  async settle(quoteReceiver: PublicKey, assetReceivers: [PublicKey]) {
+  async settle(quoteReceiver: PublicKey, assetReceivers: PublicKey[]) {
     const remainingAccounts = await (
       await Promise.all(
         this.rfq.legs.map(async (x, index) => await x.getSettleAccounts(assetReceivers[index], index, this.rfq, this))
@@ -303,11 +310,20 @@ export async function getContext() {
   context = new Context();
   await context.initialize();
   await context.initializeProtocol();
-  await context.addSpotInstrument();
 
-  await context.initializeCollateral(context.taker);
-  await context.fundCollateral(context.taker, DEFAULT_COLLATERAL_FUNDED);
-  await context.initializeCollateral(context.maker);
-  await context.fundCollateral(context.maker, DEFAULT_COLLATERAL_FUNDED);
+  await executeInParallel(
+    async () => {
+      await context.addSpotInstrument();
+    },
+    async () => {
+      await context.initializeCollateral(context.taker);
+      await context.fundCollateral(context.taker, DEFAULT_COLLATERAL_FUNDED);
+    },
+    async () => {
+      await context.initializeCollateral(context.maker);
+      await context.fundCollateral(context.maker, DEFAULT_COLLATERAL_FUNDED);
+    }
+  );
+
   return context;
 }
