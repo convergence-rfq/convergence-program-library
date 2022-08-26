@@ -4,14 +4,8 @@ import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/w
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { DummyRiskEngine } from "../../target/types/dummy_risk_engine";
-import { SpotInstrument } from "../../target/types/spot_instrument";
-import {
-  getCollateralInfoPda,
-  getCollateralTokenPda,
-  getProtocolPda,
-  getQuoteEscrowPda,
-  getSpotEscrowPda,
-} from "./pdas";
+import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
+import { getCollateralInfoPda, getCollateralTokenPda, getProtocolPda, getQuoteEscrowPda } from "./pdas";
 import {
   DEFAULT_ACTIVE_WINDOW,
   DEFAULT_COLLATERAL_FUNDED,
@@ -24,18 +18,20 @@ import {
   DEFAULT_INSTRUMENT_SIDE,
 } from "./constants";
 import { AuthoritySide, getStandartQuote, OrderType, Side } from "./types";
+import { SpotInstrument } from "./spotInstrument";
+import { Instrument } from "./instrument";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
   public riskEngine: anchor.Program<DummyRiskEngine>;
-  public spotInstrument: anchor.Program<SpotInstrument>;
+  public spotInstrument: anchor.Program<SpotInstrumentIdl>;
   public provider: anchor.Provider;
   public dao: Keypair;
   public taker: Keypair;
   public maker: Keypair;
-  public assetToken: Token;
-  public quoteToken: Token;
-  public collateralToken: Token;
+  public assetToken: Mint;
+  public quoteToken: Mint;
+  public collateralToken: Mint;
   public protocolPda: PublicKey;
 
   constructor() {
@@ -43,21 +39,19 @@ export class Context {
     anchor.setProvider(this.provider);
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
     this.riskEngine = anchor.workspace.DummyRiskEngine as anchor.Program<DummyRiskEngine>;
-    this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrument>;
+    this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
   }
 
   async initialize() {
     this.dao = await this.createPayer();
+    this.taker = await this.createPayer();
+    this.maker = await this.createPayer();
+
     this.protocolPda = await getProtocolPda(this.program.programId);
 
-    this.assetToken = await this.createMint();
-    this.quoteToken = await this.createMint();
-    this.collateralToken = await this.createMint();
-
-    this.taker = await this.createPayer();
-    await this.createTokenAccountsFor(this.taker.publicKey);
-    this.maker = await this.createPayer();
-    await this.createTokenAccountsFor(this.maker.publicKey);
+    this.assetToken = await Mint.create(this);
+    this.quoteToken = await Mint.create(this);
+    this.collateralToken = await Mint.create(this);
   }
 
   async createPayer() {
@@ -71,75 +65,8 @@ export class Context {
     return payer;
   }
 
-  async getAssetTokenAddress(address: PublicKey) {
-    return await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      this.assetToken.publicKey,
-      address
-    );
-  }
-
-  async getQuoteTokenAddress(address: PublicKey) {
-    return await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      this.quoteToken.publicKey,
-      address
-    );
-  }
-
-  async getCollateralTokenAddress(address: PublicKey) {
-    return await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      this.collateralToken.publicKey,
-      address
-    );
-  }
-
-  async getAssetTokenBalance(address: PublicKey) {
-    const account = await this.assetToken.getAccountInfo(await this.getAssetTokenAddress(address));
-    return account.amount.toNumber();
-  }
-
-  async getQuoteTokenBalance(address: PublicKey) {
-    const account = await this.quoteToken.getAccountInfo(await this.getQuoteTokenAddress(address));
-    return account.amount.toNumber();
-  }
-
   async createMint() {
     return await Token.createMint(this.provider.connection, this.dao, this.dao.publicKey, null, 0, TOKEN_PROGRAM_ID);
-  }
-
-  async createPayerWithTokens() {
-    const payer = await this.createPayer();
-    await this.createTokenAccountsFor(payer.publicKey);
-
-    return payer;
-  }
-
-  async createTokenAccountsFor(address: PublicKey) {
-    await this.createAccountAndMintTokens(address, "asset");
-    await this.createAccountAndMintTokens(address, "quote");
-    await this.createAccountAndMintTokens(address, "collateral");
-  }
-
-  async createAccountAndMintTokens(address: PublicKey, type: "asset" | "quote" | "collateral", amount?: number) {
-    let mint: Token;
-    if (type == "asset") {
-      mint = this.assetToken;
-    } else if (type == "quote") {
-      mint = this.quoteToken;
-    } else if (type == "collateral") {
-      mint = this.collateralToken;
-    } else {
-      throw new Error("Unsuported type");
-    }
-
-    amount = amount ?? DEFAULT_TOKEN_AMOUNT;
-    const account = await mint.createAssociatedTokenAccount(address);
-    await mint.mintTo(account, this.dao, [], amount);
   }
 
   async initializeProtocol({ settleFees = DEFAULT_FEES, defaultFees = DEFAULT_FEES } = {}) {
@@ -190,7 +117,7 @@ export class Context {
       .fundCollateral(new BN(amount))
       .accounts({
         user: user.publicKey,
-        userTokens: await this.getCollateralTokenAddress(user.publicKey),
+        userTokens: await this.collateralToken.getAssociatedAddress(user.publicKey),
         protocol: this.protocolPda,
         collateralInfo: await getCollateralInfoPda(user.publicKey, this.program.programId),
         collateralToken: await getCollateralTokenPda(user.publicKey, this.program.programId),
@@ -201,23 +128,17 @@ export class Context {
   }
 
   async initializeRfq({
-    legs = null,
+    legs = [new SpotInstrument(this)],
     orderType = DEFAULT_ORDER_TYPE,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
   } = {}) {
-    legs = legs ?? [
-      {
-        instrument: this.spotInstrument.programId,
-        instrumentData: this.assetToken.publicKey.toBytes(),
-        instrument_amount: new BN(DEFAULT_INSTRUMENT_AMOUNT),
-        side: DEFAULT_INSTRUMENT_SIDE,
-      },
-    ];
+    const legData = await Promise.all(legs.map(async (x) => await x.toLegData()));
+    const remainingAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
 
     const rfq = new Keypair();
     await this.program.methods
-      .intitializeRfq(legs, orderType, activeWindow, settlingWindow)
+      .intitializeRfq(legData, orderType, activeWindow, settlingWindow)
       .accounts({
         taker: this.taker.publicKey,
         protocol: this.protocolPda,
@@ -228,19 +149,52 @@ export class Context {
         riskEngine: this.riskEngine.programId,
         systemProgram: SystemProgram.programId,
       })
-      .remainingAccounts([
-        { pubkey: this.spotInstrument.programId, isSigner: false, isWritable: false },
-        { pubkey: this.assetToken.publicKey, isSigner: false, isWritable: false },
-      ])
+      .remainingAccounts(remainingAccounts)
       .signers([this.taker, rfq])
       .rpc();
 
-    return new Rfq(this, rfq.publicKey);
+    return new Rfq(this, rfq.publicKey, legs);
+  }
+}
+
+export class Mint {
+  public publicKey: PublicKey;
+
+  private constructor(private context: Context, public token: Token) {
+    this.publicKey = token.publicKey;
+  }
+
+  public static async create(context: Context) {
+    const token = await context.createMint();
+    const mint = new Mint(context, token);
+    await mint.createAssociatedAccountWithTokens(context.taker.publicKey);
+    await mint.createAssociatedAccountWithTokens(context.maker.publicKey);
+
+    return mint;
+  }
+
+  public async createAssociatedAccountWithTokens(address: PublicKey, amount = DEFAULT_TOKEN_AMOUNT) {
+    const account = await this.token.createAssociatedTokenAccount(address);
+    await this.token.mintTo(account, this.context.dao, [], amount);
+  }
+
+  public async getAssociatedAddress(address: PublicKey) {
+    return await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      this.publicKey,
+      address
+    );
+  }
+
+  public async getAssociatedBalance(address: PublicKey) {
+    const account = await this.token.getAccountInfo(await this.getAssociatedAddress(address));
+    return account.amount;
   }
 }
 
 export class Rfq {
-  public constructor(public context: Context, public account: PublicKey) {}
+  public constructor(public context: Context, public account: PublicKey, public legs: Instrument[]) {}
 
   async respond({ bid = getStandartQuote(new BN(1), new BN(1)), ask = null } = {}) {
     const response = new Keypair();
@@ -260,60 +214,15 @@ export class Rfq {
       .signers([this.context.maker, response])
       .rpc();
 
-    return new Order(this.context, this, this.context.maker, response.publicKey);
+    return new Response(this.context, this, this.context.maker, response.publicKey);
   }
 
-  // async cancel() {
-  //   const protocolPda = await getProtocolPda(this.context.program.programId);
-  //   await this.context.program.methods
-  //     .cancel()
-  //     .accounts({
-  //       signer: this.context.taker.publicKey,
-  //       protocol: protocolPda,
-  //       rfq: this.account,
-  //     })
-  //     .signers([this.context.taker])
-  //     .rpc();
-  // }
-
-  // async settle(sender: Keypair) {
-  //   if (!this.confirmedOrder) {
-  //     throw new Error("Unconfirmed RFQ!");
-  //   }
-  //   const [order, quoteType] = this.confirmedOrder;
-  //   const treasuryMint = quoteType.hasOwnProperty("ask") ? this.context.assetToken : this.context.quoteToken;
-  //   const treasuryWallet = await treasuryMint.createAccount(this.context.dao.publicKey);
-
-  //   const assetWallet = await this.context.getAssetTokenAddress(sender.publicKey);
-  //   const quoteWallet = await this.context.getQuoteTokenAddress(sender.publicKey);
-  //   await this.context.program.methods
-  //     .settle()
-  //     .accounts({
-  //       assetEscrow: this.assetEscrow,
-  //       assetMint: this.context.assetToken.publicKey,
-  //       assetWallet,
-  //       signer: sender.publicKey,
-  //       order: order.account,
-  //       quoteEscrow: this.quoteEscrow,
-  //       quoteMint: this.context.quoteToken.publicKey,
-  //       quoteWallet,
-  //       rfq: this.account,
-  //       systemProgram: SystemProgram.programId,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       protocol: this.context.protocolPda,
-  //       treasuryWallet,
-  //       rent: SYSVAR_RENT_PUBKEY,
-  //     })
-  //     .signers([sender])
-  //     .rpc();
-  // }
-
-  // async getState() {
-  //   return this.context.program.account.rfqState.fetch(this.account);
-  // }
+  async getData() {
+    return await this.context.program.account.rfq.fetch(this.account);
+  }
 }
 
-export class Order {
+export class Response {
   constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {}
 
   async confirm(side = Side.Bid) {
@@ -334,12 +243,17 @@ export class Order {
 
   async prepareToSettle(side) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    const remainingAccounts = await (
+      await Promise.all(
+        this.rfq.legs.map(async (x, index) => await x.getPrepareToSettleAccounts(side, index, this.rfq, this))
+      )
+    ).flat();
 
     await this.context.program.methods
       .prepareToSettle(side)
       .accounts({
         caller: caller.publicKey,
-        quoteTokens: await this.context.getQuoteTokenAddress(caller.publicKey),
+        quoteTokens: await this.context.quoteToken.getAssociatedAddress(caller.publicKey),
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
         response: this.account,
@@ -350,53 +264,33 @@ export class Order {
         rent: SYSVAR_RENT_PUBKEY,
       })
       .signers([caller])
-      .remainingAccounts([
-        { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
-        { pubkey: caller.publicKey, isSigner: true, isWritable: true },
-        { pubkey: await this.context.getAssetTokenAddress(caller.publicKey), isSigner: false, isWritable: true },
-        { pubkey: this.rfq.account, isSigner: false, isWritable: false },
-        { pubkey: this.account, isSigner: false, isWritable: false },
-        { pubkey: this.context.assetToken.publicKey, isSigner: false, isWritable: false },
-        {
-          pubkey: await getSpotEscrowPda(this.account, 0, this.context.spotInstrument.programId),
-          isSigner: false,
-          isWritable: true,
-        },
-        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
-      ])
+      .remainingAccounts(remainingAccounts)
       .rpc();
   }
 
-  async settle(quoteReceiver: PublicKey, assetReceiver: PublicKey) {
+  async settle(quoteReceiver: PublicKey, assetReceivers: [PublicKey]) {
+    const remainingAccounts = await (
+      await Promise.all(
+        this.rfq.legs.map(async (x, index) => await x.getSettleAccounts(assetReceivers[index], index, this.rfq, this))
+      )
+    ).flat();
+
     await this.context.program.methods
       .settle()
       .accounts({
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
         response: this.account,
-        quoteReceiverTokens: await this.context.getQuoteTokenAddress(quoteReceiver),
+        quoteReceiverTokens: await this.context.quoteToken.getAssociatedAddress(quoteReceiver),
         quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .remainingAccounts([
-        { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
-        { pubkey: this.rfq.account, isSigner: false, isWritable: false },
-        { pubkey: this.account, isSigner: false, isWritable: false },
-        {
-          pubkey: await getSpotEscrowPda(this.account, 0, this.context.spotInstrument.programId),
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: await this.context.getAssetTokenAddress(assetReceiver),
-          isSigner: false,
-          isWritable: true,
-        },
-        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      ])
+      .remainingAccounts(remainingAccounts)
       .rpc();
+  }
+
+  async getData() {
+    return await this.context.program.account.response.fetch(this.account);
   }
 }
 

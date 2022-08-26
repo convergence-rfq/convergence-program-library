@@ -8,9 +8,9 @@ pub enum AuthoritySideDuplicate {
     Maker,
 }
 
-impl Into<AuthoritySide> for AuthoritySideDuplicate {
-    fn into(self) -> AuthoritySide {
-        match self {
+impl From<AuthoritySideDuplicate> for AuthoritySide {
+    fn from(value: AuthoritySideDuplicate) -> Self {
+        match value {
             AuthoritySideDuplicate::Taker => AuthoritySide::Taker,
             AuthoritySideDuplicate::Maker => AuthoritySide::Maker,
         }

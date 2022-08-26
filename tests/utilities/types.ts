@@ -16,15 +16,15 @@ export const AuthoritySide = {
   Maker: { maker: {} },
 };
 
-export function getStandartQuote(amountBps: BN, legsMultiplierBps: BN) {
+export function getStandartQuote(priceBps: BN, legsMultiplierBps: BN) {
   return {
     standart: {
       priceQuote: {
         absolutePrice: {
-          amountBps,
+          amountBps: priceBps,
         },
       },
+      legsMultiplierBps,
     },
-    legsMultiplierBps,
   };
 }

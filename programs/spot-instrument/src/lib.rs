@@ -79,7 +79,7 @@ pub mod spot_instrument {
             ..
         } = &ctx.accounts;
 
-        let receiver = response.get_quote_tokens_receiver(rfq);
+        let receiver = response.get_leg_assets_receiver(rfq, leg_index);
         let receiver = match receiver {
             AuthoritySide::Taker => rfq.taker,
             AuthoritySide::Maker => response.maker,

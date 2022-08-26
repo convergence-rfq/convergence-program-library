@@ -219,8 +219,8 @@ impl Response {
             } => amount_bps,
         };
 
-        let result =
-            legs_multiplier as u128 * price_bps / 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS);
+        let result = legs_multiplier as u128 * price_bps
+            / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS + PriceQuote::ABSOLUTE_PRICE_DECIMALS);
         let mut result = result as i64;
 
         if let Side::Ask = quote_side {
