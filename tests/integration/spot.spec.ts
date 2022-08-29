@@ -24,11 +24,11 @@ describe("RFQ Spot instrument integration tests", () => {
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
+      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
     });
     // taker confirms to buy 2 bitcoins
-    await response.confirm(Side.Bid);
+    await response.confirm(Side.Ask);
     await response.prepareToSettle(AuthoritySide.Taker);
     await response.prepareToSettle(AuthoritySide.Maker);
     // taker should receive 2 bitcoins, maker should receive 44k$
@@ -53,15 +53,15 @@ describe("RFQ Spot instrument integration tests", () => {
     });
     // respond with quote for half of legs
     const response = await rfq.respond({
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(90_000)), toLegMultiplier(0.5)),
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(90_000)), toLegMultiplier(0.5)),
     });
     // respond with quote for twice of legs once more with higher price
     const secondResponse = await rfq.respond({
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(91_000)), toLegMultiplier(2)),
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(91_000)), toLegMultiplier(2)),
     });
 
     // taker confirms first response
-    await response.confirm(Side.Ask);
+    await response.confirm(Side.Bid);
     const firstMeasurer = await TokenChangeMeasurer.takeSnapshot(
       [context.assetToken, context.quoteToken, ethMint],
       [taker, maker]
@@ -80,7 +80,7 @@ describe("RFQ Spot instrument integration tests", () => {
     ]);
 
     // taker confirms second response
-    await secondResponse.confirm(Side.Ask);
+    await secondResponse.confirm(Side.Bid);
     const secondMeasurer = await TokenChangeMeasurer.takeSnapshot(
       [context.assetToken, context.quoteToken, ethMint],
       [taker, maker]
@@ -108,10 +108,10 @@ describe("RFQ Spot instrument integration tests", () => {
     });
     // response with agreeing to sell 15 bitcoins for 103.333k$ per 5 bitcoins
     const response = await rfq.respond({
-      bid: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(103_333))),
+      ask: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(103_333))),
     });
 
-    await response.confirm(Side.Bid);
+    await response.confirm(Side.Ask);
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
     await response.prepareToSettle(AuthoritySide.Taker);
     await response.prepareToSettle(AuthoritySide.Maker);
@@ -134,10 +134,10 @@ describe("RFQ Spot instrument integration tests", () => {
     });
     // response with agreeing to buy for 11k$ per 0.5 bitcoin
     const response = await rfq.respond({
-      ask: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(11_000))),
+      bid: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(11_000))),
     });
 
-    await response.confirm(Side.Ask);
+    await response.confirm(Side.Bid);
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
     await response.prepareToSettle(AuthoritySide.Taker);
     await response.prepareToSettle(AuthoritySide.Maker);

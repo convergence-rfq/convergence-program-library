@@ -204,7 +204,7 @@ impl Response {
         if let Side::Ask = leg.side {
             result = -result;
         }
-        if let Side::Ask = quote_side {
+        if let Side::Bid = quote_side {
             result = -result;
         }
         if let AuthoritySide::Taker = side {
@@ -254,7 +254,7 @@ impl Response {
             result as i64
         };
 
-        if let Side::Ask = quote_side {
+        if let Side::Bid = quote_side {
             result = -result;
         }
         if let AuthoritySide::Maker = side {

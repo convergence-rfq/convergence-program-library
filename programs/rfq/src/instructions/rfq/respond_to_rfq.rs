@@ -51,11 +51,11 @@ fn validate(
 
     match rfq.order_type {
         OrderType::Buy => require!(
-            bid.is_some() && ask.is_none(),
+            bid.is_none() && ask.is_some(),
             ProtocolError::ResponseDoesNotMatchOrderType
         ),
         OrderType::Sell => require!(
-            bid.is_none() && ask.is_some(),
+            bid.is_some() && ask.is_none(),
             ProtocolError::ResponseDoesNotMatchOrderType
         ),
         OrderType::TwoWay => require!(
