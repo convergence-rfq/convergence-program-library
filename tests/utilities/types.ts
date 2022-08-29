@@ -16,15 +16,50 @@ export const AuthoritySide = {
   Maker: { maker: {} },
 };
 
-export function getStandartQuote(priceBps: BN, legsMultiplierBps: BN) {
-  return {
-    standart: {
-      priceQuote: {
-        absolutePrice: {
-          amountBps: priceBps,
+export const Quote = {
+  getStandart: (priceBps: BN, legsMultiplierBps: BN) => {
+    return {
+      standart: {
+        priceQuote: {
+          absolutePrice: {
+            amountBps: priceBps,
+          },
+        },
+        legsMultiplierBps,
+      },
+    };
+  },
+  getFixedSize: (priceBps: BN) => {
+    return {
+      fixedSize: {
+        priceQuote: {
+          absolutePrice: {
+            amountBps: priceBps,
+          },
         },
       },
-      legsMultiplierBps,
+    };
+  },
+};
+
+export const FixedSize = {
+  None: {
+    none: {
+      padding: new BN(0),
     },
-  };
-}
+  },
+  getBaseAsset: (legsMultiplierBps: BN) => {
+    return {
+      baseAsset: {
+        legsMultiplierBps,
+      },
+    };
+  },
+  getQuoteAsset: (quoteAmount: BN) => {
+    return {
+      quoteAsset: {
+        quoteAmount,
+      },
+    };
+  },
+};

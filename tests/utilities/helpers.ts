@@ -1,4 +1,5 @@
 import { BN } from "@project-serum/anchor";
+import { BigNumber } from "bignumber.js";
 import { PublicKey } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
@@ -38,7 +39,8 @@ export function toLegMultiplier(value: number) {
 }
 
 export function withTokenDecimals(value: number) {
-  return new BN(10).pow(new BN(9)).muln(value);
+  let bignumber = new BigNumber(value).multipliedBy(new BigNumber(10).pow(9));
+  return new BN(bignumber.toString());
 }
 
 export function executeInParallel(...fns: (() => Promise<any>)[]) {

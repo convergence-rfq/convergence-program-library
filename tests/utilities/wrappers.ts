@@ -17,7 +17,7 @@ import {
   DEFAULT_TOKEN_AMOUNT,
   DEFAULT_INSTRUMENT_SIDE,
 } from "./constants";
-import { AuthoritySide, getStandartQuote, OrderType, Side } from "./types";
+import { AuthoritySide, Quote, OrderType, Side, FixedSize } from "./types";
 import { SpotInstrument } from "./spotInstrument";
 import { Instrument } from "./instrument";
 import { executeInParallel } from "./helpers";
@@ -135,15 +135,18 @@ export class Context {
   async initializeRfq({
     legs = [new SpotInstrument(this)],
     orderType = null,
+    fixedSize = null,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
   } = {}) {
+    orderType = orderType ?? DEFAULT_ORDER_TYPE;
+    fixedSize = fixedSize ?? FixedSize.None;
     const legData = await Promise.all(legs.map(async (x) => await x.toLegData()));
     const remainingAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
 
     const rfq = new Keypair();
     await this.program.methods
-      .intitializeRfq(legData, orderType ?? DEFAULT_ORDER_TYPE, activeWindow, settlingWindow)
+      .intitializeRfq(legData, orderType, fixedSize, activeWindow, settlingWindow)
       .accounts({
         taker: this.taker.publicKey,
         protocol: this.protocolPda,
@@ -203,10 +206,13 @@ export class Mint {
 export class Rfq {
   public constructor(public context: Context, public account: PublicKey, public legs: Instrument[]) {}
 
-  async respond({ bid = getStandartQuote(new BN(1), new BN(1)), ask = null } = {}) {
+  async respond({ bid = null, ask = null } = {}) {
+    if (bid === null && ask === null) {
+      bid = Quote.getStandart(new BN(1), new BN(1));
+    }
     const response = new Keypair();
 
-    await this.context.program.methods // @ts-ignore
+    await this.context.program.methods
       .respondToRfq(bid, ask)
       .accounts({
         maker: this.context.maker.publicKey,

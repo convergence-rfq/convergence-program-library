@@ -176,7 +176,25 @@ impl Response {
                 price_quote: _,
                 legs_multiplier_bps,
             } => legs_multiplier_bps,
-            Quote::FixedSize { price_quote: _ } => todo!(),
+            Quote::FixedSize {
+                price_quote:
+                    PriceQuote::AbsolutePrice {
+                        amount_bps: price_bps,
+                    },
+            } => match rfq.fixed_size {
+                FixedSize::None { padding: _ } => unreachable!(),
+                FixedSize::BaseAsset {
+                    legs_multiplier_bps,
+                } => legs_multiplier_bps,
+                FixedSize::QuoteAsset { quote_amount } => {
+                    // quote multiplied by leg decimals divided by the price
+                    let leg_multiplier_bps = quote_amount as u128
+                        * 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS)
+                        * 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS)
+                        / price_bps;
+                    leg_multiplier_bps as u64
+                }
+            },
         };
 
         let result = leg.instrument_amount as u128 * leg_multiplier_bps as u128
@@ -196,32 +214,45 @@ impl Response {
         result
     }
 
-    pub fn get_quote_amount_to_transfer(&self, _rfq: &Rfq, side: AuthoritySide) -> i64 {
+    pub fn get_quote_amount_to_transfer(&self, rfq: &Rfq, side: AuthoritySide) -> i64 {
         let quote_side = self.confirmed.unwrap();
         let quote = match quote_side {
             Side::Bid => self.bid.unwrap(),
             Side::Ask => self.ask.unwrap(),
         };
-        let legs_multiplier = match quote {
-            Quote::Standart {
-                price_quote: _,
-                legs_multiplier_bps,
-            } => legs_multiplier_bps,
-            Quote::FixedSize { price_quote: _ } => todo!(),
-        };
-        let price_bps = match quote {
-            Quote::Standart {
-                price_quote: PriceQuote::AbsolutePrice { amount_bps },
-                legs_multiplier_bps: _,
-            } => amount_bps,
-            Quote::FixedSize {
-                price_quote: PriceQuote::AbsolutePrice { amount_bps },
-            } => amount_bps,
-        };
 
-        let result = legs_multiplier as u128 * price_bps
-            / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS + PriceQuote::ABSOLUTE_PRICE_DECIMALS);
-        let mut result = result as i64;
+        let mut result = if let FixedSize::QuoteAsset { quote_amount } = rfq.fixed_size {
+            quote_amount as i64
+        } else {
+            let legs_multiplier_bps = match quote {
+                Quote::Standart {
+                    price_quote: _,
+                    legs_multiplier_bps,
+                } => legs_multiplier_bps,
+                Quote::FixedSize {
+                    price_quote: PriceQuote::AbsolutePrice { amount_bps: _ },
+                } => match rfq.fixed_size {
+                    FixedSize::BaseAsset {
+                        legs_multiplier_bps,
+                    } => legs_multiplier_bps,
+                    FixedSize::None { padding: _ } => unreachable!(),
+                    FixedSize::QuoteAsset { quote_amount: _ } => unreachable!(),
+                },
+            };
+            let price_bps = match quote {
+                Quote::Standart {
+                    price_quote: PriceQuote::AbsolutePrice { amount_bps },
+                    legs_multiplier_bps: _,
+                } => amount_bps,
+                Quote::FixedSize {
+                    price_quote: PriceQuote::AbsolutePrice { amount_bps },
+                } => amount_bps,
+            };
+
+            let result = legs_multiplier_bps as u128 * price_bps
+                / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS + PriceQuote::ABSOLUTE_PRICE_DECIMALS);
+            result as i64
+        };
 
         if let Side::Ask = quote_side {
             result = -result;

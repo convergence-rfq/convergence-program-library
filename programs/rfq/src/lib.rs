@@ -74,10 +74,18 @@ pub mod rfq {
         ctx: Context<'_, '_, '_, 'info, InitializeRfqAccounts<'info>>,
         legs: Vec<Leg>,
         order_type: OrderType,
+        fixed_size: FixedSize,
         active_window: u32,
         settling_window: u32,
     ) -> Result<()> {
-        initialize_rfq_instruction(ctx, legs, order_type, active_window, settling_window)
+        initialize_rfq_instruction(
+            ctx,
+            legs,
+            order_type,
+            fixed_size,
+            active_window,
+            settling_window,
+        )
     }
 
     pub fn respond_to_rfq(

@@ -57,6 +57,7 @@ pub fn initialize_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, InitializeRfqAccounts<'info>>,
     legs: Vec<Leg>,
     order_type: OrderType,
+    fixed_size: FixedSize,
     active_window: u32,
     settling_window: u32,
 ) -> Result<()> {
@@ -72,7 +73,6 @@ pub fn initialize_rfq_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    let fixed_size = FixedSize::None { padding: 0 };
     rfq.set_inner(Rfq {
         taker: taker.key(),
         order_type,
