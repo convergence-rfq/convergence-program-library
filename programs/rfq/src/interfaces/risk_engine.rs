@@ -53,7 +53,7 @@ pub fn calculate_required_collateral_for_confirmation<'a, 'info: 'a>(
     rfq: &'a AccountInfo<'info>,
     response: &'a AccountInfo<'info>,
     risk_engine: &'a AccountInfo<'info>,
-) -> Result<u64> {
+) -> Result<(u64, u64)> {
     let data = CALCULATE_REQUIRED_COLLATERAL_FOR_CONFIRMATION_SELECTOR.to_vec();
 
     let instruction = Instruction {
@@ -67,5 +67,5 @@ pub fn calculate_required_collateral_for_confirmation<'a, 'info: 'a>(
     invoke(&instruction, &[rfq.clone(), response.clone()])?;
 
     let (_key, data) = get_return_data().unwrap();
-    Ok(u64::try_from_slice(&data).unwrap())
+    Ok(<(u64, u64)>::try_from_slice(&data).unwrap())
 }

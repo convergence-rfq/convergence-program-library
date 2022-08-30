@@ -35,7 +35,8 @@ export function toAbsolutePrice(value: BN) {
 }
 
 export function toLegMultiplier(value: number) {
-  return new BN(10).pow(new BN(LEG_MULTIPLIER_DECIMALS)).muln(value);
+  let bignumber = new BigNumber(value).multipliedBy(new BigNumber(10).pow(LEG_MULTIPLIER_DECIMALS));
+  return new BN(bignumber.toString());
 }
 
 export function withTokenDecimals(value: number) {

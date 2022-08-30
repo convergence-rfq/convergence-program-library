@@ -3,7 +3,7 @@ use crate::{
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_confirmation,
     states::{
-        CollateralInfo, ProtocolState, Response, ResponseState, Rfq, RfqState, Side,
+        CollateralInfo, ProtocolState, Quote, Response, ResponseState, Rfq, RfqState, Side,
         StoredResponseState,
     },
 };
@@ -24,6 +24,9 @@ pub struct ConfirmResponseAccounts<'info> {
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), taker.key().as_ref()],
                 bump = collateral_info.bump)]
     pub collateral_info: Account<'info, CollateralInfo>,
+    #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), response.maker.as_ref()],
+                bump = maker_collateral_info.bump)]
+    pub maker_collateral_info: Account<'info, CollateralInfo>,
     #[account(seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), taker.key().as_ref()],
                 bump = collateral_info.token_account_bump)]
     pub collateral_token: Account<'info, TokenAccount>,
@@ -34,7 +37,11 @@ pub struct ConfirmResponseAccounts<'info> {
     pub risk_engine: UncheckedAccount<'info>,
 }
 
-fn validate(ctx: &Context<ConfirmResponseAccounts>, side: Side) -> Result<()> {
+fn validate(
+    ctx: &Context<ConfirmResponseAccounts>,
+    side: Side,
+    leg_multiplier_bps: Option<u64>,
+) -> Result<()> {
     let ConfirmResponseAccounts { rfq, response, .. } = &ctx.accounts;
 
     require!(
@@ -50,42 +57,76 @@ fn validate(ctx: &Context<ConfirmResponseAccounts>, side: Side) -> Result<()> {
         Side::Ask => require!(response.ask.is_some(), ProtocolError::ConfirmedSideMissing),
     }
 
+    if rfq.is_fixed_size() {
+        require!(
+            leg_multiplier_bps.is_none(),
+            ProtocolError::NoLegMultiplierForFixedSize
+        );
+    }
+
     Ok(())
 }
 
 pub fn confirm_response_instruction(
     ctx: Context<ConfirmResponseAccounts>,
     side: Side,
+    leg_multiplier_bps: Option<u64>,
 ) -> Result<()> {
-    validate(&ctx, side)?;
+    validate(&ctx, side, leg_multiplier_bps)?;
 
     let ConfirmResponseAccounts {
         rfq,
         response,
         collateral_info,
         collateral_token,
+        maker_collateral_info,
         risk_engine,
         ..
     } = ctx.accounts;
 
     response.confirmed = Some(side);
     response.state = StoredResponseState::SettlingPreparations;
+    if let Some(leg_multiplier_bps) = leg_multiplier_bps {
+        // update stored leg multiplier
+        let quote = response.get_mut_confirmed_quote().unwrap();
+        match quote {
+            Quote::Standart {
+                price_quote: _,
+                legs_multiplier_bps: stored,
+            } => {
+                require!(
+                    leg_multiplier_bps <= *stored,
+                    ProtocolError::LegMultiplierHigherThanInQuote
+                );
+                *stored = leg_multiplier_bps
+            }
+            _ => unreachable!(),
+        }
+    }
     response.exit(ctx.program_id)?;
 
-    let required_collateral = calculate_required_collateral_for_confirmation(
+    let (taker_collateral, maker_collateral) = calculate_required_collateral_for_confirmation(
         &rfq.to_account_info(),
         &response.to_account_info(),
         risk_engine,
     )?;
-    let collateral_taken_from_already_deposited = u64::min(
-        required_collateral,
-        rfq.non_response_taker_collateral_locked,
-    );
-    let locked_collateral = required_collateral - collateral_taken_from_already_deposited;
+    let collateral_taken_from_already_deposited =
+        u64::min(taker_collateral, rfq.non_response_taker_collateral_locked);
+    let locked_collateral = taker_collateral - collateral_taken_from_already_deposited;
     rfq.non_response_taker_collateral_locked -= collateral_taken_from_already_deposited;
-    response.taker_collateral_locked = required_collateral;
+    response.taker_collateral_locked = taker_collateral;
     if locked_collateral > 0 {
-        collateral_info.lock_collateral(collateral_token, required_collateral)?;
+        collateral_info.lock_collateral(collateral_token, taker_collateral)?;
+    }
+
+    require!(
+        maker_collateral <= response.maker_collateral_locked,
+        ProtocolError::CanNotLockAdditionalMakerCollateral
+    );
+    let maker_collateral_to_unlock = response.maker_collateral_locked - maker_collateral;
+    if maker_collateral_to_unlock > 0 {
+        maker_collateral_info.unlock_collateral(maker_collateral_to_unlock);
+        response.maker_collateral_locked -= maker_collateral_to_unlock;
     }
 
     Ok(())

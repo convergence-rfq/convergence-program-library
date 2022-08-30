@@ -50,4 +50,10 @@ pub enum ProtocolError {
     NotAQuoteMint,
     #[msg("Quote receiver account is not a receiver associated token account")]
     WrongQuoteReceiver,
+    #[msg("Fixed size rfq doesn't support specifying legs multiplier")]
+    NoLegMultiplierForFixedSize,
+    #[msg("Leg multiplier can't be higher than which is specified in the quote")]
+    LegMultiplierHigherThanInQuote,
+    #[msg("Confirmation can't lock additional maker collateral")]
+    CanNotLockAdditionalMakerCollateral,
 }

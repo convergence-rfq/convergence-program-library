@@ -87,6 +87,10 @@ impl Rfq {
         current_time
             >= self.creation_timestamp + self.active_window as i64 + self.settling_window as i64
     }
+
+    pub fn is_fixed_size(&self) -> bool {
+        !matches!(self.fixed_size, FixedSize::None { padding: _ })
+    }
 }
 
 #[account]
@@ -167,10 +171,8 @@ impl Response {
     pub fn get_leg_amount_to_transfer(&self, rfq: &Rfq, leg_index: u8, side: AuthoritySide) -> i64 {
         let leg = &rfq.legs[leg_index as usize];
         let quote_side = self.confirmed.unwrap();
-        let quote = match quote_side {
-            Side::Bid => self.bid.unwrap(),
-            Side::Ask => self.ask.unwrap(),
-        };
+        let quote = self.get_confirmed_quote().unwrap();
+
         let leg_multiplier_bps = match quote {
             Quote::Standart {
                 price_quote: _,
@@ -216,10 +218,7 @@ impl Response {
 
     pub fn get_quote_amount_to_transfer(&self, rfq: &Rfq, side: AuthoritySide) -> i64 {
         let quote_side = self.confirmed.unwrap();
-        let quote = match quote_side {
-            Side::Bid => self.bid.unwrap(),
-            Side::Ask => self.ask.unwrap(),
-        };
+        let quote = self.get_confirmed_quote().unwrap();
 
         let mut result = if let FixedSize::QuoteAsset { quote_amount } = rfq.fixed_size {
             quote_amount as i64
@@ -281,6 +280,26 @@ impl Response {
             AuthoritySide::Taker
         }
     }
+
+    pub fn get_confirmed_quote(&self) -> Option<Quote> {
+        match self.confirmed {
+            Some(side) => match side {
+                Side::Bid => self.bid,
+                Side::Ask => self.ask,
+            },
+            None => None,
+        }
+    }
+
+    pub fn get_mut_confirmed_quote(&mut self) -> Option<&mut Quote> {
+        match self.confirmed {
+            Some(side) => match side {
+                Side::Bid => self.bid.as_mut(),
+                Side::Ask => self.ask.as_mut(),
+            },
+            None => None,
+        }
+    }
 }
 
 #[account]
@@ -298,6 +317,10 @@ impl CollateralInfo {
         );
         self.locked_tokens_amount += amount;
         Ok(())
+    }
+
+    pub fn unlock_collateral(&mut self, amount: u64) -> () {
+        self.locked_tokens_amount -= amount;
     }
 }
 

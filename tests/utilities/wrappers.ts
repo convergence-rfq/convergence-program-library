@@ -238,15 +238,16 @@ export class Rfq {
 export class Response {
   constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {}
 
-  async confirm(side = null) {
+  async confirm({ side = null, legMultiplierBps = null } = {}) {
     await this.context.program.methods
-      .confirmResponse(side ?? Side.Bid)
+      .confirmResponse(side ?? Side.Bid, legMultiplierBps)
       .accounts({
         taker: this.context.taker.publicKey,
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
         response: this.account,
         collateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
+        makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
         collateralToken: await getCollateralTokenPda(this.context.taker.publicKey, this.context.program.programId),
         riskEngine: this.context.riskEngine.programId,
       })

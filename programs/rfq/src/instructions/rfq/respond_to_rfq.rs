@@ -5,7 +5,7 @@ use crate::{
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_response,
     states::{
-        CollateralInfo, FixedSize, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
+        CollateralInfo, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
         StoredResponseState,
     },
 };
@@ -64,18 +64,17 @@ fn validate(
         ),
     };
 
-    let is_rfq_fixed_sized = !matches!(rfq.fixed_size, FixedSize::None { padding: _ });
     if let Some(quote) = bid {
         let is_quote_fixed_size = matches!(quote, Quote::FixedSize { price_quote: _ });
         require!(
-            is_rfq_fixed_sized == is_quote_fixed_size,
+            rfq.is_fixed_size() == is_quote_fixed_size,
             ProtocolError::InvalidQuoteType
         );
     }
     if let Some(quote) = ask {
         let is_quote_fixed_size = matches!(quote, Quote::FixedSize { price_quote: _ });
         require!(
-            is_rfq_fixed_sized == is_quote_fixed_size,
+            rfq.is_fixed_size() == is_quote_fixed_size,
             ProtocolError::InvalidQuoteType
         );
     }

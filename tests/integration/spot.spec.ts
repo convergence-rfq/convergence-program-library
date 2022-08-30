@@ -27,17 +27,17 @@ describe("RFQ Spot instrument integration tests", () => {
       bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
       ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
     });
-    // taker confirms to buy 2 bitcoins
-    await response.confirm(Side.Ask);
+    // taker confirms to buy 1 bitcoin
+    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     await response.prepareToSettle(AuthoritySide.Taker);
     await response.prepareToSettle(AuthoritySide.Maker);
-    // taker should receive 2 bitcoins, maker should receive 44k$
+    // taker should receive 1 bitcoins, maker should receive 22k$
     await response.settle(maker, [taker]);
     await tokenMeasurer.expectChange([
-      { mint: context.assetToken, user: taker, delta: withTokenDecimals(2) },
-      { mint: context.assetToken, user: maker, delta: withTokenDecimals(-2) },
-      { mint: context.quoteToken, user: taker, delta: withTokenDecimals(-44_000) },
-      { mint: context.quoteToken, user: maker, delta: withTokenDecimals(44_000) },
+      { mint: context.assetToken, user: taker, delta: withTokenDecimals(1) },
+      { mint: context.assetToken, user: maker, delta: withTokenDecimals(-1) },
+      { mint: context.quoteToken, user: taker, delta: withTokenDecimals(-22_000) },
+      { mint: context.quoteToken, user: maker, delta: withTokenDecimals(22_000) },
     ]);
   });
 
@@ -60,27 +60,27 @@ describe("RFQ Spot instrument integration tests", () => {
       bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(91_000)), toLegMultiplier(2)),
     });
 
-    // taker confirms first response
-    await response.confirm(Side.Bid);
+    // taker confirms first response, but only half of it
+    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(0.25) });
     const firstMeasurer = await TokenChangeMeasurer.takeSnapshot(
       [context.assetToken, context.quoteToken, ethMint],
       [taker, maker]
     );
     await response.prepareToSettle(AuthoritySide.Taker);
     await response.prepareToSettle(AuthoritySide.Maker);
-    // taker should spend 2.5 bitcoins, receive 5 eth and 45k$
+    // taker should spend 1.25 bitcoins, receive 2.5 eth and 22.5k$
     await response.settle(taker, [maker, taker]);
     await firstMeasurer.expectChange([
-      { mint: context.assetToken, user: taker, delta: withTokenDecimals(-2.5) },
-      { mint: context.assetToken, user: maker, delta: withTokenDecimals(2.5) },
-      { mint: ethMint, user: taker, delta: withTokenDecimals(5) },
-      { mint: ethMint, user: maker, delta: withTokenDecimals(-5) },
-      { mint: context.quoteToken, user: taker, delta: withTokenDecimals(45_000) },
-      { mint: context.quoteToken, user: maker, delta: withTokenDecimals(-45_000) },
+      { mint: context.assetToken, user: taker, delta: withTokenDecimals(-1.25) },
+      { mint: context.assetToken, user: maker, delta: withTokenDecimals(1.25) },
+      { mint: ethMint, user: taker, delta: withTokenDecimals(2.5) },
+      { mint: ethMint, user: maker, delta: withTokenDecimals(-2.5) },
+      { mint: context.quoteToken, user: taker, delta: withTokenDecimals(22_500) },
+      { mint: context.quoteToken, user: maker, delta: withTokenDecimals(-22_500) },
     ]);
 
     // taker confirms second response
-    await secondResponse.confirm(Side.Bid);
+    await secondResponse.confirm({ side: Side.Bid });
     const secondMeasurer = await TokenChangeMeasurer.takeSnapshot(
       [context.assetToken, context.quoteToken, ethMint],
       [taker, maker]
@@ -111,7 +111,7 @@ describe("RFQ Spot instrument integration tests", () => {
       ask: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(103_333))),
     });
 
-    await response.confirm(Side.Ask);
+    await response.confirm({ side: Side.Ask });
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
     await response.prepareToSettle(AuthoritySide.Taker);
     await response.prepareToSettle(AuthoritySide.Maker);
@@ -137,7 +137,7 @@ describe("RFQ Spot instrument integration tests", () => {
       bid: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(11_000))),
     });
 
-    await response.confirm(Side.Bid);
+    await response.confirm({ side: Side.Bid });
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
     await response.prepareToSettle(AuthoritySide.Taker);
     await response.prepareToSettle(AuthoritySide.Maker);

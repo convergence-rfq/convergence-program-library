@@ -96,8 +96,12 @@ pub mod rfq {
         respond_to_rfq_instruction(ctx, bid, ask)
     }
 
-    pub fn confirm_response(ctx: Context<ConfirmResponseAccounts>, side: Side) -> Result<()> {
-        confirm_response_instruction(ctx, side)
+    pub fn confirm_response(
+        ctx: Context<ConfirmResponseAccounts>,
+        side: Side,
+        leg_multiplier_bps: Option<u64>,
+    ) -> Result<()> {
+        confirm_response_instruction(ctx, side, leg_multiplier_bps)
     }
 
     pub fn prepare_to_settle<'info>(

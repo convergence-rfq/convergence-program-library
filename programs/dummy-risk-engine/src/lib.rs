@@ -21,8 +21,10 @@ pub mod dummy_risk_engine {
 
     pub fn calculate_collateral_for_confirmation(
         _ctx: Context<CalculateRequiredCollateralForConfirmation>,
-    ) -> Result<u64> {
-        Ok(3_000_000_000)
+    ) -> Result<(u64, u64)> {
+        let taker_collateral = 3_000_000_000;
+        let maker_collateral = 1_000_000_000;
+        Ok((taker_collateral, maker_collateral))
     }
 }
 
