@@ -946,10 +946,6 @@ export async function mintPsyAmericanOption(
     .rpc();
   console.log("PsyOptions:", psyTx);
 
-  console.log("Leg Id:", legId);
-  console.log("Size:", size);
-  console.log("Bump:", vaultAuthorityBump);
-
   const mintTx = await rfqProgram.methods
     .mintPsyOptionsAmericanOption(legId, size, vaultAuthorityBump)
     .accounts(accounts)

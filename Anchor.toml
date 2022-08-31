@@ -1,11 +1,11 @@
 [programs.localnet]
-rfq = "NpQJvg6yiyDLoxRiJN6LHoNvFyeRQ8ErDCzPQqqRJZS"
+rfq = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
        
 [programs.devnet]
-rfq = "NpQJvg6yiyDLoxRiJN6LHoNvFyeRQ8ErDCzPQqqRJZS"
+rfq = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
 
 [programs.mainnet]
-rfq = "NpQJvg6yiyDLoxRiJN6LHoNvFyeRQ8ErDCzPQqqRJZS"
+rfq = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
 
 [registry]
 url = "https://anchor.projectserum.com"

@@ -1,39 +1,24 @@
 {
   "version": "0.1.0",
   "name": "rfq",
-  "docs": [
-    "Request for quote (RFQ) protocol module."
-  ],
   "instructions": [
     {
       "name": "initialize",
-      "docs": [
-        "Initializes."
-      ],
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Signer"
-          ]
+          "isSigner": true
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Protocol"
-          ]
+          "isSigner": false
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Solana system program"
-          ]
+          "isSigner": false
         }
       ],
       "args": [
@@ -49,25 +34,16 @@
     },
     {
       "name": "setFee",
-      "docs": [
-        "Sets fee."
-      ],
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Signer"
-          ]
+          "isSigner": true
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Protocol"
-          ]
+          "isSigner": false
         }
       ],
       "args": [
@@ -83,89 +59,56 @@
     },
     {
       "name": "request",
-      "docs": [
-        "Requests quote (RFQ)."
-      ],
       "accounts": [
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset escrow"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetMint",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Asset mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Protocol"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote escrow"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteMint",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Quote mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Rent"
-          ]
+          "isSigner": false
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "RFQ"
-          ]
+          "isSigner": false
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Signer"
-          ]
+          "isSigner": true
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Solana system program"
-          ]
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Solana token program"
-          ]
+          "isSigner": false
         }
       ],
       "args": [
@@ -205,105 +148,66 @@
     },
     {
       "name": "respond",
-      "docs": [
-        "Responds to RFQ."
-      ],
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Authority"
-          ]
+          "isSigner": true
         },
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Order"
-          ]
+          "isSigner": false
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "RFQ"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset wallet"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote wallet"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset escrow"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote escrow"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "System program"
-          ]
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Token program"
-          ]
+          "isSigner": false
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Rent"
-          ]
+          "isSigner": false
         }
       ],
       "args": [
@@ -323,171 +227,108 @@
     },
     {
       "name": "cancel",
-      "docs": [
-        "Cancels RFQ."
-      ],
       "accounts": [
         {
           "name": "protocol",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Protocol"
-          ]
+          "isSigner": false
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "RFQ"
-          ]
+          "isSigner": false
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Signer"
-          ]
+          "isSigner": true
         }
       ],
       "args": []
     },
     {
       "name": "lastLook",
-      "docs": [
-        "Quote last look."
-      ],
       "accounts": [
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Order"
-          ]
+          "isSigner": false
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "RFQ"
-          ]
+          "isSigner": false
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Signer"
-          ]
+          "isSigner": true
         }
       ],
       "args": []
     },
     {
       "name": "confirm",
-      "docs": [
-        "Confirms quote."
-      ],
       "accounts": [
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset escrow"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset wallet"
-          ]
+          "isSigner": false
         },
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Order"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote escrow"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote wallet"
-          ]
+          "isSigner": false
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Rent"
-          ]
+          "isSigner": false
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "RFQ"
-          ]
+          "isSigner": false
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Signer"
-          ]
+          "isSigner": true
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "System program"
-          ]
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Token program"
-          ]
+          "isSigner": false
         }
       ],
       "args": [
@@ -501,122 +342,77 @@
     },
     {
       "name": "returnCollateral",
-      "docs": [
-        "Returns quote collateral."
-      ],
       "accounts": [
         {
           "name": "assetEscrow",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset escrow"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset wallet"
-          ]
+          "isSigner": false
         },
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Order"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote escrow"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote wallet"
-          ]
+          "isSigner": false
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Rent"
-          ]
+          "isSigner": false
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "RFQ"
-          ]
+          "isSigner": false
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Signer"
-          ]
+          "isSigner": true
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Solana token program"
-          ]
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
       "name": "settle",
-      "docs": [
-        "Settles RFQ."
-      ],
       "accounts": [
         {
           "name": "assetMint",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetWallet",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Asset wallet"
-          ]
+          "isSigner": false
         },
         {
           "name": "assetEscrow",
@@ -626,82 +422,52 @@
         {
           "name": "order",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Order"
-          ]
+          "isSigner": false
         },
         {
           "name": "protocol",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Protocol"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteEscrow",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote escrow"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteMint",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "quoteWallet",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Quote wallet"
-          ]
+          "isSigner": false
         },
         {
           "name": "rfq",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "RFQ"
-          ]
+          "isSigner": false
         },
         {
           "name": "rent",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Rent"
-          ]
+          "isSigner": false
         },
         {
           "name": "signer",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Signer"
-          ]
+          "isSigner": true
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "System program"
-          ]
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Solana token program"
-          ]
+          "isSigner": false
         },
         {
           "name": "treasuryWallet",
@@ -713,9 +479,6 @@
     },
     {
       "name": "initializePsyOptionsAmericanOptionMarket",
-      "docs": [
-        "Initializes PsyOptions American option market."
-      ],
       "accounts": [
         {
           "name": "user",
@@ -814,9 +577,6 @@
     },
     {
       "name": "initializePsyOptionsAmericanMintVault",
-      "docs": [
-        "Initializes PsyOptions American mint vault."
-      ],
       "accounts": [
         {
           "name": "authority",
@@ -858,9 +618,6 @@
     },
     {
       "name": "mintPsyOptionsAmericanOption",
-      "docs": [
-        "Mints PsyOptions American option market."
-      ],
       "accounts": [
         {
           "name": "authority",
@@ -875,10 +632,7 @@
         {
           "name": "vault",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The vault where the underlying assets are held. This is the PsyAmerican"
-          ]
+          "isSigner": false
         },
         {
           "name": "vaultAuthority",
@@ -975,9 +729,6 @@
   "accounts": [
     {
       "name": "AccessManagerState",
-      "docs": [
-        "Access manager state."
-      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1003,97 +754,61 @@
     },
     {
       "name": "RfqState",
-      "docs": [
-        "RFQ state."
-      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "accessManager",
-            "docs": [
-              "Optional access manager"
-            ],
             "type": {
               "option": "publicKey"
             }
           },
           {
             "name": "assetEscrowBump",
-            "docs": [
-              "Asset escrow bump"
-            ],
             "type": "u8"
           },
           {
             "name": "assetMint",
-            "docs": [
-              "Asset mint"
-            ],
             "type": "publicKey"
           },
           {
             "name": "authority",
-            "docs": [
-              "Authority"
-            ],
             "type": "publicKey"
           },
           {
             "name": "bestAskAmount",
-            "docs": [
-              "Best ask amount"
-            ],
             "type": {
               "option": "u64"
             }
           },
           {
             "name": "bestBidAmount",
-            "docs": [
-              "Best bid amount"
-            ],
             "type": {
               "option": "u64"
             }
           },
           {
             "name": "bestAskAddress",
-            "docs": [
-              "Best ask amount"
-            ],
             "type": {
               "option": "publicKey"
             }
           },
           {
             "name": "bestBidAddress",
-            "docs": [
-              "Best bid amount"
-            ],
             "type": {
               "option": "publicKey"
             }
           },
           {
             "name": "bump",
-            "docs": [
-              "PDA bump"
-            ],
             "type": "u8"
           },
           {
             "name": "canceled",
-            "docs": [
-              "Canceled"
-            ],
             "type": "bool"
           },
           {
             "name": "confirmedOrder",
-            "docs": [
-              "Confirmed"
-            ],
             "type": {
               "option": {
                 "defined": "ConfirmedOrder"
@@ -1102,25 +817,16 @@
           },
           {
             "name": "expiry",
-            "docs": [
-              "Expiry time"
-            ],
             "type": "i64"
           },
           {
             "name": "lastLookApproved",
-            "docs": [
-              "Last look approved, None value means last look logic is disabled"
-            ],
             "type": {
               "option": "bool"
             }
           },
           {
             "name": "legs",
-            "docs": [
-              "Legs"
-            ],
             "type": {
               "vec": {
                 "defined": "Leg"
@@ -1129,46 +835,28 @@
           },
           {
             "name": "orderAmount",
-            "docs": [
-              "Order amount"
-            ],
             "type": "u64"
           },
           {
             "name": "orderType",
-            "docs": [
-              "Order type"
-            ],
             "type": {
               "defined": "Order"
             }
           },
           {
             "name": "quoteEscrowBump",
-            "docs": [
-              "Quote escrow bump"
-            ],
             "type": "u8"
           },
           {
             "name": "quoteMint",
-            "docs": [
-              "Quote mint"
-            ],
             "type": "publicKey"
           },
           {
             "name": "settled",
-            "docs": [
-              "Settled"
-            ],
             "type": "bool"
           },
           {
             "name": "unixTimestamp",
-            "docs": [
-              "Creation time"
-            ],
             "type": "i64"
           }
         ]
@@ -1176,9 +864,6 @@
     },
     {
       "name": "ProtocolState",
-      "docs": [
-        "Protocol state."
-      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1207,9 +892,6 @@
     },
     {
       "name": "OrderState",
-      "docs": [
-        "Order state."
-      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1235,30 +917,18 @@
           },
           {
             "name": "collateralReturned",
-            "docs": [
-              "Collateral returned"
-            ],
             "type": "bool"
           },
           {
             "name": "rfq",
-            "docs": [
-              "Rfq"
-            ],
             "type": "publicKey"
           },
           {
             "name": "settled",
-            "docs": [
-              "Settled"
-            ],
             "type": "bool"
           },
           {
             "name": "unixTimestamp",
-            "docs": [
-              "Creation time"
-            ],
             "type": "i64"
           }
         ]
@@ -1268,9 +938,6 @@
   "types": [
     {
       "name": "Leg",
-      "docs": [
-        "Leg."
-      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1353,9 +1020,6 @@
     },
     {
       "name": "Instrument",
-      "docs": [
-        "Instrument."
-      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1373,9 +1037,6 @@
     },
     {
       "name": "Contract",
-      "docs": [
-        "Contract."
-      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1396,9 +1057,6 @@
     },
     {
       "name": "Venue",
-      "docs": [
-        "Venue."
-      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1416,9 +1074,6 @@
     },
     {
       "name": "BuySell",
-      "docs": [
-        "BuySell."
-      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1433,9 +1088,6 @@
     },
     {
       "name": "Quote",
-      "docs": [
-        "Quote."
-      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1450,9 +1102,6 @@
     },
     {
       "name": "Order",
-      "docs": [
-        "Order."
-      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -1597,6 +1246,6 @@
     }
   ],
   "metadata": {
-    "address": "NpQJvg6yiyDLoxRiJN6LHoNvFyeRQ8ErDCzPQqqRJZS"
+    "address": "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
   }
 }
