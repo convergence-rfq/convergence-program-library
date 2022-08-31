@@ -943,7 +943,6 @@ export async function mintPsyAmericanOption(
     .accounts(accounts)
     .signers([signer.payer])
     .rpc();
-  console.log("Convergence:", mintTx);
 
   return { mintTx, vaultTx };
 }
