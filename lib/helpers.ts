@@ -938,14 +938,6 @@ export async function mintPsyAmericanOption(
     systemProgram: SystemProgram.programId,
   };
 
-  const psyTx = await psyAmericanProgram.methods
-    .mintOptionV2(size)
-    .accounts(psyAccounts)
-    .preInstructions(instructions)
-    .signers([signer.payer])
-    .rpc();
-  console.log("PsyOptions:", psyTx);
-
   const mintTx = await rfqProgram.methods
     .mintPsyOptionsAmericanOption(legId, size, vaultAuthorityBump)
     .accounts(accounts)
