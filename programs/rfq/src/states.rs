@@ -1,7 +1,7 @@
 use std::mem;
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
+use anchor_spl::{associated_token::get_associated_token_address, token::TokenAccount};
 
 use crate::errors::ProtocolError;
 
@@ -102,8 +102,10 @@ pub struct Response {
     pub maker_collateral_locked: u64,
     pub taker_collateral_locked: u64,
     pub state: StoredResponseState,
+    pub taker_prepared_to_settle: bool,
+    pub maker_prepared_to_settle: bool,
 
-    pub confirmed: Option<Side>,
+    pub confirmed: Option<Confirmation>,
     pub first_to_prepare: Option<AuthoritySide>,
     pub bid: Option<Quote>,
     pub ask: Option<Quote>,
@@ -142,21 +144,13 @@ impl Response {
             }
             StoredResponseState::SettlingPreparations => {
                 if !settle_window_ended {
-                    ResponseState::SettlingPreparations
-                } else {
-                    ResponseState::Defaulted
-                }
-            }
-            StoredResponseState::OnlyMakerPrepared => {
-                if !settle_window_ended {
-                    ResponseState::OnlyMakerPrepared
-                } else {
-                    ResponseState::Defaulted
-                }
-            }
-            StoredResponseState::OnlyTakerPrepared => {
-                if !settle_window_ended {
-                    ResponseState::OnlyTakerPrepared
+                    if self.taker_prepared_to_settle {
+                        ResponseState::OnlyTakerPrepared
+                    } else if self.maker_prepared_to_settle {
+                        ResponseState::OnlyMakerPrepared
+                    } else {
+                        ResponseState::SettlingPreparations
+                    }
                 } else {
                     ResponseState::Defaulted
                 }
@@ -170,7 +164,7 @@ impl Response {
 
     pub fn get_leg_amount_to_transfer(&self, rfq: &Rfq, leg_index: u8, side: AuthoritySide) -> i64 {
         let leg = &rfq.legs[leg_index as usize];
-        let quote_side = self.confirmed.unwrap();
+        let confirmation = self.confirmed.unwrap();
         let quote = self.get_confirmed_quote().unwrap();
 
         let leg_multiplier_bps = match quote {
@@ -206,7 +200,7 @@ impl Response {
         if let Side::Ask = leg.side {
             result = -result;
         }
-        if let Side::Bid = quote_side {
+        if let Side::Bid = confirmation.side {
             result = -result;
         }
         if let AuthoritySide::Taker = side {
@@ -217,7 +211,7 @@ impl Response {
     }
 
     pub fn get_quote_amount_to_transfer(&self, rfq: &Rfq, side: AuthoritySide) -> i64 {
-        let quote_side = self.confirmed.unwrap();
+        let confirmation = self.confirmed.unwrap();
         let quote = self.get_confirmed_quote().unwrap();
 
         let mut result = if let FixedSize::QuoteAsset { quote_amount } = rfq.fixed_size {
@@ -253,7 +247,7 @@ impl Response {
             result as i64
         };
 
-        if let Side::Bid = quote_side {
+        if let Side::Bid = confirmation.side {
             result = -result;
         }
         if let AuthoritySide::Maker = side {
@@ -283,23 +277,33 @@ impl Response {
 
     pub fn get_confirmed_quote(&self) -> Option<Quote> {
         match self.confirmed {
-            Some(side) => match side {
-                Side::Bid => self.bid,
-                Side::Ask => self.ask,
-            },
+            Some(confirmation) => {
+                let mut quote = match confirmation.side {
+                    Side::Bid => self.bid,
+                    Side::Ask => self.ask,
+                }
+                .unwrap()
+                .clone();
+
+                // apply overriden leg multiplier
+                if let Some(override_leg_multiplier_bps) = confirmation.override_leg_multiplier_bps
+                {
+                    match &mut quote {
+                        Quote::Standart {
+                            price_quote: _,
+                            legs_multiplier_bps,
+                        } => *legs_multiplier_bps = override_leg_multiplier_bps,
+                        Quote::FixedSize { price_quote: _ } => unreachable!(),
+                    }
+                }
+
+                Some(quote)
+            }
             None => None,
         }
     }
 
-    pub fn get_mut_confirmed_quote(&mut self) -> Option<&mut Quote> {
-        match self.confirmed {
-            Some(side) => match side {
-                Side::Bid => self.bid.as_mut(),
-                Side::Ask => self.ask.as_mut(),
-            },
-            None => None,
-        }
-    }
+    pub fn default_by_time(&mut self) {}
 }
 
 #[account]
@@ -330,6 +334,7 @@ pub struct Instrument {
     pub validate_data_account_amount: u8,
     pub prepare_to_settle_account_amount: u8,
     pub settle_account_amount: u8,
+    pub revert_preparation_account_amount: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -431,13 +436,17 @@ pub enum Side {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub struct Confirmation {
+    pub side: Side,
+    pub override_leg_multiplier_bps: Option<u64>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum StoredResponseState {
     Active,
     Canceled,
     WaitingForLastLook,
     SettlingPreparations,
-    OnlyMakerPrepared,
-    OnlyTakerPrepared,
     ReadyForSettling,
     Settled,
     Defaulted,
@@ -476,4 +485,32 @@ impl ResponseState {
 pub enum AuthoritySide {
     Taker,
     Maker,
+}
+
+impl AuthoritySide {
+    pub fn revert(self) -> Self {
+        match self {
+            AuthoritySide::Taker => AuthoritySide::Maker,
+            AuthoritySide::Maker => AuthoritySide::Taker,
+        }
+    }
+
+    pub fn validate_is_associated_token_account(
+        &self,
+        rfq: &Rfq,
+        response: &Response,
+        mint: Pubkey,
+        token_account: Pubkey,
+    ) -> Result<()> {
+        let receiver = match self {
+            AuthoritySide::Taker => rfq.taker,
+            AuthoritySide::Maker => response.maker,
+        };
+        require!(
+            get_associated_token_address(&receiver, &mint) == token_account.key(),
+            ProtocolError::WrongQuoteReceiver
+        );
+
+        Ok(())
+    }
 }

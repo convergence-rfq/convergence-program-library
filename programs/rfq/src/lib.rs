@@ -20,6 +20,7 @@ use instructions::rfq::confirm_response::*;
 use instructions::rfq::intitialize_rfq::*;
 use instructions::rfq::prepare_to_settle::*;
 use instructions::rfq::respond_to_rfq::*;
+use instructions::rfq::revert_preparation::*;
 use instructions::rfq::settle::*;
 use states::*;
 
@@ -53,12 +54,14 @@ pub mod rfq {
         validate_data_account_amount: u8,
         prepare_to_settle_account_amount: u8,
         settle_account_amount: u8,
+        revert_preparation_account_amount: u8,
     ) -> Result<()> {
         add_instrument_instruction(
             ctx,
             validate_data_account_amount,
             prepare_to_settle_account_amount,
             settle_account_amount,
+            revert_preparation_account_amount,
         )
     }
 
@@ -99,9 +102,9 @@ pub mod rfq {
     pub fn confirm_response(
         ctx: Context<ConfirmResponseAccounts>,
         side: Side,
-        leg_multiplier_bps: Option<u64>,
+        override_leg_multiplier_bps: Option<u64>,
     ) -> Result<()> {
-        confirm_response_instruction(ctx, side, leg_multiplier_bps)
+        confirm_response_instruction(ctx, side, override_leg_multiplier_bps)
     }
 
     pub fn prepare_to_settle<'info>(
@@ -113,5 +116,11 @@ pub mod rfq {
 
     pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {
         settle_instruction(ctx)
+    }
+
+    pub fn revert_preparation<'info>(
+        ctx: Context<'_, '_, '_, 'info, RevertPreparationAccounts<'info>>,
+    ) -> Result<()> {
+        revert_preparation_instruction(ctx)
     }
 }

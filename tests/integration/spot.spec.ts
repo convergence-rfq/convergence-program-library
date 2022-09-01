@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
+import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
@@ -148,6 +148,42 @@ describe("RFQ Spot instrument integration tests", () => {
       { mint: context.assetToken, user: maker, delta: withTokenDecimals(1.75) },
       { mint: context.quoteToken, user: taker, delta: withTokenDecimals(38_500) },
       { mint: context.quoteToken, user: maker, delta: withTokenDecimals(-38_500) },
+    ]);
+  });
+
+  it("Create a rfq, respond and confirm, taker prepares but maker defaults", async () => {
+    const rfq = await context.initializeRfq({ activeWindow: 2, settlingWindow: 1 });
+    const response = await rfq.respond();
+    await response.confirm();
+
+    let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
+    await response.prepareToSettle(AuthoritySide.Taker);
+    await sleep(3000);
+    await response.revertPreparation(maker, [taker]);
+    // no assets are exchanged
+    await tokenMeasurer.expectChange([
+      { mint: context.assetToken, user: taker, delta: withTokenDecimals(0) },
+      { mint: context.assetToken, user: maker, delta: withTokenDecimals(0) },
+      { mint: context.quoteToken, user: taker, delta: withTokenDecimals(0) },
+      { mint: context.quoteToken, user: maker, delta: withTokenDecimals(0) },
+    ]);
+  });
+
+  it("Create a rfq, respond and confirm, maker prepares but taker defaults", async () => {
+    const rfq = await context.initializeRfq({ activeWindow: 2, settlingWindow: 1 });
+    const response = await rfq.respond();
+    await response.confirm();
+
+    let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
+    await response.prepareToSettle(AuthoritySide.Maker);
+    await sleep(3000);
+    await response.revertPreparation(maker, [taker]);
+    // no assets are exchanged
+    await tokenMeasurer.expectChange([
+      { mint: context.assetToken, user: taker, delta: withTokenDecimals(0) },
+      { mint: context.assetToken, user: maker, delta: withTokenDecimals(0) },
+      { mint: context.quoteToken, user: taker, delta: withTokenDecimals(0) },
+      { mint: context.quoteToken, user: maker, delta: withTokenDecimals(0) },
     ]);
   });
 });

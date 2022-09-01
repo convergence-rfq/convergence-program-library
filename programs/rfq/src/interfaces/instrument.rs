@@ -11,6 +11,7 @@ use crate::{
 const VALIDATE_DATA_SELECTOR: [u8; 8] = [181, 2, 45, 238, 64, 129, 254, 198];
 const PREPARE_TO_SETTLE_SELECTOR: [u8; 8] = [254, 209, 39, 188, 15, 5, 140, 146];
 const SETTLE_SELECTOR: [u8; 8] = [175, 42, 185, 87, 144, 131, 102, 212];
+const REVERT_PREPARATION_SELECTOR: [u8; 8] = [32, 185, 171, 189, 112, 246, 209, 149];
 
 pub fn validate_instrument_data<'a, 'info: 'a>(
     leg: &Leg,
@@ -72,6 +73,27 @@ pub fn settle<'a, 'info: 'a>(
         protocol,
         &instrument_key,
         instrument_parameters.settle_account_amount as usize,
+        remaining_accounts,
+    )
+}
+
+pub fn revert_preparation<'a, 'info: 'a>(
+    leg: &Leg,
+    leg_index: u8,
+    protocol: &Account<'info, ProtocolState>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
+    let mut data = REVERT_PREPARATION_SELECTOR.to_vec();
+    AnchorSerialize::serialize(&leg_index, &mut data)?;
+
+    let instrument_key = leg.instrument;
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+
+    call_instrument(
+        data,
+        protocol,
+        &instrument_key,
+        instrument_parameters.revert_preparation_account_amount as usize,
         remaining_accounts,
     )
 }

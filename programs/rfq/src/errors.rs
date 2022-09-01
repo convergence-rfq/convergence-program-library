@@ -56,4 +56,6 @@ pub enum ProtocolError {
     LegMultiplierHigherThanInQuote,
     #[msg("Confirmation can't lock additional maker collateral")]
     CanNotLockAdditionalMakerCollateral,
+    #[msg("This side of rfq either had not prepared or had already reverted")]
+    NoPreparationToRevert,
 }

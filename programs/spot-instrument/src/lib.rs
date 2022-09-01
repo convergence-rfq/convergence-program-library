@@ -1,7 +1,6 @@
 use crate::errors::SpotError;
 use crate::state::AuthoritySideDuplicate;
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
@@ -79,20 +78,64 @@ pub mod spot_instrument {
             ..
         } = &ctx.accounts;
 
-        let receiver = response.get_leg_assets_receiver(rfq, leg_index);
-        let receiver = match receiver {
-            AuthoritySide::Taker => rfq.taker,
-            AuthoritySide::Maker => response.maker,
-        };
-        require!(
-            get_associated_token_address(&receiver, &escrow.mint) == receiver_tokens.key(),
-            SpotError::InvalidReceiver
-        );
+        response
+            .get_leg_assets_receiver(rfq, leg_index)
+            .validate_is_associated_token_account(
+                rfq,
+                response,
+                escrow.mint,
+                receiver_tokens.key(),
+            )?;
 
         let amount = escrow.amount;
         let transfer_accounts = Transfer {
             from: escrow.to_account_info(),
             to: receiver_tokens.to_account_info(),
+            authority: escrow.to_account_info(),
+        };
+        let response_key = response.key();
+        let leg_index_seed = [leg_index];
+        let bump_seed = [*ctx.bumps.get("escrow").unwrap()];
+        let transfer_seed = &[&[
+            ESCROW_SEED.as_bytes(),
+            response_key.as_ref(),
+            &leg_index_seed,
+            &bump_seed,
+        ][..]];
+        let transfer_ctx = CpiContext::new_with_signer(
+            token_program.to_account_info(),
+            transfer_accounts,
+            transfer_seed,
+        );
+        transfer(transfer_ctx, amount)?;
+
+        Ok(())
+    }
+
+    pub fn revert_preparation(ctx: Context<RevertPreparation>, leg_index: u8) -> Result<()> {
+        let RevertPreparation {
+            rfq,
+            response,
+            escrow,
+            sender_tokens,
+            token_program,
+            ..
+        } = &ctx.accounts;
+
+        response
+            .get_leg_assets_receiver(rfq, leg_index)
+            .revert()
+            .validate_is_associated_token_account(
+                rfq,
+                response,
+                escrow.mint,
+                sender_tokens.key(),
+            )?;
+
+        let amount = escrow.amount;
+        let transfer_accounts = Transfer {
+            from: escrow.to_account_info(),
+            to: sender_tokens.to_account_info(),
             authority: escrow.to_account_info(),
         };
         let response_key = response.key();
@@ -157,6 +200,22 @@ pub struct Settle<'info> {
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
     pub receiver_tokens: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+#[instruction(leg_index: u8)]
+pub struct RevertPreparation<'info> {
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
+    pub rfq: Account<'info, Rfq>,
+    pub response: Account<'info, Response>,
+
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    pub escrow: Account<'info, TokenAccount>,
+    #[account(mut, constraint = sender_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
+    pub sender_tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
 }

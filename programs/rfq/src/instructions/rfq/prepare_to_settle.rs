@@ -96,21 +96,13 @@ pub fn prepare_to_settle_instruction<'info>(
     }
 
     response.first_to_prepare = response.first_to_prepare.or(Some(side));
-    response.state = match (side, response.get_state(rfq)?) {
-        (AuthoritySide::Taker, ResponseState::SettlingPreparations) => {
-            StoredResponseState::OnlyTakerPrepared
-        }
-        (AuthoritySide::Taker, ResponseState::OnlyMakerPrepared) => {
-            StoredResponseState::ReadyForSettling
-        }
-        (AuthoritySide::Maker, ResponseState::SettlingPreparations) => {
-            StoredResponseState::OnlyMakerPrepared
-        }
-        (AuthoritySide::Maker, ResponseState::OnlyTakerPrepared) => {
-            StoredResponseState::ReadyForSettling
-        }
-        _ => unreachable!(),
+    match side {
+        AuthoritySide::Taker => response.taker_prepared_to_settle = true,
+        AuthoritySide::Maker => response.maker_prepared_to_settle = true,
     };
+    if response.taker_prepared_to_settle && response.maker_prepared_to_settle {
+        response.state = StoredResponseState::ReadyForSettling;
+    }
 
     Ok(())
 }

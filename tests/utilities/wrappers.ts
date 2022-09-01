@@ -16,6 +16,8 @@ import {
   DEFAULT_INSTRUMENT_AMOUNT,
   DEFAULT_TOKEN_AMOUNT,
   DEFAULT_INSTRUMENT_SIDE,
+  DEFAULT_PRICE,
+  DEFAULT_LEG_MULTIPLIER,
 } from "./constants";
 import { AuthoritySide, Quote, OrderType, Side, FixedSize } from "./types";
 import { SpotInstrument } from "./spotInstrument";
@@ -90,7 +92,7 @@ export class Context {
 
   async addSpotInstrument() {
     await this.program.methods
-      .addInstrument(1, 9, 5)
+      .addInstrument(1, 9, 5, 5)
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -208,7 +210,7 @@ export class Rfq {
 
   async respond({ bid = null, ask = null } = {}) {
     if (bid === null && ask === null) {
-      bid = Quote.getStandart(new BN(1), new BN(1));
+      bid = Quote.getStandart(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
     }
     const response = new Keypair();
 
@@ -296,6 +298,29 @@ export class Response {
         rfq: this.rfq.account,
         response: this.account,
         quoteReceiverTokens: await this.context.quoteToken.getAssociatedAddress(quoteReceiver),
+        quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async revertPreparation(quoteSender: PublicKey, assetSenders: PublicKey[]) {
+    const remainingAccounts = await (
+      await Promise.all(
+        this.rfq.legs.map(
+          async (x, index) => await x.getRevertPreparationAccounts(assetSenders[index], index, this.rfq, this)
+        )
+      )
+    ).flat();
+
+    await this.context.program.methods
+      .revertPreparation()
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+        quoteSenderTokens: await this.context.quoteToken.getAssociatedAddress(quoteSender),
         quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
         tokenProgram: TOKEN_PROGRAM_ID,
       })
