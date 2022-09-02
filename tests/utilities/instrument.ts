@@ -20,7 +20,7 @@ export interface Instrument {
   ): Promise<AccountMeta[]>;
   getSettleAccounts(assetReceiver: PublicKey, legIndex: number, rfq: Rfq, response: Response): Promise<AccountMeta[]>;
   getRevertPreparationAccounts(
-    assetSender: PublicKey,
+    side: { taker: {} } | { maker: {} },
     legIndex: number,
     rfq: Rfq,
     response: Response

@@ -159,7 +159,7 @@ describe("RFQ Spot instrument integration tests", () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
     await response.prepareToSettle(AuthoritySide.Taker);
     await sleep(3000);
-    await response.revertPreparation(maker, [taker]);
+    await response.revertPreparation(AuthoritySide.Taker);
     // no assets are exchanged
     await tokenMeasurer.expectChange([
       { mint: context.assetToken, user: taker, delta: withTokenDecimals(0) },
@@ -177,7 +177,7 @@ describe("RFQ Spot instrument integration tests", () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
     await response.prepareToSettle(AuthoritySide.Maker);
     await sleep(3000);
-    await response.revertPreparation(maker, [taker]);
+    await response.revertPreparation(AuthoritySide.Maker);
     // no assets are exchanged
     await tokenMeasurer.expectChange([
       { mint: context.assetToken, user: taker, delta: withTokenDecimals(0) },

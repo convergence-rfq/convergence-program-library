@@ -80,11 +80,13 @@ pub fn settle<'a, 'info: 'a>(
 pub fn revert_preparation<'a, 'info: 'a>(
     leg: &Leg,
     leg_index: u8,
+    side: AuthoritySide,
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = REVERT_PREPARATION_SELECTOR.to_vec();
     AnchorSerialize::serialize(&leg_index, &mut data)?;
+    AnchorSerialize::serialize(&side, &mut data)?;
 
     let instrument_key = leg.instrument;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;

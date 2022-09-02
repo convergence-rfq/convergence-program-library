@@ -305,22 +305,22 @@ export class Response {
       .rpc();
   }
 
-  async revertPreparation(quoteSender: PublicKey, assetSenders: PublicKey[]) {
+  async revertPreparation(side: { taker: {} } | { maker: {} }) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(
-          async (x, index) => await x.getRevertPreparationAccounts(assetSenders[index], index, this.rfq, this)
-        )
+        this.rfq.legs.map(async (x, index) => await x.getRevertPreparationAccounts(side, index, this.rfq, this))
       )
     ).flat();
 
     await this.context.program.methods
-      .revertPreparation()
+      .revertPreparation(side)
       .accounts({
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
         response: this.account,
-        quoteSenderTokens: await this.context.quoteToken.getAssociatedAddress(quoteSender),
+        quoteTokens: await this.context.quoteToken.getAssociatedAddress(caller.publicKey),
         quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
         tokenProgram: TOKEN_PROGRAM_ID,
       })

@@ -108,8 +108,9 @@ pub fn respond_to_rfq_instruction(
         state: StoredResponseState::Active,
         maker_prepared_to_settle: false,
         taker_prepared_to_settle: false,
-        first_to_prepare: None,
         confirmed: None,
+        defaulting_party: None,
+        first_to_prepare: None,
         bid,
         ask,
     });

@@ -112,47 +112,46 @@ pub mod spot_instrument {
         Ok(())
     }
 
-    pub fn revert_preparation(ctx: Context<RevertPreparation>, leg_index: u8) -> Result<()> {
+    pub fn revert_preparation(
+        ctx: Context<RevertPreparation>,
+        leg_index: u8,
+        side: AuthoritySideDuplicate,
+    ) -> Result<()> {
         let RevertPreparation {
             rfq,
             response,
             escrow,
-            sender_tokens,
+            tokens,
             token_program,
             ..
         } = &ctx.accounts;
 
-        response
-            .get_leg_assets_receiver(rfq, leg_index)
-            .revert()
-            .validate_is_associated_token_account(
-                rfq,
-                response,
-                escrow.mint,
-                sender_tokens.key(),
-            )?;
+        let side: AuthoritySide = side.into();
+        side.validate_is_associated_token_account(rfq, response, escrow.mint, tokens.key())?;
 
-        let amount = escrow.amount;
-        let transfer_accounts = Transfer {
-            from: escrow.to_account_info(),
-            to: sender_tokens.to_account_info(),
-            authority: escrow.to_account_info(),
-        };
-        let response_key = response.key();
-        let leg_index_seed = [leg_index];
-        let bump_seed = [*ctx.bumps.get("escrow").unwrap()];
-        let transfer_seed = &[&[
-            ESCROW_SEED.as_bytes(),
-            response_key.as_ref(),
-            &leg_index_seed,
-            &bump_seed,
-        ][..]];
-        let transfer_ctx = CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            transfer_accounts,
-            transfer_seed,
-        );
-        transfer(transfer_ctx, amount)?;
+        if side == response.get_leg_assets_receiver(rfq, leg_index).revert() {
+            let amount = escrow.amount;
+            let transfer_accounts = Transfer {
+                from: escrow.to_account_info(),
+                to: tokens.to_account_info(),
+                authority: escrow.to_account_info(),
+            };
+            let response_key = response.key();
+            let leg_index_seed = [leg_index];
+            let bump_seed = [*ctx.bumps.get("escrow").unwrap()];
+            let transfer_seed = &[&[
+                ESCROW_SEED.as_bytes(),
+                response_key.as_ref(),
+                &leg_index_seed,
+                &bump_seed,
+            ][..]];
+            let transfer_ctx = CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                transfer_accounts,
+                transfer_seed,
+            );
+            transfer(transfer_ctx, amount)?;
+        }
 
         Ok(())
     }
@@ -214,8 +213,8 @@ pub struct RevertPreparation<'info> {
 
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = sender_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
-    pub sender_tokens: Account<'info, TokenAccount>,
+    #[account(mut, constraint = tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
+    pub tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
 }

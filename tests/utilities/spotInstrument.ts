@@ -91,7 +91,14 @@ export class SpotInstrument implements Instrument {
     ];
   }
 
-  async getRevertPreparationAccounts(assetSender: PublicKey, legIndex: number, rfq: Rfq, response: Response) {
+  async getRevertPreparationAccounts(
+    side: { taker: {} } | { maker: {} },
+    legIndex: number,
+    rfq: Rfq,
+    response: Response
+  ) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+
     return [
       { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
       { pubkey: rfq.account, isSigner: false, isWritable: false },
@@ -102,7 +109,7 @@ export class SpotInstrument implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(assetSender),
+        pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
         isSigner: false,
         isWritable: true,
       },

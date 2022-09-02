@@ -120,7 +120,8 @@ pub mod rfq {
 
     pub fn revert_preparation<'info>(
         ctx: Context<'_, '_, '_, 'info, RevertPreparationAccounts<'info>>,
+        side: AuthoritySide,
     ) -> Result<()> {
-        revert_preparation_instruction(ctx)
+        revert_preparation_instruction(ctx, side)
     }
 }

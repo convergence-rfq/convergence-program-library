@@ -106,6 +106,7 @@ pub struct Response {
     pub maker_prepared_to_settle: bool,
 
     pub confirmed: Option<Confirmation>,
+    pub defaulting_party: Option<DefaultingParty>,
     pub first_to_prepare: Option<AuthoritySide>,
     pub bid: Option<Quote>,
     pub ask: Option<Quote>,
@@ -303,7 +304,17 @@ impl Response {
         }
     }
 
-    pub fn default_by_time(&mut self) {}
+    pub fn default_by_time(&mut self) {
+        self.state = StoredResponseState::Defaulted;
+        let defaulting_party = match (self.taker_prepared_to_settle, self.maker_prepared_to_settle)
+        {
+            (false, false) => DefaultingParty::Both,
+            (true, false) => DefaultingParty::Maker,
+            (false, true) => DefaultingParty::Taker,
+            _ => unreachable!(),
+        };
+        self.defaulting_party = Some(defaulting_party);
+    }
 }
 
 #[account]
@@ -441,7 +452,7 @@ pub struct Confirmation {
     pub override_leg_multiplier_bps: Option<u64>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
 pub enum StoredResponseState {
     Active,
     Canceled,
@@ -485,6 +496,13 @@ impl ResponseState {
 pub enum AuthoritySide {
     Taker,
     Maker,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+pub enum DefaultingParty {
+    Taker,
+    Maker,
+    Both,
 }
 
 impl AuthoritySide {
