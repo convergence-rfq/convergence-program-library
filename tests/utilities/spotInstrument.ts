@@ -1,6 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import { AccountMeta, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "./constants";
 import { Instrument } from "./instrument";
 import { getSpotEscrowPda } from "./pdas";
@@ -84,6 +84,32 @@ export class SpotInstrument implements Instrument {
       },
       {
         pubkey: await this.mint.getAssociatedAddress(assetReceiver),
+        isSigner: false,
+        isWritable: true,
+      },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    ];
+  }
+
+  async getRevertPreparationAccounts(
+    side: { taker: {} } | { maker: {} },
+    legIndex: number,
+    rfq: Rfq,
+    response: Response
+  ) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+
+    return [
+      { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
+      { pubkey: rfq.account, isSigner: false, isWritable: false },
+      { pubkey: response.account, isSigner: false, isWritable: false },
+      {
+        pubkey: await getSpotEscrowPda(response.account, legIndex, this.context.spotInstrument.programId),
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
         isSigner: false,
         isWritable: true,
       },

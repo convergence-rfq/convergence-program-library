@@ -106,8 +106,11 @@ pub fn respond_to_rfq_instruction(
         maker_collateral_locked: 0,
         taker_collateral_locked: 0,
         state: StoredResponseState::Active,
-        first_to_prepare: None,
+        maker_prepared_to_settle: false,
+        taker_prepared_to_settle: false,
         confirmed: None,
+        defaulting_party: None,
+        first_to_prepare: None,
         bid,
         ask,
     });

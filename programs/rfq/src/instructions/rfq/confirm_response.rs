@@ -3,8 +3,8 @@ use crate::{
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_confirmation,
     states::{
-        CollateralInfo, ProtocolState, Quote, Response, ResponseState, Rfq, RfqState, Side,
-        StoredResponseState,
+        CollateralInfo, Confirmation, ProtocolState, Quote, Response, ResponseState, Rfq, RfqState,
+        Side, StoredResponseState,
     },
 };
 use anchor_lang::prelude::*;
@@ -40,7 +40,7 @@ pub struct ConfirmResponseAccounts<'info> {
 fn validate(
     ctx: &Context<ConfirmResponseAccounts>,
     side: Side,
-    leg_multiplier_bps: Option<u64>,
+    override_leg_multiplier_bps: Option<u64>,
 ) -> Result<()> {
     let ConfirmResponseAccounts { rfq, response, .. } = &ctx.accounts;
 
@@ -59,9 +59,30 @@ fn validate(
 
     if rfq.is_fixed_size() {
         require!(
-            leg_multiplier_bps.is_none(),
+            override_leg_multiplier_bps.is_none(),
             ProtocolError::NoLegMultiplierForFixedSize
         );
+    }
+
+    // make sure new leg multiplier is not bigger than provided
+    if let Some(override_leg_multiplier_bps) = override_leg_multiplier_bps {
+        let quote = match side {
+            Side::Bid => response.bid.unwrap(),
+            Side::Ask => response.ask.unwrap(),
+        };
+
+        match quote {
+            Quote::Standart {
+                price_quote: _,
+                legs_multiplier_bps,
+            } => {
+                require!(
+                    override_leg_multiplier_bps <= legs_multiplier_bps,
+                    ProtocolError::LegMultiplierHigherThanInQuote
+                );
+            }
+            _ => unreachable!(),
+        }
     }
 
     Ok(())
@@ -70,9 +91,9 @@ fn validate(
 pub fn confirm_response_instruction(
     ctx: Context<ConfirmResponseAccounts>,
     side: Side,
-    leg_multiplier_bps: Option<u64>,
+    override_leg_multiplier_bps: Option<u64>,
 ) -> Result<()> {
-    validate(&ctx, side, leg_multiplier_bps)?;
+    validate(&ctx, side, override_leg_multiplier_bps)?;
 
     let ConfirmResponseAccounts {
         rfq,
@@ -84,25 +105,11 @@ pub fn confirm_response_instruction(
         ..
     } = ctx.accounts;
 
-    response.confirmed = Some(side);
+    response.confirmed = Some(Confirmation {
+        side,
+        override_leg_multiplier_bps,
+    });
     response.state = StoredResponseState::SettlingPreparations;
-    if let Some(leg_multiplier_bps) = leg_multiplier_bps {
-        // update stored leg multiplier
-        let quote = response.get_mut_confirmed_quote().unwrap();
-        match quote {
-            Quote::Standart {
-                price_quote: _,
-                legs_multiplier_bps: stored,
-            } => {
-                require!(
-                    leg_multiplier_bps <= *stored,
-                    ProtocolError::LegMultiplierHigherThanInQuote
-                );
-                *stored = leg_multiplier_bps
-            }
-            _ => unreachable!(),
-        }
-    }
     response.exit(ctx.program_id)?;
 
     let (taker_collateral, maker_collateral) = calculate_required_collateral_for_confirmation(

@@ -17,6 +17,8 @@ export const DEFAULT_FEES = { takerBps: new BN(0), makerBps: new BN(0) };
 export const DEFAULT_ORDER_TYPE = OrderType.TwoWay;
 export const DEFAULT_INSTRUMENT_AMOUNT = new BN(1_000_000_000);
 export const DEFAULT_INSTRUMENT_SIDE = Side.Bid;
+export const DEFAULT_PRICE = new BN(100).mul(new BN(10).pow(new BN(ABSOLUTE_PRICE_DECIMALS)));
+export const DEFAULT_LEG_MULTIPLIER = new BN(1).mul(new BN(10).pow(new BN(LEG_MULTIPLIER_DECIMALS)));
 export const DEFAULT_ACTIVE_WINDOW = 10;
 export const DEFAULT_SETTLING_WINDOW = 60;
 

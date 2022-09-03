@@ -2,10 +2,9 @@ use crate::{
     constants::{PROTOCOL_SEED, QUOTE_ESCROW_SEED},
     errors::ProtocolError,
     interfaces::instrument::settle,
-    states::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
+    states::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 
 #[derive(Accounts)]
@@ -28,7 +27,6 @@ fn validate(ctx: &Context<SettleAccounts>) -> Result<()> {
     let SettleAccounts {
         rfq,
         response,
-        quote_escrow,
         quote_receiver_tokens,
         ..
     } = &ctx.accounts;
@@ -37,15 +35,14 @@ fn validate(ctx: &Context<SettleAccounts>) -> Result<()> {
         .get_state(rfq)?
         .assert_state_in([ResponseState::ReadyForSettling])?;
 
-    let quote_receiver = response.get_quote_tokens_receiver(rfq);
-    let receiver = match quote_receiver {
-        AuthoritySide::Taker => rfq.taker,
-        AuthoritySide::Maker => response.maker,
-    };
-    require!(
-        get_associated_token_address(&receiver, &quote_escrow.mint) == quote_receiver_tokens.key(),
-        ProtocolError::WrongQuoteReceiver
-    );
+    response
+        .get_quote_tokens_receiver(rfq)
+        .validate_is_associated_token_account(
+            rfq,
+            response,
+            rfq.quote_mint,
+            quote_receiver_tokens.key(),
+        )?;
 
     Ok(())
 }
