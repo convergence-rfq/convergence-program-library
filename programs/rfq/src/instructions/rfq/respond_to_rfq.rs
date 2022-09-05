@@ -47,7 +47,7 @@ fn validate(
 
     require!(maker.key() != rfq.taker, ProtocolError::TakerCanNotRespond);
 
-    rfq.get_state()?.assert_state_is(RfqState::Active)?;
+    rfq.get_state()?.assert_state_in([RfqState::Active])?;
 
     match rfq.order_type {
         OrderType::Buy => require!(

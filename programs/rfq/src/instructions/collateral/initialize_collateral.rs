@@ -33,11 +33,14 @@ pub struct InitializeCollateralAccounts<'info> {
 
 pub fn initialize_collateral_instruction(ctx: Context<InitializeCollateralAccounts>) -> Result<()> {
     let InitializeCollateralAccounts {
-        collateral_info, ..
+        user,
+        collateral_info,
+        ..
     } = ctx.accounts;
 
     collateral_info.set_inner(CollateralInfo {
         bump: *ctx.bumps.get("collateral_info").unwrap(),
+        user: user.key(),
         token_account_bump: *ctx.bumps.get("collateral_token").unwrap(),
         locked_tokens_amount: 0,
     });

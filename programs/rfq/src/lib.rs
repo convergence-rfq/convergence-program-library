@@ -5,6 +5,7 @@
 use anchor_lang::prelude::*;
 use solana_security_txt::security_txt;
 
+pub mod common;
 pub mod constants;
 pub mod errors;
 pub mod instructions;
@@ -22,6 +23,10 @@ use instructions::rfq::prepare_to_settle::*;
 use instructions::rfq::respond_to_rfq::*;
 use instructions::rfq::revert_preparation::*;
 use instructions::rfq::settle::*;
+use instructions::rfq::settle_both_party_default_collateral::*;
+use instructions::rfq::settle_one_party_default_collateral::*;
+use instructions::rfq::unlock_response_collateral::*;
+use instructions::rfq::unlock_rfq_collateral::*;
 use states::*;
 
 security_txt! {
@@ -123,5 +128,27 @@ pub mod rfq {
         side: AuthoritySide,
     ) -> Result<()> {
         revert_preparation_instruction(ctx, side)
+    }
+
+    pub fn unlock_response_collateral(
+        ctx: Context<UnlockResponseCollateralAccounts>,
+    ) -> Result<()> {
+        unlock_response_collateral_instruction(ctx)
+    }
+
+    pub fn unlock_rfq_collateral(ctx: Context<UnlockRfqCollateralAccounts>) -> Result<()> {
+        unlock_rfq_collateral_instruction(ctx)
+    }
+
+    pub fn settle_one_party_default_collateral(
+        ctx: Context<SettleOnePartyDefaultCollateralAccounts>,
+    ) -> Result<()> {
+        settle_one_party_default_collateral_instruction(ctx)
+    }
+
+    pub fn settle_both_party_default_collateral(
+        ctx: Context<SettleBothPartyDefaultCollateralAccounts>,
+    ) -> Result<()> {
+        settle_both_party_default_collateral_instruction(ctx)
     }
 }
