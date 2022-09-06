@@ -117,14 +117,16 @@ pub fn confirm_response_instruction(
         &response.to_account_info(),
         risk_engine,
     )?;
-    let collateral_taken_from_already_deposited =
+
+    let collateral_from_already_deposited =
         u64::min(taker_collateral, rfq.non_response_taker_collateral_locked);
-    let locked_collateral = taker_collateral - collateral_taken_from_already_deposited;
-    rfq.non_response_taker_collateral_locked -= collateral_taken_from_already_deposited;
-    response.taker_collateral_locked = taker_collateral;
-    if locked_collateral > 0 {
-        collateral_info.lock_collateral(collateral_token, taker_collateral)?;
+    let additional_collateral = taker_collateral - collateral_from_already_deposited;
+    rfq.non_response_taker_collateral_locked -= collateral_from_already_deposited;
+    if additional_collateral > 0 {
+        collateral_info.lock_collateral(collateral_token, additional_collateral)?;
+        rfq.total_taker_collateral_locked += additional_collateral;
     }
+    response.taker_collateral_locked = taker_collateral;
 
     require!(
         maker_collateral <= response.maker_collateral_locked,

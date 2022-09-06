@@ -34,7 +34,7 @@ export class Context {
   public maker: Keypair;
   public assetToken: Mint;
   public quoteToken: Mint;
-  public collateralToken: Mint;
+  public collateralToken: CollateralMint;
   public protocolPda: PublicKey;
 
   constructor() {
@@ -57,7 +57,7 @@ export class Context {
     await executeInParallel(
       async () => (this.assetToken = await Mint.create(this)),
       async () => (this.quoteToken = await Mint.create(this)),
-      async () => (this.collateralToken = await Mint.create(this))
+      async () => (this.collateralToken = await CollateralMint.create(this))
     );
   }
 
@@ -170,7 +170,7 @@ export class Context {
 export class Mint {
   public publicKey: PublicKey;
 
-  private constructor(private context: Context, public token: Token) {
+  protected constructor(protected context: Context, public token: Token) {
     this.publicKey = token.publicKey;
   }
 
@@ -205,6 +205,30 @@ export class Mint {
   }
 }
 
+export class CollateralMint extends Mint {
+  public static async create(context: Context) {
+    const mint = await Mint.create(context);
+    return new CollateralMint(context, mint.token);
+  }
+
+  public async getTotalCollateral(address: PublicKey) {
+    const account = await this.token.getAccountInfo(
+      await getCollateralTokenPda(address, this.context.program.programId)
+    );
+    return account.amount;
+  }
+
+  public async getUnlockedCollateral(address: PublicKey) {
+    const tokenAccount = await this.token.getAccountInfo(
+      await getCollateralTokenPda(address, this.context.program.programId)
+    );
+    const collateralInfo = await this.context.program.account.collateralInfo.fetch(
+      await getCollateralInfoPda(address, this.context.program.programId)
+    );
+    return tokenAccount.amount.sub(collateralInfo.lockedTokensAmount);
+  }
+}
+
 export class Rfq {
   public constructor(public context: Context, public account: PublicKey, public legs: Instrument[]) {}
 
@@ -230,6 +254,17 @@ export class Rfq {
       .rpc();
 
     return new Response(this.context, this, this.context.maker, response.publicKey);
+  }
+
+  async unlockCollateral() {
+    await this.context.program.methods
+      .unlockRfqCollateral()
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+        collateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
+      })
+      .rpc();
   }
 
   async getData() {
@@ -328,6 +363,67 @@ export class Response {
       .rpc();
   }
 
+  async unlockCollateral() {
+    await this.context.program.methods
+      .unlockResponseCollateral()
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+        takerCollateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
+        makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
+      })
+      .rpc();
+  }
+
+  async settleOnePartyDefaultCollateral() {
+    await this.context.program.methods
+      .settleOnePartyDefaultCollateral()
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+        takerCollateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
+        makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
+        takerCollateralTokens: await getCollateralTokenPda(
+          this.context.taker.publicKey,
+          this.context.program.programId
+        ),
+        makerCollateralTokens: await getCollateralTokenPda(
+          this.context.maker.publicKey,
+          this.context.program.programId
+        ),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+  }
+
+  async settleBothPartyDefaultCollateral() {
+    await this.context.program.methods
+      .settleBothPartyDefaultCollateral()
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+        takerCollateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
+        makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
+        takerCollateralTokens: await getCollateralTokenPda(
+          this.context.taker.publicKey,
+          this.context.program.programId
+        ),
+        makerCollateralTokens: await getCollateralTokenPda(
+          this.context.maker.publicKey,
+          this.context.program.programId
+        ),
+        protocolCollateralTokens: await getCollateralTokenPda(
+          this.context.dao.publicKey,
+          this.context.program.programId
+        ),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+  }
+
   async getData() {
     return await this.context.program.account.response.fetch(this.account);
   }
@@ -354,6 +450,9 @@ export async function getContext() {
     async () => {
       await context.initializeCollateral(context.maker);
       await context.fundCollateral(context.maker, DEFAULT_COLLATERAL_FUNDED);
+    },
+    async () => {
+      await context.initializeCollateral(context.dao);
     }
   );
 

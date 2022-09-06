@@ -315,11 +315,16 @@ impl Response {
         };
         self.defaulting_party = Some(defaulting_party);
     }
+
+    pub fn have_locked_collateral(&self) -> bool {
+        self.taker_collateral_locked > 0 || self.maker_collateral_locked > 0
+    }
 }
 
 #[account]
 pub struct CollateralInfo {
     pub bump: u8,
+    pub user: Pubkey,
     pub token_account_bump: u8,
     pub locked_tokens_amount: u64,
 }
@@ -414,12 +419,12 @@ pub enum RfqState {
 }
 
 impl RfqState {
-    pub fn assert_state_is(&self, expected_state: Self) -> Result<()> {
-        if self != &expected_state {
+    pub fn assert_state_in<const N: usize>(&self, expected_states: [Self; N]) -> Result<()> {
+        if !expected_states.contains(self) {
             msg!(
                 "Rfq state: {:?}, expected state: {:?}",
                 self,
-                expected_state
+                expected_states
             );
             err!(ProtocolError::RfqIsNotInRequiredState)
         } else {

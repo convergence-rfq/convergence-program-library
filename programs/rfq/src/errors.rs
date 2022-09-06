@@ -58,4 +58,8 @@ pub enum ProtocolError {
     CanNotLockAdditionalMakerCollateral,
     #[msg("This side of rfq either had not prepared or had already reverted")]
     NoPreparationToRevert,
+    #[msg("No collateral locked")]
+    NoCollateralLocked,
+    #[msg("Invalid defaulting party")]
+    InvalidDefaultingParty,
 }
