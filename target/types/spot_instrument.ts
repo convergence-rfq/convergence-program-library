@@ -18,6 +18,10 @@ export type SpotInstrument = {
       ],
       "args": [
         {
+          "name": "dataSize",
+          "type": "u32"
+        },
+        {
           "name": "mintAddress",
           "type": "publicKey"
         }
@@ -85,7 +89,7 @@ export type SpotInstrument = {
         {
           "name": "side",
           "type": {
-            "defined": "AuthoritySide"
+            "defined": "AuthoritySideDuplicate"
           }
         }
       ]
@@ -130,16 +134,84 @@ export type SpotInstrument = {
           "type": "u8"
         }
       ]
+    },
+    {
+      "name": "revertPreparation",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "legIndex",
+          "type": "u8"
+        },
+        {
+          "name": "side",
+          "type": {
+            "defined": "AuthoritySideDuplicate"
+          }
+        }
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "AuthoritySideDuplicate",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Taker"
+          },
+          {
+            "name": "Maker"
+          }
+        ]
+      }
     }
   ],
   "errors": [
     {
       "code": 6000,
+      "name": "InvalidDataSize",
+      "msg": "Invalid data size"
+    },
+    {
+      "code": 6001,
       "name": "PassedMintDoesNotMatch",
       "msg": "Passed mint account does not match"
     },
     {
-      "code": 6001,
+      "code": 6002,
       "name": "InvalidReceiver",
       "msg": "Passed account is not an associated token account of a receiver"
     }
@@ -166,6 +238,10 @@ export const IDL: SpotInstrument = {
       ],
       "args": [
         {
+          "name": "dataSize",
+          "type": "u32"
+        },
+        {
           "name": "mintAddress",
           "type": "publicKey"
         }
@@ -233,7 +309,7 @@ export const IDL: SpotInstrument = {
         {
           "name": "side",
           "type": {
-            "defined": "AuthoritySide"
+            "defined": "AuthoritySideDuplicate"
           }
         }
       ]
@@ -278,16 +354,84 @@ export const IDL: SpotInstrument = {
           "type": "u8"
         }
       ]
+    },
+    {
+      "name": "revertPreparation",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "legIndex",
+          "type": "u8"
+        },
+        {
+          "name": "side",
+          "type": {
+            "defined": "AuthoritySideDuplicate"
+          }
+        }
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "AuthoritySideDuplicate",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Taker"
+          },
+          {
+            "name": "Maker"
+          }
+        ]
+      }
     }
   ],
   "errors": [
     {
       "code": 6000,
+      "name": "InvalidDataSize",
+      "msg": "Invalid data size"
+    },
+    {
+      "code": 6001,
       "name": "PassedMintDoesNotMatch",
       "msg": "Passed mint account does not match"
     },
     {
-      "code": 6001,
+      "code": 6002,
       "name": "InvalidReceiver",
       "msg": "Passed account is not an associated token account of a receiver"
     }

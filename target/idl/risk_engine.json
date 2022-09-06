@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "name": "dummy_risk_engine",
+  "name": "risk_engine",
   "instructions": [
     {
       "name": "calculateCollateralForRfq",
@@ -50,8 +50,5 @@
         "defined": "(u64,u64)"
       }
     }
-  ],
-  "metadata": {
-    "address": "E3mS5KjyhgZ5yP9ff3psQb7KsQfBJYTfiwGczE2kVN5R"
-  }
+  ]
 }

@@ -1,6 +1,6 @@
-export type DummyRiskEngine = {
+export type RiskEngine = {
   "version": "0.1.0",
-  "name": "dummy_risk_engine",
+  "name": "risk_engine",
   "instructions": [
     {
       "name": "calculateCollateralForRfq",
@@ -53,9 +53,9 @@ export type DummyRiskEngine = {
   ]
 };
 
-export const IDL: DummyRiskEngine = {
+export const IDL: RiskEngine = {
   "version": "0.1.0",
-  "name": "dummy_risk_engine",
+  "name": "risk_engine",
   "instructions": [
     {
       "name": "calculateCollateralForRfq",
