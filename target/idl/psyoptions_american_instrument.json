@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "name": "spot_instrument",
+  "name": "psyoptions_american_instrument",
   "instructions": [
     {
       "name": "validateData",

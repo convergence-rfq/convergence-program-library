@@ -47,7 +47,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "addInstrumentProtocol",
+      "name": "addInstrument",
       "accounts": [
         {
           "name": "authority",
@@ -60,17 +60,27 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "instrument",
+          "name": "instrumentProgram",
           "isMut": false,
           "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "parameters",
-          "type": {
-            "defined": "InstrumentParameters"
-          }
+          "name": "validateDataAccountAmount",
+          "type": "u8"
+        },
+        {
+          "name": "prepareToSettleAccountAmount",
+          "type": "u8"
+        },
+        {
+          "name": "settleAccountAmount",
+          "type": "u8"
+        },
+        {
+          "name": "revertPreparationAccountAmount",
+          "type": "u8"
         }
       ]
     },
@@ -149,11 +159,6 @@ export type Rfq = {
           "isSigner": false
         },
         {
-          "name": "collateralMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -223,6 +228,12 @@ export type Rfq = {
           "name": "orderType",
           "type": {
             "defined": "OrderType"
+          }
+        },
+        {
+          "name": "fixedSize",
+          "type": {
+            "defined": "FixedSize"
           }
         },
         {
@@ -299,7 +310,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "confirmRfq",
+      "name": "confirmResponse",
       "accounts": [
         {
           "name": "taker",
@@ -327,6 +338,11 @@ export type Rfq = {
           "isSigner": false
         },
         {
+          "name": "makerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "collateralToken",
           "isMut": false,
           "isSigner": false
@@ -343,8 +359,305 @@ export type Rfq = {
           "type": {
             "defined": "Side"
           }
+        },
+        {
+          "name": "overrideLegMultiplierBps",
+          "type": {
+            "option": "u64"
+          }
         }
       ]
+    },
+    {
+      "name": "prepareToSettle",
+      "accounts": [
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "quoteTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "side",
+          "type": {
+            "defined": "AuthoritySide"
+          }
+        }
+      ]
+    },
+    {
+      "name": "settle",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteReceiverTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "revertPreparation",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "side",
+          "type": {
+            "defined": "AuthoritySide"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unlockResponseCollateral",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "unlockRfqCollateral",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "collateralInfo",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settleOnePartyDefaultCollateral",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settleBothPartyDefaultCollateral",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocolCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -388,7 +701,9 @@ export type Rfq = {
           {
             "name": "instruments",
             "type": {
-              "defined": "HashMap<Pubkey,InstrumentParameters>"
+              "vec": {
+                "defined": "Instrument"
+              }
             }
           }
         ]
@@ -510,10 +825,26 @@ export type Rfq = {
             }
           },
           {
+            "name": "takerPreparedToSettle",
+            "type": "bool"
+          },
+          {
+            "name": "makerPreparedToSettle",
+            "type": "bool"
+          },
+          {
             "name": "confirmed",
             "type": {
               "option": {
-                "defined": "Side"
+                "defined": "Confirmation"
+              }
+            }
+          },
+          {
+            "name": "defaultingParty",
+            "type": {
+              "option": {
+                "defined": "DefaultingParty"
               }
             }
           },
@@ -554,6 +885,10 @@ export type Rfq = {
             "type": "u8"
           },
           {
+            "name": "user",
+            "type": "publicKey"
+          },
+          {
             "name": "tokenAccountBump",
             "type": "u8"
           },
@@ -567,10 +902,14 @@ export type Rfq = {
   ],
   "types": [
     {
-      "name": "InstrumentParameters",
+      "name": "Instrument",
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "programKey",
+            "type": "publicKey"
+          },
           {
             "name": "validateDataAccountAmount",
             "type": "u8"
@@ -581,6 +920,10 @@ export type Rfq = {
           },
           {
             "name": "settleAccountAmount",
+            "type": "u8"
+          },
+          {
+            "name": "revertPreparationAccountAmount",
             "type": "u8"
           }
         ]
@@ -623,6 +966,26 @@ export type Rfq = {
             "name": "side",
             "type": {
               "defined": "Side"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Confirmation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "overrideLegMultiplierBps",
+            "type": {
+              "option": "u64"
             }
           }
         ]
@@ -806,12 +1169,6 @@ export type Rfq = {
             "name": "SettlingPreparations"
           },
           {
-            "name": "OnlyMakerPrepared"
-          },
-          {
-            "name": "OnlyTakerPrepared"
-          },
-          {
             "name": "ReadyForSettling"
           },
           {
@@ -874,6 +1231,23 @@ export type Rfq = {
           }
         ]
       }
+    },
+    {
+      "name": "DefaultingParty",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Taker"
+          },
+          {
+            "name": "Maker"
+          },
+          {
+            "name": "Both"
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -909,8 +1283,8 @@ export type Rfq = {
     },
     {
       "code": 6006,
-      "name": "NotARiskEngineRegister",
-      "msg": "Passed account is not a risk engine register in the protocol"
+      "name": "EmptyLegsNotSupported",
+      "msg": "An Rfq without legs is not supported"
     },
     {
       "code": 6007,
@@ -939,8 +1313,8 @@ export type Rfq = {
     },
     {
       "code": 6012,
-      "name": "RfqIsNotActive",
-      "msg": "Rfq is not in active state"
+      "name": "RfqIsNotInRequiredState",
+      "msg": "Rfq is not in required state"
     },
     {
       "code": 6013,
@@ -964,8 +1338,8 @@ export type Rfq = {
     },
     {
       "code": 6017,
-      "name": "ResponseIsNotActive",
-      "msg": "Response is not active"
+      "name": "ResponseIsNotInRequiredState",
+      "msg": "Response is not required state"
     },
     {
       "code": 6018,
@@ -979,23 +1353,48 @@ export type Rfq = {
     },
     {
       "code": 6020,
-      "name": "ResponseIsNotAValidState",
-      "msg": "Response is not a valid state"
-    },
-    {
-      "code": 6021,
       "name": "TakerCanNotRespond",
       "msg": "Taker can not respond to rfq he had created"
     },
     {
-      "code": 6022,
+      "code": 6021,
       "name": "NotAQuoteMint",
       "msg": "Not a quote mint"
     },
     {
-      "code": 6023,
+      "code": 6022,
       "name": "WrongQuoteReceiver",
       "msg": "Quote receiver account is not a receiver associated token account"
+    },
+    {
+      "code": 6023,
+      "name": "NoLegMultiplierForFixedSize",
+      "msg": "Fixed size rfq doesn't support specifying legs multiplier"
+    },
+    {
+      "code": 6024,
+      "name": "LegMultiplierHigherThanInQuote",
+      "msg": "Leg multiplier can't be higher than which is specified in the quote"
+    },
+    {
+      "code": 6025,
+      "name": "CanNotLockAdditionalMakerCollateral",
+      "msg": "Confirmation can't lock additional maker collateral"
+    },
+    {
+      "code": 6026,
+      "name": "NoPreparationToRevert",
+      "msg": "This side of rfq either had not prepared or had already reverted"
+    },
+    {
+      "code": 6027,
+      "name": "NoCollateralLocked",
+      "msg": "No collateral locked"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidDefaultingParty",
+      "msg": "Invalid defaulting party"
     }
   ]
 };
@@ -1049,7 +1448,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "addInstrumentProtocol",
+      "name": "addInstrument",
       "accounts": [
         {
           "name": "authority",
@@ -1062,17 +1461,27 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "instrument",
+          "name": "instrumentProgram",
           "isMut": false,
           "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "parameters",
-          "type": {
-            "defined": "InstrumentParameters"
-          }
+          "name": "validateDataAccountAmount",
+          "type": "u8"
+        },
+        {
+          "name": "prepareToSettleAccountAmount",
+          "type": "u8"
+        },
+        {
+          "name": "settleAccountAmount",
+          "type": "u8"
+        },
+        {
+          "name": "revertPreparationAccountAmount",
+          "type": "u8"
         }
       ]
     },
@@ -1151,11 +1560,6 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
-          "name": "collateralMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1225,6 +1629,12 @@ export const IDL: Rfq = {
           "name": "orderType",
           "type": {
             "defined": "OrderType"
+          }
+        },
+        {
+          "name": "fixedSize",
+          "type": {
+            "defined": "FixedSize"
           }
         },
         {
@@ -1301,7 +1711,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "confirmRfq",
+      "name": "confirmResponse",
       "accounts": [
         {
           "name": "taker",
@@ -1329,6 +1739,11 @@ export const IDL: Rfq = {
           "isSigner": false
         },
         {
+          "name": "makerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "collateralToken",
           "isMut": false,
           "isSigner": false
@@ -1345,8 +1760,305 @@ export const IDL: Rfq = {
           "type": {
             "defined": "Side"
           }
+        },
+        {
+          "name": "overrideLegMultiplierBps",
+          "type": {
+            "option": "u64"
+          }
         }
       ]
+    },
+    {
+      "name": "prepareToSettle",
+      "accounts": [
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "quoteTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "side",
+          "type": {
+            "defined": "AuthoritySide"
+          }
+        }
+      ]
+    },
+    {
+      "name": "settle",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteReceiverTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "revertPreparation",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "side",
+          "type": {
+            "defined": "AuthoritySide"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unlockResponseCollateral",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "unlockRfqCollateral",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "collateralInfo",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settleOnePartyDefaultCollateral",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settleBothPartyDefaultCollateral",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "takerCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "makerCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocolCollateralTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -1390,7 +2102,9 @@ export const IDL: Rfq = {
           {
             "name": "instruments",
             "type": {
-              "defined": "HashMap<Pubkey,InstrumentParameters>"
+              "vec": {
+                "defined": "Instrument"
+              }
             }
           }
         ]
@@ -1512,10 +2226,26 @@ export const IDL: Rfq = {
             }
           },
           {
+            "name": "takerPreparedToSettle",
+            "type": "bool"
+          },
+          {
+            "name": "makerPreparedToSettle",
+            "type": "bool"
+          },
+          {
             "name": "confirmed",
             "type": {
               "option": {
-                "defined": "Side"
+                "defined": "Confirmation"
+              }
+            }
+          },
+          {
+            "name": "defaultingParty",
+            "type": {
+              "option": {
+                "defined": "DefaultingParty"
               }
             }
           },
@@ -1556,6 +2286,10 @@ export const IDL: Rfq = {
             "type": "u8"
           },
           {
+            "name": "user",
+            "type": "publicKey"
+          },
+          {
             "name": "tokenAccountBump",
             "type": "u8"
           },
@@ -1569,10 +2303,14 @@ export const IDL: Rfq = {
   ],
   "types": [
     {
-      "name": "InstrumentParameters",
+      "name": "Instrument",
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "programKey",
+            "type": "publicKey"
+          },
           {
             "name": "validateDataAccountAmount",
             "type": "u8"
@@ -1583,6 +2321,10 @@ export const IDL: Rfq = {
           },
           {
             "name": "settleAccountAmount",
+            "type": "u8"
+          },
+          {
+            "name": "revertPreparationAccountAmount",
             "type": "u8"
           }
         ]
@@ -1625,6 +2367,26 @@ export const IDL: Rfq = {
             "name": "side",
             "type": {
               "defined": "Side"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Confirmation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "overrideLegMultiplierBps",
+            "type": {
+              "option": "u64"
             }
           }
         ]
@@ -1808,12 +2570,6 @@ export const IDL: Rfq = {
             "name": "SettlingPreparations"
           },
           {
-            "name": "OnlyMakerPrepared"
-          },
-          {
-            "name": "OnlyTakerPrepared"
-          },
-          {
             "name": "ReadyForSettling"
           },
           {
@@ -1876,6 +2632,23 @@ export const IDL: Rfq = {
           }
         ]
       }
+    },
+    {
+      "name": "DefaultingParty",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Taker"
+          },
+          {
+            "name": "Maker"
+          },
+          {
+            "name": "Both"
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -1911,8 +2684,8 @@ export const IDL: Rfq = {
     },
     {
       "code": 6006,
-      "name": "NotARiskEngineRegister",
-      "msg": "Passed account is not a risk engine register in the protocol"
+      "name": "EmptyLegsNotSupported",
+      "msg": "An Rfq without legs is not supported"
     },
     {
       "code": 6007,
@@ -1941,8 +2714,8 @@ export const IDL: Rfq = {
     },
     {
       "code": 6012,
-      "name": "RfqIsNotActive",
-      "msg": "Rfq is not in active state"
+      "name": "RfqIsNotInRequiredState",
+      "msg": "Rfq is not in required state"
     },
     {
       "code": 6013,
@@ -1966,8 +2739,8 @@ export const IDL: Rfq = {
     },
     {
       "code": 6017,
-      "name": "ResponseIsNotActive",
-      "msg": "Response is not active"
+      "name": "ResponseIsNotInRequiredState",
+      "msg": "Response is not required state"
     },
     {
       "code": 6018,
@@ -1981,23 +2754,48 @@ export const IDL: Rfq = {
     },
     {
       "code": 6020,
-      "name": "ResponseIsNotAValidState",
-      "msg": "Response is not a valid state"
-    },
-    {
-      "code": 6021,
       "name": "TakerCanNotRespond",
       "msg": "Taker can not respond to rfq he had created"
     },
     {
-      "code": 6022,
+      "code": 6021,
       "name": "NotAQuoteMint",
       "msg": "Not a quote mint"
     },
     {
-      "code": 6023,
+      "code": 6022,
       "name": "WrongQuoteReceiver",
       "msg": "Quote receiver account is not a receiver associated token account"
+    },
+    {
+      "code": 6023,
+      "name": "NoLegMultiplierForFixedSize",
+      "msg": "Fixed size rfq doesn't support specifying legs multiplier"
+    },
+    {
+      "code": 6024,
+      "name": "LegMultiplierHigherThanInQuote",
+      "msg": "Leg multiplier can't be higher than which is specified in the quote"
+    },
+    {
+      "code": 6025,
+      "name": "CanNotLockAdditionalMakerCollateral",
+      "msg": "Confirmation can't lock additional maker collateral"
+    },
+    {
+      "code": 6026,
+      "name": "NoPreparationToRevert",
+      "msg": "This side of rfq either had not prepared or had already reverted"
+    },
+    {
+      "code": 6027,
+      "name": "NoCollateralLocked",
+      "msg": "No collateral locked"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidDefaultingParty",
+      "msg": "Invalid defaulting party"
     }
   ]
 };

@@ -1,6 +1,6 @@
-export type SpotInstrument = {
+export type PsyoptionsAmericanInstrument = {
   "version": "0.1.0",
-  "name": "spot_instrument",
+  "name": "psyoptions_american_instrument",
   "instructions": [
     {
       "name": "validateData",
@@ -218,9 +218,9 @@ export type SpotInstrument = {
   ]
 };
 
-export const IDL: SpotInstrument = {
+export const IDL: PsyoptionsAmericanInstrument = {
   "version": "0.1.0",
-  "name": "spot_instrument",
+  "name": "psyoptions_american_instrument",
   "instructions": [
     {
       "name": "validateData",

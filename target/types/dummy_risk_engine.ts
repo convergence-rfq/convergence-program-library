@@ -4,27 +4,14 @@ export type DummyRiskEngine = {
   "instructions": [
     {
       "name": "calculateCollateralForRfq",
-      "accounts": [],
-      "args": [
+      "accounts": [
         {
-          "name": "taker",
-          "type": "publicKey"
-        },
-        {
-          "name": "legs",
-          "type": {
-            "vec": {
-              "defined": "Leg"
-            }
-          }
-        },
-        {
-          "name": "fixedSize",
-          "type": {
-            "defined": "FixedSize"
-          }
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
         }
       ],
+      "args": [],
       "returns": "u64"
     },
     {
@@ -34,30 +21,14 @@ export type DummyRiskEngine = {
           "name": "rfq",
           "isMut": false,
           "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "maker",
-          "type": "publicKey"
         },
         {
-          "name": "bid",
-          "type": {
-            "option": {
-              "defined": "Quote"
-            }
-          }
-        },
-        {
-          "name": "ask",
-          "type": {
-            "option": {
-              "defined": "Quote"
-            }
-          }
+          "name": "response",
+          "isMut": false,
+          "isSigner": false
         }
       ],
+      "args": [],
       "returns": "u64"
     },
     {
@@ -74,15 +45,10 @@ export type DummyRiskEngine = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "side",
-          "type": {
-            "defined": "Side"
-          }
-        }
-      ],
-      "returns": "u64"
+      "args": [],
+      "returns": {
+        "defined": "(u64,u64)"
+      }
     }
   ]
 };
@@ -93,27 +59,14 @@ export const IDL: DummyRiskEngine = {
   "instructions": [
     {
       "name": "calculateCollateralForRfq",
-      "accounts": [],
-      "args": [
+      "accounts": [
         {
-          "name": "taker",
-          "type": "publicKey"
-        },
-        {
-          "name": "legs",
-          "type": {
-            "vec": {
-              "defined": "Leg"
-            }
-          }
-        },
-        {
-          "name": "fixedSize",
-          "type": {
-            "defined": "FixedSize"
-          }
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
         }
       ],
+      "args": [],
       "returns": "u64"
     },
     {
@@ -123,30 +76,14 @@ export const IDL: DummyRiskEngine = {
           "name": "rfq",
           "isMut": false,
           "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "maker",
-          "type": "publicKey"
         },
         {
-          "name": "bid",
-          "type": {
-            "option": {
-              "defined": "Quote"
-            }
-          }
-        },
-        {
-          "name": "ask",
-          "type": {
-            "option": {
-              "defined": "Quote"
-            }
-          }
+          "name": "response",
+          "isMut": false,
+          "isSigner": false
         }
       ],
+      "args": [],
       "returns": "u64"
     },
     {
@@ -163,15 +100,10 @@ export const IDL: DummyRiskEngine = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "side",
-          "type": {
-            "defined": "Side"
-          }
-        }
-      ],
-      "returns": "u64"
+      "args": [],
+      "returns": {
+        "defined": "(u64,u64)"
+      }
     }
   ]
 };

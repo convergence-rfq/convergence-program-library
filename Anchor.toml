@@ -2,6 +2,7 @@
 rfq = "3UA1aU58WxePXwtLCMb1CGPQjQQFqVPoKsEQo8vMFe3q"
 dummy_risk_engine = "E3mS5KjyhgZ5yP9ff3psQb7KsQfBJYTfiwGczE2kVN5R"
 spot_instrument = "A5mS5KjyhgZ5yP9ff3psQb7KsQfBJYTfiwGczE2kVNMM"
+psyoptions_american_instrument = "B5mS5KjyhgZ5yP9ff3psQb7KsQfBJYTfiwGczE2kVNMM"
 
 [programs.devnet]
 rfq = "3UA1aU58WxePXwtLCMb1CGPQjQQFqVPoKsEQo8vMFe3q"
@@ -14,4 +15,4 @@ url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+wallet = "~/.config/solana/convergence-v2.json"

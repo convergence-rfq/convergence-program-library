@@ -4,27 +4,14 @@
   "instructions": [
     {
       "name": "calculateCollateralForRfq",
-      "accounts": [],
-      "args": [
+      "accounts": [
         {
-          "name": "taker",
-          "type": "publicKey"
-        },
-        {
-          "name": "legs",
-          "type": {
-            "vec": {
-              "defined": "Leg"
-            }
-          }
-        },
-        {
-          "name": "fixedSize",
-          "type": {
-            "defined": "FixedSize"
-          }
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
         }
       ],
+      "args": [],
       "returns": "u64"
     },
     {
@@ -34,30 +21,14 @@
           "name": "rfq",
           "isMut": false,
           "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "maker",
-          "type": "publicKey"
         },
         {
-          "name": "bid",
-          "type": {
-            "option": {
-              "defined": "Quote"
-            }
-          }
-        },
-        {
-          "name": "ask",
-          "type": {
-            "option": {
-              "defined": "Quote"
-            }
-          }
+          "name": "response",
+          "isMut": false,
+          "isSigner": false
         }
       ],
+      "args": [],
       "returns": "u64"
     },
     {
@@ -74,18 +45,10 @@
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "side",
-          "type": {
-            "defined": "Side"
-          }
-        }
-      ],
-      "returns": "u64"
+      "args": [],
+      "returns": {
+        "defined": "(u64,u64)"
+      }
     }
-  ],
-  "metadata": {
-    "address": "5RWPQMctk2KxpQChrr3AXKQvqKL5iRNdcLQNQjvPdk3e"
-  }
+  ]
 }
