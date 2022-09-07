@@ -17,6 +17,7 @@ use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::initialize_protocol::*;
+use instructions::rfq::clean_up_response::*;
 use instructions::rfq::confirm_response::*;
 use instructions::rfq::intitialize_rfq::*;
 use instructions::rfq::prepare_to_settle::*;
@@ -60,6 +61,7 @@ pub mod rfq {
         prepare_to_settle_account_amount: u8,
         settle_account_amount: u8,
         revert_preparation_account_amount: u8,
+        clean_up_account_amount: u8,
     ) -> Result<()> {
         add_instrument_instruction(
             ctx,
@@ -67,6 +69,7 @@ pub mod rfq {
             prepare_to_settle_account_amount,
             settle_account_amount,
             revert_preparation_account_amount,
+            clean_up_account_amount,
         )
     }
 
@@ -150,5 +153,11 @@ pub mod rfq {
         ctx: Context<SettleBothPartyDefaultCollateralAccounts>,
     ) -> Result<()> {
         settle_both_party_default_collateral_instruction(ctx)
+    }
+
+    pub fn clean_up_response<'info>(
+        ctx: Context<'_, '_, '_, 'info, CleanUpResponseAccounts<'info>>,
+    ) -> Result<()> {
+        clean_up_response_instruction(ctx)
     }
 }

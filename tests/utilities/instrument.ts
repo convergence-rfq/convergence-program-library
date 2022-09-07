@@ -25,4 +25,5 @@ export interface Instrument {
     rfq: Rfq,
     response: Response
   ): Promise<AccountMeta[]>;
+  getCleanUpAccounts(legIndex: number, rfq: Rfq, response: Response): Promise<AccountMeta[]>;
 }

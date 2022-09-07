@@ -58,8 +58,6 @@ export class SpotInstrument implements Instrument {
         isSigner: false,
         isWritable: true,
       },
-      { pubkey: rfq.account, isSigner: false, isWritable: false },
-      { pubkey: response.account, isSigner: false, isWritable: false },
       { pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
       {
         pubkey: await getSpotEscrowPda(response.account, legIndex, this.context.spotInstrument.programId),
@@ -75,8 +73,6 @@ export class SpotInstrument implements Instrument {
   async getSettleAccounts(assetReceiver: PublicKey, legIndex: number, rfq: Rfq, response: Response) {
     return [
       { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
-      { pubkey: rfq.account, isSigner: false, isWritable: false },
-      { pubkey: response.account, isSigner: false, isWritable: false },
       {
         pubkey: await getSpotEscrowPda(response.account, legIndex, this.context.spotInstrument.programId),
         isSigner: false,
@@ -101,8 +97,6 @@ export class SpotInstrument implements Instrument {
 
     return [
       { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
-      { pubkey: rfq.account, isSigner: false, isWritable: false },
-      { pubkey: response.account, isSigner: false, isWritable: false },
       {
         pubkey: await getSpotEscrowPda(response.account, legIndex, this.context.spotInstrument.programId),
         isSigner: false,
@@ -110,6 +104,28 @@ export class SpotInstrument implements Instrument {
       },
       {
         pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
+        isSigner: false,
+        isWritable: true,
+      },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    ];
+  }
+
+  async getCleanUpAccounts(legIndex: number, rfq: Rfq, response: Response) {
+    return [
+      { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
+      {
+        pubkey: response.firstToPrepare,
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: await getSpotEscrowPda(response.account, legIndex, this.context.spotInstrument.programId),
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: await this.mint.getAssociatedAddress(this.context.dao.publicKey),
         isSigner: false,
         isWritable: true,
       },

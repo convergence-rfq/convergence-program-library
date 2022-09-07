@@ -41,6 +41,7 @@ pub fn add_instrument_instruction(
     prepare_to_settle_account_amount: u8,
     settle_account_amount: u8,
     revert_preparation_account_amount: u8,
+    clean_up_account_amount: u8,
 ) -> Result<()> {
     validate(&ctx)?;
 
@@ -56,6 +57,7 @@ pub fn add_instrument_instruction(
         prepare_to_settle_account_amount,
         settle_account_amount,
         revert_preparation_account_amount,
+        clean_up_account_amount,
     });
 
     Ok(())

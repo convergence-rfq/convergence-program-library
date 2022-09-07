@@ -351,6 +351,7 @@ pub struct Instrument {
     pub prepare_to_settle_account_amount: u8,
     pub settle_account_amount: u8,
     pub revert_preparation_account_amount: u8,
+    pub clean_up_account_amount: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -518,6 +519,13 @@ impl AuthoritySide {
         }
     }
 
+    pub fn to_public_key(&self, rfq: &Rfq, response: &Response) -> Pubkey {
+        match self {
+            AuthoritySide::Taker => rfq.taker,
+            AuthoritySide::Maker => response.maker,
+        }
+    }
+
     pub fn validate_is_associated_token_account(
         &self,
         rfq: &Rfq,
@@ -525,10 +533,7 @@ impl AuthoritySide {
         mint: Pubkey,
         token_account: Pubkey,
     ) -> Result<()> {
-        let receiver = match self {
-            AuthoritySide::Taker => rfq.taker,
-            AuthoritySide::Maker => response.maker,
-        };
+        let receiver = self.to_public_key(rfq, response);
         require!(
             get_associated_token_address(&receiver, &mint) == token_account.key(),
             ProtocolError::WrongQuoteReceiver
