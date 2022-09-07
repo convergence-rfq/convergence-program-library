@@ -178,6 +178,7 @@ describe("RFQ Spot instrument integration tests", () => {
     ]);
     await response.settleOnePartyDefaultCollateral();
     await response.cleanUp();
+    await rfq.cleanUp();
   });
 
   it("Create a rfq, respond and confirm, maker prepares but taker defaults", async () => {
@@ -198,6 +199,7 @@ describe("RFQ Spot instrument integration tests", () => {
     ]);
     await response.settleOnePartyDefaultCollateral();
     await response.cleanUp();
+    await rfq.cleanUp();
   });
 
   it("Create a rfq, respond and confirm, both defaults", async () => {
@@ -210,6 +212,7 @@ describe("RFQ Spot instrument integration tests", () => {
 
     await response.settleBothPartyDefaultCollateral();
     await response.cleanUp();
+    await rfq.cleanUp();
     await tokenMeasurer.expectChange([
       { token: "unlockedCollateral", user: taker, delta: TAKER_CONFIRMED_COLLATERAL.neg() },
       { token: "unlockedCollateral", user: maker, delta: MAKER_CONFIRMED_COLLATERAL.neg() },
@@ -227,6 +230,7 @@ describe("RFQ Spot instrument integration tests", () => {
     await rfq.unlockCollateral();
     await response.unlockCollateral();
     await response.cleanUp();
+    await rfq.cleanUp();
     await tokenMeasurer.expectChange([
       { token: "unlockedCollateral", user: taker, delta: new BN(0) },
       { token: "unlockedCollateral", user: maker, delta: new BN(0) },

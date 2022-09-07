@@ -13,7 +13,7 @@ use anchor_spl::{
 
 #[derive(Accounts)]
 pub struct CleanUpResponseAccounts<'info> {
-    /// CHECK: is a maker address in this rfq
+    /// CHECK: is a maker address in this response
     #[account(mut, constraint = maker.key() == response.maker @ ProtocolError::NotAMaker)]
     pub maker: UncheckedAccount<'info>,
     /// CHECK: is an authority first to prepare for settlement. If no preparation, it can be any account
