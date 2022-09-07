@@ -81,7 +81,15 @@ pub fn prepare_to_settle_instruction<'info>(
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
     for (index, leg) in rfq.legs.iter().enumerate() {
-        prepare_to_settle(leg, index as u8, side, protocol, &mut remaining_accounts)?;
+        prepare_to_settle(
+            leg,
+            index as u8,
+            side,
+            protocol,
+            rfq,
+            response,
+            &mut remaining_accounts,
+        )?;
     }
 
     let quote_amount = response.get_quote_amount_to_transfer(rfq, side);

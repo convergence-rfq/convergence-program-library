@@ -62,4 +62,14 @@ pub enum ProtocolError {
     NoCollateralLocked,
     #[msg("Invalid defaulting party")]
     InvalidDefaultingParty,
+    #[msg("Can't clean up with collateral locked")]
+    HaveCollateralLocked,
+    #[msg("Can't clean up with pending settle preparations")]
+    PendingPreparations,
+    #[msg("Passed backup address should be an associated account of protocol owner")]
+    InvalidBackupAddress,
+    #[msg("Passed address is not a response maker")]
+    NotAMaker,
+    #[msg("Passed address is not of a party first to prepare for settlement")]
+    NotFirstToPrepare,
 }

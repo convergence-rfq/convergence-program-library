@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 
 use crate::{
-    constants::COLLATERAL_SEED,
+    constants::{COLLATERAL_SEED, QUOTE_ESCROW_SEED},
     states::{CollateralInfo, Response, Rfq},
 };
 
@@ -50,6 +50,36 @@ pub fn transfer_collateral_token<'info>(
         transfer_seed,
     );
     transfer(transfer_ctx, amount)?;
+
+    Ok(())
+}
+
+pub fn transfer_quote_escrow_token<'info>(
+    quote_escrow: &Account<'info, TokenAccount>,
+    to: &Account<'info, TokenAccount>,
+    response: Pubkey,
+    bump: u8,
+    token_program: &Program<'info, Token>,
+) -> Result<()> {
+    let quote_amount = quote_escrow.amount;
+    let transfer_accounts = Transfer {
+        from: quote_escrow.to_account_info(),
+        to: to.to_account_info(),
+        authority: quote_escrow.to_account_info(),
+    };
+    let response_key = response.key();
+    let bump_seed = [bump];
+    let transfer_seed = &[&[
+        QUOTE_ESCROW_SEED.as_bytes(),
+        response_key.as_ref(),
+        &bump_seed,
+    ][..]];
+    let transfer_ctx = CpiContext::new_with_signer(
+        token_program.to_account_info(),
+        transfer_accounts,
+        transfer_seed,
+    );
+    transfer(transfer_ctx, quote_amount)?;
 
     Ok(())
 }
