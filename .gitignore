@@ -2,7 +2,7 @@
 .DS_Store
 **/*.rs.bk
 node_modules
-target
+target/
 programs/target/rls
 programs/rfq/target/rls
 .coderrect

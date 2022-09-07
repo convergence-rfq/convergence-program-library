@@ -3,7 +3,7 @@ import { BN } from "@project-serum/anchor";
 import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
-import { DummyRiskEngine } from "../../target/types/dummy_risk_engine";
+import { RiskEngine } from "../../target/types/risk_engine";
 import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
 import { getCollateralInfoPda, getCollateralTokenPda, getProtocolPda, getQuoteEscrowPda } from "./pdas";
 import {
@@ -24,7 +24,7 @@ import { executeInParallel } from "./helpers";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
-  public riskEngine: anchor.Program<DummyRiskEngine>;
+  public riskEngine: anchor.Program<RiskEngine>;
   public spotInstrument: anchor.Program<SpotInstrumentIdl>;
   public provider: anchor.Provider;
   public dao: Keypair;
@@ -39,7 +39,7 @@ export class Context {
     this.provider = anchor.AnchorProvider.env();
     anchor.setProvider(this.provider);
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
-    this.riskEngine = anchor.workspace.DummyRiskEngine as anchor.Program<DummyRiskEngine>;
+    this.riskEngine = anchor.workspace.DummyRiskEngine as anchor.Program<RiskEngine>;
     this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
   }
 

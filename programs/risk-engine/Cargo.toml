@@ -1,12 +1,12 @@
 [package]
-name = "dummy-risk-engine"
+name = "risk-engine"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "dummy_risk_engine"
+name = "risk_engine"
 
 [dependencies]
 anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }

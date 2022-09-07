@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 use rfq::states::{Response, Rfq};
 
-declare_id!("E3mS5KjyhgZ5yP9ff3psQb7KsQfBJYTfiwGczE2kVN5R");
+declare_id!("2DPSCUvdXw3TAWkyAt42gEYptbX8F4YYZtrEw9jYbt4K");
 
 #[program]
-pub mod dummy_risk_engine {
+pub mod risk_engine {
     use super::*;
 
     pub fn calculate_collateral_for_rfq(

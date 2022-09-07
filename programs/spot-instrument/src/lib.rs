@@ -10,7 +10,7 @@ use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 mod errors;
 mod state;
 
-declare_id!("A5mS5KjyhgZ5yP9ff3psQb7KsQfBJYTfiwGczE2kVNMM");
+declare_id!("GxT7mn3cmaJMvX2FjeabgUQozyGUELqqfQwsjM98aFtC");
 
 const ESCROW_SEED: &str = "escrow";
 
