@@ -61,7 +61,6 @@ pub struct Rfq {
 impl Rfq {
     pub fn get_state(&self) -> Result<RfqState> {
         let state = match self.state {
-            StoredRfqState::Constructed => RfqState::Constructed,
             StoredRfqState::Active => {
                 let current_time = Clock::get()?.unix_timestamp;
                 if !self.active_window_ended(current_time) {
@@ -404,14 +403,12 @@ impl PriceQuote {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum StoredRfqState {
-    Constructed,
     Active,
     Canceled,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RfqState {
-    Constructed,
     Active,
     Canceled,
     Expired,

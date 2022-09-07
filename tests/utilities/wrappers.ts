@@ -266,6 +266,17 @@ export class Rfq {
       .rpc();
   }
 
+  async cleanUp() {
+    await this.context.program.methods
+      .cleanUpRfq()
+      .accounts({
+        taker: this.context.taker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+      })
+      .rpc();
+  }
+
   async getData() {
     return await this.context.program.account.rfq.fetch(this.account);
   }
