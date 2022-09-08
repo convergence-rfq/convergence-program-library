@@ -3,7 +3,7 @@ import { BN } from "@project-serum/anchor";
 import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
-import { DummyRiskEngine } from "../../target/types/dummy_risk_engine";
+import { RiskEngine } from "../../target/types/risk_engine";
 import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
 import { getCollateralInfoPda, getCollateralTokenPda, getProtocolPda, getQuoteEscrowPda } from "./pdas";
 import {
@@ -13,20 +13,18 @@ import {
   DEFAULT_ORDER_TYPE,
   DEFAULT_SETTLING_WINDOW,
   DEFAULT_SOL_FOR_SIGNERS,
-  DEFAULT_INSTRUMENT_AMOUNT,
   DEFAULT_TOKEN_AMOUNT,
-  DEFAULT_INSTRUMENT_SIDE,
   DEFAULT_PRICE,
   DEFAULT_LEG_MULTIPLIER,
 } from "./constants";
-import { AuthoritySide, Quote, OrderType, Side, FixedSize } from "./types";
+import { AuthoritySide, Quote, Side, FixedSize } from "./types";
 import { SpotInstrument } from "./spotInstrument";
 import { Instrument } from "./instrument";
 import { executeInParallel } from "./helpers";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
-  public riskEngine: anchor.Program<DummyRiskEngine>;
+  public riskEngine: anchor.Program<RiskEngine>;
   public spotInstrument: anchor.Program<SpotInstrumentIdl>;
   public provider: anchor.Provider;
   public dao: Keypair;
@@ -41,7 +39,7 @@ export class Context {
     this.provider = anchor.AnchorProvider.env();
     anchor.setProvider(this.provider);
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
-    this.riskEngine = anchor.workspace.DummyRiskEngine as anchor.Program<DummyRiskEngine>;
+    this.riskEngine = anchor.workspace.DummyRiskEngine as anchor.Program<RiskEngine>;
     this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
   }
 
@@ -92,7 +90,7 @@ export class Context {
 
   async addSpotInstrument() {
     await this.program.methods
-      .addInstrument(1, 9, 5, 5)
+      .addInstrument(1, 7, 3, 3, 4)
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -179,7 +177,8 @@ export class Mint {
     const mint = new Mint(context, token);
     await executeInParallel(
       async () => await mint.createAssociatedAccountWithTokens(context.taker.publicKey),
-      async () => await mint.createAssociatedAccountWithTokens(context.maker.publicKey)
+      async () => await mint.createAssociatedAccountWithTokens(context.maker.publicKey),
+      async () => await mint.createAssociatedAccountWithTokens(context.dao.publicKey)
     );
 
     return mint;
@@ -267,13 +266,28 @@ export class Rfq {
       .rpc();
   }
 
+  async cleanUp() {
+    await this.context.program.methods
+      .cleanUpRfq()
+      .accounts({
+        taker: this.context.taker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+      })
+      .rpc();
+  }
+
   async getData() {
     return await this.context.program.account.rfq.fetch(this.account);
   }
 }
 
 export class Response {
-  constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {}
+  public firstToPrepare: PublicKey;
+
+  constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {
+    this.firstToPrepare = PublicKey.default;
+  }
 
   async confirm({ side = null, legMultiplierBps = null } = {}) {
     await this.context.program.methods
@@ -294,6 +308,9 @@ export class Response {
 
   async prepareToSettle(side) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    if (this.firstToPrepare.equals(PublicKey.default)) {
+      this.firstToPrepare = caller.publicKey;
+    }
     const remainingAccounts = await (
       await Promise.all(
         this.rfq.legs.map(async (x, index) => await x.getPrepareToSettleAccounts(side, index, this.rfq, this))
@@ -421,6 +438,30 @@ export class Response {
         ),
         tokenProgram: TOKEN_PROGRAM_ID,
       })
+      .rpc();
+  }
+
+  async cleanUp() {
+    let remainingAccounts = [];
+    if (this.firstToPrepare) {
+      remainingAccounts = await (
+        await Promise.all(this.rfq.legs.map(async (x, index) => await x.getCleanUpAccounts(index, this.rfq, this)))
+      ).flat();
+    }
+
+    await this.context.program.methods
+      .cleanUpResponse()
+      .accounts({
+        maker: this.context.maker.publicKey,
+        firstToPrepare: this.firstToPrepare,
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+        quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
+        quoteBackupTokens: await this.context.quoteToken.getAssociatedAddress(this.context.dao.publicKey),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(remainingAccounts)
       .rpc();
   }
 

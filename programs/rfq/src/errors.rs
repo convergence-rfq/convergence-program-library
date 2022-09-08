@@ -36,7 +36,7 @@ pub enum ProtocolError {
     InvalidQuoteType,
     #[msg("Response is for another Rfq")]
     ResponseForAnotherRfq,
-    #[msg("Caller is not a taker")]
+    #[msg("Passed address is not a rfq taker")]
     NotATaker,
     #[msg("Response is not required state")]
     ResponseIsNotInRequiredState,
@@ -62,4 +62,16 @@ pub enum ProtocolError {
     NoCollateralLocked,
     #[msg("Invalid defaulting party")]
     InvalidDefaultingParty,
+    #[msg("Can't clean up with collateral locked")]
+    HaveCollateralLocked,
+    #[msg("Can't clean up with pending settle preparations")]
+    PendingPreparations,
+    #[msg("Passed backup address should be an associated account of protocol owner")]
+    InvalidBackupAddress,
+    #[msg("Passed address is not a response maker")]
+    NotAMaker,
+    #[msg("Passed address is not of a party first to prepare for settlement")]
+    NotFirstToPrepare,
+    #[msg("Rfq have not cleared responses and can't be cleaned up")]
+    HaveExistingResponses,
 }

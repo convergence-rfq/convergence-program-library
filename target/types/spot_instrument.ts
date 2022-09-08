@@ -36,16 +36,6 @@ export type SpotInstrument = {
           "isSigner": true
         },
         {
-          "name": "caller",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "callerTokens",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "rfq",
           "isMut": false,
           "isSigner": false
@@ -53,6 +43,16 @@ export type SpotInstrument = {
         {
           "name": "response",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "callerTokens",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -181,6 +181,52 @@ export type SpotInstrument = {
           }
         }
       ]
+    },
+    {
+      "name": "cleanUp",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "firstToPrepare",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "backupReceiver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "legIndex",
+          "type": "u8"
+        }
+      ]
     }
   ],
   "types": [
@@ -214,6 +260,16 @@ export type SpotInstrument = {
       "code": 6002,
       "name": "InvalidReceiver",
       "msg": "Passed account is not an associated token account of a receiver"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidBackupAddress",
+      "msg": "Passed backup address should be an associated account of protocol owner"
+    },
+    {
+      "code": 6004,
+      "name": "NotFirstToPrepare",
+      "msg": "Passed address is not of a party first to prepare for settlement"
     }
   ]
 };
@@ -256,16 +312,6 @@ export const IDL: SpotInstrument = {
           "isSigner": true
         },
         {
-          "name": "caller",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "callerTokens",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "rfq",
           "isMut": false,
           "isSigner": false
@@ -273,6 +319,16 @@ export const IDL: SpotInstrument = {
         {
           "name": "response",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "callerTokens",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -401,6 +457,52 @@ export const IDL: SpotInstrument = {
           }
         }
       ]
+    },
+    {
+      "name": "cleanUp",
+      "accounts": [
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rfq",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "firstToPrepare",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "backupReceiver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "legIndex",
+          "type": "u8"
+        }
+      ]
     }
   ],
   "types": [
@@ -434,6 +536,16 @@ export const IDL: SpotInstrument = {
       "code": 6002,
       "name": "InvalidReceiver",
       "msg": "Passed account is not an associated token account of a receiver"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidBackupAddress",
+      "msg": "Passed backup address should be an associated account of protocol owner"
+    },
+    {
+      "code": 6004,
+      "name": "NotFirstToPrepare",
+      "msg": "Passed address is not of a party first to prepare for settlement"
     }
   ]
 };

@@ -1,18 +1,22 @@
 use crate::errors::SpotError;
 use crate::state::AuthoritySideDuplicate;
 use anchor_lang::prelude::*;
-use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::associated_token::get_associated_token_address;
+use anchor_spl::token::{
+    close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
+};
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
 mod errors;
 mod state;
 
-declare_id!("A5mS5KjyhgZ5yP9ff3psQb7KsQfBJYTfiwGczE2kVNMM");
+declare_id!("GxT7mn3cmaJMvX2FjeabgUQozyGUELqqfQwsjM98aFtC");
 
 const ESCROW_SEED: &str = "escrow";
 
 #[program]
 pub mod spot_instrument {
+
     use super::*;
 
     pub fn validate_data(
@@ -87,27 +91,14 @@ pub mod spot_instrument {
                 receiver_tokens.key(),
             )?;
 
-        let amount = escrow.amount;
-        let transfer_accounts = Transfer {
-            from: escrow.to_account_info(),
-            to: receiver_tokens.to_account_info(),
-            authority: escrow.to_account_info(),
-        };
-        let response_key = response.key();
-        let leg_index_seed = [leg_index];
-        let bump_seed = [*ctx.bumps.get("escrow").unwrap()];
-        let transfer_seed = &[&[
-            ESCROW_SEED.as_bytes(),
-            response_key.as_ref(),
-            &leg_index_seed,
-            &bump_seed,
-        ][..]];
-        let transfer_ctx = CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            transfer_accounts,
-            transfer_seed,
-        );
-        transfer(transfer_ctx, amount)?;
+        transfer_from_an_escrow(
+            escrow,
+            receiver_tokens,
+            response.key(),
+            leg_index,
+            *ctx.bumps.get("escrow").unwrap(),
+            token_program,
+        )?;
 
         Ok(())
     }
@@ -130,52 +121,159 @@ pub mod spot_instrument {
         side.validate_is_associated_token_account(rfq, response, escrow.mint, tokens.key())?;
 
         if side == response.get_leg_assets_receiver(rfq, leg_index).revert() {
-            let amount = escrow.amount;
-            let transfer_accounts = Transfer {
-                from: escrow.to_account_info(),
-                to: tokens.to_account_info(),
-                authority: escrow.to_account_info(),
-            };
-            let response_key = response.key();
-            let leg_index_seed = [leg_index];
-            let bump_seed = [*ctx.bumps.get("escrow").unwrap()];
-            let transfer_seed = &[&[
-                ESCROW_SEED.as_bytes(),
-                response_key.as_ref(),
-                &leg_index_seed,
-                &bump_seed,
-            ][..]];
-            let transfer_ctx = CpiContext::new_with_signer(
-                token_program.to_account_info(),
-                transfer_accounts,
-                transfer_seed,
-            );
-            transfer(transfer_ctx, amount)?;
+            transfer_from_an_escrow(
+                escrow,
+                tokens,
+                response.key(),
+                leg_index,
+                *ctx.bumps.get("escrow").unwrap(),
+                token_program,
+            )?;
         }
+
+        Ok(())
+    }
+
+    pub fn clean_up(ctx: Context<CleanUp>, leg_index: u8) -> Result<()> {
+        let CleanUp {
+            protocol,
+            rfq,
+            response,
+            first_to_prepare,
+            escrow,
+            backup_receiver,
+            token_program,
+            ..
+        } = &ctx.accounts;
+
+        require!(
+            get_associated_token_address(&protocol.authority, &escrow.mint)
+                == backup_receiver.key(),
+            SpotError::InvalidBackupAddress
+        );
+
+        let expected_first_to_prepare = response
+            .first_to_prepare
+            .unwrap()
+            .to_public_key(rfq, response);
+        require!(
+            first_to_prepare.key() == expected_first_to_prepare,
+            SpotError::NotFirstToPrepare
+        );
+
+        transfer_from_an_escrow(
+            escrow,
+            backup_receiver,
+            response.key(),
+            leg_index,
+            *ctx.bumps.get("escrow").unwrap(),
+            token_program,
+        )?;
+
+        close_escrow_account(
+            escrow,
+            first_to_prepare,
+            response.key(),
+            leg_index,
+            *ctx.bumps.get("escrow").unwrap(),
+            token_program,
+        )?;
 
         Ok(())
     }
 }
 
+fn transfer_from_an_escrow<'info>(
+    escrow: &Account<'info, TokenAccount>,
+    receiver: &Account<'info, TokenAccount>,
+    response: Pubkey,
+    leg_index: u8,
+    bump: u8,
+    token_program: &Program<'info, Token>,
+) -> Result<()> {
+    let amount = escrow.amount;
+    let transfer_accounts = Transfer {
+        from: escrow.to_account_info(),
+        to: receiver.to_account_info(),
+        authority: escrow.to_account_info(),
+    };
+    let response_key = response.key();
+    let leg_index_seed = [leg_index];
+    let bump_seed = [bump];
+    let escrow_seed = &[&[
+        ESCROW_SEED.as_bytes(),
+        response_key.as_ref(),
+        &leg_index_seed,
+        &bump_seed,
+    ][..]];
+    let transfer_ctx = CpiContext::new_with_signer(
+        token_program.to_account_info(),
+        transfer_accounts,
+        escrow_seed,
+    );
+    transfer(transfer_ctx, amount)?;
+
+    Ok(())
+}
+
+fn close_escrow_account<'info>(
+    escrow: &Account<'info, TokenAccount>,
+    sol_receiver: &UncheckedAccount<'info>,
+    response: Pubkey,
+    leg_index: u8,
+    bump: u8,
+    token_program: &Program<'info, Token>,
+) -> Result<()> {
+    let close_tokens_account = CloseAccount {
+        account: escrow.to_account_info(),
+        destination: sol_receiver.to_account_info(),
+        authority: escrow.to_account_info(),
+    };
+
+    let response_key = response.key();
+    let leg_index_seed = [leg_index];
+    let bump_seed = [bump];
+    let escrow_seed = &[&[
+        ESCROW_SEED.as_bytes(),
+        response_key.as_ref(),
+        &leg_index_seed,
+        &bump_seed,
+    ][..]];
+
+    let close_tokens_account_ctx = CpiContext::new_with_signer(
+        token_program.to_account_info(),
+        close_tokens_account,
+        escrow_seed,
+    );
+
+    close_account(close_tokens_account_ctx)
+}
+
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
+    /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
+
+    /// user provided
     pub mint: Account<'info, Mint>,
 }
 
 #[derive(Accounts)]
 #[instruction(leg_index: u8, side: AuthoritySide)]
 pub struct PrepareToSettle<'info> {
+    /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
+    pub rfq: Box<Account<'info, Rfq>>,
+    pub response: Account<'info, Response>,
+
+    /// user provided
     #[account(mut)]
     pub caller: Signer<'info>,
     #[account(mut, constraint = caller_tokens.mint == mint.key() @ SpotError::PassedMintDoesNotMatch)]
     pub caller_tokens: Account<'info, TokenAccount>,
 
-    pub rfq: Box<Account<'info, Rfq>>,
-    pub response: Account<'info, Response>,
     pub mint: Account<'info, Mint>,
 
     #[account(init_if_needed, payer = caller, token::mint = mint, token::authority = escrow,
@@ -190,11 +288,13 @@ pub struct PrepareToSettle<'info> {
 #[derive(Accounts)]
 #[instruction(leg_index: u8)]
 pub struct Settle<'info> {
+    /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Account<'info, Rfq>,
     pub response: Account<'info, Response>,
 
+    /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
@@ -206,15 +306,38 @@ pub struct Settle<'info> {
 #[derive(Accounts)]
 #[instruction(leg_index: u8)]
 pub struct RevertPreparation<'info> {
+    /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Account<'info, Rfq>,
     pub response: Account<'info, Response>,
 
+    /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
     pub tokens: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+#[instruction(leg_index: u8)]
+pub struct CleanUp<'info> {
+    /// protocol provided
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
+    pub rfq: Account<'info, Rfq>,
+    pub response: Account<'info, Response>,
+
+    /// user provided
+    /// CHECK: is an authority first to prepare for settlement
+    #[account(mut)]
+    pub first_to_prepare: UncheckedAccount<'info>,
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    pub escrow: Account<'info, TokenAccount>,
+    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
+    pub backup_receiver: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
 }

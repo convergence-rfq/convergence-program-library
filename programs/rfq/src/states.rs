@@ -61,7 +61,6 @@ pub struct Rfq {
 impl Rfq {
     pub fn get_state(&self) -> Result<RfqState> {
         let state = match self.state {
-            StoredRfqState::Constructed => RfqState::Constructed,
             StoredRfqState::Active => {
                 let current_time = Clock::get()?.unix_timestamp;
                 if !self.active_window_ended(current_time) {
@@ -351,6 +350,7 @@ pub struct Instrument {
     pub prepare_to_settle_account_amount: u8,
     pub settle_account_amount: u8,
     pub revert_preparation_account_amount: u8,
+    pub clean_up_account_amount: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -403,14 +403,12 @@ impl PriceQuote {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum StoredRfqState {
-    Constructed,
     Active,
     Canceled,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RfqState {
-    Constructed,
     Active,
     Canceled,
     Expired,
@@ -518,6 +516,13 @@ impl AuthoritySide {
         }
     }
 
+    pub fn to_public_key(&self, rfq: &Rfq, response: &Response) -> Pubkey {
+        match self {
+            AuthoritySide::Taker => rfq.taker,
+            AuthoritySide::Maker => response.maker,
+        }
+    }
+
     pub fn validate_is_associated_token_account(
         &self,
         rfq: &Rfq,
@@ -525,10 +530,7 @@ impl AuthoritySide {
         mint: Pubkey,
         token_account: Pubkey,
     ) -> Result<()> {
-        let receiver = match self {
-            AuthoritySide::Taker => rfq.taker,
-            AuthoritySide::Maker => response.maker,
-        };
+        let receiver = self.to_public_key(rfq, response);
         require!(
             get_associated_token_address(&receiver, &mint) == token_account.key(),
             ProtocolError::WrongQuoteReceiver

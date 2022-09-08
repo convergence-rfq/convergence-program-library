@@ -81,6 +81,10 @@ export type Rfq = {
         {
           "name": "revertPreparationAccountAmount",
           "type": "u8"
+        },
+        {
+          "name": "cleanUpAccountAmount",
+          "type": "u8"
         }
       ]
     },
@@ -658,6 +662,73 @@ export type Rfq = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "cleanUpResponse",
+      "accounts": [
+        {
+          "name": "maker",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "firstToPrepare",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteBackupTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cleanUpRfq",
+      "accounts": [
+        {
+          "name": "taker",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -925,6 +996,10 @@ export type Rfq = {
           {
             "name": "revertPreparationAccountAmount",
             "type": "u8"
+          },
+          {
+            "name": "cleanUpAccountAmount",
+            "type": "u8"
           }
         ]
       }
@@ -1100,9 +1175,6 @@ export type Rfq = {
         "kind": "enum",
         "variants": [
           {
-            "name": "Constructed"
-          },
-          {
             "name": "Active"
           },
           {
@@ -1116,9 +1188,6 @@ export type Rfq = {
       "type": {
         "kind": "enum",
         "variants": [
-          {
-            "name": "Constructed"
-          },
           {
             "name": "Active"
           },
@@ -1334,7 +1403,7 @@ export type Rfq = {
     {
       "code": 6016,
       "name": "NotATaker",
-      "msg": "Caller is not a taker"
+      "msg": "Passed address is not a rfq taker"
     },
     {
       "code": 6017,
@@ -1395,6 +1464,36 @@ export type Rfq = {
       "code": 6028,
       "name": "InvalidDefaultingParty",
       "msg": "Invalid defaulting party"
+    },
+    {
+      "code": 6029,
+      "name": "HaveCollateralLocked",
+      "msg": "Can't clean up with collateral locked"
+    },
+    {
+      "code": 6030,
+      "name": "PendingPreparations",
+      "msg": "Can't clean up with pending settle preparations"
+    },
+    {
+      "code": 6031,
+      "name": "InvalidBackupAddress",
+      "msg": "Passed backup address should be an associated account of protocol owner"
+    },
+    {
+      "code": 6032,
+      "name": "NotAMaker",
+      "msg": "Passed address is not a response maker"
+    },
+    {
+      "code": 6033,
+      "name": "NotFirstToPrepare",
+      "msg": "Passed address is not of a party first to prepare for settlement"
+    },
+    {
+      "code": 6034,
+      "name": "HaveExistingResponses",
+      "msg": "Rfq have not cleared responses and can't be cleaned up"
     }
   ]
 };
@@ -1482,6 +1581,10 @@ export const IDL: Rfq = {
         {
           "name": "revertPreparationAccountAmount",
           "type": "u8"
+        },
+        {
+          "name": "cleanUpAccountAmount",
+          "type": "u8"
         }
       ]
     },
@@ -2059,6 +2162,73 @@ export const IDL: Rfq = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "cleanUpResponse",
+      "accounts": [
+        {
+          "name": "maker",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "firstToPrepare",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "response",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteBackupTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cleanUpRfq",
+      "accounts": [
+        {
+          "name": "taker",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rfq",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -2326,6 +2496,10 @@ export const IDL: Rfq = {
           {
             "name": "revertPreparationAccountAmount",
             "type": "u8"
+          },
+          {
+            "name": "cleanUpAccountAmount",
+            "type": "u8"
           }
         ]
       }
@@ -2501,9 +2675,6 @@ export const IDL: Rfq = {
         "kind": "enum",
         "variants": [
           {
-            "name": "Constructed"
-          },
-          {
             "name": "Active"
           },
           {
@@ -2517,9 +2688,6 @@ export const IDL: Rfq = {
       "type": {
         "kind": "enum",
         "variants": [
-          {
-            "name": "Constructed"
-          },
           {
             "name": "Active"
           },
@@ -2735,7 +2903,7 @@ export const IDL: Rfq = {
     {
       "code": 6016,
       "name": "NotATaker",
-      "msg": "Caller is not a taker"
+      "msg": "Passed address is not a rfq taker"
     },
     {
       "code": 6017,
@@ -2796,6 +2964,36 @@ export const IDL: Rfq = {
       "code": 6028,
       "name": "InvalidDefaultingParty",
       "msg": "Invalid defaulting party"
+    },
+    {
+      "code": 6029,
+      "name": "HaveCollateralLocked",
+      "msg": "Can't clean up with collateral locked"
+    },
+    {
+      "code": 6030,
+      "name": "PendingPreparations",
+      "msg": "Can't clean up with pending settle preparations"
+    },
+    {
+      "code": 6031,
+      "name": "InvalidBackupAddress",
+      "msg": "Passed backup address should be an associated account of protocol owner"
+    },
+    {
+      "code": 6032,
+      "name": "NotAMaker",
+      "msg": "Passed address is not a response maker"
+    },
+    {
+      "code": 6033,
+      "name": "NotFirstToPrepare",
+      "msg": "Passed address is not of a party first to prepare for settlement"
+    },
+    {
+      "code": 6034,
+      "name": "HaveExistingResponses",
+      "msg": "Rfq have not cleared responses and can't be cleaned up"
     }
   ]
 };
