@@ -37,7 +37,7 @@ export class SpotInstrument implements Instrument {
     ];
   }
 
-  async getPrepareToSettleAccounts(
+  async getPrepareSettlementAccounts(
     side: { taker: {} } | { maker: {} },
     legIndex: number,
     rfq: Rfq,
@@ -87,7 +87,7 @@ export class SpotInstrument implements Instrument {
     ];
   }
 
-  async getRevertPreparationAccounts(
+  async getRevertSettlementPreparationAccounts(
     side: { taker: {} } | { maker: {} },
     legIndex: number,
     rfq: Rfq,

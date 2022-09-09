@@ -12,14 +12,14 @@ export interface InstrumentData {
 export interface Instrument {
   toLegData(): Promise<InstrumentData>;
   getValidationAccounts(): Promise<AccountMeta[]>;
-  getPrepareToSettleAccounts(
+  getPrepareSettlementAccounts(
     side: { taker: {} } | { maker: {} },
     legIndex: number,
     rfq: Rfq,
     response: Response
   ): Promise<AccountMeta[]>;
   getSettleAccounts(assetReceiver: PublicKey, legIndex: number, rfq: Rfq, response: Response): Promise<AccountMeta[]>;
-  getRevertPreparationAccounts(
+  getRevertSettlementPreparationAccounts(
     side: { taker: {} } | { maker: {} },
     legIndex: number,
     rfq: Rfq,

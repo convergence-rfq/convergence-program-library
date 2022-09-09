@@ -116,22 +116,22 @@ pub mod rfq {
         confirm_response_instruction(ctx, side, override_leg_multiplier_bps)
     }
 
-    pub fn prepare_to_settle<'info>(
-        ctx: Context<'_, '_, '_, 'info, PrepareToSettleAccounts<'info>>,
+    pub fn prepare_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
         side: AuthoritySide,
     ) -> Result<()> {
-        prepare_to_settle_instruction(ctx, side)
+        prepare_settlement_instruction(ctx, side)
     }
 
     pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {
         settle_instruction(ctx)
     }
 
-    pub fn revert_preparation<'info>(
-        ctx: Context<'_, '_, '_, 'info, RevertPreparationAccounts<'info>>,
+    pub fn revert_settlement_preparation<'info>(
+        ctx: Context<'_, '_, '_, 'info, RevertSettlementPreparationAccounts<'info>>,
         side: AuthoritySide,
     ) -> Result<()> {
-        revert_preparation_instruction(ctx, side)
+        revert_settlement_preparation_instruction(ctx, side)
     }
 
     pub fn unlock_response_collateral(
