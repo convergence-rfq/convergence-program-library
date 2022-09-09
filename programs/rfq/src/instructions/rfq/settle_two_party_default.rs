@@ -11,7 +11,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
-pub struct SettleBothPartyDefaultCollateralAccounts<'info> {
+pub struct SettleTwoPartyDefaultAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
@@ -28,8 +28,7 @@ pub struct SettleBothPartyDefaultCollateralAccounts<'info> {
     #[account(mut, seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), rfq.taker.as_ref()],
                 bump = taker_collateral_info.token_account_bump)]
     pub taker_collateral_tokens: Account<'info, TokenAccount>,
-    #[account(mut, seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), response.maker.as_ref()],
-                bump = maker_collateral_info.token_account_bump)]
+    #[account(mut, seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), response.maker.as_ref()], bump = maker_collateral_info.token_account_bump)]
     pub maker_collateral_tokens: Account<'info, TokenAccount>,
     #[account(mut, seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), protocol.authority.as_ref()],
                 bump)]
@@ -38,8 +37,8 @@ pub struct SettleBothPartyDefaultCollateralAccounts<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-fn validate(ctx: &Context<SettleBothPartyDefaultCollateralAccounts>) -> Result<()> {
-    let SettleBothPartyDefaultCollateralAccounts { rfq, response, .. } = &ctx.accounts;
+fn validate(ctx: &Context<SettleTwoPartyDefaultAccounts>) -> Result<()> {
+    let SettleTwoPartyDefaultAccounts { rfq, response, .. } = &ctx.accounts;
 
     response
         .get_state(rfq)?
@@ -59,7 +58,7 @@ fn validate(ctx: &Context<SettleBothPartyDefaultCollateralAccounts>) -> Result<(
 }
 
 pub fn settle_both_party_default_collateral_instruction(
-    ctx: Context<SettleBothPartyDefaultCollateralAccounts>,
+    ctx: Context<SettleTwoPartyDefaultAccounts>,
 ) -> Result<()> {
     let response = &mut ctx.accounts.response;
     if response.state != StoredResponseState::Defaulted {
@@ -69,7 +68,7 @@ pub fn settle_both_party_default_collateral_instruction(
 
     validate(&ctx)?;
 
-    let SettleBothPartyDefaultCollateralAccounts {
+    let SettleTwoPartyDefaultAccounts {
         rfq,
         response,
         taker_collateral_info,

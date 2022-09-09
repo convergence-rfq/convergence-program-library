@@ -9,7 +9,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
-pub struct RevertPreparationAccounts<'info> {
+pub struct RevertSettlementPreparationAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Account<'info, Rfq>,
@@ -24,8 +24,8 @@ pub struct RevertPreparationAccounts<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-fn validate(ctx: &Context<RevertPreparationAccounts>, side: AuthoritySide) -> Result<()> {
-    let RevertPreparationAccounts {
+fn validate(ctx: &Context<RevertSettlementPreparationAccounts>, side: AuthoritySide) -> Result<()> {
+    let RevertSettlementPreparationAccounts {
         rfq,
         response,
         quote_tokens,
@@ -52,13 +52,13 @@ fn validate(ctx: &Context<RevertPreparationAccounts>, side: AuthoritySide) -> Re
     Ok(())
 }
 
-pub fn revert_preparation_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, RevertPreparationAccounts<'info>>,
+pub fn revert_settlement_preparation_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, RevertSettlementPreparationAccounts<'info>>,
     side: AuthoritySide,
 ) -> Result<()> {
     validate(&ctx, side)?;
 
-    let RevertPreparationAccounts {
+    let RevertSettlementPreparationAccounts {
         protocol,
         rfq,
         response,

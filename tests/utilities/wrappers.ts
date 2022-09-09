@@ -39,7 +39,7 @@ export class Context {
     this.provider = anchor.AnchorProvider.env();
     anchor.setProvider(this.provider);
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
-    this.riskEngine = anchor.workspace.DummyRiskEngine as anchor.Program<RiskEngine>;
+    this.riskEngine = anchor.workspace.RiskEngine as anchor.Program<RiskEngine>;
     this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
   }
 
@@ -224,6 +224,7 @@ export class CollateralMint extends Mint {
     const collateralInfo = await this.context.program.account.collateralInfo.fetch(
       await getCollateralInfoPda(address, this.context.program.programId)
     );
+    // @ts-ignore
     return tokenAccount.amount.sub(collateralInfo.lockedTokensAmount);
   }
 }
@@ -306,19 +307,19 @@ export class Response {
       .rpc();
   }
 
-  async prepareToSettle(side) {
+  async prepareSettlement(side) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
     if (this.firstToPrepare.equals(PublicKey.default)) {
       this.firstToPrepare = caller.publicKey;
     }
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(async (x, index) => await x.getPrepareToSettleAccounts(side, index, this.rfq, this))
+        this.rfq.legs.map(async (x, index) => await x.getPrepareSettlementAccounts(side, index, this.rfq, this))
       )
     ).flat();
 
     await this.context.program.methods
-      .prepareToSettle(side)
+      .prepareSettlement(side)
       .accounts({
         caller: caller.publicKey,
         quoteTokens: await this.context.quoteToken.getAssociatedAddress(caller.publicKey),
@@ -357,17 +358,17 @@ export class Response {
       .rpc();
   }
 
-  async revertPreparation(side: { taker: {} } | { maker: {} }) {
+  async revertSettlementPreparation(side: { taker: {} } | { maker: {} }) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(async (x, index) => await x.getRevertPreparationAccounts(side, index, this.rfq, this))
+        this.rfq.legs.map(async (x, index) => await x.getRevertSettlementPreparationAccounts(side, index, this.rfq, this))
       )
     ).flat();
 
     await this.context.program.methods
-      .revertPreparation(side)
+      .revertSettlementPreparation(side)
       .accounts({
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
@@ -380,7 +381,7 @@ export class Response {
       .rpc();
   }
 
-  async unlockCollateral() {
+  async unlockResponseCollateral() {
     await this.context.program.methods
       .unlockResponseCollateral()
       .accounts({
@@ -393,9 +394,9 @@ export class Response {
       .rpc();
   }
 
-  async settleOnePartyDefaultCollateral() {
+  async settleOnePartyDefault() {
     await this.context.program.methods
-      .settleOnePartyDefaultCollateral()
+      .settleOnePartyDefault()
       .accounts({
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
@@ -415,9 +416,9 @@ export class Response {
       .rpc();
   }
 
-  async settleBothPartyDefaultCollateral() {
+  async settleTwoPartyDefault() {
     await this.context.program.methods
-      .settleBothPartyDefaultCollateral()
+      .settleTwoPartyDefault()
       .accounts({
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
@@ -441,7 +442,7 @@ export class Response {
       .rpc();
   }
 
-  async cleanUp() {
+  async cleanUpResponse() {
     let remainingAccounts = [];
     if (this.firstToPrepare) {
       remainingAccounts = await (
