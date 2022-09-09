@@ -11,7 +11,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
-pub struct SettleOnePartyDefaultCollateralAccounts<'info> {
+pub struct SettleOnePartyDefaultAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
@@ -35,8 +35,8 @@ pub struct SettleOnePartyDefaultCollateralAccounts<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-fn validate(ctx: &Context<SettleOnePartyDefaultCollateralAccounts>) -> Result<()> {
-    let SettleOnePartyDefaultCollateralAccounts { rfq, response, .. } = &ctx.accounts;
+fn validate(ctx: &Context<SettleOnePartyDefaultAccounts>) -> Result<()> {
+    let SettleOnePartyDefaultAccounts { rfq, response, .. } = &ctx.accounts;
 
     response
         .get_state(rfq)?
@@ -58,8 +58,8 @@ fn validate(ctx: &Context<SettleOnePartyDefaultCollateralAccounts>) -> Result<()
     Ok(())
 }
 
-pub fn settle_one_party_default_collateral_instruction(
-    ctx: Context<SettleOnePartyDefaultCollateralAccounts>,
+pub fn settle_one_party_default_instruction(
+    ctx: Context<SettleOnePartyDefaultAccounts>,
 ) -> Result<()> {
     let response = &mut ctx.accounts.response;
     if response.state != StoredResponseState::Defaulted {
@@ -69,7 +69,7 @@ pub fn settle_one_party_default_collateral_instruction(
 
     validate(&ctx)?;
 
-    let SettleOnePartyDefaultCollateralAccounts {
+    let SettleOnePartyDefaultAccounts {
         rfq,
         response,
         taker_collateral_info,

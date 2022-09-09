@@ -394,9 +394,9 @@ export class Response {
       .rpc();
   }
 
-  async settleOnePartyDefaultCollateral() {
+  async settleOnePartyDefault() {
     await this.context.program.methods
-      .settleOnePartyDefaultCollateral()
+      .settleOnePartyDefault()
       .accounts({
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
@@ -416,9 +416,9 @@ export class Response {
       .rpc();
   }
 
-  async settleBothPartyDefaultCollateral() {
+  async settleTwoPartyDefault() {
     await this.context.program.methods
-      .settleBothPartyDefaultCollateral()
+      .settleTwoPartyDefault()
       .accounts({
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,

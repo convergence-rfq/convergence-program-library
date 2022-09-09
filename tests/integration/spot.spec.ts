@@ -176,7 +176,7 @@ describe("RFQ Spot instrument integration tests", () => {
       { token: "quote", user: taker, delta: withTokenDecimals(0) },
       { token: "quote", user: maker, delta: withTokenDecimals(0) },
     ]);
-    await response.settleOnePartyDefaultCollateral();
+    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -197,7 +197,7 @@ describe("RFQ Spot instrument integration tests", () => {
       { token: "quote", user: taker, delta: withTokenDecimals(0) },
       { token: "quote", user: maker, delta: withTokenDecimals(0) },
     ]);
-    await response.settleOnePartyDefaultCollateral();
+    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -210,7 +210,7 @@ describe("RFQ Spot instrument integration tests", () => {
 
     await sleep(3000);
 
-    await response.settleBothPartyDefaultCollateral();
+    await response.settleTwoPartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
     await tokenMeasurer.expectChange([
