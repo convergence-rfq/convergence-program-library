@@ -17,5 +17,5 @@ spot_instrument = "A5mS5KjyhgZ5yP9ff3psQb7KsQfBJYTfiwGczE2kVNMM"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
