@@ -1,17 +1,17 @@
 [programs.localnet]
 rfq = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
-risk_engine = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
-spot_instrument = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
+risk_engine = "2DPSCUvdXw3TAWkyAt42gEYptbX8F4YYZtrEw9jYbt4K"
+spot_instrument = "GxT7mn3cmaJMvX2FjeabgUQozyGUELqqfQwsjM98aFtC"
 
 [programs.devnet]
 rfq = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
-risk_engine = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
-spot_instrument = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
+risk_engine = "2DPSCUvdXw3TAWkyAt42gEYptbX8F4YYZtrEw9jYbt4K"
+spot_instrument = "GxT7mn3cmaJMvX2FjeabgUQozyGUELqqfQwsjM98aFtC"
 
 [programs.mainnet]
 rfq = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
-risk_engine = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
-spot_instrument = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
+risk_engine = "2DPSCUvdXw3TAWkyAt42gEYptbX8F4YYZtrEw9jYbt4K"
+spot_instrument = "GxT7mn3cmaJMvX2FjeabgUQozyGUELqqfQwsjM98aFtC"
 
 [registry]
 url = "https://anchor.projectserum.com"
