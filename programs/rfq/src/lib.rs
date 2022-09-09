@@ -25,8 +25,8 @@ use instructions::rfq::prepare_to_settle::*;
 use instructions::rfq::respond_to_rfq::*;
 use instructions::rfq::revert_preparation::*;
 use instructions::rfq::settle::*;
-use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::settle_one_party_default::*;
+use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
 use instructions::rfq::unlock_rfq_collateral::*;
 use states::*;
@@ -144,15 +144,11 @@ pub mod rfq {
         unlock_rfq_collateral_instruction(ctx)
     }
 
-    pub fn settle_one_party_default(
-        ctx: Context<SettleOnePartyDefaultAccounts>,
-    ) -> Result<()> {
+    pub fn settle_one_party_default(ctx: Context<SettleOnePartyDefaultAccounts>) -> Result<()> {
         settle_one_party_default_instruction(ctx)
     }
 
-    pub fn settle_two_party_default(
-        ctx: Context<SettleTwoPartyDefaultAccounts>,
-    ) -> Result<()> {
+    pub fn settle_two_party_default(ctx: Context<SettleTwoPartyDefaultAccounts>) -> Result<()> {
         settle_both_party_default_collateral_instruction(ctx)
     }
 
