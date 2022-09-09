@@ -144,12 +144,14 @@ pub mod rfq {
         unlock_rfq_collateral_instruction(ctx)
     }
 
+    // TODO: ?
     pub fn settle_one_party_default_collateral(
         ctx: Context<SettleOnePartyDefaultCollateralAccounts>,
     ) -> Result<()> {
         settle_one_party_default_collateral_instruction(ctx)
     }
 
+    // TODO: ?
     pub fn settle_both_party_default_collateral(
         ctx: Context<SettleBothPartyDefaultCollateralAccounts>,
     ) -> Result<()> {

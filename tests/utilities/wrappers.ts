@@ -39,7 +39,7 @@ export class Context {
     this.provider = anchor.AnchorProvider.env();
     anchor.setProvider(this.provider);
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
-    this.riskEngine = anchor.workspace.DummyRiskEngine as anchor.Program<RiskEngine>;
+    this.riskEngine = anchor.workspace.RiskEngine as anchor.Program<RiskEngine>;
     this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
   }
 
@@ -224,6 +224,7 @@ export class CollateralMint extends Mint {
     const collateralInfo = await this.context.program.account.collateralInfo.fetch(
       await getCollateralInfoPda(address, this.context.program.programId)
     );
+    // @ts-ignore
     return tokenAccount.amount.sub(collateralInfo.lockedTokensAmount);
   }
 }
