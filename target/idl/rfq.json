@@ -373,7 +373,7 @@
       ]
     },
     {
-      "name": "prepareToSettle",
+      "name": "prepareSettlement",
       "accounts": [
         {
           "name": "caller",
@@ -472,7 +472,7 @@
       "args": []
     },
     {
-      "name": "revertPreparation",
+      "name": "revertSettlementPreparation",
       "accounts": [
         {
           "name": "protocol",
@@ -567,7 +567,7 @@
       "args": []
     },
     {
-      "name": "settleOnePartyDefaultCollateral",
+      "name": "settleOnePartyDefault",
       "accounts": [
         {
           "name": "protocol",
@@ -613,7 +613,7 @@
       "args": []
     },
     {
-      "name": "settleBothPartyDefaultCollateral",
+      "name": "settleTwoPartyDefault",
       "accounts": [
         {
           "name": "protocol",
@@ -1495,5 +1495,8 @@
       "name": "HaveExistingResponses",
       "msg": "Rfq have not cleared responses and can't be cleaned up"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "GG6yqY98YCMRscQtALLhPPRcLR3kJ3UJ9MRDyMXzqPt"
+  }
 }

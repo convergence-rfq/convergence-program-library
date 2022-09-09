@@ -271,5 +271,8 @@
       "name": "NotFirstToPrepare",
       "msg": "Passed address is not of a party first to prepare for settlement"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "DzqdNPDezykYX4TkM1CX1c1VdmZY9pjnRVt9v6W2iftv"
+  }
 }

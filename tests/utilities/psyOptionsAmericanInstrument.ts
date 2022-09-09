@@ -7,7 +7,7 @@ import { getSpotEscrowPda } from "./pdas";
 import { AuthoritySide } from "./types";
 import { Context, Mint, Response, Rfq } from "./wrappers";
 
-export class SpotInstrument implements Instrument {
+export class PsyOptionsAmericanInstrument implements Instrument {
   private mint: Mint;
   private amount: BN;
   private side: { bid: {} } | { ask: {} };

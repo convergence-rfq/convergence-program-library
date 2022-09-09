@@ -215,5 +215,8 @@
       "name": "InvalidReceiver",
       "msg": "Passed account is not an associated token account of a receiver"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "GX3X7FB3c1UniCxmEYwbtdeizteEPXDdDvSJ198EdW3Z"
+  }
 }

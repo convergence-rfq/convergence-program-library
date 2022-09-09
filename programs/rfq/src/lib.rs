@@ -25,8 +25,8 @@ use instructions::rfq::prepare_to_settle::*;
 use instructions::rfq::respond_to_rfq::*;
 use instructions::rfq::revert_preparation::*;
 use instructions::rfq::settle::*;
-use instructions::rfq::settle_both_party_default_collateral::*;
-use instructions::rfq::settle_one_party_default_collateral::*;
+use instructions::rfq::settle_one_party_default::*;
+use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
 use instructions::rfq::unlock_rfq_collateral::*;
 use states::*;
@@ -41,7 +41,7 @@ security_txt! {
     auditors: "None"
 }
 
-declare_id!("F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t");
+declare_id!("GG6yqY98YCMRscQtALLhPPRcLR3kJ3UJ9MRDyMXzqPt");
 
 /// Request for quote (RFQ) protocol module.
 #[program]
@@ -116,22 +116,22 @@ pub mod rfq {
         confirm_response_instruction(ctx, side, override_leg_multiplier_bps)
     }
 
-    pub fn prepare_to_settle<'info>(
-        ctx: Context<'_, '_, '_, 'info, PrepareToSettleAccounts<'info>>,
+    pub fn prepare_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
         side: AuthoritySide,
     ) -> Result<()> {
-        prepare_to_settle_instruction(ctx, side)
+        prepare_settlement_instruction(ctx, side)
     }
 
     pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {
         settle_instruction(ctx)
     }
 
-    pub fn revert_preparation<'info>(
-        ctx: Context<'_, '_, '_, 'info, RevertPreparationAccounts<'info>>,
+    pub fn revert_settlement_preparation<'info>(
+        ctx: Context<'_, '_, '_, 'info, RevertSettlementPreparationAccounts<'info>>,
         side: AuthoritySide,
     ) -> Result<()> {
-        revert_preparation_instruction(ctx, side)
+        revert_settlement_preparation_instruction(ctx, side)
     }
 
     pub fn unlock_response_collateral(
@@ -144,15 +144,11 @@ pub mod rfq {
         unlock_rfq_collateral_instruction(ctx)
     }
 
-    pub fn settle_one_party_default_collateral(
-        ctx: Context<SettleOnePartyDefaultCollateralAccounts>,
-    ) -> Result<()> {
-        settle_one_party_default_collateral_instruction(ctx)
+    pub fn settle_one_party_default(ctx: Context<SettleOnePartyDefaultAccounts>) -> Result<()> {
+        settle_one_party_default_instruction(ctx)
     }
 
-    pub fn settle_both_party_default_collateral(
-        ctx: Context<SettleBothPartyDefaultCollateralAccounts>,
-    ) -> Result<()> {
+    pub fn settle_two_party_default(ctx: Context<SettleTwoPartyDefaultAccounts>) -> Result<()> {
         settle_both_party_default_collateral_instruction(ctx)
     }
 

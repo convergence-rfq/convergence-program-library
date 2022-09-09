@@ -8,7 +8,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-pub struct PrepareToSettleAccounts<'info> {
+pub struct PrepareSettlementAccounts<'info> {
     #[account(mut)]
     pub caller: Signer<'info>,
     #[account(mut, constraint = quote_tokens.mint == quote_mint.key() @ ProtocolError::NotAQuoteMint)]
@@ -31,8 +31,8 @@ pub struct PrepareToSettleAccounts<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-fn validate(ctx: &Context<PrepareToSettleAccounts>, side: AuthoritySide) -> Result<()> {
-    let PrepareToSettleAccounts {
+fn validate(ctx: &Context<PrepareSettlementAccounts>, side: AuthoritySide) -> Result<()> {
+    let PrepareSettlementAccounts {
         caller,
         rfq,
         response,
@@ -60,13 +60,13 @@ fn validate(ctx: &Context<PrepareToSettleAccounts>, side: AuthoritySide) -> Resu
     Ok(())
 }
 
-pub fn prepare_to_settle_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, PrepareToSettleAccounts<'info>>,
+pub fn prepare_settlement_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
     side: AuthoritySide,
 ) -> Result<()> {
     validate(&ctx, side)?;
 
-    let PrepareToSettleAccounts {
+    let PrepareSettlementAccounts {
         caller,
         quote_tokens,
         protocol,

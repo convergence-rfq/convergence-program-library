@@ -373,7 +373,7 @@ export type Rfq = {
       ]
     },
     {
-      "name": "prepareToSettle",
+      "name": "prepareSettlement",
       "accounts": [
         {
           "name": "caller",
@@ -472,7 +472,7 @@ export type Rfq = {
       "args": []
     },
     {
-      "name": "revertPreparation",
+      "name": "revertSettlementPreparation",
       "accounts": [
         {
           "name": "protocol",
@@ -567,7 +567,7 @@ export type Rfq = {
       "args": []
     },
     {
-      "name": "settleOnePartyDefaultCollateral",
+      "name": "settleOnePartyDefault",
       "accounts": [
         {
           "name": "protocol",
@@ -613,7 +613,7 @@ export type Rfq = {
       "args": []
     },
     {
-      "name": "settleBothPartyDefaultCollateral",
+      "name": "settleTwoPartyDefault",
       "accounts": [
         {
           "name": "protocol",
@@ -1873,7 +1873,7 @@ export const IDL: Rfq = {
       ]
     },
     {
-      "name": "prepareToSettle",
+      "name": "prepareSettlement",
       "accounts": [
         {
           "name": "caller",
@@ -1972,7 +1972,7 @@ export const IDL: Rfq = {
       "args": []
     },
     {
-      "name": "revertPreparation",
+      "name": "revertSettlementPreparation",
       "accounts": [
         {
           "name": "protocol",
@@ -2067,7 +2067,7 @@ export const IDL: Rfq = {
       "args": []
     },
     {
-      "name": "settleOnePartyDefaultCollateral",
+      "name": "settleOnePartyDefault",
       "accounts": [
         {
           "name": "protocol",
@@ -2113,7 +2113,7 @@ export const IDL: Rfq = {
       "args": []
     },
     {
-      "name": "settleBothPartyDefaultCollateral",
+      "name": "settleTwoPartyDefault",
       "accounts": [
         {
           "name": "protocol",
