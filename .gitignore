@@ -10,3 +10,9 @@ programs/rfq/target/rls
 
 rfq/js/.crates
 rfq/js/node_modules
+
+risk-engine/js/.crates
+risk-engine/js/node_modules
+
+spot-instrument/js/.crates
+spot-instrument/js/node_modules

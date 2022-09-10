@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "name": "spot_instrument",
+  "instructions": [],
+  "metadata": {
+    "origin": "shank",
+    "address": "GxT7mn3cmaJMvX2FjeabgUQozyGUELqqfQwsjM98aFtC",
+    "binaryVersion": "0.0.8",
+    "libVersion": "0.0.8"
+  }
+}
