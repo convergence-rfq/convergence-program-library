@@ -1,5 +1,9 @@
 [workspace]
-members = ["programs/*"]
+members = [
+    #"rfq/program",
+    #"risk-engine/program",
+    #"spot-instrument/program"
+]
 
 [profile.release]
 overflow-checks = true

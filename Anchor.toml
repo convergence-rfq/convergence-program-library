@@ -19,3 +19,9 @@ url = "https://anchor.projectserum.com"
 [provider]
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
+
+members = [
+    #"rfq/program",
+    #"risk-engine/program",
+    #"spot-instrument/program"
+]
