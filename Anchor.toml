@@ -20,8 +20,9 @@ url = "https://anchor.projectserum.com"
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
+[workspace]
 members = [
-    #"rfq/program",
-    #"risk-engine/program",
-    #"spot-instrument/program"
+    "rfq/program",
+    "risk-engine/program",
+    "spot-instrument/program"
 ]

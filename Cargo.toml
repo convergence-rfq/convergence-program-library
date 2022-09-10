@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    #"rfq/program",
-    #"risk-engine/program",
-    #"spot-instrument/program"
+    "rfq/program",
+    "risk-engine/program",
+    "spot-instrument/program"
 ]
 
 [profile.release]
