@@ -2,16 +2,19 @@
 rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
 risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
 spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+psyoptions_american_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
 
 [programs.devnet]
 rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
 risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
 spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+psyoptions_american_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
 
 [programs.mainnet]
 rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
 risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
 spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+psyoptions_american_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -24,5 +27,6 @@ wallet = "~/.config/solana/convergence-v2.json"
 members = [
     "rfq/program",
     "risk-engine/program",
-    "spot-instrument/program"
+    "spot-instrument/program",
+    "psyoptions-american-instrument/program"
 ]

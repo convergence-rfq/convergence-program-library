@@ -16,3 +16,6 @@ risk-engine/js/node_modules
 
 spot-instrument/js/.crates
 spot-instrument/js/node_modules
+
+psyoptions-american-instrument/js/.crates
+psyoptions-american-instrument/js/node_modules
