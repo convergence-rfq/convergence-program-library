@@ -6,7 +6,7 @@ import { PublicKey } from '@solana/web3.js'
  * @category constants
  * @category generated
  */
-export const PROGRAM_ADDRESS = 'F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t'
+export const PROGRAM_ADDRESS = '3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA'
 
 /**
  * Program public key
