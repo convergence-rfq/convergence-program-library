@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use rfq::states::{Response, Rfq};
 
-declare_id!("2DPSCUvdXw3TAWkyAt42gEYptbX8F4YYZtrEw9jYbt4K");
+declare_id!("8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2");
 
 #[program]
 pub mod risk_engine {
