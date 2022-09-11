@@ -1,24 +1,24 @@
 [programs.localnet]
-rfq = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
-risk_engine = "2DPSCUvdXw3TAWkyAt42gEYptbX8F4YYZtrEw9jYbt4K"
-spot_instrument = "GxT7mn3cmaJMvX2FjeabgUQozyGUELqqfQwsjM98aFtC"
+rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
+risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
+spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
 
 [programs.devnet]
-rfq = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
-risk_engine = "2DPSCUvdXw3TAWkyAt42gEYptbX8F4YYZtrEw9jYbt4K"
-spot_instrument = "GxT7mn3cmaJMvX2FjeabgUQozyGUELqqfQwsjM98aFtC"
+rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
+risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
+spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
 
 [programs.mainnet]
-rfq = "F3DbKqFNpgE3AKtzdscoVt5fbiXmy9jNGDEhMHZyBX7t"
-risk_engine = "2DPSCUvdXw3TAWkyAt42gEYptbX8F4YYZtrEw9jYbt4K"
-spot_instrument = "GxT7mn3cmaJMvX2FjeabgUQozyGUELqqfQwsjM98aFtC"
+rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
+risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
+spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "devnet"
+wallet = "~/.config/solana/convergence-v2.json"
 
 [workspace]
 members = [
