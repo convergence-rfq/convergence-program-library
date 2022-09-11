@@ -267,7 +267,7 @@ pub struct PrepareToSettle<'info> {
     /// user provided
     #[account(mut)]
     pub caller: Signer<'info>,
-    #[account(mut, constraint = caller_tokens.mint == mint.key() @ SpotError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = caller_tokens.mint == mint.key() @ PsyOptionsAmericanError::PassedMintDoesNotMatch)]
     pub caller_tokens: Account<'info, TokenAccount>,
 
     pub mint: Account<'info, Mint>,
@@ -293,7 +293,7 @@ pub struct Settle<'info> {
     /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ PsyOptionsAmericanError::PassedMintDoesNotMatch)]
     pub receiver_tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -311,7 +311,7 @@ pub struct RevertPreparation<'info> {
     /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = tokens.mint == escrow.mint @ PsyOptionsAmericanError::PassedMintDoesNotMatch)]
     pub tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -332,7 +332,7 @@ pub struct CleanUp<'info> {
     pub first_to_prepare: UncheckedAccount<'info>,
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ PsyOptionsAmericanError::PassedMintDoesNotMatch)]
     pub backup_receiver: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
