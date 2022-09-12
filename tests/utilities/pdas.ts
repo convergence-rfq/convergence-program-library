@@ -5,6 +5,7 @@ import {
   PROTOCOL_SEED,
   QUOTE_ESCROW_SEED,
   SPOT_ESCROW_SEED,
+  PSYOPTIONS_AMERICAN_ESCROW_SEED,
 } from "./constants";
 
 export async function getProtocolPda(programId: PublicKey) {
@@ -30,6 +31,14 @@ export async function getQuoteEscrowPda(response: PublicKey, programId: PublicKe
 export async function getSpotEscrowPda(response: PublicKey, legIndex: number, programId: PublicKey) {
   const [pda] = await PublicKey.findProgramAddress(
     [Buffer.from(SPOT_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
+    programId
+  );
+  return pda;
+}
+
+export async function getPsyoptionsAmericanEscrowPda(response: PublicKey, legIndex: number, programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress(
+    [Buffer.from(PSYOPTIONS_AMERICAN_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
     programId
   );
   return pda;

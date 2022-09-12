@@ -23,13 +23,13 @@ import { executeInParallel } from "./helpers";
 import { SpotInstrument } from "./spotInstrument";
 import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
 import { PsyoptionsAmericanInstrument } from "./psyoptionsAmericanInstrument";
-import { PsyoptionsAmericanInstrument as PsyOptionsAmericanInstrumentIdl } from "../../target/types/psyoptions_american_instrument";
+import { PsyoptionsAmericanInstrument as PsyoptionsAmericanInstrumentIdl } from "../../target/types/psyoptions_american_instrument";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
   public riskEngine: anchor.Program<RiskEngine>;
   public spotInstrument: anchor.Program<SpotInstrumentIdl>;
-  public psyOptionsAmericanInstrument: anchor.Program<PsyOptionsAmericanInstrumentIdl>;
+  public psyoptionsAmericanInstrument: anchor.Program<PsyoptionsAmericanInstrumentIdl>;
   public provider: anchor.Provider;
   public dao: Keypair;
   public taker: Keypair;
@@ -45,8 +45,8 @@ export class Context {
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
     this.riskEngine = anchor.workspace.RiskEngine as anchor.Program<RiskEngine>;
     this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
-    this.psyOptionsAmericanInstrument = anchor.workspace
-      .PsyOptionsAmericanInstrument as anchor.Program<PsyOptionsAmericanInstrumentIdl>;
+    this.psyoptionsAmericanInstrument = anchor.workspace
+      .PsyoptionsAmericanInstrument as anchor.Program<PsyoptionsAmericanInstrumentIdl>;
   }
 
   async initialize() {
@@ -106,13 +106,13 @@ export class Context {
       .rpc();
   }
 
-  async addPsyOptionsAmericanInstrument() {
+  async addPsyoptionsAmericanInstrument() {
     await this.program.methods
       .addInstrument(1, 7, 3, 3, 4) // TODO: Update
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
-        instrumentProgram: this.psyOptionsAmericanInstrument.programId,
+        instrumentProgram: this.psyoptionsAmericanInstrument.programId,
       })
       .signers([this.dao])
       .rpc();
@@ -504,6 +504,7 @@ export async function getContext() {
   await executeInParallel(
     async () => {
       await context.addSpotInstrument();
+      await context.addPsyoptionsAmericanInstrument();
     },
     async () => {
       await context.initializeCollateral(context.taker);
