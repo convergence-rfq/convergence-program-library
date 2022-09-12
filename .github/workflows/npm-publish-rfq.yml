@@ -5,6 +5,7 @@ name: NPM RFQ Package
 
 on:
   release:
+    branches: v2
     types: [created]
     paths: rfq/js
 
