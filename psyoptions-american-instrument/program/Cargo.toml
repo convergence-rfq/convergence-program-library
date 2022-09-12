@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "psyoptions-american-instrument"
 version = "0.1.0"

@@ -6,7 +6,7 @@ use anchor_spl::token::{
 
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
-declare_id!("CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL");
+declare_id!("22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG");
 
 const ESCROW_SEED: &str = "escrow";
 
@@ -22,11 +22,11 @@ pub mod psyoptions_american_instrument {
     ) -> Result<()> {
         require!(
             data_size as usize == std::mem::size_of::<Pubkey>(),
-            PsyOptionsAmericanError::InvalidDataSize
+            PsyoptionsAmericanError::InvalidDataSize
         );
         require!(
             mint_address == ctx.accounts.mint.key(),
-            PsyOptionsAmericanError::PassedMintDoesNotMatch
+            PsyoptionsAmericanError::PassedMintDoesNotMatch
         );
         Ok(())
     }
@@ -50,7 +50,7 @@ pub mod psyoptions_american_instrument {
         let expected_mint: Pubkey = AnchorDeserialize::try_from_slice(leg_data)?;
         require!(
             expected_mint == mint.key(),
-            PsyOptionsAmericanError::PassedMintDoesNotMatch
+            PsyoptionsAmericanError::PassedMintDoesNotMatch
         );
 
         let token_amount = response.get_leg_amount_to_transfer(rfq, leg_index, side.into());
@@ -145,7 +145,7 @@ pub mod psyoptions_american_instrument {
         require!(
             get_associated_token_address(&protocol.authority, &escrow.mint)
                 == backup_receiver.key(),
-            PsyOptionsAmericanError::InvalidBackupAddress
+            PsyoptionsAmericanError::InvalidBackupAddress
         );
 
         let expected_first_to_prepare = response
@@ -154,7 +154,7 @@ pub mod psyoptions_american_instrument {
             .to_public_key(rfq, response);
         require!(
             first_to_prepare.key() == expected_first_to_prepare,
-            PsyOptionsAmericanError::NotFirstToPrepare
+            PsyoptionsAmericanError::NotFirstToPrepare
         );
 
         transfer_from_an_escrow(
@@ -267,7 +267,7 @@ pub struct PrepareToSettle<'info> {
     /// user provided
     #[account(mut)]
     pub caller: Signer<'info>,
-    #[account(mut, constraint = caller_tokens.mint == mint.key() @ PsyOptionsAmericanError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = caller_tokens.mint == mint.key() @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub caller_tokens: Account<'info, TokenAccount>,
 
     pub mint: Account<'info, Mint>,
@@ -293,7 +293,7 @@ pub struct Settle<'info> {
     /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ PsyOptionsAmericanError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub receiver_tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -311,7 +311,7 @@ pub struct RevertPreparation<'info> {
     /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = tokens.mint == escrow.mint @ PsyOptionsAmericanError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = tokens.mint == escrow.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -332,7 +332,7 @@ pub struct CleanUp<'info> {
     pub first_to_prepare: UncheckedAccount<'info>,
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ PsyOptionsAmericanError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub backup_receiver: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -356,7 +356,7 @@ impl From<AuthoritySideDuplicate> for AuthoritySide {
 
 /// Error codes.
 #[error_code]
-pub enum PsyOptionsAmericanError {
+pub enum PsyoptionsAmericanError {
     #[msg("Invalid data size")]
     InvalidDataSize,
     #[msg("Passed mint account does not match")]

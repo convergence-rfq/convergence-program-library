@@ -4,7 +4,6 @@ import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/w
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { RiskEngine } from "../../target/types/risk_engine";
-import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
 import { getCollateralInfoPda, getCollateralTokenPda, getProtocolPda, getQuoteEscrowPda } from "./pdas";
 import {
   DEFAULT_ACTIVE_WINDOW,
@@ -18,14 +17,19 @@ import {
   DEFAULT_LEG_MULTIPLIER,
 } from "./constants";
 import { AuthoritySide, Quote, Side, FixedSize } from "./types";
-import { SpotInstrument } from "./spotInstrument";
 import { Instrument } from "./instrument";
 import { executeInParallel } from "./helpers";
+
+import { SpotInstrument } from "./spotInstrument";
+import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
+import { PsyoptionsAmericanInstrument } from "./psyoptionsAmericanInstrument";
+import { PsyoptionsAmericanInstrument as PsyOptionsAmericanInstrumentIdl } from "../../target/types/psyoptions_american_instrument";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
   public riskEngine: anchor.Program<RiskEngine>;
   public spotInstrument: anchor.Program<SpotInstrumentIdl>;
+  public psyOptionsAmericanInstrument: anchor.Program<PsyOptionsAmericanInstrumentIdl>;
   public provider: anchor.Provider;
   public dao: Keypair;
   public taker: Keypair;
@@ -41,6 +45,8 @@ export class Context {
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
     this.riskEngine = anchor.workspace.RiskEngine as anchor.Program<RiskEngine>;
     this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
+    this.psyOptionsAmericanInstrument = anchor.workspace
+      .PsyOptionsAmericanInstrument as anchor.Program<PsyOptionsAmericanInstrumentIdl>;
   }
 
   async initialize() {
@@ -100,6 +106,18 @@ export class Context {
       .rpc();
   }
 
+  async addPsyOptionsAmericanInstrument() {
+    await this.program.methods
+      .addInstrument(1, 7, 3, 3, 4) // TODO: Update
+      .accounts({
+        authority: this.dao.publicKey,
+        protocol: this.protocolPda,
+        instrumentProgram: this.psyOptionsAmericanInstrument.programId,
+      })
+      .signers([this.dao])
+      .rpc();
+  }
+
   async initializeCollateral(user: Keypair) {
     await this.program.methods
       .initializeCollateral()
@@ -133,7 +151,7 @@ export class Context {
   }
 
   async initializeRfq({
-    legs = [new SpotInstrument(this)],
+    legs = [],
     orderType = null,
     fixedSize = null,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
@@ -363,7 +381,9 @@ export class Response {
 
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(async (x, index) => await x.getRevertSettlementPreparationAccounts(side, index, this.rfq, this))
+        this.rfq.legs.map(
+          async (x, index) => await x.getRevertSettlementPreparationAccounts(side, index, this.rfq, this)
+        )
       )
     ).flat();
 

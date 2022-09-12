@@ -965,6 +965,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "psyoptions-american-instrument"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "rfq",
+ "shank",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,26 +1,28 @@
+anchor_version = "0.24.2"
+
 [programs.localnet]
 rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
 risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
 spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
-psyoptions_american_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
 
 [programs.devnet]
 rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
 risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
 spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
-psyoptions_american_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
 
 [programs.mainnet]
 rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
 risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
 spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
-psyoptions_american_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/convergence-v2.json"
 
 [workspace]

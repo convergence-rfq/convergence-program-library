@@ -2,11 +2,12 @@ import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { MAKER_CONFIRMED_COLLATERAL, TAKER_CONFIRMED_COLLATERAL } from "../utilities/constants";
 import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
+import { PsyoptionsAmericanInstrument } from "../utilities/psyoptionsAmericanInstrument";
 import { SpotInstrument } from "../utilities/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 
-describe("RFQ Spot instrument integration tests", () => {
+describe("RFQ Psyoptions American instrument integration tests", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
@@ -19,12 +20,15 @@ describe("RFQ Spot instrument integration tests", () => {
     dao = context.dao.publicKey;
   });
 
-  it("Create two-way RFQ with one spot leg, respond and settle as sell", async () => {
+  it("Create two-way RFQ with one spot leg and one option leg, respond and settle as sell", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
 
     // create a two way RFQ specifying 1 bitcoin as a leg
     const rfq = await context.initializeRfq({
-      legs: [new SpotInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid })],
+      legs: [
+        new SpotInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid }),
+        new PsyoptionsAmericanInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid }),
+      ],
       orderType: OrderType.TwoWay,
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
@@ -163,7 +167,6 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create RFQ, respond and confirm, taker prepares but maker defaults", async () => {
     const rfq = await context.initializeRfq({
-      legs: [new SpotInstrument(context)],
       activeWindow: 2,
       settlingWindow: 1,
       orderType: OrderType.TwoWay,
@@ -189,7 +192,6 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create RFQ, respond and confirm, maker prepares but taker defaults", async () => {
     const rfq = await context.initializeRfq({
-      legs: [new SpotInstrument(context)],
       activeWindow: 2,
       settlingWindow: 1,
       orderType: OrderType.TwoWay,
@@ -216,7 +218,6 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create RFQ, respond and confirm, both parties default", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
     const rfq = await context.initializeRfq({
-      legs: [new SpotInstrument(context)],
       activeWindow: 2,
       settlingWindow: 1,
       orderType: OrderType.TwoWay,
@@ -238,11 +239,7 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create RFQ, respond without confirmations and close", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
-    const rfq = await context.initializeRfq({
-      legs: [new SpotInstrument(context)],
-      activeWindow: 2,
-      settlingWindow: 1,
-    });
+    const rfq = await context.initializeRfq({ activeWindow: 2, settlingWindow: 1 });
     const response = await rfq.respond();
 
     await sleep(2000);
