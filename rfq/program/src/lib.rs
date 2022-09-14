@@ -17,6 +17,8 @@ use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::initialize_protocol::*;
+use instructions::rfq::cancel_response::*;
+use instructions::rfq::cancel_rfq::*;
 use instructions::rfq::clean_up_response::*;
 use instructions::rfq::clean_up_rfq::*;
 use instructions::rfq::confirm_response::*;
@@ -162,5 +164,13 @@ pub mod rfq {
         ctx: Context<'_, '_, '_, 'info, CleanUpRfqAccounts<'info>>,
     ) -> Result<()> {
         clean_up_rfq_instruction(ctx)
+    }
+
+    pub fn cancel_response(ctx: Context<CancelResponseAccounts>) -> Result<()> {
+        cancel_response_instruction(ctx)
+    }
+
+    pub fn cancel_rfq(ctx: Context<CancelRfqAccounts>) -> Result<()> {
+        cancel_rfq_instruction(ctx)
     }
 }
