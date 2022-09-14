@@ -40,7 +40,8 @@ describe("RFQ Psyoptions American instrument integration tests", () => {
     await response.prepareSettlement(AuthoritySide.Taker);
     await response.prepareSettlement(AuthoritySide.Maker);
 
-    await response.settle(maker, [taker]);
+    // TODO: This is kind of strange, need to pass in two takers?
+    await response.settle(maker, [taker, taker]);
     //await tokenMeasurer.expectChange([
     //  { token: "asset", user: taker, delta: withTokenDecimals(1) },
     //  { token: "asset", user: maker, delta: withTokenDecimals(-1) },
@@ -48,8 +49,8 @@ describe("RFQ Psyoptions American instrument integration tests", () => {
     //  { token: "quote", user: maker, delta: withTokenDecimals(22_000) },
     //]);
 
-    //await response.unlockResponseCollateral();
-    //await response.cleanUpResponse();
+    await response.unlockResponseCollateral();
+    await response.cleanUp();
   });
 
   /*it("Create sell RFQ with two spot legs, respond and settle multiple responses", async () => {
