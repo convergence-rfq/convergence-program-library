@@ -46,7 +46,7 @@ describe("RFQ Spot instrument integration tests", () => {
     ]);
 
     await response.unlockResponseCollateral();
-    await response.cleanUpResponse();
+    await response.cleanUp();
   });
 
   it("Create sell RFQ with two spot legs, respond and settle multiple responses", async () => {
@@ -84,7 +84,7 @@ describe("RFQ Spot instrument integration tests", () => {
       { token: "quote", user: maker, delta: withTokenDecimals(-22_500) },
     ]);
     await response.unlockResponseCollateral();
-    await response.cleanUpResponse();
+    await response.cleanUp();
 
     // taker confirms second response
     await secondResponse.confirm({ side: Side.Bid });
@@ -102,7 +102,7 @@ describe("RFQ Spot instrument integration tests", () => {
       { token: "quote", user: maker, delta: withTokenDecimals(-182_000) },
     ]);
     await secondResponse.unlockResponseCollateral();
-    await secondResponse.cleanUpResponse();
+    await secondResponse.cleanUp();
   });
 
   it("Create fixed quote size buy RFQ, respond and settle response", async () => {
@@ -130,7 +130,7 @@ describe("RFQ Spot instrument integration tests", () => {
       { token: "quote", user: maker, delta: withTokenDecimals(309_999) },
     ]);
     await response.unlockResponseCollateral();
-    await response.cleanUpResponse();
+    await response.cleanUp();
   });
 
   it("Create fixed quote size sell RFQ, respond and settle response", async () => {
@@ -158,7 +158,7 @@ describe("RFQ Spot instrument integration tests", () => {
       { token: "quote", user: maker, delta: withTokenDecimals(-38_500) },
     ]);
     await response.unlockResponseCollateral();
-    await response.cleanUpResponse();
+    await response.cleanUp();
   });
 
   it("Create RFQ, respond and confirm, taker prepares but maker defaults", async () => {
@@ -183,7 +183,7 @@ describe("RFQ Spot instrument integration tests", () => {
       { token: "quote", user: maker, delta: withTokenDecimals(0) },
     ]);
     await response.settleOnePartyDefault();
-    await response.cleanUpResponse();
+    await response.cleanUp();
     await rfq.cleanUp();
   });
 
@@ -209,7 +209,7 @@ describe("RFQ Spot instrument integration tests", () => {
       { token: "quote", user: maker, delta: withTokenDecimals(0) },
     ]);
     await response.settleOnePartyDefault();
-    await response.cleanUpResponse();
+    await response.cleanUp();
     await rfq.cleanUp();
   });
 
@@ -227,7 +227,7 @@ describe("RFQ Spot instrument integration tests", () => {
     await sleep(3000);
 
     await response.settleTwoPartyDefault();
-    await response.cleanUpResponse();
+    await response.cleanUp();
     await rfq.cleanUp();
     await tokenMeasurer.expectChange([
       { token: "unlockedCollateral", user: taker, delta: TAKER_CONFIRMED_COLLATERAL.neg() },
@@ -236,7 +236,7 @@ describe("RFQ Spot instrument integration tests", () => {
     ]);
   });
 
-  it("Create RFQ, respond without confirmations and close", async () => {
+  it("Create RFQ, respond, cancel response and close all", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     const rfq = await context.initializeRfq({
       legs: [new SpotInstrument(context)],
@@ -244,16 +244,25 @@ describe("RFQ Spot instrument integration tests", () => {
       settlingWindow: 1,
     });
     const response = await rfq.respond();
+    await response.cancel();
+    await response.unlockResponseCollateral();
+    await response.cleanUp();
 
     await sleep(2000);
 
     await rfq.unlockCollateral();
-    await response.unlockResponseCollateral();
-    await response.cleanUpResponse();
     await rfq.cleanUp();
     await tokenMeasurer.expectChange([
       { token: "unlockedCollateral", user: taker, delta: new BN(0) },
       { token: "unlockedCollateral", user: maker, delta: new BN(0) },
     ]);
+  });
+
+  it("Create RFQ, cancel it and clean up", async () => {
+    const rfq = await context.initializeRfq();
+
+    await rfq.cancel();
+    await rfq.unlockCollateral();
+    await rfq.cleanUp();
   });
 });

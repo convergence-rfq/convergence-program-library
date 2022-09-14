@@ -296,6 +296,18 @@ export class Rfq {
       .rpc();
   }
 
+  async cancel() {
+    await this.context.program.methods
+      .cancelRfq()
+      .accounts({
+        taker: this.context.taker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
   async getData() {
     return await this.context.program.account.rfq.fetch(this.account);
   }
@@ -462,7 +474,7 @@ export class Response {
       .rpc();
   }
 
-  async cleanUpResponse() {
+  async cleanUp() {
     let remainingAccounts = [];
     if (this.firstToPrepare) {
       remainingAccounts = await (
@@ -483,6 +495,19 @@ export class Response {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async cancel() {
+    await this.context.program.methods
+      .cancelResponse()
+      .accounts({
+        maker: this.context.maker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+      })
+      .signers([this.context.maker])
       .rpc();
   }
 
