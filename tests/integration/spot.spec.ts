@@ -220,20 +220,29 @@ describe("RFQ Spot instrument integration tests", () => {
     ]);
   });
 
-  it("Create RFQ, respond without confirmations and close", async () => {
+  it("Create RFQ, respond, cancel response and close all", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     const rfq = await context.initializeRfq({ activeWindow: 2, settlingWindow: 1 });
     const response = await rfq.respond();
+    await response.cancelResponse();
+    await response.unlockResponseCollateral();
+    await response.cleanUpResponse();
 
     await sleep(2000);
 
     await rfq.unlockCollateral();
-    await response.unlockResponseCollateral();
-    await response.cleanUpResponse();
     await rfq.cleanUp();
     await tokenMeasurer.expectChange([
       { token: "unlockedCollateral", user: taker, delta: new BN(0) },
       { token: "unlockedCollateral", user: maker, delta: new BN(0) },
     ]);
+  });
+
+  it("Create RFQ, cancel it and clean up", async () => {
+    const rfq = await context.initializeRfq();
+
+    await rfq.cancelRfq();
+    await rfq.unlockCollateral();
+    await rfq.cleanUp();
   });
 });

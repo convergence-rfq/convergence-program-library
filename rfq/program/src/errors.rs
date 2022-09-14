@@ -74,4 +74,6 @@ pub enum ProtocolError {
     NotFirstToPrepare,
     #[msg("Rfq have not cleared responses and can't be cleaned up")]
     HaveExistingResponses,
+    #[msg("Can't cancel an rfq with existing responses")]
+    HaveResponses,
 }
