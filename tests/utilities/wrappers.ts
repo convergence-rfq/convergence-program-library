@@ -278,7 +278,7 @@ export class Rfq {
       .rpc();
   }
 
-  async cancelRfq() {
+  async cancel() {
     await this.context.program.methods
       .cancelRfq()
       .accounts({
@@ -456,7 +456,7 @@ export class Response {
       .rpc();
   }
 
-  async cleanUpResponse() {
+  async cleanUp() {
     let remainingAccounts = [];
     if (this.firstToPrepare) {
       remainingAccounts = await (
@@ -480,7 +480,7 @@ export class Response {
       .rpc();
   }
 
-  async cancelResponse() {
+  async cancel() {
     await this.context.program.methods
       .cancelResponse()
       .accounts({
