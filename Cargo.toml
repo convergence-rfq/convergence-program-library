@@ -2,7 +2,8 @@
 members = [
     "rfq/program",
     "risk-engine/program",
-    "spot-instrument/program"
+    "spot-instrument/program",
+    "hxro-instrument/program",
 ]
 
 [profile.release]
