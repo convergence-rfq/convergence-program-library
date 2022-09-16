@@ -4,19 +4,16 @@ import { AccountMeta, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@sola
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "./constants";
 import { Instrument } from "./instrument";
 import { getPsyoptionsAmericanEscrowPda } from "./pdas";
-import { AuthoritySide } from "./types";
+import { AuthoritySide, PsyoptionsAmericanContract } from "./types";
 import { Context, Mint, Response, Rfq } from "./wrappers";
 
 export class PsyoptionsAmericanInstrument implements Instrument {
-  private mint: Mint;
+  private contract: any;
   private amount: BN;
   private side: { bid: {} } | { ask: {} };
 
-  constructor(
-    private context: Context,
-    { mint = context.assetToken, amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
-  ) {
-    this.mint = mint;
+  constructor(private context: Context, { contract = {}, amount = new BN(0), side = null } = {}) {
+    this.contract = contract;
     this.amount = amount;
     this.side = side ?? DEFAULT_INSTRUMENT_SIDE;
   }
@@ -24,17 +21,14 @@ export class PsyoptionsAmericanInstrument implements Instrument {
   async toLegData() {
     return {
       instrument: this.context.psyoptionsAmericanInstrument.programId,
-      instrumentData: this.mint.publicKey.toBytes(),
+      instrumentData: this.contract.UnderlyingAssetMint.toBytes(),
       instrumentAmount: new BN(this.amount),
       side: this.side,
     };
   }
 
   async getValidationAccounts() {
-    return [
-      { pubkey: this.context.psyoptionsAmericanInstrument.programId, isSigner: false, isWritable: false },
-      { pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
-    ];
+    return [{ pubkey: this.context.psyoptionsAmericanInstrument.programId, isSigner: false, isWritable: false }];
   }
 
   async getPrepareSettlementAccounts(
@@ -48,17 +42,17 @@ export class PsyoptionsAmericanInstrument implements Instrument {
     return [
       { pubkey: this.context.psyoptionsAmericanInstrument.programId, isSigner: false, isWritable: false },
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
-      {
-        pubkey: await await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          this.mint.publicKey,
-          caller.publicKey
-        ),
-        isSigner: false,
-        isWritable: true,
-      },
-      { pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
+      //{
+      //  pubkey: await await Token.getAssociatedTokenAddress(
+      //    ASSOCIATED_TOKEN_PROGRAM_ID,
+      //    TOKEN_PROGRAM_ID,
+      //    this.mint.publicKey,
+      //    caller.publicKey
+      //  ),
+      //  isSigner: false,
+      //  isWritable: true,
+      //},
+      //{ pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
       {
         pubkey: await getPsyoptionsAmericanEscrowPda(
           response.account,
@@ -86,11 +80,11 @@ export class PsyoptionsAmericanInstrument implements Instrument {
         isSigner: false,
         isWritable: true,
       },
-      {
-        pubkey: await this.mint.getAssociatedAddress(assetReceiver),
-        isSigner: false,
-        isWritable: true,
-      },
+      //{
+      //  pubkey: await this.mint.getAssociatedAddress(assetReceiver),
+      //  isSigner: false,
+      //  isWritable: true,
+      //},
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     ];
   }
@@ -114,11 +108,11 @@ export class PsyoptionsAmericanInstrument implements Instrument {
         isSigner: false,
         isWritable: true,
       },
-      {
-        pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
-        isSigner: false,
-        isWritable: true,
-      },
+      //{
+      //  pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
+      //  isSigner: false,
+      //  isWritable: true,
+      //},
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     ];
   }
@@ -140,11 +134,11 @@ export class PsyoptionsAmericanInstrument implements Instrument {
         isSigner: false,
         isWritable: true,
       },
-      {
-        pubkey: await this.mint.getAssociatedAddress(this.context.dao.publicKey),
-        isSigner: false,
-        isWritable: true,
-      },
+      //{
+      //  pubkey: await this.mint.getAssociatedAddress(this.context.dao.publicKey),
+      //  isSigner: false,
+      //  isWritable: true,
+      //},
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     ];
   }

@@ -1,4 +1,5 @@
 import { BN } from "@project-serum/anchor";
+import { PublicKey } from "@solana/web3.js";
 
 export const OrderType = {
   Buy: { buy: {} },
@@ -62,4 +63,11 @@ export const FixedSize = {
       },
     };
   },
+};
+
+export const PsyoptionsAmericanContract = {
+  UnderlyingAssetMint: PublicKey,
+  UnderlyingAmountPerContract: BN,
+  ExpirationUnixTimestamp: BN,
+  QuoteAmountPerContract: BN,
 };

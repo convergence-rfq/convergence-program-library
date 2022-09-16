@@ -3,6 +3,8 @@ use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
+use psy_american::OptionMarket;
+use psy_american::cpi::accounts::MintOptionV2;
 
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
@@ -21,13 +23,13 @@ pub mod psyoptions_american_instrument {
         mint_address: Pubkey,
     ) -> Result<()> {
         require!(
-            data_size as usize == std::mem::size_of::<Pubkey>(),
+            data_size as usize == (std::mem::size_of::<Pubkey>() + std::mem::size_of::<Contract>()),
             PsyoptionsAmericanError::InvalidDataSize
         );
-        require!(
-            mint_address == ctx.accounts.mint.key(),
-            PsyoptionsAmericanError::PassedMintDoesNotMatch
-        );
+        //require!(
+        //    mint_address == ctx.accounts.mint.key(),
+        //    PsyoptionsAmericanError::PassedMintDoesNotMatch
+        //);
         Ok(())
     }
 
@@ -78,23 +80,42 @@ pub mod psyoptions_american_instrument {
             ..
         } = &ctx.accounts;
 
-        response
-            .get_leg_assets_receiver(rfq, leg_index)
-            .validate_is_associated_token_account(
-                rfq,
-                response,
-                escrow.mint,
-                receiver_tokens.key(),
-            )?;
+        //response
+        //    .get_leg_assets_receiver(rfq, leg_index)
+        //    .validate_is_associated_token_account(
+        //        rfq,
+        //        response,
+        //        escrow.mint,
+        //        receiver_tokens.key(),
+        //    )?;
 
-        transfer_from_an_escrow(
-            escrow,
-            receiver_tokens,
-            response.key(),
-            leg_index,
-            *ctx.bumps.get("escrow").unwrap(),
-            token_program,
-        )?;
+        //transfer_from_an_escrow(
+        //    escrow,
+        //    receiver_tokens,
+        //    response.key(),
+        //    leg_index,
+        //    *ctx.bumps.get("escrow").unwrap(),
+        //    token_program,
+        //)?;
+
+        //let cpi_program = ctx.accounts.psy_american_program.clone();
+        //let cpi_accounts = MintOptionV2 {
+        //    user_authority: ctx.accounts.vault_authority.to_account_info(),
+        //    underlying_asset_mint: ctx.accounts.underlying_asset_mint.to_account_info(),
+        //    underlying_asset_pool: ctx.accounts.underlying_asset_pool.to_account_info(),
+        //    underlying_asset_src: ctx.accounts.vault.to_account_info(),
+        //    option_mint: ctx.accounts.option_mint.to_account_info(),
+        //    minted_option_dest: ctx.accounts.minted_option_dest.to_account_info(),
+        //    writer_token_mint: ctx.accounts.writer_token_mint.to_account_info(),
+        //    minted_writer_token_dest: ctx.accounts.minted_writer_token_dest.to_account_info(),
+        //    option_market: ctx.accounts.option_market.to_account_info(),
+        //    token_program: ctx.accounts.token_program.to_account_info(),
+        //};
+        //let key = ctx.accounts.underlying_asset_mint.key();
+        //let seeds = &[key.as_ref(), b"vaultAuthority", &[vault_authority_bump]];
+        //let signer = &[&seeds[..]];
+        //let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+        //psy_american::cpi::mint_option_v2(cpi_ctx, size)?;
 
         Ok(())
     }
@@ -252,7 +273,15 @@ pub struct ValidateData<'info> {
     pub protocol: Account<'info, ProtocolState>,
 
     /// user provided
-    pub mint: Account<'info, Mint>,
+    pub contract: Account<'info, Contract>,
+}
+
+#[account]
+pub struct Contract  {
+    pub underlying_asset_mint: Pubkey,
+    pub underlying_amount_per_contract: u64,
+    pub quote_amount_per_contract: u64,
+    pub expiration_unix_timestamp: i64,
 }
 
 #[derive(Accounts)]
@@ -336,6 +365,98 @@ pub struct CleanUp<'info> {
     pub backup_receiver: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct InitializeOptionMarket<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+    /// CHECK: TODO
+    pub psy_american_program: AccountInfo<'info>,
+    pub underlying_asset_mint: Box<Account<'info, Mint>>,
+    pub quote_asset_mint: Box<Account<'info, Mint>>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub option_mint: AccountInfo<'info>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub writer_token_mint: AccountInfo<'info>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub quote_asset_pool: AccountInfo<'info>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub underlying_asset_pool: AccountInfo<'info>,
+    /// CHECK: TODO
+    #[account(mut)]
+    pub option_market: AccountInfo<'info>,
+    /// CHECK: TODO
+    pub fee_owner: AccountInfo<'info>,
+    /// CHECK: TODO
+    pub token_program: AccountInfo<'info>,
+    /// CHECK: TODO
+    pub associated_token_program: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    /// CHECK: TODO
+    pub system_program: AccountInfo<'info>,
+    pub clock: Sysvar<'info, Clock>,
+}
+
+#[derive(Accounts)]
+pub struct InitializeMintVault<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub underlying_asset: Box<Account<'info, Mint>>,
+    #[account(
+        init,
+        seeds = [&underlying_asset.key().to_bytes()[..], b"vault"],
+        payer = authority,    
+        token::mint = underlying_asset,
+        token::authority = vault_authority,
+        bump
+    )]
+    pub vault: Box<Account<'info, TokenAccount>>,
+    /// CHECK: TODO
+    pub vault_authority: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct MintOption<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    /// CHECK: TODO
+    pub psy_american_program: AccountInfo<'info>,
+    /// The vault where the underlying assets are held. This is the PsyAmerican
+    #[account(mut)]
+    pub vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    /// CHECK: TODO
+    pub vault_authority: AccountInfo<'info>,
+    /// CHECK: TODO
+    pub underlying_asset_mint: AccountInfo<'info>,
+    #[account(mut)]
+    pub underlying_asset_pool: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub option_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub minted_option_dest: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub writer_token_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub minted_writer_token_dest: Box<Account<'info, TokenAccount>>,
+    pub option_market: Box<Account<'info, OptionMarket>>,
+    #[account(mut)]
+    /// CHECK: TODO
+    pub fee_owner: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
+    /// CHECK: TODO
+    pub associated_token_program: AccountInfo<'info>,
+    pub clock: Sysvar<'info, Clock>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
 }
 
 // Duplicate required because anchor doesn't generate IDL for imported structs
