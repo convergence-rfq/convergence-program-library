@@ -50,6 +50,7 @@ fn validate(ctx: &Context<SettleAccounts>) -> Result<()> {
 
 pub fn settle_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>,
+    defaulting_leg: Option<u8>,
 ) -> Result<()> {
     validate(&ctx)?;
 
@@ -73,7 +74,7 @@ pub fn settle_instruction<'info>(
     )?;
 
     for (index, leg) in rfq.legs.iter().enumerate() {
-        settle(
+        let defaulting_party = settle(
             leg,
             index as u8,
             &protocol,
@@ -81,6 +82,12 @@ pub fn settle_instruction<'info>(
             response,
             &mut remaining_accounts,
         )?;
+
+        if let Some(defaulting_party) = defaulting_party {
+            response.state = StoredResponseState::Defaulted;
+            response.defaulting_party = Some(defaulting_party);
+            return Ok(());
+        }
     }
 
     response.state = StoredResponseState::Settled;

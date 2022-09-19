@@ -1,10 +1,13 @@
 use anchor_lang::prelude::*;
-use solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::{
+    instruction::Instruction,
+    program::{get_return_data, invoke_signed},
+};
 
 use crate::{
     constants::PROTOCOL_SEED,
     errors::ProtocolError,
-    states::{AuthoritySide, Leg, ProtocolState, Response, Rfq},
+    states::{AuthoritySide, DefaultingParty, Leg, ProtocolState, Response, Rfq},
     utils::ToAccountMeta,
 };
 
@@ -70,7 +73,7 @@ pub fn settle<'a, 'info: 'a>(
     rfq: &Account<'info, Rfq>,
     response: &Account<'info, Response>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
-) -> Result<()> {
+) -> Result<Option<DefaultingParty>> {
     let mut data = SETTLE_SELECTOR.to_vec();
     AnchorSerialize::serialize(&leg_index, &mut data)?;
 
@@ -85,7 +88,14 @@ pub fn settle<'a, 'info: 'a>(
         Some(rfq),
         Some(response),
         remaining_accounts,
-    )
+    )?;
+
+    if instrument_parameters.can_default_mid_settlement {
+        let (_key, data) = get_return_data().unwrap();
+        Ok(Option::<DefaultingParty>::try_from_slice(&data).unwrap())
+    } else {
+        Ok(None)
+    }
 }
 
 pub fn revert_preparation<'a, 'info: 'a>(

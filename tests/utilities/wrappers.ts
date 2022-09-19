@@ -5,6 +5,7 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/sp
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { RiskEngine } from "../../target/types/risk_engine";
 import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
+import { FailingInstrument as FailingInstrumentIdl } from "../../target/types/failing_instrument";
 import { getCollateralInfoPda, getCollateralTokenPda, getProtocolPda, getQuoteEscrowPda } from "./pdas";
 import {
   DEFAULT_ACTIVE_WINDOW,
@@ -21,11 +22,13 @@ import { AuthoritySide, Quote, Side, FixedSize } from "./types";
 import { SpotInstrument } from "./spotInstrument";
 import { Instrument } from "./instrument";
 import { executeInParallel } from "./helpers";
+import { FailingInstrument } from "./failingInstrument";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
   public riskEngine: anchor.Program<RiskEngine>;
   public spotInstrument: anchor.Program<SpotInstrumentIdl>;
+  public failingInstrument: anchor.Program<FailingInstrumentIdl>;
   public provider: anchor.Provider;
   public dao: Keypair;
   public taker: Keypair;
@@ -41,6 +44,7 @@ export class Context {
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
     this.riskEngine = anchor.workspace.RiskEngine as anchor.Program<RiskEngine>;
     this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
+    this.failingInstrument = anchor.workspace.FailingInstrument as anchor.Program<FailingInstrumentIdl>;
   }
 
   async initialize() {
@@ -88,18 +92,6 @@ export class Context {
       .rpc();
   }
 
-  async addSpotInstrument() {
-    await this.program.methods
-      .addInstrument(1, 7, 3, 3, 4)
-      .accounts({
-        authority: this.dao.publicKey,
-        protocol: this.protocolPda,
-        instrumentProgram: this.spotInstrument.programId,
-      })
-      .signers([this.dao])
-      .rpc();
-  }
-
   async initializeCollateral(user: Keypair) {
     await this.program.methods
       .initializeCollateral()
@@ -133,12 +125,13 @@ export class Context {
   }
 
   async initializeRfq({
-    legs = [new SpotInstrument(this)],
+    legs = null,
     orderType = null,
     fixedSize = null,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
   } = {}) {
+    legs = legs ?? [new SpotInstrument(this)];
     orderType = orderType ?? DEFAULT_ORDER_TYPE;
     fixedSize = fixedSize ?? FixedSize.None;
     const legData = await Promise.all(legs.map(async (x) => await x.toLegData()));
@@ -510,7 +503,10 @@ export async function getContext() {
 
   await executeInParallel(
     async () => {
-      await context.addSpotInstrument();
+      await SpotInstrument.add(context);
+    },
+    async () => {
+      await FailingInstrument.add(context);
     },
     async () => {
       await context.initializeCollateral(context.taker);

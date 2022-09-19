@@ -548,14 +548,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "failing-instrument"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "rfq",
-]
-
-[[package]]
 name = "feature-probe"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1060,16 +1052,6 @@ dependencies = [
  "solana-program",
  "solana-security-txt",
  "spl-token",
-]
-
-[[package]]
-name = "risk-engine"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "rfq",
- "shank",
 ]
 
 [[package]]

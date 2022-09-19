@@ -49,23 +49,12 @@ fn validate(ctx: &Context<SettleTwoPartyDefaultAccounts>) -> Result<()> {
         ProtocolError::NoCollateralLocked
     );
 
-    require!(
-        matches!(response.defaulting_party.unwrap(), DefaultingParty::Both),
-        ProtocolError::InvalidDefaultingParty
-    );
-
     Ok(())
 }
 
 pub fn settle_both_party_default_collateral_instruction(
     ctx: Context<SettleTwoPartyDefaultAccounts>,
 ) -> Result<()> {
-    let response = &mut ctx.accounts.response;
-    if response.state != StoredResponseState::Defaulted {
-        response.default_by_time();
-        response.exit(ctx.program_id)?;
-    }
-
     validate(&ctx)?;
 
     let SettleTwoPartyDefaultAccounts {
@@ -79,6 +68,16 @@ pub fn settle_both_party_default_collateral_instruction(
         token_program,
         ..
     } = ctx.accounts;
+
+    if response.state != StoredResponseState::Defaulted {
+        response.default_by_time();
+        response.exit(ctx.program_id)?;
+    }
+
+    require!(
+        matches!(response.defaulting_party.unwrap(), DefaultingParty::Both),
+        ProtocolError::InvalidDefaultingParty
+    );
 
     transfer_collateral_token(
         response.taker_collateral_locked,

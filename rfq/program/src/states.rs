@@ -346,6 +346,7 @@ impl CollateralInfo {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct Instrument {
     pub program_key: Pubkey,
+    pub can_default_mid_settlement: bool,
     pub validate_data_account_amount: u8,
     pub prepare_to_settle_account_amount: u8,
     pub settle_account_amount: u8,

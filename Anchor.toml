@@ -2,6 +2,7 @@
 rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
 risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
 spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+failing_instrument = "RvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz22"
 
 [programs.devnet]
 rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
@@ -17,12 +18,13 @@ spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
-wallet = "~/.config/solana/convergence-v2.json"
+cluster = "localnet"
+wallet = "/home/yaroslav/Documents/Projects/Work/rfq/keypair.json"
 
 [workspace]
 members = [
     "rfq/program",
     "risk-engine/program",
-    "spot-instrument/program"
+    "spot-instrument/program",
+    "tests/programs/failing-instrument",
 ]

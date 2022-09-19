@@ -21,6 +21,18 @@ export class SpotInstrument implements Instrument {
     this.side = side ?? DEFAULT_INSTRUMENT_SIDE;
   }
 
+  static async add(context: Context) {
+    await context.program.methods
+      .addInstrument(false, 1, 7, 3, 3, 4)
+      .accounts({
+        authority: context.dao.publicKey,
+        protocol: context.protocolPda,
+        instrumentProgram: context.spotInstrument.programId,
+      })
+      .signers([context.dao])
+      .rpc();
+  }
+
   async toLegData() {
     return {
       instrument: this.context.spotInstrument.programId,

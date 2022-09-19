@@ -1,6 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { MAKER_CONFIRMED_COLLATERAL, TAKER_CONFIRMED_COLLATERAL } from "../utilities/constants";
+import { FailingInstrument } from "../utilities/failingInstrument";
 import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
@@ -243,6 +244,20 @@ describe("RFQ Spot instrument integration tests", () => {
 
     await rfq.cancel();
     await rfq.unlockCollateral();
+    await rfq.cleanUp();
+  });
+
+  it.only("Create RFQ, respond and confirm, taker fails mid settlement", async () => {
+    const rfq = await context.initializeRfq({ legs: [new FailingInstrument(context, AuthoritySide.Taker)] });
+    const response = await rfq.respond();
+    await response.confirm();
+    await response.prepareSettlement(AuthoritySide.Taker);
+    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.settle(taker, [maker]);
+    await response.settleOnePartyDefault();
+    await response.revertSettlementPreparation(AuthoritySide.Taker);
+    await response.revertSettlementPreparation(AuthoritySide.Maker);
+    await response.cleanUp();
     await rfq.cleanUp();
   });
 });
