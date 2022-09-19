@@ -11,3 +11,4 @@ name = "hxro_instrument"
 [dependencies]
 anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }
 dex-cpi = { path="../dex-cpi", features=["cpi"] }
+borsh = "0.9.3"

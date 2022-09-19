@@ -1,2 +1,3 @@
 [scripts]
 test = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/*.ts"
+test_hxro = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/hxro.spec.ts"
