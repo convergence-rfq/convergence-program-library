@@ -4,7 +4,7 @@ import { MAKER_CONFIRMED_COLLATERAL, TAKER_CONFIRMED_COLLATERAL } from "../utili
 import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
 import { PsyoptionsAmericanInstrument } from "../utilities/psyoptionsAmericanInstrument";
 import { SpotInstrument } from "../utilities/spotInstrument";
-import { AuthoritySide, FixedSize, OrderType, PsyoptionsAmericanContract, Quote, Side } from "../utilities/types";
+import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 
 describe("RFQ Psyoptions American instrument integration tests", () => {
@@ -23,18 +23,19 @@ describe("RFQ Psyoptions American instrument integration tests", () => {
   it("Create two-way RFQ with one spot leg and one option leg, respond and settle as sell", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
 
-    const contract = {
-      UnderlyingAmountPerContract: new BN(1),
-      UnderlyingAssetMint: context.assetToken.publicKey,
-      ExpirationUnixTimestamp: new BN(1),
-      QuoteAmountPerContract: new BN(1),
-    };
+    const underlyingAmountPerContract = new BN(1);
+    const underlyingAssetMint = context.assetToken.publicKey;
+    const expirationUnixTimestamp = new BN(1);
+    const quoteAmountPerContract = new BN(1);
 
     const rfq = await context.initializeRfq({
       legs: [
         new SpotInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid }),
         new PsyoptionsAmericanInstrument(context, {
-          contract,
+          underlyingAmountPerContract,
+          underlyingAssetMint,
+          expirationUnixTimestamp,
+          quoteAmountPerContract,
           amount: withTokenDecimals(1),
           side: Side.Bid,
         }),

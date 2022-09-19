@@ -4,16 +4,33 @@ import { AccountMeta, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@sola
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "./constants";
 import { Instrument } from "./instrument";
 import { getPsyoptionsAmericanEscrowPda } from "./pdas";
-import { AuthoritySide, PsyoptionsAmericanContract } from "./types";
+import { AuthoritySide } from "./types";
 import { Context, Mint, Response, Rfq } from "./wrappers";
 
 export class PsyoptionsAmericanInstrument implements Instrument {
-  private contract: any;
+  private underlyingAssetMint: PublicKey;
+  private expirationUnixTimestamp: BN;
+  private quoteAmountPerContract: BN;
+  private underlyingAssetAmount: BN;
   private amount: BN;
   private side: { bid: {} } | { ask: {} };
 
-  constructor(private context: Context, { contract = {}, amount = new BN(0), side = null } = {}) {
-    this.contract = contract;
+  constructor(
+    private context: Context,
+    {
+      underlyingAssetAmount = new BN(1),
+      underlyingAmountPerContract = new BN(1),
+      underlyingAssetMint = new BN(1),
+      expirationUnixTimestamp = new BN(0),
+      quoteAmountPerContract = new BN(1),
+      amount = new BN(0),
+      side = null,
+    } = {}
+  ) {
+    this.expirationUnixTimestamp = expirationUnixTimestamp;
+    this.underlyingAssetAmount = underlyingAssetAmount;
+    this.quoteAmountPerContract = quoteAmountPerContract;
+    this.underlyingAssetMint = underlyingAssetMint;
     this.amount = amount;
     this.side = side ?? DEFAULT_INSTRUMENT_SIDE;
   }
@@ -21,7 +38,7 @@ export class PsyoptionsAmericanInstrument implements Instrument {
   async toLegData() {
     return {
       instrument: this.context.psyoptionsAmericanInstrument.programId,
-      instrumentData: this.contract.UnderlyingAssetMint.toBytes(),
+      instrumentData: this.underlyingAssetMint.toBytes(),
       instrumentAmount: new BN(this.amount),
       side: this.side,
     };

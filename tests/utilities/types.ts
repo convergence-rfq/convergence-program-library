@@ -64,10 +64,3 @@ export const FixedSize = {
     };
   },
 };
-
-export const PsyoptionsAmericanContract = {
-  UnderlyingAssetMint: PublicKey,
-  UnderlyingAmountPerContract: BN,
-  ExpirationUnixTimestamp: BN,
-  QuoteAmountPerContract: BN,
-};

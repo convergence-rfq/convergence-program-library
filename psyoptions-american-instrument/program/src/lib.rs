@@ -4,7 +4,7 @@ use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
 use psy_american::OptionMarket;
-use psy_american::cpi::accounts::MintOptionV2;
+//use psy_american::cpi::accounts::MintOptionV2;
 
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
@@ -20,16 +20,15 @@ pub mod psyoptions_american_instrument {
     pub fn validate_data(
         ctx: Context<ValidateData>,
         data_size: u32,
-        mint_address: Pubkey,
+        underlying_asset_mint: Pubkey,
+        underlying_amount_per_contract: u64,
+        quote_amount_per_contract: u64,
+        expiration_unix_timestamp: i64,
     ) -> Result<()> {
         require!(
-            data_size as usize == (std::mem::size_of::<Pubkey>() + std::mem::size_of::<Contract>()),
-            PsyoptionsAmericanError::InvalidDataSize
+            underlying_asset_mint == ctx.accounts.underlying_asset_mint.key(),
+            PsyoptionsAmericanError::PassedMintDoesNotMatch
         );
-        //require!(
-        //    mint_address == ctx.accounts.mint.key(),
-        //    PsyoptionsAmericanError::PassedMintDoesNotMatch
-        //);
         Ok(())
     }
 
@@ -273,15 +272,7 @@ pub struct ValidateData<'info> {
     pub protocol: Account<'info, ProtocolState>,
 
     /// user provided
-    pub contract: Account<'info, Contract>,
-}
-
-#[account]
-pub struct Contract  {
-    pub underlying_asset_mint: Pubkey,
-    pub underlying_amount_per_contract: u64,
-    pub quote_amount_per_contract: u64,
-    pub expiration_unix_timestamp: i64,
+    pub underlying_asset_mint: Account<'info, Mint>,
 }
 
 #[derive(Accounts)]
