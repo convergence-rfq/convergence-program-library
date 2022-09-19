@@ -21,17 +21,17 @@ pub mod psyoptions_american_instrument {
         ctx: Context<ValidateData>,
         data_size: u32,
         underlying_asset_mint: Pubkey,
-        underlying_amount_per_contract: u64,
-        quote_amount_per_contract: u64,
-        expiration_unix_timestamp: i64,
+        //underlying_amount_per_contract: u64,
+        //quote_amount_per_contract: u64,
+        //expiration_unix_timestamp: i64,
     ) -> Result<()> {
         require!(
             underlying_asset_mint == ctx.accounts.underlying_asset_mint.key(),
             PsyoptionsAmericanError::PassedMintDoesNotMatch
         );
-        require!(underlying_amount_per_contract > 0, PsyoptionsAmericanError::PassedMintDoesNotMatch);
-        require!(quote_amount_per_contract > 0, PsyoptionsAmericanError::PassedMintDoesNotMatch);
-        require!(expiration_unix_timestamp > 0, PsyoptionsAmericanError::PassedMintDoesNotMatch);
+        //require!(underlying_amount_per_contract > 0, PsyoptionsAmericanError::PassedMintDoesNotMatch);
+        //require!(quote_amount_per_contract > 0, PsyoptionsAmericanError::PassedMintDoesNotMatch);
+        //require!(expiration_unix_timestamp > 0, PsyoptionsAmericanError::PassedMintDoesNotMatch);
 
         Ok(())
     }

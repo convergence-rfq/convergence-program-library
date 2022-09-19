@@ -35,9 +35,10 @@ export class PsyoptionsAmericanInstrument implements Instrument {
   }
 
   async toLegData() {
+    const instrumentData = this.underlyingAssetMint.publicKey.toBytes();
     return {
       instrument: this.context.psyoptionsAmericanInstrument.programId,
-      instrumentData: this.underlyingAssetMint.publicKey.toBytes(),
+      instrumentData,
       instrumentAmount: new BN(this.amount),
       side: this.side,
     };
@@ -56,7 +57,7 @@ export class PsyoptionsAmericanInstrument implements Instrument {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     return [
-      { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
+      { pubkey: this.context.psyoptionsAmericanInstrument.programId, isSigner: false, isWritable: false },
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
       {
         pubkey: await Token.getAssociatedTokenAddress(
