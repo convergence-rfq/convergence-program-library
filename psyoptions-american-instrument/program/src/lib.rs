@@ -29,6 +29,10 @@ pub mod psyoptions_american_instrument {
             underlying_asset_mint == ctx.accounts.underlying_asset_mint.key(),
             PsyoptionsAmericanError::PassedMintDoesNotMatch
         );
+        require!(underlying_amount_per_contract > 0, PsyoptionsAmericanError::PassedMintDoesNotMatch);
+        require!(quote_amount_per_contract > 0, PsyoptionsAmericanError::PassedMintDoesNotMatch);
+        require!(expiration_unix_timestamp > 0, PsyoptionsAmericanError::PassedMintDoesNotMatch);
+
         Ok(())
     }
 
