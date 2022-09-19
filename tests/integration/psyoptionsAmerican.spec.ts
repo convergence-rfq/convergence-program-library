@@ -23,19 +23,19 @@ describe("RFQ Psyoptions American instrument integration tests", () => {
   it("Create two-way RFQ with one spot leg and one option leg, respond and settle as sell", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
 
+    const underlyingAssetMint = context.assetToken;
     const underlyingAmountPerContract = new BN(1);
-    const underlyingAssetMint = context.assetToken.publicKey;
-    const expirationUnixTimestamp = new BN(1);
     const quoteAmountPerContract = new BN(1);
+    const expirationUnixTimestamp = new BN(1);
 
     const rfq = await context.initializeRfq({
       legs: [
         new SpotInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid }),
         new PsyoptionsAmericanInstrument(context, {
-          underlyingAmountPerContract,
           underlyingAssetMint,
-          expirationUnixTimestamp,
+          underlyingAmountPerContract,
           quoteAmountPerContract,
+          expirationUnixTimestamp,
           amount: withTokenDecimals(1),
           side: Side.Bid,
         }),

@@ -8,29 +8,28 @@ import { AuthoritySide } from "./types";
 import { Context, Mint, Response, Rfq } from "./wrappers";
 
 export class PsyoptionsAmericanInstrument implements Instrument {
-  private underlyingAssetMint: PublicKey;
+  private underlyingAssetMint: Mint;
   private expirationUnixTimestamp: BN;
+  private underlyingAmountPerContract: BN;
   private quoteAmountPerContract: BN;
-  private underlyingAssetAmount: BN;
   private amount: BN;
   private side: { bid: {} } | { ask: {} };
 
   constructor(
     private context: Context,
     {
-      underlyingAssetAmount = new BN(1),
+      underlyingAssetMint = context.assetToken,
       underlyingAmountPerContract = new BN(1),
-      underlyingAssetMint = new BN(1),
-      expirationUnixTimestamp = new BN(0),
       quoteAmountPerContract = new BN(1),
+      expirationUnixTimestamp = new BN(0),
       amount = new BN(0),
       side = null,
     } = {}
   ) {
-    this.expirationUnixTimestamp = expirationUnixTimestamp;
-    this.underlyingAssetAmount = underlyingAssetAmount;
-    this.quoteAmountPerContract = quoteAmountPerContract;
     this.underlyingAssetMint = underlyingAssetMint;
+    this.underlyingAmountPerContract = underlyingAmountPerContract;
+    this.quoteAmountPerContract = quoteAmountPerContract;
+    this.expirationUnixTimestamp = expirationUnixTimestamp;
     this.amount = amount;
     this.side = side ?? DEFAULT_INSTRUMENT_SIDE;
   }
@@ -38,7 +37,7 @@ export class PsyoptionsAmericanInstrument implements Instrument {
   async toLegData() {
     return {
       instrument: this.context.psyoptionsAmericanInstrument.programId,
-      instrumentData: this.underlyingAssetMint.toBytes(),
+      instrumentData: this.underlyingAssetMint.publicKey.toBytes(),
       instrumentAmount: new BN(this.amount),
       side: this.side,
     };
@@ -57,19 +56,19 @@ export class PsyoptionsAmericanInstrument implements Instrument {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     return [
-      { pubkey: this.context.psyoptionsAmericanInstrument.programId, isSigner: false, isWritable: false },
+      { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
-      //{
-      //  pubkey: await await Token.getAssociatedTokenAddress(
-      //    ASSOCIATED_TOKEN_PROGRAM_ID,
-      //    TOKEN_PROGRAM_ID,
-      //    this.mint.publicKey,
-      //    caller.publicKey
-      //  ),
-      //  isSigner: false,
-      //  isWritable: true,
-      //},
-      //{ pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
+      {
+        pubkey: await Token.getAssociatedTokenAddress(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          this.underlyingAssetMint.publicKey,
+          caller.publicKey
+        ),
+        isSigner: false,
+        isWritable: true,
+      },
+      { pubkey: this.underlyingAssetMint.publicKey, isSigner: false, isWritable: false },
       {
         pubkey: await getPsyoptionsAmericanEscrowPda(
           response.account,
@@ -97,11 +96,11 @@ export class PsyoptionsAmericanInstrument implements Instrument {
         isSigner: false,
         isWritable: true,
       },
-      //{
-      //  pubkey: await this.mint.getAssociatedAddress(assetReceiver),
-      //  isSigner: false,
-      //  isWritable: true,
-      //},
+      {
+        pubkey: await this.underlyingAssetMint.getAssociatedAddress(assetReceiver),
+        isSigner: false,
+        isWritable: true,
+      },
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     ];
   }
@@ -125,11 +124,11 @@ export class PsyoptionsAmericanInstrument implements Instrument {
         isSigner: false,
         isWritable: true,
       },
-      //{
-      //  pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
-      //  isSigner: false,
-      //  isWritable: true,
-      //},
+      {
+        pubkey: await this.underlyingAssetMint.getAssociatedAddress(caller.publicKey),
+        isSigner: false,
+        isWritable: true,
+      },
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     ];
   }
@@ -151,11 +150,11 @@ export class PsyoptionsAmericanInstrument implements Instrument {
         isSigner: false,
         isWritable: true,
       },
-      //{
-      //  pubkey: await this.mint.getAssociatedAddress(this.context.dao.publicKey),
-      //  isSigner: false,
-      //  isWritable: true,
-      //},
+      {
+        pubkey: await this.underlyingAssetMint.getAssociatedAddress(this.context.dao.publicKey),
+        isSigner: false,
+        isWritable: true,
+      },
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     ];
   }

@@ -49,7 +49,7 @@ export class SpotInstrument implements Instrument {
       { pubkey: this.context.spotInstrument.programId, isSigner: false, isWritable: false },
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
       {
-        pubkey: await await Token.getAssociatedTokenAddress(
+        pubkey: await Token.getAssociatedTokenAddress(
           ASSOCIATED_TOKEN_PROGRAM_ID,
           TOKEN_PROGRAM_ID,
           this.mint.publicKey,
