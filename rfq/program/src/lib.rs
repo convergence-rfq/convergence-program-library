@@ -17,12 +17,14 @@ use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::initialize_protocol::*;
+use instructions::rfq::add_legs_to_rfq::*;
 use instructions::rfq::cancel_response::*;
 use instructions::rfq::cancel_rfq::*;
 use instructions::rfq::clean_up_response::*;
 use instructions::rfq::clean_up_rfq::*;
 use instructions::rfq::confirm_response::*;
-use instructions::rfq::intitialize_rfq::*;
+use instructions::rfq::create_rfq::*;
+use instructions::rfq::finalize_rfq_construction::*;
 use instructions::rfq::prepare_to_settle::*;
 use instructions::rfq::respond_to_rfq::*;
 use instructions::rfq::revert_preparation::*;
@@ -76,6 +78,13 @@ pub mod rfq {
         )
     }
 
+    pub fn prepare_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
+        side: AuthoritySide,
+    ) -> Result<()> {
+        prepare_settlement_instruction(ctx, side)
+    }
+
     pub fn initialize_collateral(ctx: Context<InitializeCollateralAccounts>) -> Result<()> {
         initialize_collateral_instruction(ctx)
     }
@@ -84,22 +93,28 @@ pub mod rfq {
         fund_collateral_instruction(ctx, amount)
     }
 
-    pub fn intitialize_rfq<'info>(
-        ctx: Context<'_, '_, '_, 'info, InitializeRfqAccounts<'info>>,
+    pub fn create_rfq<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
+        expected_leg_size: u16,
         legs: Vec<Leg>,
         order_type: OrderType,
         fixed_size: FixedSize,
         active_window: u32,
         settling_window: u32,
     ) -> Result<()> {
-        initialize_rfq_instruction(
+        create_rfq_instruction(
             ctx,
+            expected_leg_size,
             legs,
             order_type,
             fixed_size,
             active_window,
             settling_window,
         )
+    }
+
+    pub fn finalize_rfq_construction(ctx: Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
+        finalize_rfq_construction_instruction(ctx)
     }
 
     pub fn respond_to_rfq(
@@ -118,11 +133,11 @@ pub mod rfq {
         confirm_response_instruction(ctx, side, override_leg_multiplier_bps)
     }
 
-    pub fn prepare_settlement<'info>(
-        ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
-        side: AuthoritySide,
+    pub fn add_legs_to_rfq<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddLegsToRfqAccounts<'info>>,
+        legs: Vec<Leg>,
     ) -> Result<()> {
-        prepare_settlement_instruction(ctx, side)
+        add_legs_to_rfq_instruction(ctx, legs)
     }
 
     pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {

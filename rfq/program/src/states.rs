@@ -48,6 +48,7 @@ pub struct Rfq {
     pub active_window: u32,
     pub settling_window: u32,
 
+    pub expected_leg_size: u16,
     pub state: StoredRfqState,
     pub non_response_taker_collateral_locked: u64,
     pub total_taker_collateral_locked: u64,
@@ -61,6 +62,7 @@ pub struct Rfq {
 impl Rfq {
     pub fn get_state(&self) -> Result<RfqState> {
         let state = match self.state {
+            StoredRfqState::Constructed => RfqState::Constructed,
             StoredRfqState::Active => {
                 let current_time = Clock::get()?.unix_timestamp;
                 if !self.active_window_ended(current_time) {
@@ -403,12 +405,14 @@ impl PriceQuote {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum StoredRfqState {
+    Constructed,
     Active,
     Canceled,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RfqState {
+    Constructed,
     Active,
     Canceled,
     Expired,
@@ -437,10 +441,6 @@ pub struct Leg {
     pub instrument_data: Vec<u8>,
     pub instrument_amount: u64,
     pub side: Side,
-}
-
-impl Leg {
-    pub const EMPTY_SIZE: usize = 32 + 4 + 8 + 1;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

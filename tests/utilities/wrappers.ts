@@ -20,7 +20,7 @@ import {
 import { AuthoritySide, Quote, Side, FixedSize } from "./types";
 import { SpotInstrument } from "./spotInstrument";
 import { Instrument } from "./instrument";
-import { executeInParallel } from "./helpers";
+import { calculateLegsSize, executeInParallel } from "./helpers";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
@@ -132,36 +132,42 @@ export class Context {
       .rpc();
   }
 
-  async initializeRfq({
+  async createRfq({
     legs = [new SpotInstrument(this)],
     orderType = null,
     fixedSize = null,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
+    legsSize = null,
+    finalize = true,
   } = {}) {
     orderType = orderType ?? DEFAULT_ORDER_TYPE;
     fixedSize = fixedSize ?? FixedSize.None;
+    legsSize = legsSize ?? calculateLegsSize(legs);
     const legData = await Promise.all(legs.map(async (x) => await x.toLegData()));
     const remainingAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
-
     const rfq = new Keypair();
-    await this.program.methods
-      .intitializeRfq(legData, orderType, fixedSize, activeWindow, settlingWindow)
+    const rfqObject = new Rfq(this, rfq.publicKey, legs);
+
+    let txConstructor = await this.program.methods
+      .createRfq(legsSize, legData, orderType, fixedSize, activeWindow, settlingWindow)
       .accounts({
         taker: this.taker.publicKey,
         protocol: this.protocolPda,
         rfq: rfq.publicKey,
-        collateralInfo: await getCollateralInfoPda(this.taker.publicKey, this.program.programId),
-        collateralToken: await getCollateralTokenPda(this.taker.publicKey, this.program.programId),
         quoteMint: this.quoteToken.publicKey,
-        riskEngine: this.riskEngine.programId,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts(remainingAccounts)
-      .signers([this.taker, rfq])
-      .rpc();
+      .signers([this.taker, rfq]);
 
-    return new Rfq(this, rfq.publicKey, legs);
+    if (finalize) {
+      txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeRfqInstruction()]);
+    }
+
+    await txConstructor.rpc();
+
+    return rfqObject;
   }
 }
 
@@ -288,6 +294,44 @@ export class Rfq {
       })
       .signers([this.context.taker])
       .rpc();
+  }
+
+  async addLegs(legs: Instrument[], finalize = true) {
+    this.legs = this.legs.concat(legs);
+
+    const legData = await Promise.all(legs.map(async (x) => await x.toLegData()));
+    const remainingAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
+
+    let txConstructor = this.context.program.methods
+      .addLegsToRfq(legData)
+      .accounts({
+        taker: this.context.taker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+      })
+      .remainingAccounts(remainingAccounts)
+      .signers([this.context.taker]);
+
+    if (finalize) {
+      txConstructor = txConstructor.postInstructions([await this.getFinalizeRfqInstruction()]);
+    }
+
+    await txConstructor.rpc();
+  }
+
+  async getFinalizeRfqInstruction() {
+    return this.context.program.methods
+      .finalizeRfqConstruction()
+      .accounts({
+        taker: this.context.taker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+        collateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
+        collateralToken: await getCollateralTokenPda(this.context.taker.publicKey, this.context.program.programId),
+        riskEngine: this.context.riskEngine.programId,
+      })
+      .signers([this.context.taker])
+      .instruction();
   }
 
   async getData() {

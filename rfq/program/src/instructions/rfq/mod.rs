@@ -1,9 +1,11 @@
+pub mod add_legs_to_rfq;
 pub mod cancel_response;
 pub mod cancel_rfq;
 pub mod clean_up_response;
 pub mod clean_up_rfq;
 pub mod confirm_response;
-pub mod intitialize_rfq;
+pub mod create_rfq;
+pub mod finalize_rfq_construction;
 pub mod prepare_to_settle;
 pub mod respond_to_rfq;
 pub mod revert_preparation;

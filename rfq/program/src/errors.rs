@@ -18,6 +18,8 @@ pub enum ProtocolError {
     NotARiskEngine,
     #[msg("An Rfq without legs is not supported")]
     EmptyLegsNotSupported,
+    #[msg("Leg size does not match specified expected leg size")]
+    LegSizeDoesNotMatchExpectedSize,
     #[msg("Not enough tokens")]
     NotEnoughTokens,
     #[msg("Not enough collateral")]
