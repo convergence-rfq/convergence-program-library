@@ -21,7 +21,8 @@ pub struct RespondToRfqAccounts<'info> {
     pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
     pub rfq: Account<'info, Rfq>,
-    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>())]
+    // rfq legs additional storage for first_to_prepare_legs field
+    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>() + rfq.legs.len() * 1)]
     pub response: Account<'info, Response>,
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
                 bump = collateral_info.bump)]
@@ -106,11 +107,11 @@ pub fn respond_to_rfq_instruction(
         maker_collateral_locked: 0,
         taker_collateral_locked: 0,
         state: StoredResponseState::Active,
-        maker_prepared_to_settle: false,
-        taker_prepared_to_settle: false,
+        taker_prepared_legs: 0,
+        maker_prepared_legs: 0,
         confirmed: None,
         defaulting_party: None,
-        first_to_prepare: None,
+        first_to_prepare_legs: vec![],
         bid,
         ask,
     });

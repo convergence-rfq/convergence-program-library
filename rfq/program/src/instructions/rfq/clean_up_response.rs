@@ -17,7 +17,7 @@ pub struct CleanUpResponseAccounts<'info> {
     #[account(mut, constraint = maker.key() == response.maker @ ProtocolError::NotAMaker)]
     pub maker: UncheckedAccount<'info>,
     /// CHECK: is an authority first to prepare for settlement. If no preparation, it can be any account
-    pub first_to_prepare: UncheckedAccount<'info>,
+    pub first_to_prepare_quote: UncheckedAccount<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
@@ -53,7 +53,7 @@ fn validate(ctx: &Context<CleanUpResponseAccounts>) -> Result<()> {
     ])?;
     if let ResponseState::Defaulted = response_state {
         require!(
-            !response.taker_prepared_to_settle && !response.maker_prepared_to_settle,
+            response.taker_prepared_legs == 0 && response.maker_prepared_legs == 0,
             ProtocolError::PendingPreparations
         );
     }
@@ -78,7 +78,7 @@ pub fn clean_up_response_instruction<'info>(
     validate(&ctx)?;
 
     let CleanUpResponseAccounts {
-        first_to_prepare,
+        first_to_prepare_quote,
         protocol,
         rfq,
         response,
@@ -88,15 +88,13 @@ pub fn clean_up_response_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    if response.first_to_prepare.is_some() {
+    if response.first_to_prepare_legs.len() > 0 {
         let quote_escrow: Account<TokenAccount> = Account::try_from(quote_escrow)?;
 
-        let expected_first_to_prepare = response
-            .first_to_prepare
-            .unwrap()
-            .to_public_key(rfq, response);
+        let expected_first_to_prepare_quote =
+            response.first_to_prepare_legs[0].to_public_key(rfq, response);
         require!(
-            first_to_prepare.key() == expected_first_to_prepare,
+            first_to_prepare_quote.key() == expected_first_to_prepare_quote,
             ProtocolError::NotFirstToPrepare
         );
 
@@ -110,7 +108,7 @@ pub fn clean_up_response_instruction<'info>(
 
         close_quote_escrow_account(
             &quote_escrow,
-            first_to_prepare,
+            first_to_prepare_quote,
             response.key(),
             *ctx.bumps.get("quote_escrow").unwrap(),
             token_program,
@@ -118,7 +116,12 @@ pub fn clean_up_response_instruction<'info>(
 
         let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-        for (index, leg) in rfq.legs.iter().enumerate() {
+        for (index, leg) in rfq
+            .legs
+            .iter()
+            .enumerate()
+            .take(response.first_to_prepare_legs.len())
+        {
             clean_up(
                 leg,
                 index as u8,

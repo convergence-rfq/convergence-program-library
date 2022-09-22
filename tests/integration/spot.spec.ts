@@ -254,7 +254,7 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create RFQ with a lot of spot legs and settle it", async () => {
-    const legAmount = 6;
+    const legAmount = 10;
     const mints = await Promise.all(
       [...Array(legAmount)].map(() => {
         return Mint.create(context);
@@ -274,14 +274,53 @@ describe("RFQ Spot instrument integration tests", () => {
     await rfq.addLegs(legs.slice(legAmount / 2));
     const response = await rfq.respond();
     await response.confirm();
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+    await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
     await response.settle(
       taker,
       [...Array(legAmount)].map(() => maker)
     );
 
     await response.unlockResponseCollateral();
+    await response.cleanUp();
+  });
+
+  it("Create RFQ with a lot of spot legs and default with partial preparation", async () => {
+    const legAmount = 10;
+    const mints = await Promise.all(
+      [...Array(legAmount)].map(() => {
+        return Mint.create(context);
+      })
+    );
+    const legs = mints.map(
+      (mint) =>
+        new SpotInstrument(context, {
+          mint,
+        })
+    );
+    const rfq = await context.createRfq({
+      legs: legs.slice(0, legAmount / 2),
+      legsSize: calculateLegsSize(legs),
+      finalize: false,
+      activeWindow: 2,
+      settlingWindow: 1,
+    });
+    await rfq.addLegs(legs.slice(legAmount / 2));
+    const response = await rfq.respond();
+    await response.confirm();
+    await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+    await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
+
+    await sleep(2000);
+
+    await response.partlyRevertSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
+    await response.revertSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
+    await response.revertSettlementPreparation(AuthoritySide.Maker, legAmount / 2);
+
+    await response.settleOnePartyDefault();
     await response.cleanUp();
   });
 });

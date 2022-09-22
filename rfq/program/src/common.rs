@@ -1,9 +1,11 @@
+use std::iter;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 
 use crate::{
     constants::{COLLATERAL_SEED, QUOTE_ESCROW_SEED},
-    states::{CollateralInfo, Response, Rfq},
+    states::{AuthoritySide, CollateralInfo, Response, Rfq, StoredResponseState},
 };
 
 pub fn unlock_response_collateral(
@@ -82,4 +84,27 @@ pub fn transfer_quote_escrow_token<'info>(
     transfer(transfer_ctx, quote_amount)?;
 
     Ok(())
+}
+
+pub fn update_state_after_preparation(
+    side: AuthoritySide,
+    legs_prepared: u8,
+    rfq: &mut Rfq,
+    response: &mut Response,
+) {
+    let state_legs_prepared = response.get_prepared_legs_mut(side);
+    *state_legs_prepared += legs_prepared;
+
+    let state_legs_prepared = response.get_prepared_legs(side);
+    if state_legs_prepared > response.first_to_prepare_legs.len() as u8 {
+        let additional_entries = state_legs_prepared - response.first_to_prepare_legs.len() as u8;
+        let items = iter::repeat(side).take(additional_entries as usize);
+        response.first_to_prepare_legs.extend(items);
+    }
+
+    if response.is_prepared(AuthoritySide::Taker, rfq)
+        && response.is_prepared(AuthoritySide::Maker, rfq)
+    {
+        response.state = StoredResponseState::ReadyForSettling;
+    }
 }

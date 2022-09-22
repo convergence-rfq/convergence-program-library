@@ -1,8 +1,9 @@
 use crate::{
+    common::update_state_after_preparation,
     constants::{PROTOCOL_SEED, QUOTE_ESCROW_SEED},
     errors::ProtocolError,
     interfaces::instrument::prepare_to_settle,
-    states::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
+    states::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
@@ -31,7 +32,11 @@ pub struct PrepareSettlementAccounts<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-fn validate(ctx: &Context<PrepareSettlementAccounts>, side: AuthoritySide) -> Result<()> {
+fn validate(
+    ctx: &Context<PrepareSettlementAccounts>,
+    side: AuthoritySide,
+    leg_amount_to_prepare: u8,
+) -> Result<()> {
     let PrepareSettlementAccounts {
         caller,
         rfq,
@@ -43,6 +48,11 @@ fn validate(ctx: &Context<PrepareSettlementAccounts>, side: AuthoritySide) -> Re
     require!(
         matches!(actual_side, Some(inner_side) if inner_side == side),
         ProtocolError::NotAPassedAuthority
+    );
+
+    require!(
+        leg_amount_to_prepare > 0 && leg_amount_to_prepare as usize <= rfq.legs.len(),
+        ProtocolError::InvalidSpecifiedLegAmount
     );
 
     let response_state = response.get_state(rfq)?;
@@ -57,14 +67,20 @@ fn validate(ctx: &Context<PrepareSettlementAccounts>, side: AuthoritySide) -> Re
         ])?,
     };
 
+    require!(
+        response.get_prepared_legs(side) == 0,
+        ProtocolError::AlreadyStartedToPrepare
+    );
+
     Ok(())
 }
 
 pub fn prepare_settlement_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
     side: AuthoritySide,
+    leg_amount_to_prepare: u8,
 ) -> Result<()> {
-    validate(&ctx, side)?;
+    validate(&ctx, side, leg_amount_to_prepare)?;
 
     let PrepareSettlementAccounts {
         caller,
@@ -77,10 +93,14 @@ pub fn prepare_settlement_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    let side = response.get_authority_side(rfq, &caller.key()).unwrap();
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    for (index, leg) in rfq.legs.iter().enumerate() {
+    for (index, leg) in rfq
+        .legs
+        .iter()
+        .take(leg_amount_to_prepare as usize)
+        .enumerate()
+    {
         prepare_to_settle(
             leg,
             index as u8,
@@ -103,14 +123,7 @@ pub fn prepare_settlement_instruction<'info>(
         transfer(transfer_ctx, quote_amount as u64)?;
     }
 
-    response.first_to_prepare = response.first_to_prepare.or(Some(side));
-    match side {
-        AuthoritySide::Taker => response.taker_prepared_to_settle = true,
-        AuthoritySide::Maker => response.maker_prepared_to_settle = true,
-    };
-    if response.taker_prepared_to_settle && response.maker_prepared_to_settle {
-        response.state = StoredResponseState::ReadyForSettling;
-    }
+    update_state_after_preparation(side, leg_amount_to_prepare, rfq, response);
 
     Ok(())
 }

@@ -152,10 +152,8 @@ pub mod spot_instrument {
             SpotError::InvalidBackupAddress
         );
 
-        let expected_first_to_prepare = response
-            .first_to_prepare
-            .unwrap()
-            .to_public_key(rfq, response);
+        let expected_first_to_prepare =
+            response.first_to_prepare_legs[leg_index as usize].to_public_key(rfq, response);
         require!(
             first_to_prepare.key() == expected_first_to_prepare,
             SpotError::NotFirstToPrepare

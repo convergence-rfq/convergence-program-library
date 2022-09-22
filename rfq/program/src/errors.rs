@@ -78,4 +78,10 @@ pub enum ProtocolError {
     HaveExistingResponses,
     #[msg("Can't cancel an rfq with existing responses")]
     HaveResponses,
+    #[msg("Invalid specified leg amount")]
+    InvalidSpecifiedLegAmount,
+    #[msg("Already started to prepare to settle")]
+    AlreadyStartedToPrepare,
+    #[msg("Have not started to prepare to settle")]
+    HaveNotStartedToPrepare,
 }

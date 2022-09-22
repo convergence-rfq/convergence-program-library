@@ -340,6 +340,7 @@ export class Rfq {
 }
 
 export class Response {
+  //storing single here assumes all legs are prepared by the same single side
   public firstToPrepare: PublicKey;
 
   constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {
@@ -363,19 +364,21 @@ export class Response {
       .rpc();
   }
 
-  async prepareSettlement(side) {
+  async prepareSettlement(side, legAmount = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
     if (this.firstToPrepare.equals(PublicKey.default)) {
       this.firstToPrepare = caller.publicKey;
     }
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(async (x, index) => await x.getPrepareSettlementAccounts(side, index, this.rfq, this))
+        this.rfq.legs
+          .slice(0, legAmount)
+          .map(async (x, index) => await x.getPrepareSettlementAccounts(side, index, this.rfq, this))
       )
     ).flat();
 
     await this.context.program.methods
-      .prepareSettlement(side)
+      .prepareSettlement(side, legAmount)
       .accounts({
         caller: caller.publicKey,
         quoteTokens: await this.context.quoteToken.getAssociatedAddress(caller.publicKey),
@@ -387,6 +390,29 @@ export class Response {
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([caller])
+      .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async prepareMoreLegsSettlement(side, from: number, legAmount: number) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    const remainingAccounts = await (
+      await Promise.all(
+        this.rfq.legs
+          .slice(from, from + legAmount)
+          .map(async (x, index) => await x.getPrepareSettlementAccounts(side, from + index, this.rfq, this))
+      )
+    ).flat();
+
+    await this.context.program.methods
+      .prepareMoreLegsSettlement(side, legAmount)
+      .accounts({
+        caller: caller.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
       })
       .signers([caller])
       .remainingAccounts(remainingAccounts)
@@ -414,14 +440,14 @@ export class Response {
       .rpc();
   }
 
-  async revertSettlementPreparation(side: { taker: {} } | { maker: {} }) {
+  async revertSettlementPreparation(side: { taker: {} } | { maker: {} }, preparedLegs = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(
-          async (x, index) => await x.getRevertSettlementPreparationAccounts(side, index, this.rfq, this)
-        )
+        this.rfq.legs
+          .slice(0, preparedLegs)
+          .map(async (x, index) => await x.getRevertSettlementPreparationAccounts(side, index, this.rfq, this))
       )
     ).flat();
 
@@ -434,6 +460,33 @@ export class Response {
         quoteTokens: await this.context.quoteToken.getAssociatedAddress(caller.publicKey),
         quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
         tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async partlyRevertSettlementPreparation(
+    side: { taker: {} } | { maker: {} },
+    legAmount: number,
+    preparedLegs = this.rfq.legs.length
+  ) {
+    const remainingAccounts = await (
+      await Promise.all(
+        this.rfq.legs
+          .slice(preparedLegs - legAmount, preparedLegs)
+          .map(
+            async (x, index) =>
+              await x.getRevertSettlementPreparationAccounts(side, preparedLegs - legAmount + index, this.rfq, this)
+          )
+      )
+    ).flat();
+
+    await this.context.program.methods
+      .partlyRevertSettlementPreparation(side, legAmount)
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
       })
       .remainingAccounts(remainingAccounts)
       .rpc();
@@ -512,7 +565,7 @@ export class Response {
       .cleanUpResponse()
       .accounts({
         maker: this.context.maker.publicKey,
-        firstToPrepare: this.firstToPrepare,
+        firstToPrepareQuote: this.firstToPrepare,
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
         response: this.account,
