@@ -21,6 +21,7 @@ use instructions::rfq::add_legs_to_rfq::*;
 use instructions::rfq::cancel_response::*;
 use instructions::rfq::cancel_rfq::*;
 use instructions::rfq::clean_up_response::*;
+use instructions::rfq::clean_up_response_legs::*;
 use instructions::rfq::clean_up_rfq::*;
 use instructions::rfq::confirm_response::*;
 use instructions::rfq::create_rfq::*;
@@ -192,6 +193,13 @@ pub mod rfq {
         ctx: Context<'_, '_, '_, 'info, CleanUpResponseAccounts<'info>>,
     ) -> Result<()> {
         clean_up_response_instruction(ctx)
+    }
+
+    pub fn clean_up_response_legs<'info>(
+        ctx: Context<'_, '_, '_, 'info, CleanUpResponseLegsAccounts<'info>>,
+        leg_amount_to_clear: u8,
+    ) -> Result<()> {
+        clean_up_response_legs_instruction(ctx, leg_amount_to_clear)
     }
 
     pub fn clean_up_rfq<'info>(

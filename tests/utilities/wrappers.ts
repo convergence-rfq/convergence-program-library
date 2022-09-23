@@ -553,11 +553,15 @@ export class Response {
       .rpc();
   }
 
-  async cleanUp() {
+  async cleanUp(preparedLegs = this.rfq.legs.length) {
     let remainingAccounts = [];
     if (this.firstToPrepare) {
       remainingAccounts = await (
-        await Promise.all(this.rfq.legs.map(async (x, index) => await x.getCleanUpAccounts(index, this.rfq, this)))
+        await Promise.all(
+          this.rfq.legs
+            .slice(0, preparedLegs)
+            .map(async (x, index) => await x.getCleanUpAccounts(index, this.rfq, this))
+        )
       ).flat();
     }
 
@@ -572,6 +576,29 @@ export class Response {
         quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
         quoteBackupTokens: await this.context.quoteToken.getAssociatedAddress(this.context.dao.publicKey),
         tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async cleanUpLegs(legAmount: number, preparedLegs = this.rfq.legs.length) {
+    let remainingAccounts = [];
+    if (this.firstToPrepare) {
+      remainingAccounts = await (
+        await Promise.all(
+          this.rfq.legs
+            .slice(preparedLegs - legAmount, preparedLegs)
+            .map(async (x, index) => await x.getCleanUpAccounts(preparedLegs - legAmount + index, this.rfq, this))
+        )
+      ).flat();
+    }
+
+    await this.context.program.methods
+      .cleanUpResponseLegs(legAmount)
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
       })
       .remainingAccounts(remainingAccounts)
       .rpc();

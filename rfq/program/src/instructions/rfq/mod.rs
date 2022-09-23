@@ -2,6 +2,7 @@ pub mod add_legs_to_rfq;
 pub mod cancel_response;
 pub mod cancel_rfq;
 pub mod clean_up_response;
+pub mod clean_up_response_legs;
 pub mod clean_up_rfq;
 pub mod confirm_response;
 pub mod create_rfq;

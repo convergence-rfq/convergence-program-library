@@ -253,8 +253,8 @@ describe("RFQ Spot instrument integration tests", () => {
     await rfq.cleanUp();
   });
 
-  it("Create RFQ with a lot of spot legs and settle it", async () => {
-    const legAmount = 10;
+  it.only("Create RFQ with a lot of spot legs and settle it", async () => {
+    const legAmount = 12;
     const mints = await Promise.all(
       [...Array(legAmount)].map(() => {
         return Mint.create(context);
@@ -284,11 +284,12 @@ describe("RFQ Spot instrument integration tests", () => {
     );
 
     await response.unlockResponseCollateral();
-    await response.cleanUp();
+    await response.cleanUpLegs(legAmount / 2);
+    await response.cleanUp(legAmount / 2);
   });
 
   it("Create RFQ with a lot of spot legs and default with partial preparation", async () => {
-    const legAmount = 10;
+    const legAmount = 12;
     const mints = await Promise.all(
       [...Array(legAmount)].map(() => {
         return Mint.create(context);
@@ -321,6 +322,7 @@ describe("RFQ Spot instrument integration tests", () => {
     await response.revertSettlementPreparation(AuthoritySide.Maker, legAmount / 2);
 
     await response.settleOnePartyDefault();
-    await response.cleanUp();
+    await response.cleanUpLegs(legAmount / 2);
+    await response.cleanUp(legAmount / 2);
   });
 });

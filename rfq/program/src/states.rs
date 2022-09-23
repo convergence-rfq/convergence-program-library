@@ -108,7 +108,7 @@ pub struct Response {
 
     pub confirmed: Option<Confirmation>,
     pub defaulting_party: Option<DefaultingParty>,
-    pub first_to_prepare_legs: Vec<AuthoritySide>,
+    pub leg_preparations_initialized_by: Vec<AuthoritySide>,
     pub bid: Option<Quote>,
     pub ask: Option<Quote>,
 }

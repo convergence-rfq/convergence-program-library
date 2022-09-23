@@ -111,7 +111,7 @@ pub fn respond_to_rfq_instruction(
         maker_prepared_legs: 0,
         confirmed: None,
         defaulting_party: None,
-        first_to_prepare_legs: vec![],
+        leg_preparations_initialized_by: vec![],
         bid,
         ask,
     });

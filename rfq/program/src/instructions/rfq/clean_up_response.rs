@@ -88,11 +88,11 @@ pub fn clean_up_response_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    if response.first_to_prepare_legs.len() > 0 {
+    if response.leg_preparations_initialized_by.len() > 0 {
         let quote_escrow: Account<TokenAccount> = Account::try_from(quote_escrow)?;
 
         let expected_first_to_prepare_quote =
-            response.first_to_prepare_legs[0].to_public_key(rfq, response);
+            response.leg_preparations_initialized_by[0].to_public_key(rfq, response);
         require!(
             first_to_prepare_quote.key() == expected_first_to_prepare_quote,
             ProtocolError::NotFirstToPrepare
@@ -120,7 +120,7 @@ pub fn clean_up_response_instruction<'info>(
             .legs
             .iter()
             .enumerate()
-            .take(response.first_to_prepare_legs.len())
+            .take(response.leg_preparations_initialized_by.len())
         {
             clean_up(
                 leg,
