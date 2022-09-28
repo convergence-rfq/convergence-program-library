@@ -3,8 +3,9 @@ import { BigNumber } from "bignumber.js";
 import { PublicKey } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
-import { ABSOLUTE_PRICE_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
+import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
+import { Instrument } from "./instrument";
 
 chai.use(chaiBn(BN));
 
@@ -46,6 +47,10 @@ export function withTokenDecimals(value: number) {
 
 export function executeInParallel(...fns: (() => Promise<any>)[]) {
   return Promise.all(fns.map((x) => x()));
+}
+
+export function calculateLegsSize(legs: Instrument[]) {
+  return legs.map((leg) => EMPTY_LEG_SIZE + leg.getInstrumendDataSize()).reduce((x, y) => x + y, 4);
 }
 
 type MeasuredToken = "quote" | "asset" | "unlockedCollateral" | "totalCollateral" | Mint;

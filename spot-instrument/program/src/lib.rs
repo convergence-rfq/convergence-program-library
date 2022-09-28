@@ -152,9 +152,8 @@ pub mod spot_instrument {
             SpotError::InvalidBackupAddress
         );
 
-        let expected_first_to_prepare = response
-            .first_to_prepare
-            .unwrap()
+        let expected_first_to_prepare = response.leg_preparations_initialized_by
+            [leg_index as usize]
             .to_public_key(rfq, response);
         require!(
             first_to_prepare.key() == expected_first_to_prepare,
@@ -291,7 +290,7 @@ pub struct Settle<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
     /// user provided
@@ -309,7 +308,7 @@ pub struct RevertPreparation<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
     /// user provided
@@ -327,7 +326,7 @@ pub struct CleanUp<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
     /// user provided

@@ -17,15 +17,21 @@ use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::initialize_protocol::*;
+use instructions::rfq::add_legs_to_rfq::*;
 use instructions::rfq::cancel_response::*;
 use instructions::rfq::cancel_rfq::*;
 use instructions::rfq::clean_up_response::*;
+use instructions::rfq::clean_up_response_legs::*;
 use instructions::rfq::clean_up_rfq::*;
 use instructions::rfq::confirm_response::*;
-use instructions::rfq::intitialize_rfq::*;
-use instructions::rfq::prepare_to_settle::*;
+use instructions::rfq::create_rfq::*;
+use instructions::rfq::finalize_rfq_construction::*;
+use instructions::rfq::partially_settle_legs::*;
+use instructions::rfq::partly_revert_settlement_preparation::*;
+use instructions::rfq::prepare_more_legs_settlement::*;
+use instructions::rfq::prepare_settlement::*;
 use instructions::rfq::respond_to_rfq::*;
-use instructions::rfq::revert_preparation::*;
+use instructions::rfq::revert_settlement_preparation::*;
 use instructions::rfq::settle::*;
 use instructions::rfq::settle_one_party_default::*;
 use instructions::rfq::settle_two_party_default::*;
@@ -76,6 +82,22 @@ pub mod rfq {
         )
     }
 
+    pub fn prepare_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
+        side: AuthoritySide,
+        leg_amount_to_prepare: u8,
+    ) -> Result<()> {
+        prepare_settlement_instruction(ctx, side, leg_amount_to_prepare)
+    }
+
+    pub fn prepare_more_legs_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareMoreLegsSettlementAccounts<'info>>,
+        side: AuthoritySide,
+        leg_amount_to_prepare: u8,
+    ) -> Result<()> {
+        prepare_more_legs_settlement_instruction(ctx, side, leg_amount_to_prepare)
+    }
+
     pub fn initialize_collateral(ctx: Context<InitializeCollateralAccounts>) -> Result<()> {
         initialize_collateral_instruction(ctx)
     }
@@ -84,22 +106,28 @@ pub mod rfq {
         fund_collateral_instruction(ctx, amount)
     }
 
-    pub fn intitialize_rfq<'info>(
-        ctx: Context<'_, '_, '_, 'info, InitializeRfqAccounts<'info>>,
+    pub fn create_rfq<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
+        expected_leg_size: u16,
         legs: Vec<Leg>,
         order_type: OrderType,
         fixed_size: FixedSize,
         active_window: u32,
         settling_window: u32,
     ) -> Result<()> {
-        initialize_rfq_instruction(
+        create_rfq_instruction(
             ctx,
+            expected_leg_size,
             legs,
             order_type,
             fixed_size,
             active_window,
             settling_window,
         )
+    }
+
+    pub fn finalize_rfq_construction(ctx: Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
+        finalize_rfq_construction_instruction(ctx)
     }
 
     pub fn respond_to_rfq(
@@ -118,15 +146,22 @@ pub mod rfq {
         confirm_response_instruction(ctx, side, override_leg_multiplier_bps)
     }
 
-    pub fn prepare_settlement<'info>(
-        ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
-        side: AuthoritySide,
+    pub fn add_legs_to_rfq<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddLegsToRfqAccounts<'info>>,
+        legs: Vec<Leg>,
     ) -> Result<()> {
-        prepare_settlement_instruction(ctx, side)
+        add_legs_to_rfq_instruction(ctx, legs)
     }
 
     pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {
         settle_instruction(ctx)
+    }
+
+    pub fn partially_settle_legs<'info>(
+        ctx: Context<'_, '_, '_, 'info, PartiallySettleLegsAccounts<'info>>,
+        leg_amount_to_settle: u8,
+    ) -> Result<()> {
+        partially_settle_legs_instruction(ctx, leg_amount_to_settle)
     }
 
     pub fn revert_settlement_preparation<'info>(
@@ -134,6 +169,14 @@ pub mod rfq {
         side: AuthoritySide,
     ) -> Result<()> {
         revert_settlement_preparation_instruction(ctx, side)
+    }
+
+    pub fn partly_revert_settlement_preparation<'info>(
+        ctx: Context<'_, '_, '_, 'info, PartlyRevertSettlementPreparationAccounts<'info>>,
+        side: AuthoritySide,
+        leg_amount_to_revert: u8,
+    ) -> Result<()> {
+        partly_revert_settlement_preparation_instruction(ctx, side, leg_amount_to_revert)
     }
 
     pub fn unlock_response_collateral(
@@ -158,6 +201,13 @@ pub mod rfq {
         ctx: Context<'_, '_, '_, 'info, CleanUpResponseAccounts<'info>>,
     ) -> Result<()> {
         clean_up_response_instruction(ctx)
+    }
+
+    pub fn clean_up_response_legs<'info>(
+        ctx: Context<'_, '_, '_, 'info, CleanUpResponseLegsAccounts<'info>>,
+        leg_amount_to_clear: u8,
+    ) -> Result<()> {
+        clean_up_response_legs_instruction(ctx, leg_amount_to_clear)
     }
 
     pub fn clean_up_rfq<'info>(

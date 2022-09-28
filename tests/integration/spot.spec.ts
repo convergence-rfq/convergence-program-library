@@ -1,7 +1,14 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { MAKER_CONFIRMED_COLLATERAL, TAKER_CONFIRMED_COLLATERAL } from "../utilities/constants";
-import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
+import {
+  calculateLegsSize,
+  sleep,
+  toAbsolutePrice,
+  TokenChangeMeasurer,
+  toLegMultiplier,
+  withTokenDecimals,
+} from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
@@ -23,7 +30,7 @@ describe("RFQ Spot instrument integration tests", () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
 
     // create a two way RFQ specifying 1 bitcoin as a leg
-    const rfq = await context.initializeRfq({
+    const rfq = await context.createRfq({
       legs: [new SpotInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid })],
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
@@ -51,7 +58,7 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create sell RFQ with two spot legs, respond and settle multiple responses", async () => {
     const ethMint = await Mint.create(context);
     // create a sell RFQ specifying 5 bitcoin bid and 10 eth ask
-    const rfq = await context.initializeRfq({
+    const rfq = await context.createRfq({
       legs: [
         new SpotInstrument(context, { amount: withTokenDecimals(5), side: Side.Bid }),
         new SpotInstrument(context, { mint: ethMint, amount: withTokenDecimals(10), side: Side.Ask }),
@@ -106,7 +113,7 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create fixed quote size buy RFQ, respond and settle response", async () => {
     // create a buy RFQ specifying 15 bitcoin as a leg(5 in leg with multiplier of 3)
-    const rfq = await context.initializeRfq({
+    const rfq = await context.createRfq({
       legs: [new SpotInstrument(context, { amount: withTokenDecimals(5), side: Side.Bid })],
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(3)),
       orderType: OrderType.Buy,
@@ -134,7 +141,7 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create fixed quote size sell RFQ, respond and settle response", async () => {
     // create a sell RFQ specifying 0.5 bitcoin in leg and fixed quote of 38.5k$
-    const rfq = await context.initializeRfq({
+    const rfq = await context.createRfq({
       legs: [new SpotInstrument(context, { amount: withTokenDecimals(0.5), side: Side.Bid })],
       fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(38_500)),
       orderType: OrderType.Sell,
@@ -161,7 +168,7 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create RFQ, respond and confirm, taker prepares but maker defaults", async () => {
-    const rfq = await context.initializeRfq({ activeWindow: 2, settlingWindow: 1 });
+    const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
     const response = await rfq.respond();
     await response.confirm();
 
@@ -182,7 +189,7 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create RFQ, respond and confirm, maker prepares but taker defaults", async () => {
-    const rfq = await context.initializeRfq({ activeWindow: 2, settlingWindow: 1 });
+    const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
     const response = await rfq.respond();
     await response.confirm();
 
@@ -204,7 +211,7 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create RFQ, respond and confirm, both parties default", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
-    const rfq = await context.initializeRfq({ activeWindow: 2, settlingWindow: 1 });
+    const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
     const response = await rfq.respond();
     await response.confirm();
 
@@ -222,7 +229,7 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create RFQ, respond, cancel response and close all", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
-    const rfq = await context.initializeRfq({ activeWindow: 2, settlingWindow: 1 });
+    const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
     const response = await rfq.respond();
     await response.cancel();
     await response.unlockResponseCollateral();
@@ -239,10 +246,88 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create RFQ, cancel it and clean up", async () => {
-    const rfq = await context.initializeRfq();
+    const rfq = await context.createRfq();
 
     await rfq.cancel();
     await rfq.unlockCollateral();
     await rfq.cleanUp();
+  });
+
+  it("Create RFQ with a lot of spot legs and settle it", async () => {
+    const legAmount = 12;
+    const mints = await Promise.all(
+      [...Array(legAmount)].map(() => {
+        return Mint.create(context);
+      })
+    );
+    const legs = mints.map(
+      (mint) =>
+        new SpotInstrument(context, {
+          mint,
+        })
+    );
+    const rfq = await context.createRfq({
+      legs: legs.slice(0, legAmount / 2),
+      legsSize: calculateLegsSize(legs),
+      finalize: false,
+    });
+    await rfq.addLegs(legs.slice(legAmount / 2));
+    const response = await rfq.respond();
+    await response.confirm();
+    await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+    await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
+    await response.partiallySettleLegs(
+      [...Array(legAmount / 2)].map(() => maker),
+      legAmount / 2
+    );
+    await response.settle(
+      taker,
+      [...Array(legAmount / 2)].map(() => maker),
+      legAmount / 2
+    );
+
+    await response.unlockResponseCollateral();
+    await response.cleanUpLegs(legAmount / 2);
+    await response.cleanUp(legAmount / 2);
+  });
+
+  it("Create RFQ with a lot of spot legs and default with partial preparation", async () => {
+    const legAmount = 12;
+    const mints = await Promise.all(
+      [...Array(legAmount)].map(() => {
+        return Mint.create(context);
+      })
+    );
+    const legs = mints.map(
+      (mint) =>
+        new SpotInstrument(context, {
+          mint,
+        })
+    );
+    const rfq = await context.createRfq({
+      legs: legs.slice(0, legAmount / 2),
+      legsSize: calculateLegsSize(legs),
+      finalize: false,
+      activeWindow: 2,
+      settlingWindow: 1,
+    });
+    await rfq.addLegs(legs.slice(legAmount / 2));
+    const response = await rfq.respond();
+    await response.confirm();
+    await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+    await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
+
+    await sleep(2000);
+
+    await response.partlyRevertSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
+    await response.revertSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
+    await response.revertSettlementPreparation(AuthoritySide.Maker, legAmount / 2);
+
+    await response.settleOnePartyDefault();
+    await response.cleanUpLegs(legAmount / 2);
+    await response.cleanUp(legAmount / 2);
   });
 });

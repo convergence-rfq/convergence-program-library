@@ -18,6 +18,8 @@ pub enum ProtocolError {
     NotARiskEngine,
     #[msg("An Rfq without legs is not supported")]
     EmptyLegsNotSupported,
+    #[msg("Leg size does not match specified expected leg size")]
+    LegSizeDoesNotMatchExpectedSize,
     #[msg("Not enough tokens")]
     NotEnoughTokens,
     #[msg("Not enough collateral")]
@@ -76,4 +78,14 @@ pub enum ProtocolError {
     HaveExistingResponses,
     #[msg("Can't cancel an rfq with existing responses")]
     HaveResponses,
+    #[msg("Invalid specified leg amount")]
+    InvalidSpecifiedLegAmount,
+    #[msg("Already started to prepare to settle")]
+    AlreadyStartedToPrepare,
+    #[msg("Have not started to prepare to settle")]
+    HaveNotStartedToPrepare,
+    #[msg("LegAmountExceedsMaximumLimit")]
+    TooManyLegs,
+    #[msg("LegsDataSizeExceedsMaximumLimit")]
+    LegsDataTooBig,
 }

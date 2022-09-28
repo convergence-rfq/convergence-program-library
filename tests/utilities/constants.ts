@@ -6,6 +6,8 @@ export const COLLATERAL_SEED = "collateral_info";
 export const COLLATERAL_TOKEN_SEED = "collateral_token";
 export const QUOTE_ESCROW_SEED = "quote_escrow";
 
+export const EMPTY_LEG_SIZE = 32 + 4 + 8 + 1;
+
 export const LEG_MULTIPLIER_DECIMALS = 9;
 export const ABSOLUTE_PRICE_DECIMALS = 9;
 
