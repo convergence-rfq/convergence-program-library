@@ -105,6 +105,7 @@ pub struct Response {
     pub state: StoredResponseState,
     pub taker_prepared_legs: u8,
     pub maker_prepared_legs: u8,
+    pub settled_legs: u8,
 
     pub confirmed: Option<Confirmation>,
     pub defaulting_party: Option<DefaultingParty>,

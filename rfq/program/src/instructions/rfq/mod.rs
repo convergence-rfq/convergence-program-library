@@ -7,6 +7,7 @@ pub mod clean_up_rfq;
 pub mod confirm_response;
 pub mod create_rfq;
 pub mod finalize_rfq_construction;
+pub mod partially_settle_legs;
 pub mod partly_revert_settlement_preparation;
 pub mod prepare_more_legs_settlement;
 pub mod prepare_settlement;

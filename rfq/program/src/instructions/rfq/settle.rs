@@ -72,7 +72,12 @@ pub fn settle_instruction<'info>(
         token_program,
     )?;
 
-    for (index, leg) in rfq.legs.iter().enumerate() {
+    for (index, leg) in rfq
+        .legs
+        .iter()
+        .enumerate()
+        .skip(response.settled_legs as usize)
+    {
         settle(
             leg,
             index as u8,
@@ -83,6 +88,7 @@ pub fn settle_instruction<'info>(
         )?;
     }
 
+    response.settled_legs = rfq.legs.len() as u8;
     response.state = StoredResponseState::Settled;
 
     Ok(())

@@ -109,6 +109,7 @@ pub fn respond_to_rfq_instruction(
         state: StoredResponseState::Active,
         taker_prepared_legs: 0,
         maker_prepared_legs: 0,
+        settled_legs: 0,
         confirmed: None,
         defaulting_party: None,
         leg_preparations_initialized_by: vec![],

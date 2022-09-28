@@ -26,6 +26,7 @@ use instructions::rfq::clean_up_rfq::*;
 use instructions::rfq::confirm_response::*;
 use instructions::rfq::create_rfq::*;
 use instructions::rfq::finalize_rfq_construction::*;
+use instructions::rfq::partially_settle_legs::*;
 use instructions::rfq::partly_revert_settlement_preparation::*;
 use instructions::rfq::prepare_more_legs_settlement::*;
 use instructions::rfq::prepare_settlement::*;
@@ -154,6 +155,13 @@ pub mod rfq {
 
     pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {
         settle_instruction(ctx)
+    }
+
+    pub fn partially_settle_legs<'info>(
+        ctx: Context<'_, '_, '_, 'info, PartiallySettleLegsAccounts<'info>>,
+        leg_amount_to_settle: u8,
+    ) -> Result<()> {
+        partially_settle_legs_instruction(ctx, leg_amount_to_settle)
     }
 
     pub fn revert_settlement_preparation<'info>(

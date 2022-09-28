@@ -419,10 +419,15 @@ export class Response {
       .rpc();
   }
 
-  async settle(quoteReceiver: PublicKey, assetReceivers: PublicKey[]) {
+  async settle(quoteReceiver: PublicKey, assetReceivers: PublicKey[], alreadySettledLegs = 0) {
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(async (x, index) => await x.getSettleAccounts(assetReceivers[index], index, this.rfq, this))
+        this.rfq.legs
+          .slice(alreadySettledLegs)
+          .map(
+            async (x, index) =>
+              await x.getSettleAccounts(assetReceivers[index], alreadySettledLegs + index, this.rfq, this)
+          )
       )
     ).flat();
 
@@ -435,6 +440,29 @@ export class Response {
         quoteReceiverTokens: await this.context.quoteToken.getAssociatedAddress(quoteReceiver),
         quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
         tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async partiallySettleLegs(assetReceivers: PublicKey[], legsToSettle: number, alreadySettledLegs = 0) {
+    const remainingAccounts = await (
+      await Promise.all(
+        this.rfq.legs
+          .slice(alreadySettledLegs, alreadySettledLegs + legsToSettle)
+          .map(
+            async (x, index) =>
+              await x.getSettleAccounts(assetReceivers[index], alreadySettledLegs + index, this.rfq, this)
+          )
+      )
+    ).flat();
+
+    await this.context.program.methods
+      .partiallySettleLegs(legsToSettle)
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
       })
       .remainingAccounts(remainingAccounts)
       .rpc();

@@ -253,7 +253,7 @@ describe("RFQ Spot instrument integration tests", () => {
     await rfq.cleanUp();
   });
 
-  it.only("Create RFQ with a lot of spot legs and settle it", async () => {
+  it("Create RFQ with a lot of spot legs and settle it", async () => {
     const legAmount = 12;
     const mints = await Promise.all(
       [...Array(legAmount)].map(() => {
@@ -278,9 +278,14 @@ describe("RFQ Spot instrument integration tests", () => {
     await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
     await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
     await response.prepareMoreLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
+    await response.partiallySettleLegs(
+      [...Array(legAmount / 2)].map(() => maker),
+      legAmount / 2
+    );
     await response.settle(
       taker,
-      [...Array(legAmount)].map(() => maker)
+      [...Array(legAmount / 2)].map(() => maker),
+      legAmount / 2
     );
 
     await response.unlockResponseCollateral();
