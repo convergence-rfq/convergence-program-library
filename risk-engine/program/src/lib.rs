@@ -30,17 +30,17 @@ pub mod risk_engine {
 
 #[derive(Accounts)]
 pub struct CalculateRequiredCollateralForRfq<'info> {
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
 }
 
 #[derive(Accounts)]
 pub struct CalculateRequiredCollateralForResponse<'info> {
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 }
 
 #[derive(Accounts)]
 pub struct CalculateRequiredCollateralForConfirmation<'info> {
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 }

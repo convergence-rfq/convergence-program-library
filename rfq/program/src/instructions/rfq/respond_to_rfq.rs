@@ -20,7 +20,7 @@ pub struct RespondToRfqAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     // rfq legs additional storage for first_to_prepare_legs field
     #[account(init, payer = maker, space = 8 + mem::size_of::<Response>() + rfq.legs.len() * 1)]
     pub response: Account<'info, Response>,

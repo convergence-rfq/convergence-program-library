@@ -1,5 +1,5 @@
 use crate::{
-    constants::PROTOCOL_SEED,
+    constants::{MAX_LEGS_AMOUNT, PROTOCOL_SEED},
     errors::ProtocolError,
     interfaces::instrument::validate_instrument_data,
     states::{Leg, ProtocolState, Rfq, RfqState},
@@ -14,7 +14,7 @@ pub struct AddLegsToRfqAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
 }
 
 fn validate<'info>(
@@ -28,7 +28,11 @@ fn validate<'info>(
         validate_instrument_data(leg, protocol, &mut remaining_accounts)?;
     }
 
-    require!(rfq.legs.len() > 0, ProtocolError::EmptyLegsNotSupported);
+    require!(legs.len() > 0, ProtocolError::EmptyLegsNotSupported);
+    require!(
+        legs.len() + rfq.legs.len() <= MAX_LEGS_AMOUNT as usize,
+        ProtocolError::TooManyLegs
+    );
 
     rfq.get_state()?.assert_state_in([RfqState::Constructed])?;
 

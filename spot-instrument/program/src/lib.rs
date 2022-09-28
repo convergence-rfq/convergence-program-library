@@ -290,7 +290,7 @@ pub struct Settle<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
     /// user provided
@@ -308,7 +308,7 @@ pub struct RevertPreparation<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
     /// user provided
@@ -326,7 +326,7 @@ pub struct CleanUp<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
     /// user provided

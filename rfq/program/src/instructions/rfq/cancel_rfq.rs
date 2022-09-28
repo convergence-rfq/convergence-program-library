@@ -13,7 +13,7 @@ pub struct CancelRfqAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
 }
 
 fn validate(ctx: &Context<CancelRfqAccounts>) -> Result<()> {

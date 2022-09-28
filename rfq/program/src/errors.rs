@@ -84,4 +84,8 @@ pub enum ProtocolError {
     AlreadyStartedToPrepare,
     #[msg("Have not started to prepare to settle")]
     HaveNotStartedToPrepare,
+    #[msg("LegAmountExceedsMaximumLimit")]
+    TooManyLegs,
+    #[msg("LegsDataSizeExceedsMaximumLimit")]
+    LegsDataTooBig,
 }
