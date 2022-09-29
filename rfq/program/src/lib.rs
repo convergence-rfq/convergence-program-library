@@ -15,6 +15,7 @@ pub mod utils;
 
 use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;
+use instructions::collateral::withdraw_collateral::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::initialize_protocol::*;
 use instructions::rfq::add_legs_to_rfq::*;
@@ -104,6 +105,13 @@ pub mod rfq {
 
     pub fn fund_collateral(ctx: Context<FundCollateralAccounts>, amount: u64) -> Result<()> {
         fund_collateral_instruction(ctx, amount)
+    }
+
+    pub fn withdraw_collateral(
+        ctx: Context<WithdrawCollateralAccounts>,
+        amount: u64,
+    ) -> Result<()> {
+        withdraw_collateral_instruction(ctx, amount)
     }
 
     pub fn create_rfq<'info>(

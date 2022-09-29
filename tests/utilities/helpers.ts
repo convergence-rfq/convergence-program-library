@@ -53,7 +53,7 @@ export function calculateLegsSize(legs: Instrument[]) {
   return legs.map((leg) => EMPTY_LEG_SIZE + leg.getInstrumendDataSize()).reduce((x, y) => x + y, 4);
 }
 
-type MeasuredToken = "quote" | "asset" | "unlockedCollateral" | "totalCollateral" | Mint;
+type MeasuredToken = "quote" | "asset" | "walletCollateral" | "unlockedCollateral" | "totalCollateral" | Mint;
 
 export class TokenChangeMeasurer {
   private constructor(
@@ -97,6 +97,8 @@ export class TokenChangeMeasurer {
       return context.collateralToken.getUnlockedCollateral(user);
     } else if (token == "totalCollateral") {
       return context.collateralToken.getTotalCollateral(user);
+    } else if (token == "walletCollateral") {
+      return context.collateralToken.getAssociatedBalance(user);
     } else {
       return token.getAssociatedBalance(user);
     }

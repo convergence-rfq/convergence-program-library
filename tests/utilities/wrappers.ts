@@ -117,9 +117,24 @@ export class Context {
       .rpc();
   }
 
-  async fundCollateral(user: Keypair, amount: number) {
+  async fundCollateral(user: Keypair, amount: BN) {
     await this.program.methods
       .fundCollateral(new BN(amount))
+      .accounts({
+        user: user.publicKey,
+        userTokens: await this.collateralToken.getAssociatedAddress(user.publicKey),
+        protocol: this.protocolPda,
+        collateralInfo: await getCollateralInfoPda(user.publicKey, this.program.programId),
+        collateralToken: await getCollateralTokenPda(user.publicKey, this.program.programId),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([user])
+      .rpc();
+  }
+
+  async withdrawCollateral(user: Keypair, amount: BN) {
+    await this.program.methods
+      .withdrawCollateral(new BN(amount))
       .accounts({
         user: user.publicKey,
         userTokens: await this.collateralToken.getAssociatedAddress(user.publicKey),
