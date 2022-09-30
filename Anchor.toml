@@ -1,17 +1,17 @@
 [programs.localnet]
-rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
-risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
-spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
+risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
 
 [programs.devnet]
-rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
-risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
-spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
+risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
 
 [programs.mainnet]
-rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
-risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
-spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
+risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
 
 [registry]
 url = "https://anchor.projectserum.com"
