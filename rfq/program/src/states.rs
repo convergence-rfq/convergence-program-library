@@ -48,6 +48,7 @@ pub struct Rfq {
     pub active_window: u32,
     pub settling_window: u32,
 
+    pub expected_leg_size: u16,
     pub state: StoredRfqState,
     pub non_response_taker_collateral_locked: u64,
     pub total_taker_collateral_locked: u64,
@@ -55,12 +56,13 @@ pub struct Rfq {
     pub cleared_responses: u32,
     pub confirmed_responses: u32,
 
-    pub legs: Vec<Leg>,
+    pub legs: Vec<Leg>, // TODO add limit for this size
 }
 
 impl Rfq {
     pub fn get_state(&self) -> Result<RfqState> {
         let state = match self.state {
+            StoredRfqState::Constructed => RfqState::Constructed,
             StoredRfqState::Active => {
                 let current_time = Clock::get()?.unix_timestamp;
                 if !self.active_window_ended(current_time) {
@@ -101,12 +103,13 @@ pub struct Response {
     pub maker_collateral_locked: u64,
     pub taker_collateral_locked: u64,
     pub state: StoredResponseState,
-    pub taker_prepared_to_settle: bool,
-    pub maker_prepared_to_settle: bool,
+    pub taker_prepared_legs: u8,
+    pub maker_prepared_legs: u8,
+    pub settled_legs: u8,
 
     pub confirmed: Option<Confirmation>,
     pub defaulting_party: Option<DefaultingParty>,
-    pub first_to_prepare: Option<AuthoritySide>,
+    pub leg_preparations_initialized_by: Vec<AuthoritySide>,
     pub bid: Option<Quote>,
     pub ask: Option<Quote>,
 }
@@ -144,9 +147,9 @@ impl Response {
             }
             StoredResponseState::SettlingPreparations => {
                 if !settle_window_ended {
-                    if self.taker_prepared_to_settle {
+                    if self.is_prepared(AuthoritySide::Taker, rfq) {
                         ResponseState::OnlyTakerPrepared
-                    } else if self.maker_prepared_to_settle {
+                    } else if self.is_prepared(AuthoritySide::Maker, rfq) {
                         ResponseState::OnlyMakerPrepared
                     } else {
                         ResponseState::SettlingPreparations
@@ -303,16 +306,36 @@ impl Response {
         }
     }
 
-    pub fn default_by_time(&mut self) {
+    pub fn default_by_time(&mut self, rfq: &Rfq) {
         self.state = StoredResponseState::Defaulted;
-        let defaulting_party = match (self.taker_prepared_to_settle, self.maker_prepared_to_settle)
-        {
+        let defaulting_party = match (
+            self.is_prepared(AuthoritySide::Taker, rfq),
+            self.is_prepared(AuthoritySide::Maker, rfq),
+        ) {
             (false, false) => DefaultingParty::Both,
             (true, false) => DefaultingParty::Maker,
             (false, true) => DefaultingParty::Taker,
             _ => unreachable!(),
         };
         self.defaulting_party = Some(defaulting_party);
+    }
+
+    pub fn is_prepared(&self, side: AuthoritySide, rfq: &Rfq) -> bool {
+        self.get_prepared_legs(side) as usize == rfq.legs.len()
+    }
+
+    pub fn get_prepared_legs(&self, side: AuthoritySide) -> u8 {
+        match side {
+            AuthoritySide::Taker => self.taker_prepared_legs,
+            AuthoritySide::Maker => self.maker_prepared_legs,
+        }
+    }
+
+    pub fn get_prepared_legs_mut(&mut self, side: AuthoritySide) -> &mut u8 {
+        match side {
+            AuthoritySide::Taker => &mut self.taker_prepared_legs,
+            AuthoritySide::Maker => &mut self.maker_prepared_legs,
+        }
     }
 
     pub fn have_locked_collateral(&self) -> bool {
@@ -403,12 +426,14 @@ impl PriceQuote {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum StoredRfqState {
+    Constructed,
     Active,
     Canceled,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RfqState {
+    Constructed,
     Active,
     Canceled,
     Expired,
@@ -437,10 +462,6 @@ pub struct Leg {
     pub instrument_data: Vec<u8>,
     pub instrument_amount: u64,
     pub side: Side,
-}
-
-impl Leg {
-    pub const EMPTY_SIZE: usize = 32 + 4 + 8 + 1;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

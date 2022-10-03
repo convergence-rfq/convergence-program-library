@@ -21,6 +21,10 @@ export class SpotInstrument implements Instrument {
     this.side = side ?? DEFAULT_INSTRUMENT_SIDE;
   }
 
+  getInstrumendDataSize(): number {
+    return 32;
+  }
+
   async toLegData() {
     return {
       instrument: this.context.spotInstrument.programId,
