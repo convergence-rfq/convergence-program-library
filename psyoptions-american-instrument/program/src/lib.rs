@@ -172,9 +172,8 @@ pub mod psyoptions_american_instrument {
             PsyoptionsAmericanError::InvalidBackupAddress
         );
 
-        let expected_first_to_prepare = response
-            .first_to_prepare
-            .unwrap()
+        let expected_first_to_prepare = response.leg_preparations_initialized_by
+            [leg_index as usize]
             .to_public_key(rfq, response);
         require!(
             first_to_prepare.key() == expected_first_to_prepare,
