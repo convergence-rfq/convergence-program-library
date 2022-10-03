@@ -28,7 +28,7 @@ describe("RFQ Psyoptions American instrument integration tests", () => {
     const quoteAmountPerContract = new BN(1);
     const expirationUnixTimestamp = new BN(1);
 
-    const rfq = await context.initializeRfq({
+    const rfq = await context.createRfq({
       legs: [
         new SpotInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid }),
         new PsyoptionsAmericanInstrument(context, {
