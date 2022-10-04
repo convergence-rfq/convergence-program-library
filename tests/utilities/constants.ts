@@ -6,12 +6,14 @@ export const COLLATERAL_SEED = "collateral_info";
 export const COLLATERAL_TOKEN_SEED = "collateral_token";
 export const QUOTE_ESCROW_SEED = "quote_escrow";
 
+export const EMPTY_LEG_SIZE = 32 + 4 + 8 + 1;
+
 export const LEG_MULTIPLIER_DECIMALS = 9;
 export const ABSOLUTE_PRICE_DECIMALS = 9;
 
 export const DEFAULT_SOL_FOR_SIGNERS = 100_000_000_000;
 export const DEFAULT_TOKEN_AMOUNT = 1_000_000_000_000_000;
-export const DEFAULT_COLLATERAL_FUNDED = 100_000_000_000;
+export const DEFAULT_COLLATERAL_FUNDED = new BN(100_000_000_000);
 
 export const DEFAULT_FEES = { takerBps: new BN(0), makerBps: new BN(0) };
 export const DEFAULT_ORDER_TYPE = OrderType.TwoWay;

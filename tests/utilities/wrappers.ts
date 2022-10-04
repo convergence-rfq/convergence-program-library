@@ -20,7 +20,7 @@ import {
 import { AuthoritySide, Quote, Side, FixedSize } from "./types";
 import { SpotInstrument } from "./spotInstrument";
 import { Instrument } from "./instrument";
-import { executeInParallel } from "./helpers";
+import { calculateLegsSize, executeInParallel } from "./helpers";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
@@ -117,7 +117,7 @@ export class Context {
       .rpc();
   }
 
-  async fundCollateral(user: Keypair, amount: number) {
+  async fundCollateral(user: Keypair, amount: BN) {
     await this.program.methods
       .fundCollateral(new BN(amount))
       .accounts({
@@ -132,36 +132,57 @@ export class Context {
       .rpc();
   }
 
-  async initializeRfq({
+  async withdrawCollateral(user: Keypair, amount: BN) {
+    await this.program.methods
+      .withdrawCollateral(new BN(amount))
+      .accounts({
+        user: user.publicKey,
+        userTokens: await this.collateralToken.getAssociatedAddress(user.publicKey),
+        protocol: this.protocolPda,
+        collateralInfo: await getCollateralInfoPda(user.publicKey, this.program.programId),
+        collateralToken: await getCollateralTokenPda(user.publicKey, this.program.programId),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([user])
+      .rpc();
+  }
+
+  async createRfq({
     legs = [new SpotInstrument(this)],
     orderType = null,
     fixedSize = null,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
+    legsSize = null,
+    finalize = true,
   } = {}) {
     orderType = orderType ?? DEFAULT_ORDER_TYPE;
     fixedSize = fixedSize ?? FixedSize.None;
+    legsSize = legsSize ?? calculateLegsSize(legs);
     const legData = await Promise.all(legs.map(async (x) => await x.toLegData()));
     const remainingAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
-
     const rfq = new Keypair();
-    await this.program.methods
-      .intitializeRfq(legData, orderType, fixedSize, activeWindow, settlingWindow)
+    const rfqObject = new Rfq(this, rfq.publicKey, legs);
+
+    let txConstructor = await this.program.methods
+      .createRfq(legsSize, legData, orderType, fixedSize, activeWindow, settlingWindow)
       .accounts({
         taker: this.taker.publicKey,
         protocol: this.protocolPda,
         rfq: rfq.publicKey,
-        collateralInfo: await getCollateralInfoPda(this.taker.publicKey, this.program.programId),
-        collateralToken: await getCollateralTokenPda(this.taker.publicKey, this.program.programId),
         quoteMint: this.quoteToken.publicKey,
-        riskEngine: this.riskEngine.programId,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts(remainingAccounts)
-      .signers([this.taker, rfq])
-      .rpc();
+      .signers([this.taker, rfq]);
 
-    return new Rfq(this, rfq.publicKey, legs);
+    if (finalize) {
+      txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeRfqInstruction()]);
+    }
+
+    await txConstructor.rpc();
+
+    return rfqObject;
   }
 }
 
@@ -290,12 +311,51 @@ export class Rfq {
       .rpc();
   }
 
+  async addLegs(legs: Instrument[], finalize = true) {
+    this.legs = this.legs.concat(legs);
+
+    const legData = await Promise.all(legs.map(async (x) => await x.toLegData()));
+    const remainingAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
+
+    let txConstructor = this.context.program.methods
+      .addLegsToRfq(legData)
+      .accounts({
+        taker: this.context.taker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+      })
+      .remainingAccounts(remainingAccounts)
+      .signers([this.context.taker]);
+
+    if (finalize) {
+      txConstructor = txConstructor.postInstructions([await this.getFinalizeRfqInstruction()]);
+    }
+
+    await txConstructor.rpc();
+  }
+
+  async getFinalizeRfqInstruction() {
+    return this.context.program.methods
+      .finalizeRfqConstruction()
+      .accounts({
+        taker: this.context.taker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+        collateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
+        collateralToken: await getCollateralTokenPda(this.context.taker.publicKey, this.context.program.programId),
+        riskEngine: this.context.riskEngine.programId,
+      })
+      .signers([this.context.taker])
+      .instruction();
+  }
+
   async getData() {
     return await this.context.program.account.rfq.fetch(this.account);
   }
 }
 
 export class Response {
+  //storing single here assumes all legs are prepared by the same single side
   public firstToPrepare: PublicKey;
 
   constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {
@@ -319,19 +379,21 @@ export class Response {
       .rpc();
   }
 
-  async prepareSettlement(side) {
+  async prepareSettlement(side, legAmount = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
     if (this.firstToPrepare.equals(PublicKey.default)) {
       this.firstToPrepare = caller.publicKey;
     }
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(async (x, index) => await x.getPrepareSettlementAccounts(side, index, this.rfq, this))
+        this.rfq.legs
+          .slice(0, legAmount)
+          .map(async (x, index) => await x.getPrepareSettlementAccounts(side, index, this.rfq, this))
       )
     ).flat();
 
     await this.context.program.methods
-      .prepareSettlement(side)
+      .prepareSettlement(side, legAmount)
       .accounts({
         caller: caller.publicKey,
         quoteTokens: await this.context.quoteToken.getAssociatedAddress(caller.publicKey),
@@ -349,10 +411,38 @@ export class Response {
       .rpc();
   }
 
-  async settle(quoteReceiver: PublicKey, assetReceivers: PublicKey[]) {
+  async prepareMoreLegsSettlement(side, from: number, legAmount: number) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(async (x, index) => await x.getSettleAccounts(assetReceivers[index], index, this.rfq, this))
+        this.rfq.legs
+          .slice(from, from + legAmount)
+          .map(async (x, index) => await x.getPrepareSettlementAccounts(side, from + index, this.rfq, this))
+      )
+    ).flat();
+
+    await this.context.program.methods
+      .prepareMoreLegsSettlement(side, legAmount)
+      .accounts({
+        caller: caller.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+      })
+      .signers([caller])
+      .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async settle(quoteReceiver: PublicKey, assetReceivers: PublicKey[], alreadySettledLegs = 0) {
+    const remainingAccounts = await (
+      await Promise.all(
+        this.rfq.legs
+          .slice(alreadySettledLegs)
+          .map(
+            async (x, index) =>
+              await x.getSettleAccounts(assetReceivers[index], alreadySettledLegs + index, this.rfq, this)
+          )
       )
     ).flat();
 
@@ -370,14 +460,37 @@ export class Response {
       .rpc();
   }
 
-  async revertSettlementPreparation(side: { taker: {} } | { maker: {} }) {
+  async partiallySettleLegs(assetReceivers: PublicKey[], legsToSettle: number, alreadySettledLegs = 0) {
+    const remainingAccounts = await (
+      await Promise.all(
+        this.rfq.legs
+          .slice(alreadySettledLegs, alreadySettledLegs + legsToSettle)
+          .map(
+            async (x, index) =>
+              await x.getSettleAccounts(assetReceivers[index], alreadySettledLegs + index, this.rfq, this)
+          )
+      )
+    ).flat();
+
+    await this.context.program.methods
+      .partiallySettleLegs(legsToSettle)
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+      })
+      .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async revertSettlementPreparation(side: { taker: {} } | { maker: {} }, preparedLegs = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs.map(
-          async (x, index) => await x.getRevertSettlementPreparationAccounts(side, index, this.rfq, this)
-        )
+        this.rfq.legs
+          .slice(0, preparedLegs)
+          .map(async (x, index) => await x.getRevertSettlementPreparationAccounts(side, index, this.rfq, this))
       )
     ).flat();
 
@@ -390,6 +503,33 @@ export class Response {
         quoteTokens: await this.context.quoteToken.getAssociatedAddress(caller.publicKey),
         quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
         tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async partlyRevertSettlementPreparation(
+    side: { taker: {} } | { maker: {} },
+    legAmount: number,
+    preparedLegs = this.rfq.legs.length
+  ) {
+    const remainingAccounts = await (
+      await Promise.all(
+        this.rfq.legs
+          .slice(preparedLegs - legAmount, preparedLegs)
+          .map(
+            async (x, index) =>
+              await x.getRevertSettlementPreparationAccounts(side, preparedLegs - legAmount + index, this.rfq, this)
+          )
+      )
+    ).flat();
+
+    await this.context.program.methods
+      .partlyRevertSettlementPreparation(side, legAmount)
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
       })
       .remainingAccounts(remainingAccounts)
       .rpc();
@@ -456,11 +596,15 @@ export class Response {
       .rpc();
   }
 
-  async cleanUp() {
+  async cleanUp(preparedLegs = this.rfq.legs.length) {
     let remainingAccounts = [];
     if (this.firstToPrepare) {
       remainingAccounts = await (
-        await Promise.all(this.rfq.legs.map(async (x, index) => await x.getCleanUpAccounts(index, this.rfq, this)))
+        await Promise.all(
+          this.rfq.legs
+            .slice(0, preparedLegs)
+            .map(async (x, index) => await x.getCleanUpAccounts(index, this.rfq, this))
+        )
       ).flat();
     }
 
@@ -468,13 +612,36 @@ export class Response {
       .cleanUpResponse()
       .accounts({
         maker: this.context.maker.publicKey,
-        firstToPrepare: this.firstToPrepare,
+        firstToPrepareQuote: this.firstToPrepare,
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
         response: this.account,
         quoteEscrow: await getQuoteEscrowPda(this.account, this.context.program.programId),
         quoteBackupTokens: await this.context.quoteToken.getAssociatedAddress(this.context.dao.publicKey),
         tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async cleanUpLegs(legAmount: number, preparedLegs = this.rfq.legs.length) {
+    let remainingAccounts = [];
+    if (this.firstToPrepare) {
+      remainingAccounts = await (
+        await Promise.all(
+          this.rfq.legs
+            .slice(preparedLegs - legAmount, preparedLegs)
+            .map(async (x, index) => await x.getCleanUpAccounts(preparedLegs - legAmount + index, this.rfq, this))
+        )
+      ).flat();
+    }
+
+    await this.context.program.methods
+      .cleanUpResponseLegs(legAmount)
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
       })
       .remainingAccounts(remainingAccounts)
       .rpc();

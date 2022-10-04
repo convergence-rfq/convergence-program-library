@@ -15,7 +15,7 @@ pub struct SettleOnePartyDefaultAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
-    pub rfq: Account<'info, Rfq>,
+    pub rfq: Box<Account<'info, Rfq>>,
     #[account(mut, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
     pub response: Box<Account<'info, Response>>,
 
@@ -47,26 +47,12 @@ fn validate(ctx: &Context<SettleOnePartyDefaultAccounts>) -> Result<()> {
         ProtocolError::NoCollateralLocked
     );
 
-    require!(
-        matches!(
-            response.defaulting_party.unwrap(),
-            DefaultingParty::Maker | DefaultingParty::Taker
-        ),
-        ProtocolError::InvalidDefaultingParty
-    );
-
     Ok(())
 }
 
 pub fn settle_one_party_default_instruction(
     ctx: Context<SettleOnePartyDefaultAccounts>,
 ) -> Result<()> {
-    let response = &mut ctx.accounts.response;
-    if response.state != StoredResponseState::Defaulted {
-        response.default_by_time();
-        response.exit(ctx.program_id)?;
-    }
-
     validate(&ctx)?;
 
     let SettleOnePartyDefaultAccounts {
@@ -79,6 +65,19 @@ pub fn settle_one_party_default_instruction(
         token_program,
         ..
     } = ctx.accounts;
+
+    if response.state != StoredResponseState::Defaulted {
+        response.default_by_time(rfq);
+        response.exit(ctx.program_id)?;
+    }
+
+    require!(
+        matches!(
+            response.defaulting_party.unwrap(),
+            DefaultingParty::Maker | DefaultingParty::Taker
+        ),
+        ProtocolError::InvalidDefaultingParty
+    );
 
     match response.defaulting_party.unwrap() {
         DefaultingParty::Taker => transfer_collateral_token(

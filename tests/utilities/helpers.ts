@@ -3,8 +3,9 @@ import { BigNumber } from "bignumber.js";
 import { PublicKey } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
-import { ABSOLUTE_PRICE_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
+import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
+import { Instrument } from "./instrument";
 
 chai.use(chaiBn(BN));
 
@@ -48,7 +49,11 @@ export function executeInParallel(...fns: (() => Promise<any>)[]) {
   return Promise.all(fns.map((x) => x()));
 }
 
-type MeasuredToken = "quote" | "asset" | "unlockedCollateral" | "totalCollateral" | Mint;
+export function calculateLegsSize(legs: Instrument[]) {
+  return legs.map((leg) => EMPTY_LEG_SIZE + leg.getInstrumendDataSize()).reduce((x, y) => x + y, 4);
+}
+
+type MeasuredToken = "quote" | "asset" | "walletCollateral" | "unlockedCollateral" | "totalCollateral" | Mint;
 
 export class TokenChangeMeasurer {
   private constructor(
@@ -92,6 +97,8 @@ export class TokenChangeMeasurer {
       return context.collateralToken.getUnlockedCollateral(user);
     } else if (token == "totalCollateral") {
       return context.collateralToken.getTotalCollateral(user);
+    } else if (token == "walletCollateral") {
+      return context.collateralToken.getAssociatedBalance(user);
     } else {
       return token.getAssociatedBalance(user);
     }

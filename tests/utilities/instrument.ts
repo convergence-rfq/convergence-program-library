@@ -11,6 +11,7 @@ export interface InstrumentData {
 
 export interface Instrument {
   toLegData(): Promise<InstrumentData>;
+  getInstrumendDataSize(): number;
   getValidationAccounts(): Promise<AccountMeta[]>;
   getPrepareSettlementAccounts(
     side: { taker: {} } | { maker: {} },
