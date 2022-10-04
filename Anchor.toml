@@ -1,21 +1,21 @@
 anchor_version = "0.24.2"
 
 [programs.localnet]
-rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
-risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
-spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
+risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
 psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
 
 [programs.devnet]
-rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
-risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
-spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
+risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
 psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
 
 [programs.mainnet]
-rfq = "3t9BM7DwaibpjNVWAWYauZyhjteoTjuJqGEqxCv7x9MA"
-risk_engine = "8wx7soBBnx2quQcybXNU7cH2eVs16tDL7aobemfsD7n2"
-spot_instrument = "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL"
+rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
+risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
 psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
 
 [registry]

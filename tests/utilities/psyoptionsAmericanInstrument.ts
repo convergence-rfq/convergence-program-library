@@ -34,6 +34,10 @@ export class PsyoptionsAmericanInstrument implements Instrument {
     this.side = side ?? DEFAULT_INSTRUMENT_SIDE;
   }
 
+  getInstrumendDataSize(): number {
+    return 32;
+  }
+
   async toLegData() {
     const instrumentData = this.underlyingAssetMint.publicKey.toBytes();
     return {
@@ -45,7 +49,10 @@ export class PsyoptionsAmericanInstrument implements Instrument {
   }
 
   async getValidationAccounts() {
-    return [{ pubkey: this.context.psyoptionsAmericanInstrument.programId, isSigner: false, isWritable: false }];
+    return [
+      { pubkey: this.context.psyoptionsAmericanInstrument.programId, isSigner: false, isWritable: false },
+      { pubkey: this.underlyingAssetMint.publicKey, isSigner: false, isWritable: false },
+    ];
   }
 
   async getPrepareSettlementAccounts(

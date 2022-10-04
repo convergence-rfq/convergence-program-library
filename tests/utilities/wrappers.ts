@@ -696,6 +696,8 @@ export async function getContext() {
   await executeInParallel(
     async () => {
       await context.addSpotInstrument();
+    },
+    async () => {
       await context.addPsyoptionsAmericanInstrument();
     },
     async () => {
