@@ -1,8 +1,11 @@
 import {Program} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import { HxroInstrument } from '../../target/types/hxro_instrument';
+import { HxroInstrument as HxroInstrumentType } from '../../target/types/hxro_instrument';
 import { DexIdl, Dex } from '../../hxro-instrument/dex-cpi/types';
 import { Side } from "../utilities/types"
+import { Context, getContext } from "../utilities/wrappers";
+import { HxroInstrument } from "../utilities/hxroInstrument";
+import {withTokenDecimals} from "../utilities/helpers";
 
 function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): string {
     return "trdr_grp1:test" + name
@@ -12,7 +15,26 @@ function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): s
 describe("RFQ HXRO instrument integration tests", () => {
     anchor.setProvider(anchor.AnchorProvider.env())
 
-    const program = anchor.workspace.HxroInstrument as Program<HxroInstrument>;
+    const program = anchor.workspace.HxroInstrument as Program<HxroInstrumentType>;
+
+    let context: Context;
+
+    before(async () => {
+        context = await getContext();
+    });
+
+    it("Create two-way RFQ with one hxro leg", async () => {
+        // create a two-way RFQ specifying 1 bitcoin as a leg
+        const rfq = await context.createRfq({
+                legs: [
+                    new HxroInstrument(
+                        context,
+                        {
+                            amount: withTokenDecimals(1),
+                            side: Side.Bid
+                        })],
+            });
+    });
 
     it("Settle", async () => {
         const payer = anchor.web3.Keypair.generate();

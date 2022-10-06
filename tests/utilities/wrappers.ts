@@ -5,6 +5,7 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/sp
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { RiskEngine } from "../../target/types/risk_engine";
 import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
+import { HxroInstrument as HxroInstrumentIdl } from "../../target/types/hxro_instrument";
 import { getCollateralInfoPda, getCollateralTokenPda, getProtocolPda, getQuoteEscrowPda } from "./pdas";
 import {
   DEFAULT_ACTIVE_WINDOW,
@@ -21,11 +22,13 @@ import { AuthoritySide, Quote, Side, FixedSize } from "./types";
 import { SpotInstrument } from "./spotInstrument";
 import { Instrument } from "./instrument";
 import { calculateLegsSize, executeInParallel } from "./helpers";
+import {HxroInstrument} from "./hxroInstrument";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
   public riskEngine: anchor.Program<RiskEngine>;
   public spotInstrument: anchor.Program<SpotInstrumentIdl>;
+  public hxroInstrument: anchor.Program<HxroInstrumentIdl>;
   public provider: anchor.Provider;
   public dao: Keypair;
   public taker: Keypair;
@@ -41,6 +44,7 @@ export class Context {
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
     this.riskEngine = anchor.workspace.RiskEngine as anchor.Program<RiskEngine>;
     this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
+    this.hxroInstrument = anchor.workspace.HxroInstrument as anchor.Program<HxroInstrumentIdl>;
   }
 
   async initialize() {
@@ -99,6 +103,22 @@ export class Context {
       .signers([this.dao])
       .rpc();
   }
+
+    async addHxroInstrument() {
+        try {
+            await this.program.methods
+                .addInstrument(1, 7, 3, 3, 4)
+                .accounts({
+                    authority: this.dao.publicKey,
+                    protocol: this.protocolPda,
+                    instrumentProgram: this.hxroInstrument.programId,
+                })
+                .signers([this.dao])
+                .rpc();
+        } catch (e) {
+            console.log("E: ", e)
+        }
+    }
 
   async initializeCollateral(user: Keypair) {
     await this.program.methods
@@ -678,6 +698,9 @@ export async function getContext() {
   await executeInParallel(
     async () => {
       await context.addSpotInstrument();
+    },
+    async () => {
+      await context.addHxroInstrument();
     },
     async () => {
       await context.initializeCollateral(context.taker);

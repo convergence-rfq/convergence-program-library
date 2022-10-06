@@ -8,7 +8,7 @@ mod errors;
 mod params;
 mod state;
 
-declare_id!("3NYoxhinHnZ2qhYgJ5hxmkDvggpfF2bv2Hqx7sE5WhTW");
+declare_id!("G6MPqmJSCkTad48L9Pe4eN6VSQL9PopHqMsDbTsTcRHJ");
 
 #[program]
 pub mod hxro_instrument {
@@ -128,7 +128,13 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
 }
 
 #[derive(Accounts)]
-pub struct ValidateData {}
+pub struct ValidateData<'info> {
+    /// CHECK:
+    pub protocol: AccountInfo<'info>,
+
+    /// CHECK:
+    pub mint: AccountInfo<'info>,
+}
 
 #[derive(Accounts)]
 pub struct PrepareToSettle {}
