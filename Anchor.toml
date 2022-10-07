@@ -2,13 +2,13 @@
 rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
 risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
-hxro_instrument = "G6MPqmJSCkTad48L9Pe4eN6VSQL9PopHqMsDbTsTcRHJ"
+hxro_instrument = "5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL"
 
 [programs.devnet]
 rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
 risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
-hxro_instrument = "G6MPqmJSCkTad48L9Pe4eN6VSQL9PopHqMsDbTsTcRHJ"
+hxro_instrument = "5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL"
 
 [programs.mainnet]
 rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"

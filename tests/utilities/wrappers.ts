@@ -106,8 +106,8 @@ export class Context {
 
     async addHxroInstrument() {
         try {
-            await this.program.methods
-                .addInstrument(1, 7, 3, 3, 4)
+            let tx = await this.program.methods
+                .addInstrument(9, 7, 3, 3, 4)
                 .accounts({
                     authority: this.dao.publicKey,
                     protocol: this.protocolPda,
@@ -115,6 +115,7 @@ export class Context {
                 })
                 .signers([this.dao])
                 .rpc();
+            console.log("CREATED INSTRUMENT: ", tx)
         } catch (e) {
             console.log("E: ", e)
         }
@@ -200,7 +201,7 @@ export class Context {
       txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeRfqInstruction()]);
     }
 
-    await txConstructor.rpc();
+    console.log("CREATE RFQ: ", await txConstructor.rpc());
 
     return rfqObject;
   }

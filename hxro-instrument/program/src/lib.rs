@@ -8,13 +8,14 @@ mod errors;
 mod params;
 mod state;
 
-declare_id!("G6MPqmJSCkTad48L9Pe4eN6VSQL9PopHqMsDbTsTcRHJ");
+declare_id!("5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL");
 
 #[program]
 pub mod hxro_instrument {
     use super::*;
 
     pub fn validate_data(_ctx: Context<ValidateData>) -> Result<()> {
+
         Ok(())
     }
 
@@ -40,10 +41,7 @@ pub mod hxro_instrument {
     }
 }
 
-fn call_initialize_print_trade(
-    ctx: &Context<Settle>,
-    data: &SettleParams,
-) -> Result<()> {
+fn call_initialize_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::InitializePrintTrade {
         user: ctx.accounts.creator_owner.to_account_info(),
         creator: ctx.accounts.creator.to_account_info(),
@@ -67,11 +65,8 @@ fn call_initialize_print_trade(
     };
 
     dex::cpi::initialize_print_trade(
-        CpiContext::new(
-            ctx.accounts.dex.to_account_info(),
-            cpi_accounts,
-        ),
-        cpi_params
+        CpiContext::new(ctx.accounts.dex.to_account_info(), cpi_accounts),
+        cpi_params,
     )
 }
 
@@ -119,11 +114,8 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
     };
 
     dex::cpi::sign_print_trade(
-        CpiContext::new(
-            ctx.accounts.dex.to_account_info(),
-            cpi_accounts,
-        ),
-        cpi_params
+        CpiContext::new(ctx.accounts.dex.to_account_info(), cpi_accounts),
+        cpi_params,
     )
 }
 
@@ -131,9 +123,22 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
 pub struct ValidateData<'info> {
     /// CHECK:
     pub protocol: AccountInfo<'info>,
-
     /// CHECK:
-    pub mint: AccountInfo<'info>,
+    pub market_product_group: AccountInfo<'info>,
+    /// CHECK:
+    pub fee_model_program: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_engine_program: AccountInfo<'info>,
+    /// CHECK:
+    pub fee_model_configuration_acct: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_model_configuration_acct: AccountInfo<'info>,
+    /// CHECK:
+    pub fee_output_register: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_output_register: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_and_fee_signer: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]

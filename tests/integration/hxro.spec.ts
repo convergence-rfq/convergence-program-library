@@ -15,6 +15,16 @@ function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): s
 describe("RFQ HXRO instrument integration tests", () => {
     anchor.setProvider(anchor.AnchorProvider.env())
 
+    const dex = new anchor.web3.PublicKey("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL");
+    const marketProductGroup = new anchor.web3.PublicKey("HyWxreWnng9ZBDPYpuYugAfpCMkRkJ1oz93oyoybDFLB");
+    const feeModelProgram = new anchor.web3.PublicKey("5AZioCPiC7uZ4zRmkKSg5nsb2A98RhmW89a1pMwiDoeT");
+    const riskEngineProgram = new anchor.web3.PublicKey("92wdgEqyiDKrcbFHoBTg8HxMj932xweRCKaciGSW3uMr");
+    const feeModelConfigurationAcct = new anchor.web3.PublicKey("4Zwghg3tNaHZuzpQHDWA4mbSyoVrNEfvS765z7s4tNYd");
+    const riskModelConfigurationAcct = new anchor.web3.PublicKey("9kg11bsVU4MueSBhMbnhW5j7HjfMPin7NNWZZkdoFnRJ");
+    const feeOutputRegister = new anchor.web3.PublicKey("rPnaqXrvo3aBMChVLywnVz6nykSfXwvBYu1Yz1p6crv");
+    const riskOutputRegister = new anchor.web3.PublicKey("DevB1VB5Tt3YAeYZ8XTB1fXiFtXBqcP7PbfWGB71YyCE");
+    const riskAndFeeSigner = new anchor.web3.PublicKey("AQJYsJ9k47ahEEXhvnNBFca4yH3zcFUfVaKrLPLgftYg");
+
     const program = anchor.workspace.HxroInstrument as Program<HxroInstrumentType>;
 
     let context: Context;
@@ -25,15 +35,28 @@ describe("RFQ HXRO instrument integration tests", () => {
 
     it("Create two-way RFQ with one hxro leg", async () => {
         // create a two-way RFQ specifying 1 bitcoin as a leg
-        const rfq = await context.createRfq({
+        try {
+            const rfq = await context.createRfq({
                 legs: [
                     new HxroInstrument(
                         context,
                         {
                             amount: withTokenDecimals(1),
-                            side: Side.Bid
+                            side: Side.Bid,
+                            dex: dex,
+                            marketProductGroup: marketProductGroup,
+                            feeModelProgram: feeModelProgram,
+                            riskEngineProgram: riskEngineProgram,
+                            feeModelConfigurationAcct: feeModelConfigurationAcct,
+                            riskModelConfigurationAcct: riskModelConfigurationAcct,
+                            feeOutputRegister: feeOutputRegister,
+                            riskOutputRegister: riskOutputRegister,
+                            riskAndFeeSigner: riskAndFeeSigner,
                         })],
             });
+        } catch (e) {
+            console.log("ERROR", e)
+        }
     });
 
     it("Settle", async () => {
@@ -56,21 +79,10 @@ describe("RFQ HXRO instrument integration tests", () => {
         )
         console.log("airdropTX2", airdropTX2)
 
-        const dex = new anchor.web3.PublicKey("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL");
         const dexProgram = new anchor.Program(DexIdl as anchor.Idl, dex, anchor.getProvider()) as Program<Dex>;
         const product = new anchor.web3.PublicKey("3ERnKTAEcXGMQkT9kkwAi5ECPmvpKzVfAvymV2Bc13YU");
 
-        const marketProductGroup = new anchor.web3.PublicKey("HyWxreWnng9ZBDPYpuYugAfpCMkRkJ1oz93oyoybDFLB");
-        const feeModelProgram = new anchor.web3.PublicKey("5AZioCPiC7uZ4zRmkKSg5nsb2A98RhmW89a1pMwiDoeT");
-        const riskEngineProgram = new anchor.web3.PublicKey("92wdgEqyiDKrcbFHoBTg8HxMj932xweRCKaciGSW3uMr");
-        const feeModelConfigurationAcct = new anchor.web3.PublicKey("4Zwghg3tNaHZuzpQHDWA4mbSyoVrNEfvS765z7s4tNYd");
-        const riskModelConfigurationAcct = new anchor.web3.PublicKey("9kg11bsVU4MueSBhMbnhW5j7HjfMPin7NNWZZkdoFnRJ");
-
         const operator = new anchor.web3.PublicKey("GbA1vNKFzGQogorVNF4yWrU7mWdb1gKAMJCSmirEApXg");
-
-        const feeOutputRegister = new anchor.web3.PublicKey("rPnaqXrvo3aBMChVLywnVz6nykSfXwvBYu1Yz1p6crv");
-        const riskOutputRegister = new anchor.web3.PublicKey("DevB1VB5Tt3YAeYZ8XTB1fXiFtXBqcP7PbfWGB71YyCE");
-        const riskAndFeeSigner = new anchor.web3.PublicKey("AQJYsJ9k47ahEEXhvnNBFca4yH3zcFUfVaKrLPLgftYg");
 
         const creator = await anchor.web3.PublicKey.createWithSeed(
             payer.publicKey,
