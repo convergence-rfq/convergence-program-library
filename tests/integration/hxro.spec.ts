@@ -29,35 +29,6 @@ describe("RFQ HXRO instrument integration tests", () => {
 
     let context: Context;
 
-    before(async () => {
-        context = await getContext();
-    });
-
-    it("Create two-way RFQ with one hxro leg", async () => {
-        // create a two-way RFQ specifying 1 bitcoin as a leg
-        try {
-            const rfq = await context.createRfq({
-                legs: [
-                    new HxroInstrument(
-                        context,
-                        {
-                            amount: withTokenDecimals(1),
-                            side: Side.Bid,
-                            dex: dex,
-                            marketProductGroup: marketProductGroup,
-                            feeModelProgram: feeModelProgram,
-                            riskEngineProgram: riskEngineProgram,
-                            feeModelConfigurationAcct: feeModelConfigurationAcct,
-                            riskModelConfigurationAcct: riskModelConfigurationAcct,
-                            feeOutputRegister: feeOutputRegister,
-                            riskOutputRegister: riskOutputRegister,
-                            riskAndFeeSigner: riskAndFeeSigner,
-                        })],
-            });
-        } catch (e) {
-            console.log("ERROR", e)
-        }
-    });
 
     it("Settle", async () => {
         const payer = anchor.web3.Keypair.generate();
@@ -239,6 +210,21 @@ describe("RFQ HXRO instrument integration tests", () => {
             dexProgram.programId,
         )
 
+        const [s_account, ] =
+            await anchor.web3.PublicKey.findProgramAddress(
+                [
+                    Buffer.from("s"),
+                    marketProductGroup.toBytes()
+                ],
+            riskEngineProgram);
+        const [r_account, ] =
+            await anchor.web3.PublicKey.findProgramAddress(
+                [
+                    Buffer.from("r"),
+                    marketProductGroup.toBytes()
+                ],
+                riskEngineProgram);
+
         let tx = await program.methods.settle(
             // @ts-ignore
             {
@@ -285,6 +271,8 @@ describe("RFQ HXRO instrument integration tests", () => {
                 creatorTraderRiskStateAcct: creatorTraderRiskStateAcct,
                 counterpartyTraderFeeStateAcct: counterpartyTraderFeeStateAcct,
                 counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct,
+                sAccount: s_account,
+                rAccount: r_account,
             }
         ).signers(
             [payer, counterpartyPayer]
@@ -315,6 +303,8 @@ describe("RFQ HXRO instrument integration tests", () => {
                 creatorTraderRiskStateAcct: creatorTraderRiskStateAcct.toString(),
                 counterpartyTraderFeeStateAcct: counterpartyTraderFeeStateAcct.toString(),
                 counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct.toString(),
+                sAccount: s_account.toString(),
+                rAccount: r_account.toString(),
             }
         )
 
