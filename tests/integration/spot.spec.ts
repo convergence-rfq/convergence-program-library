@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import { BN, web3 } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { MAKER_CONFIRMED_COLLATERAL, TAKER_CONFIRMED_COLLATERAL } from "../utilities/constants";
 import {
@@ -9,7 +9,7 @@ import {
   toLegMultiplier,
   withTokenDecimals,
 } from "../utilities/helpers";
-import { SpotInstrument } from "../utilities/spotInstrument";
+import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 
@@ -31,7 +31,7 @@ describe("RFQ Spot instrument integration tests", () => {
 
     // create a two way RFQ specifying 1 bitcoin as a leg
     const rfq = await context.createRfq({
-      legs: [new SpotInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid })],
+      legs: [SpotInstrument.create(context, { amount: withTokenDecimals(1), side: Side.Bid })],
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
     const response = await rfq.respond({
@@ -60,8 +60,8 @@ describe("RFQ Spot instrument integration tests", () => {
     // create a sell RFQ specifying 5 bitcoin bid and 10 eth ask
     const rfq = await context.createRfq({
       legs: [
-        new SpotInstrument(context, { amount: withTokenDecimals(5), side: Side.Bid }),
-        new SpotInstrument(context, { mint: ethMint, amount: withTokenDecimals(10), side: Side.Ask }),
+        SpotInstrument.create(context, { amount: withTokenDecimals(5), side: Side.Bid }),
+        SpotInstrument.create(context, { mint: ethMint, amount: withTokenDecimals(10), side: Side.Ask }),
       ],
       orderType: OrderType.Sell,
     });
@@ -114,7 +114,7 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create fixed quote size buy RFQ, respond and settle response", async () => {
     // create a buy RFQ specifying 15 bitcoin as a leg(5 in leg with multiplier of 3)
     const rfq = await context.createRfq({
-      legs: [new SpotInstrument(context, { amount: withTokenDecimals(5), side: Side.Bid })],
+      legs: [SpotInstrument.create(context, { amount: withTokenDecimals(5), side: Side.Bid })],
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(3)),
       orderType: OrderType.Buy,
     });
@@ -142,7 +142,7 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create fixed quote size sell RFQ, respond and settle response", async () => {
     // create a sell RFQ specifying 0.5 bitcoin in leg and fixed quote of 38.5k$
     const rfq = await context.createRfq({
-      legs: [new SpotInstrument(context, { amount: withTokenDecimals(0.5), side: Side.Bid })],
+      legs: [SpotInstrument.create(context, { amount: withTokenDecimals(0.5), side: Side.Bid })],
       fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(38_500)),
       orderType: OrderType.Sell,
     });
@@ -260,11 +260,10 @@ describe("RFQ Spot instrument integration tests", () => {
         return Mint.create(context);
       })
     );
-    const legs = mints.map(
-      (mint) =>
-        new SpotInstrument(context, {
-          mint,
-        })
+    const legs = mints.map((mint) =>
+      SpotInstrument.create(context, {
+        mint,
+      })
     );
     const rfq = await context.createRfq({
       legs: legs.slice(0, legAmount / 2),
@@ -300,11 +299,10 @@ describe("RFQ Spot instrument integration tests", () => {
         return Mint.create(context);
       })
     );
-    const legs = mints.map(
-      (mint) =>
-        new SpotInstrument(context, {
-          mint,
-        })
+    const legs = mints.map((mint) =>
+      SpotInstrument.create(context, {
+        mint,
+      })
     );
     const rfq = await context.createRfq({
       legs: legs.slice(0, legAmount / 2),
