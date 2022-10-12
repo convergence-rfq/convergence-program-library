@@ -117,11 +117,11 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
                     ctx.accounts.counterparty_trader_risk_state_acct.key(),
                     false,
                 ),
-                AccountMeta::new_readonly(
+                AccountMeta::new(
                     ctx.accounts.s_account.key(),
                     false,
                 ),
-                AccountMeta::new_readonly(
+                AccountMeta::new(
                     ctx.accounts.r_account.key(),
                     false,
                 ),
@@ -222,8 +222,10 @@ pub struct Settle<'info> {
     pub counterparty_trader_risk_state_acct: AccountInfo<'info>,
 
     /// CHECK:
+    #[account(mut)]
     pub r_account: AccountInfo<'info>,
     /// CHECK:
+    #[account(mut)]
     pub s_account: AccountInfo<'info>,
 }
 
