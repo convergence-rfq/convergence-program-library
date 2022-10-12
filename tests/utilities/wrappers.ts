@@ -4,7 +4,6 @@ import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/w
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { RiskEngine } from "../../target/types/risk_engine";
-import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
 import { getCollateralInfoPda, getCollateralTokenPda, getProtocolPda, getQuoteEscrowPda } from "./pdas";
 import {
   DEFAULT_ACTIVE_WINDOW,
@@ -18,14 +17,14 @@ import {
   DEFAULT_LEG_MULTIPLIER,
 } from "./constants";
 import { AuthoritySide, Quote, Side, FixedSize } from "./types";
-import { SpotInstrument } from "./spotInstrument";
-import { Instrument } from "./instrument";
+import { SpotInstrument } from "./instruments/spotInstrument";
+import { Instrument, InstrumentController } from "./instrument";
 import { calculateLegsSize, executeInParallel } from "./helpers";
+import { EuroOptionInstrument } from "./instruments/euroOptionsInstrument";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
   public riskEngine: anchor.Program<RiskEngine>;
-  public spotInstrument: anchor.Program<SpotInstrumentIdl>;
   public provider: anchor.Provider;
   public dao: Keypair;
   public taker: Keypair;
@@ -40,7 +39,6 @@ export class Context {
     anchor.setProvider(this.provider);
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
     this.riskEngine = anchor.workspace.RiskEngine as anchor.Program<RiskEngine>;
-    this.spotInstrument = anchor.workspace.SpotInstrument as anchor.Program<SpotInstrumentIdl>;
   }
 
   async initialize() {
@@ -88,13 +86,26 @@ export class Context {
       .rpc();
   }
 
-  async addSpotInstrument() {
+  async addInstrument(
+    programId: PublicKey,
+    validateDataAccounts: number,
+    prepareToSettleAccounts: number,
+    settleAccounts: number,
+    revertPreparationAccounts: number,
+    cleanUpAccounts: number
+  ) {
     await this.program.methods
-      .addInstrument(1, 7, 3, 3, 4)
+      .addInstrument(
+        validateDataAccounts,
+        prepareToSettleAccounts,
+        settleAccounts,
+        revertPreparationAccounts,
+        cleanUpAccounts
+      )
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
-        instrumentProgram: this.spotInstrument.programId,
+        instrumentProgram: programId,
       })
       .signers([this.dao])
       .rpc();
@@ -148,7 +159,7 @@ export class Context {
   }
 
   async createRfq({
-    legs = [new SpotInstrument(this)],
+    legs = [SpotInstrument.create(this)],
     orderType = null,
     fixedSize = null,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
@@ -191,6 +202,19 @@ export class Mint {
 
   protected constructor(protected context: Context, public token: Token) {
     this.publicKey = token.publicKey;
+  }
+
+  public static async wrap(context: Context, address: PublicKey) {
+    const token = new Token(context.provider.connection, address, TOKEN_PROGRAM_ID, context.dao);
+    const mint = new Mint(context, token);
+
+    await executeInParallel(
+      async () => await token.createAssociatedTokenAccount(context.taker.publicKey),
+      async () => await token.createAssociatedTokenAccount(context.maker.publicKey),
+      async () => await token.createAssociatedTokenAccount(context.dao.publicKey)
+    );
+
+    return mint;
   }
 
   public static async create(context: Context) {
@@ -251,7 +275,7 @@ export class CollateralMint extends Mint {
 }
 
 export class Rfq {
-  public constructor(public context: Context, public account: PublicKey, public legs: Instrument[]) {}
+  public constructor(public context: Context, public account: PublicKey, public legs: InstrumentController[]) {}
 
   async respond({ bid = null, ask = null } = {}) {
     if (bid === null && ask === null) {
@@ -311,7 +335,7 @@ export class Rfq {
       .rpc();
   }
 
-  async addLegs(legs: Instrument[], finalize = true) {
+  async addLegs(legs: InstrumentController[], finalize = true) {
     this.legs = this.legs.concat(legs);
 
     const legData = await Promise.all(legs.map(async (x) => await x.toLegData()));
@@ -677,7 +701,10 @@ export async function getContext() {
 
   await executeInParallel(
     async () => {
-      await context.addSpotInstrument();
+      await SpotInstrument.addInstrument(context);
+    },
+    async () => {
+      await EuroOptionInstrument.addInstrument(context);
     },
     async () => {
       await context.initializeCollateral(context.taker);

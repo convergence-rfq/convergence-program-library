@@ -5,7 +5,7 @@ import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
 import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
-import { Instrument } from "./instrument";
+import { InstrumentController } from "./instrument";
 
 chai.use(chaiBn(BN));
 
@@ -49,7 +49,7 @@ export function executeInParallel(...fns: (() => Promise<any>)[]) {
   return Promise.all(fns.map((x) => x()));
 }
 
-export function calculateLegsSize(legs: Instrument[]) {
+export function calculateLegsSize(legs: InstrumentController[]) {
   return legs.map((leg) => EMPTY_LEG_SIZE + leg.getInstrumendDataSize()).reduce((x, y) => x + y, 4);
 }
 
