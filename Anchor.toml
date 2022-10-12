@@ -2,16 +2,19 @@
 rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
 risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
+euro_options_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
 
 [programs.devnet]
 rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
 risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
+euro_options_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
 
 [programs.mainnet]
 rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
 risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
+euro_options_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -24,5 +27,6 @@ wallet = "~/.config/solana/convergence-v2.json"
 members = [
     "rfq/program",
     "risk-engine/program",
-    "spot-instrument/program"
+    "spot-instrument/program",
+    "euro-options-instrument/program",
 ]

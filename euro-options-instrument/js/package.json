@@ -1,0 +1,9 @@
+{
+  "name": "euro-options-instrument",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@metaplex-foundation/solita": "^0.15.2"
+  }
+}
