@@ -18,9 +18,9 @@ import {
 } from "./constants";
 import { AuthoritySide, Quote, Side, FixedSize } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
-import { Instrument, InstrumentController } from "./instrument";
+import { InstrumentController } from "./instrument";
 import { calculateLegsSize, executeInParallel } from "./helpers";
-import { EuroOptionInstrument } from "./instruments/euroOptionsInstrument";
+import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
@@ -704,7 +704,7 @@ export async function getContext() {
       await SpotInstrument.addInstrument(context);
     },
     async () => {
-      await EuroOptionInstrument.addInstrument(context);
+      await PsyoptionsEuropeanInstrument.addInstrument(context);
     },
     async () => {
       await context.initializeCollateral(context.taker);

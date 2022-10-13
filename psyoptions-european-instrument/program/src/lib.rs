@@ -1,4 +1,4 @@
-use crate::errors::EuroOptionsError;
+use crate::errors::PsyoptionsEuropeanError;
 use crate::state::AuthoritySideDuplicate;
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::get_associated_token_address;
@@ -17,7 +17,7 @@ declare_id!("3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm");
 const ESCROW_SEED: &str = "escrow";
 
 #[program]
-pub mod euro_options_instrument {
+pub mod psyoptions_european_instrument {
     use super::*;
 
     pub fn validate_data(
@@ -29,13 +29,12 @@ pub mod euro_options_instrument {
     ) -> Result<()> {
         let euro_meta_acc = &ctx.accounts.euro_meta;
         require!(
-            data_size as usize
-                == std::mem::size_of::<Pubkey>() * 2 + std::mem::size_of::<OptionType>(),
-            EuroOptionsError::InvalidDataSize
+            data_size as usize == std::mem::size_of::<Pubkey>() * 2 + std::mem::size_of::<OptionType>(),
+            PsyoptionsEuropeanError::InvalidDataSize
         );
         require!(
             euro_meta == euro_meta_acc.key(),
-            EuroOptionsError::PassedMintDoesNotMatch
+            PsyoptionsEuropeanError::PassedMintDoesNotMatch
         );
         let expected_mint = match option_type {
             OptionType::CALL => euro_meta_acc.call_option_mint,
@@ -43,7 +42,7 @@ pub mod euro_options_instrument {
         };
         require!(
             mint_address == expected_mint,
-            EuroOptionsError::PassedMintDoesNotMatch
+            PsyoptionsEuropeanError::PassedMintDoesNotMatch
         );
         Ok(())
     }
@@ -67,7 +66,7 @@ pub mod euro_options_instrument {
         let expected_mint: Pubkey = AnchorDeserialize::try_from_slice(&leg_data[..32])?;
         require!(
             expected_mint == mint.key(),
-            EuroOptionsError::PassedMintDoesNotMatch
+            PsyoptionsEuropeanError::PassedMintDoesNotMatch
         );
 
         let token_amount = response.get_leg_amount_to_transfer(rfq, leg_index, side.into());
@@ -160,9 +159,8 @@ pub mod euro_options_instrument {
         } = &ctx.accounts;
 
         require!(
-            get_associated_token_address(&protocol.authority, &escrow.mint)
-                == backup_receiver.key(),
-            EuroOptionsError::InvalidBackupAddress
+            get_associated_token_address(&protocol.authority, &escrow.mint) == backup_receiver.key(),
+            PsyoptionsEuropeanError::InvalidBackupAddress
         );
 
         let expected_first_to_prepare = response.leg_preparations_initialized_by
@@ -170,7 +168,7 @@ pub mod euro_options_instrument {
             .to_public_key(rfq, response);
         require!(
             first_to_prepare.key() == expected_first_to_prepare,
-            EuroOptionsError::NotFirstToPrepare
+            PsyoptionsEuropeanError::NotFirstToPrepare
         );
 
         transfer_from_an_escrow(
@@ -283,7 +281,7 @@ pub struct PrepareToSettle<'info> {
     /// user provided
     #[account(mut)]
     pub caller: Signer<'info>,
-    #[account(mut, constraint = caller_tokens.mint == mint.key() @ EuroOptionsError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = caller_tokens.mint == mint.key() @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
     pub caller_tokens: Account<'info, TokenAccount>,
 
     pub mint: Account<'info, Mint>,
@@ -309,7 +307,7 @@ pub struct Settle<'info> {
     /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ EuroOptionsError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
     pub receiver_tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -327,7 +325,7 @@ pub struct RevertPreparation<'info> {
     /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = tokens.mint == escrow.mint @ EuroOptionsError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = tokens.mint == escrow.mint @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
     pub tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -348,7 +346,7 @@ pub struct CleanUp<'info> {
     pub first_to_prepare: UncheckedAccount<'info>,
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ EuroOptionsError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
     pub backup_receiver: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,

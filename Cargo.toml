@@ -3,7 +3,7 @@ members = [
     "rfq/program",
     "risk-engine/program",
     "spot-instrument/program",
-    "euro-options-instrument/program",
+    "psyoptions-european-instrument/program",
 ]
 
 [profile.release]

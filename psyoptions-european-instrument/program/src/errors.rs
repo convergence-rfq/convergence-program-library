@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 
 /// Error codes.
 #[error_code]
-pub enum EuroOptionsError {
+pub enum PsyoptionsEuropeanError {
     #[msg("Invalid data size")]
     InvalidDataSize,
     #[msg("Passed mint account does not match")]

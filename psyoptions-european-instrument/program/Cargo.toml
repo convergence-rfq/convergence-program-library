@@ -1,12 +1,12 @@
 [package]
-name = "euro-options-instrument"
+name = "psyoptions-european-instrument"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "euro_options_instrument"
+name = "psyoptions_european_instrument"
 
 [dependencies]
 anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }

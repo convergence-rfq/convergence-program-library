@@ -1,5 +1,5 @@
 {
-  "name": "euro-options-instrument",
+  "name": "psyoptions-european-instrument",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",

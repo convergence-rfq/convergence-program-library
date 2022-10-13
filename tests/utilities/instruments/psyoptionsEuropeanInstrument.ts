@@ -6,7 +6,7 @@ import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
 import { AuthoritySide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
-import { EuroOptionsInstrument as EuroOptionsInstrumentIdl } from "../../../target/types/euro_options_instrument";
+import { PsyoptionsEuropeanInstrument as PsyoptionsEuropeanInstrumentIdl } from "../../../target/types/psyoptions_european_instrument";
 import { executeInParallel, withTokenDecimals } from "../helpers";
 import {
   CONTRACT_DECIMALS_BN,
@@ -23,16 +23,16 @@ import {
   mintOptions,
 } from "../../dependencies/tokenized-euros/src/instructions";
 
-let spotInstrumentProgram = null;
-export function getEuroOptionsInstrumentProgram(): Program<EuroOptionsInstrumentIdl> {
-  if (spotInstrumentProgram === null) {
-    spotInstrumentProgram = workspace.EuroOptionsInstrument as Program<EuroOptionsInstrumentIdl>;
+let psyoptionsEuropeanInstrumentProgram = null;
+export function getEuroOptionsInstrumentProgram(): Program<PsyoptionsEuropeanInstrumentIdl> {
+  if (psyoptionsEuropeanInstrumentProgram === null) {
+    psyoptionsEuropeanInstrumentProgram =
+      workspace.PsyoptionsEuropeanInstrument as Program<PsyoptionsEuropeanInstrumentIdl>;
   }
-
-  return spotInstrumentProgram;
+  return psyoptionsEuropeanInstrumentProgram;
 }
 
-export class EuroOptionInstrument implements Instrument {
+export class PsyoptionsEuropeanInstrument implements Instrument {
   constructor(
     private context: Context,
     private mint: Mint,
@@ -47,7 +47,7 @@ export class EuroOptionInstrument implements Instrument {
     optionType: OptionType,
     { amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
-    const instrument = new EuroOptionInstrument(context, mint, euroMeta, optionType);
+    const instrument = new PsyoptionsEuropeanInstrument(context, mint, euroMeta, optionType);
     return new InstrumentController(instrument, amount, side ?? DEFAULT_INSTRUMENT_SIDE);
   }
 

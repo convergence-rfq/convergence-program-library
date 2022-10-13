@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-// TODO import euro options crate instead of this file when it would be available
+// TODO: Import euro options crate instead of this file when it would be available
 
 declare_id!("FASQhaZQT53W9eT9wWnPoBFw8xzZDey9TbMmJj6jCQTs");
 

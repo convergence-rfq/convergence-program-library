@@ -1,12 +1,12 @@
-import { BN, Program } from "@project-serum/anchor";
+import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
-import { EuroOptionInstrument, EuroOptionsFacade } from "../utilities/instruments/euroOptionsInstrument";
+import { PsyoptionsEuropeanInstrument, EuroOptionsFacade } from "../utilities/instruments/psyoptionsEuropeanInstrument";
 import { AuthoritySide, Quote, Side } from "../utilities/types";
 import { Context, getContext } from "../utilities/wrappers";
-import { CONTRACT_DECIMALS_BN, EuroMeta, EuroPrimitive, OptionType } from "../dependencies/tokenized-euros/src";
+import { CONTRACT_DECIMALS_BN, OptionType } from "../dependencies/tokenized-euros/src";
 
-describe("RFQ Euro options instrument integration tests", () => {
+describe("Psyoptions European instrument integration tests", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
@@ -36,7 +36,7 @@ describe("RFQ Euro options instrument integration tests", () => {
     // create a two way RFQ specifying 1 option call as a leg
     const rfq = await context.createRfq({
       legs: [
-        EuroOptionInstrument.create(context, options.callMint, options.metaKey, OptionType.CALL, {
+        PsyoptionsEuropeanInstrument.create(context, options.callMint, options.metaKey, OptionType.CALL, {
           amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
           side: Side.Bid,
         }),
@@ -75,7 +75,7 @@ describe("RFQ Euro options instrument integration tests", () => {
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
-        EuroOptionInstrument.create(context, options.putMint, options.metaKey, OptionType.PUT, {
+        PsyoptionsEuropeanInstrument.create(context, options.putMint, options.metaKey, OptionType.PUT, {
           amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
           side: Side.Bid,
         }),
