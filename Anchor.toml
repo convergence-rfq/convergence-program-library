@@ -1,21 +1,17 @@
-anchor_version = "0.24.2"
+anchor_version = "0.25.0"
 
 [programs.localnet]
-rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
-risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
+risk_engine = "7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
+psyoptions_european_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
 psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
 
 [programs.devnet]
-rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
-risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
+risk_engine = "7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
-psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
-
-[programs.mainnet]
-rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
-risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
-spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
+psyoptions_european_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
 psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
 
 [registry]
@@ -30,5 +26,6 @@ members = [
     "rfq/program",
     "risk-engine/program",
     "spot-instrument/program",
-    "psyoptions-american-instrument/program"
+    "psyoptions-american-instrument/program",
+    "psyoptions-european-instrument/program"
 ]

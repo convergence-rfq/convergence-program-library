@@ -2,8 +2,8 @@ import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { MAKER_CONFIRMED_COLLATERAL, TAKER_CONFIRMED_COLLATERAL } from "../utilities/constants";
 import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
-import { PsyoptionsAmericanInstrument } from "../utilities/psyoptionsAmericanInstrument";
-import { SpotInstrument } from "../utilities/spotInstrument";
+import { PsyoptionsAmericanInstrument } from "../utilities/instruments/psyoptionsAmericanInstrument";
+import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 
@@ -28,20 +28,20 @@ describe("RFQ Psyoptions American instrument integration tests", () => {
     const quoteAmountPerContract = new BN(1);
     const expirationUnixTimestamp = new BN(1);
 
-    const rfq = await context.createRfq({
-      legs: [
-        new SpotInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid }),
-        new PsyoptionsAmericanInstrument(context, {
-          underlyingAssetMint,
-          underlyingAmountPerContract,
-          quoteAmountPerContract,
-          expirationUnixTimestamp,
-          amount: withTokenDecimals(1),
-          side: Side.Bid,
-        }),
-      ],
-      orderType: OrderType.TwoWay,
-    });
+    //const rfq = await context.createRfq({
+    //  legs: [
+    //    new SpotInstrument(context, { amount: withTokenDecimals(1), side: Side.Bid }),
+    //    new PsyoptionsAmericanInstrument(context, {
+    //      underlyingAssetMint,
+    //      underlyingAmountPerContract,
+    //      quoteAmountPerContract,
+    //      expirationUnixTimestamp,
+    //      amount: withTokenDecimals(1),
+    //      side: Side.Bid,
+    //    }),
+    //  ],
+    //  orderType: OrderType.TwoWay,
+    //});
 
     //const response = await rfq.respond({
     //  bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
