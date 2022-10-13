@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::InstructionData;
 use anchor_lang::solana_program;
 use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 
 use dex_cpi as dex;
 use params::SettleParams;
@@ -84,6 +84,52 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
             .to_dex_fractional(),
     };
 
+    let accounts_infos = &[
+        ctx.accounts.counterparty_owner.to_account_info().clone(),
+        ctx.accounts.creator.to_account_info().clone(),
+        ctx.accounts.counterparty.to_account_info().clone(),
+        ctx.accounts.operator.to_account_info().clone(),
+        ctx.accounts.market_product_group.to_account_info().clone(),
+        ctx.accounts.product.to_account_info().clone(),
+        ctx.accounts.print_trade.to_account_info().clone(),
+        ctx.accounts.system_program.to_account_info().clone(),
+        ctx.accounts.fee_model_program.to_account_info().clone(),
+        ctx.accounts
+            .fee_model_configuration_acct
+            .to_account_info()
+            .clone(),
+        ctx.accounts.fee_output_register.to_account_info().clone(),
+        ctx.accounts.risk_engine_program.to_account_info().clone(),
+        ctx.accounts
+            .risk_model_configuration_acct
+            .to_account_info()
+            .clone(),
+        ctx.accounts.risk_output_register.to_account_info().clone(),
+        ctx.accounts.risk_and_fee_signer.to_account_info().clone(),
+        ctx.accounts
+            .creator_trader_fee_state_acct
+            .to_account_info()
+            .clone(),
+        ctx.accounts
+            .creator_trader_risk_state_acct
+            .to_account_info()
+            .clone(),
+        ctx.accounts
+            .counterparty_trader_fee_state_acct
+            .to_account_info()
+            .clone(),
+        ctx.accounts
+            .counterparty_trader_risk_state_acct
+            .to_account_info()
+            .clone(),
+        ctx.accounts
+            .counterparty_trader_risk_state_acct
+            .to_account_info()
+            .clone(),
+        ctx.accounts.s_account.to_account_info().clone(),
+        ctx.accounts.r_account.to_account_info().clone(),
+    ];
+
     solana_program::program::invoke(
         &Instruction {
             program_id: ctx.accounts.dex.key(),
@@ -105,10 +151,7 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
                 AccountMeta::new_readonly(ctx.accounts.risk_and_fee_signer.key(), false),
                 AccountMeta::new(ctx.accounts.creator_trader_fee_state_acct.key(), false),
                 AccountMeta::new(ctx.accounts.creator_trader_risk_state_acct.key(), false),
-                AccountMeta::new(
-                    ctx.accounts.counterparty_trader_fee_state_acct.key(),
-                    false,
-                ),
+                AccountMeta::new(ctx.accounts.counterparty_trader_fee_state_acct.key(), false),
                 AccountMeta::new(
                     ctx.accounts.counterparty_trader_risk_state_acct.key(),
                     false,
@@ -117,19 +160,17 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
                     ctx.accounts.counterparty_trader_risk_state_acct.key(),
                     false,
                 ),
-                AccountMeta::new(
-                    ctx.accounts.s_account.key(),
-                    false,
-                ),
-                AccountMeta::new(
-                    ctx.accounts.r_account.key(),
-                    false,
-                ),
+                AccountMeta::new(ctx.accounts.s_account.key(), false),
+                AccountMeta::new(ctx.accounts.r_account.key(), false),
             ],
-            data: dex_cpi::instruction::SignPrintTrade { _params: cpi_params }.data(),
+            data: dex_cpi::instruction::SignPrintTrade {
+                _params: cpi_params,
+            }
+            .data(),
         },
-        ToAccountInfos::to_account_infos(ctx.accounts).as_slice(),
-    ).unwrap();
+        accounts_infos,
+    )
+    .unwrap();
 
     Ok(())
 }
@@ -223,10 +264,10 @@ pub struct Settle<'info> {
 
     /// CHECK:
     #[account(mut)]
-    pub r_account: AccountInfo<'info>,
+    pub s_account: AccountInfo<'info>,
     /// CHECK:
     #[account(mut)]
-    pub s_account: AccountInfo<'info>,
+    pub r_account: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
