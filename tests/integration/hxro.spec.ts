@@ -4,8 +4,9 @@ import { HxroInstrument as HxroInstrumentType } from '../../target/types/hxro_in
 import { DexIdl, Dex } from '../../hxro-instrument/dex-cpi/types';
 import { Side } from "../utilities/types"
 import { Context, getContext } from "../utilities/wrappers";
-import { HxroInstrument } from "../utilities/hxroInstrument";
+import { HxroInstrument } from "../utilities/instruments/hxroInstrument";
 import {withTokenDecimals} from "../utilities/helpers";
+import {SpotInstrument} from "../utilities/instruments/spotInstrument";
 
 function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): string {
     return "trdr_grp1:test" + name
@@ -29,6 +30,35 @@ describe("RFQ HXRO instrument integration tests", () => {
 
     let context: Context;
 
+    before(async () => {
+        context = await getContext();
+    });
+
+    it("Create two-way RFQ with one hxro leg", async () => {
+        // create a two-way RFQ specifying 1 bitcoin as a leg
+        try {
+            const rfq = await context.createRfq({
+                legs: [
+                    HxroInstrument.create(
+                        context,
+                        {
+                            amount: withTokenDecimals(1),
+                            side: Side.Bid,
+                            dex: dex,
+                            marketProductGroup: marketProductGroup,
+                            feeModelProgram: feeModelProgram,
+                            riskEngineProgram: riskEngineProgram,
+                            feeModelConfigurationAcct: feeModelConfigurationAcct,
+                            riskModelConfigurationAcct: riskModelConfigurationAcct,
+                            feeOutputRegister: feeOutputRegister,
+                            riskOutputRegister: riskOutputRegister,
+                            riskAndFeeSigner: riskAndFeeSigner,
+                        })],
+            });
+        } catch (e) {
+            console.log("ERROR", e)
+        }
+    });
 
     it("Settle", async () => {
         const payer = anchor.web3.Keypair.generate();
@@ -53,7 +83,7 @@ describe("RFQ HXRO instrument integration tests", () => {
         const dexProgram = new anchor.Program(DexIdl as anchor.Idl, dex, anchor.getProvider()) as Program<Dex>;
         const product = new anchor.web3.PublicKey("3ERnKTAEcXGMQkT9kkwAi5ECPmvpKzVfAvymV2Bc13YU");
 
-        const operator = new anchor.web3.PublicKey("GbA1vNKFzGQogorVNF4yWrU7mWdb1gKAMJCSmirEApXg");
+        const operator =  anchor.web3.PublicKey("GbA1vNKFzGQogorVNF4yWrU7mWdb1gKAMJCSmirEApXg");
 
         const creator = await anchor.web3.PublicKey.createWithSeed(
             payer.publicKey,

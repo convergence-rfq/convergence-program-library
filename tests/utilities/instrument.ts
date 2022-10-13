@@ -10,8 +10,8 @@ export interface InstrumentData {
 }
 
 export interface Instrument {
-  toLegData(): Promise<InstrumentData>;
-  getInstrumendDataSize(): number;
+  serializeLegData(): Buffer;
+  getProgramId(): PublicKey;
   getValidationAccounts(): Promise<AccountMeta[]>;
   getPrepareSettlementAccounts(
     side: { taker: {} } | { maker: {} },
@@ -27,4 +27,61 @@ export interface Instrument {
     response: Response
   ): Promise<AccountMeta[]>;
   getCleanUpAccounts(legIndex: number, rfq: Rfq, response: Response): Promise<AccountMeta[]>;
+}
+
+export class InstrumentController {
+  constructor(protected instrument: Instrument, protected amount: BN, protected side: { bid: {} } | { ask: {} }) {}
+
+  async toLegData() {
+    return {
+      instrument: this.instrument.getProgramId(),
+      instrumentData: this.instrument.serializeLegData(),
+      instrumentAmount: new BN(this.amount),
+      side: this.side,
+    };
+  }
+
+  getInstrumendDataSize() {
+    return this.instrument.serializeLegData().length;
+  }
+
+  private getProgramAccount() {
+    return { pubkey: this.instrument.getProgramId(), isSigner: false, isWritable: false };
+  }
+
+  async getValidationAccounts() {
+    return [this.getProgramAccount()].concat(await this.instrument.getValidationAccounts());
+  }
+
+  async getPrepareSettlementAccounts(
+    side: { taker: {} } | { maker: {} },
+    legIndex: number,
+    rfq: Rfq,
+    response: Response
+  ) {
+    return [this.getProgramAccount()].concat(
+      await this.instrument.getPrepareSettlementAccounts(side, legIndex, rfq, response)
+    );
+  }
+
+  async getSettleAccounts(assetReceiver: PublicKey, legIndex: number, rfq: Rfq, response: Response) {
+    return [this.getProgramAccount()].concat(
+      await this.instrument.getSettleAccounts(assetReceiver, legIndex, rfq, response)
+    );
+  }
+
+  async getRevertSettlementPreparationAccounts(
+    side: { taker: {} } | { maker: {} },
+    legIndex: number,
+    rfq: Rfq,
+    response: Response
+  ) {
+    return [this.getProgramAccount()].concat(
+      await this.instrument.getRevertSettlementPreparationAccounts(side, legIndex, rfq, response)
+    );
+  }
+
+  async getCleanUpAccounts(legIndex: number, rfq: Rfq, response: Response) {
+    return [this.getProgramAccount()].concat(await this.instrument.getCleanUpAccounts(legIndex, rfq, response));
+  }
 }

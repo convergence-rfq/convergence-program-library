@@ -2,8 +2,10 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
+use rfq::states::{ProtocolState};
 
 use dex_cpi as dex;
+use errors::HxroError;
 use params::SettleParams;
 
 mod custom_data_types;
@@ -17,7 +19,52 @@ declare_id!("5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL");
 pub mod hxro_instrument {
     use super::*;
 
-    pub fn validate_data(_ctx: Context<ValidateData>) -> Result<()> {
+    pub fn validate_data(
+        ctx: Context<ValidateData>,
+        data_size: u32,
+        dex: Pubkey,
+        fee_model_program: Pubkey,
+        risk_engine_program: Pubkey,
+        fee_model_configuration_acct: Pubkey,
+        risk_model_configuration_acct: Pubkey,
+        fee_output_register: Pubkey,
+        risk_output_register: Pubkey,
+        risk_and_fee_signer: Pubkey,
+    ) -> Result<()> {
+        require!(
+            data_size as usize == std::mem::size_of::<Pubkey>() * 8,
+            HxroError::InvalidDataSize
+        );
+
+        require!(dex == ctx.accounts.dex.key(), HxroError::InvalidDex);
+        require!(
+            fee_model_program == ctx.accounts.fee_model_program.key(),
+            HxroError::InvalidFeeModelProgram
+        );
+        require!(
+            risk_engine_program == ctx.accounts.risk_engine_program.key(),
+            HxroError::InvalidRiskEngineProgram
+        );
+        require!(
+            fee_model_configuration_acct == ctx.accounts.fee_model_configuration_acct.key(),
+            HxroError::InvalidFeeModelConfigurationAcct
+        );
+        require!(
+            risk_model_configuration_acct == ctx.accounts.risk_model_configuration_acct.key(),
+            HxroError::InvalidRiskModelConfigurationAcct
+        );
+        require!(
+            fee_output_register == ctx.accounts.fee_output_register.key(),
+            HxroError::InvalidFeeOutputRegister
+        );
+        require!(
+            risk_output_register == ctx.accounts.risk_output_register.key(),
+            HxroError::InvalidRiskOutputRegister
+        );
+        require!(
+            risk_and_fee_signer == ctx.accounts.risk_and_fee_signer.key(),
+            HxroError::InvalidRiskAndFeeSigner
+        );
         Ok(())
     }
 
@@ -177,10 +224,12 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
 
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
+    /// protocol provided
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
+
     /// CHECK:
-    pub protocol: AccountInfo<'info>,
-    /// CHECK:
-    pub market_product_group: AccountInfo<'info>,
+    pub dex: AccountInfo<'info>,
     /// CHECK:
     pub fee_model_program: AccountInfo<'info>,
     /// CHECK:

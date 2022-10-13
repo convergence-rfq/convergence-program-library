@@ -4,6 +4,7 @@ members = [
     "risk-engine/program",
     "spot-instrument/program",
     "hxro-instrument/program",
+    "psyoptions-european-instrument/program",
 ]
 
 [profile.release]

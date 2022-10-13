@@ -4,7 +4,7 @@ import {
   COLLATERAL_TOKEN_SEED,
   PROTOCOL_SEED,
   QUOTE_ESCROW_SEED,
-  SPOT_ESCROW_SEED,
+  INSTRUMENT_ESCROW_SEED,
 } from "./constants";
 
 export async function getProtocolPda(programId: PublicKey) {
@@ -27,9 +27,9 @@ export async function getQuoteEscrowPda(response: PublicKey, programId: PublicKe
   return pda;
 }
 
-export async function getSpotEscrowPda(response: PublicKey, legIndex: number, programId: PublicKey) {
+export async function getInstrumentEscrowPda(response: PublicKey, legIndex: number, programId: PublicKey) {
   const [pda] = await PublicKey.findProgramAddress(
-    [Buffer.from(SPOT_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
+    [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
     programId
   );
   return pda;

@@ -1,11 +1,20 @@
-import { BN } from "@project-serum/anchor";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
-import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "./constants";
-import { Instrument } from "./instrument";
-import { getSpotEscrowPda } from "./pdas";
-import { AuthoritySide } from "./types";
-import { Context, Mint, Response, Rfq } from "./wrappers";
+import * as anchor from "@project-serum/anchor";
+import { PublicKey} from "@solana/web3.js";
+import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
+import { Instrument, InstrumentController } from "../instrument";
+import { Context, Mint, Response, Rfq } from "../wrappers";
+import { HxroInstrument as HxroInstrumentIdl } from "../../../target/types/hxro_instrument";
+import {BN} from "@project-serum/anchor";
+import {OptionType} from "../../dependencies/tokenized-euros/src";
+
+let hxroInstrumentProgram = null;
+export function getHxroInstrumentProgram(): anchor.Program<HxroInstrumentIdl> {
+    if (hxroInstrumentProgram === null) {
+        hxroInstrumentProgram = anchor.workspace.HxroInstrument as anchor.Program<HxroInstrumentIdl>;
+    }
+
+    return hxroInstrumentProgram;
+}
 
 export class HxroInstrument implements Instrument {
     private amount: BN;
@@ -20,8 +29,10 @@ export class HxroInstrument implements Instrument {
     private riskOutputRegister: PublicKey;
     private riskAndFeeSigner: PublicKey;
 
-    constructor(
-        private context: Context,
+    constructor(private context: Context, private mint: Mint) {}
+
+    static create(
+        context: Context,
         {
             mint = context.assetToken,
             amount = DEFAULT_INSTRUMENT_AMOUNT,
@@ -36,50 +47,54 @@ export class HxroInstrument implements Instrument {
             riskOutputRegister = new PublicKey("DevB1VB5Tt3YAeYZ8XTB1fXiFtXBqcP7PbfWGB71YyCE"),
             riskAndFeeSigner = new PublicKey("AQJYsJ9k47ahEEXhvnNBFca4yH3zcFUfVaKrLPLgftYg"),
         } = {}
-    ) {
-        this.amount = amount;
-        this.side = side ?? DEFAULT_INSTRUMENT_SIDE;
-        this.dex = dex;
-        this.marketProductGroup = marketProductGroup;
-        this.feeModelProgram = feeModelProgram;
-        this.riskEngineProgram = riskEngineProgram;
-        this.feeModelConfigurationAcct = feeModelConfigurationAcct;
-        this.riskModelConfigurationAcct = riskModelConfigurationAcct;
-        this.feeOutputRegister = feeOutputRegister;
-        this.riskOutputRegister = riskOutputRegister;
-        this.riskAndFeeSigner = riskAndFeeSigner;
+    ): InstrumentController {
+        const instrument = new HxroInstrument(context, mint);
+        instrument.amount = amount;
+        instrument.side = side ?? DEFAULT_INSTRUMENT_SIDE;
+        instrument.dex = dex;
+        instrument.marketProductGroup = marketProductGroup;
+        instrument.feeModelProgram = feeModelProgram;
+        instrument.riskEngineProgram = riskEngineProgram;
+        instrument.feeModelConfigurationAcct = feeModelConfigurationAcct;
+        instrument.riskModelConfigurationAcct = riskModelConfigurationAcct;
+        instrument.feeOutputRegister = feeOutputRegister;
+        instrument.riskOutputRegister = riskOutputRegister;
+        instrument.riskAndFeeSigner = riskAndFeeSigner;
+        return new InstrumentController(instrument, amount, side ?? DEFAULT_INSTRUMENT_SIDE);
     }
 
-
-    getInstrumendDataSize(): number {
-        return 32;
+    static async addInstrument(context: Context) {
+        await context.addInstrument(getHxroInstrumentProgram().programId, 8, 7, 3, 3, 4);
     }
 
-    async toLegData() {
-        const instrumentData = [
-            this.dex.toBytes(),
-            this.marketProductGroup.toBytes(),
-            this.feeModelProgram.toBytes(),
-            this.riskEngineProgram.toBytes(),
-            this.feeModelConfigurationAcct.toBytes(),
-            this.riskModelConfigurationAcct.toBytes(),
-            this.feeOutputRegister.toBytes(),
-            this.riskOutputRegister.toBytes(),
-            this.riskAndFeeSigner.toBytes(),
-        ]
-        return {
-            instrument: this.context.hxroInstrument.programId,
-            instrumentData: this.dex.toBytes(),
-            instrumentAmount: new BN(this.amount),
-            side: this.side,
-        };
+    serializeLegData(): Buffer {
+        let dex = this.dex.toBytes();
+        let feeModelProgram = this.feeModelProgram.toBytes();
+        let riskEngineProgram = this.riskEngineProgram.toBytes();
+        let feeModelConfigurationAcct = this.feeModelConfigurationAcct.toBytes();
+        let riskModelConfigurationAcct = this.riskModelConfigurationAcct.toBytes();
+        let feeOutputRegister = this.feeOutputRegister.toBytes();
+        let riskOutputRegister = this.riskOutputRegister.toBytes();
+        let riskAndFeeSigner = this.riskAndFeeSigner.toBytes();
+        return Buffer.from(new Uint8Array([
+            ...dex,
+            ...feeModelProgram,
+            ...riskEngineProgram,
+            ...feeModelConfigurationAcct,
+            ...riskModelConfigurationAcct,
+            ...feeOutputRegister,
+            ...riskOutputRegister,
+            ...riskAndFeeSigner,
+        ]));
+    }
+
+    getProgramId(): PublicKey {
+        return getHxroInstrumentProgram().programId;
     }
 
     async getValidationAccounts() {
         return [
-            { pubkey: this.context.hxroInstrument.programId, isSigner: false, isWritable: false },
             { pubkey: this.dex, isSigner: false, isWritable: false },
-            { pubkey: this.marketProductGroup, isSigner: false, isWritable: false },
             { pubkey: this.feeModelProgram, isSigner: false, isWritable: false },
             { pubkey: this.riskEngineProgram, isSigner: false, isWritable: false },
             { pubkey: this.feeModelConfigurationAcct, isSigner: false, isWritable: false },

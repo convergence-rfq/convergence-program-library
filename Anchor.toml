@@ -1,25 +1,22 @@
 [programs.localnet]
-rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
-risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
+risk_engine = "7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
+psyoptions_european_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
 hxro_instrument = "5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL"
 
 [programs.devnet]
-rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
-risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
+rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
+risk_engine = "7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
+psyoptions_european_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
 hxro_instrument = "5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL"
-
-[programs.mainnet]
-rfq = "9pCDyNDy2QW8AgpZSBwHHum8Bq51GpG73iLSscypRfYV"
-risk_engine = "EtudqQMgYejisSdLxc8JV5PSZeHLU2p7sP1PjLewHqNx"
-spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/convergence-v2.json"
 
 [workspace]
@@ -28,4 +25,8 @@ members = [
     "risk-engine/program",
     "spot-instrument/program",
     "hxro-instrument/program",
+    "psyoptions-european-instrument/program",
 ]
+
+[scripts]
+test_hxro = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/hxro.spec.ts"
