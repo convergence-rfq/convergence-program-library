@@ -1,9 +1,13 @@
 {
   "name": "@convergence-rfq/rfq",
-  "version": "2.0.0",
-  "main": "index.js",
+  "version": "2.0.3",
   "license": "MIT",
   "devDependencies": {
     "@metaplex-foundation/solita": "^0.18.0"
-  }
+  },
+  "exports": "./generated/index.ts",
+  "files": [
+    "generated",
+    "idl"
+  ]
 }
