@@ -6,6 +6,8 @@ use anchor_lang::prelude::*;
 pub enum HxroError {
     #[msg("An error occurred")]
     DefaultError,
+    #[msg("Passed mint account does not match")]
+    PassedMintDoesNotMatch,
     #[msg("Invalid data size")]
     InvalidDataSize,
     #[msg("This dex is not equal to the expected one")]

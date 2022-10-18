@@ -1,8 +1,12 @@
+use crate::state::AuthoritySideDuplicate;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
-use rfq::states::{ProtocolState};
+use anchor_spl::token::{
+    transfer, Mint, Token, TokenAccount, Transfer,
+};
+use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
 use dex_cpi as dex;
 use errors::HxroError;
@@ -14,6 +18,8 @@ mod params;
 mod state;
 
 declare_id!("5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL");
+
+const ESCROW_SEED: &str = "escrow";
 
 #[program]
 pub mod hxro_instrument {
@@ -68,7 +74,34 @@ pub mod hxro_instrument {
         Ok(())
     }
 
-    pub fn prepare_to_settle(_ctx: Context<PrepareToSettle>) -> Result<()> {
+    pub fn prepare_to_settle(
+        ctx: Context<PrepareToSettle>,
+        leg_index: u8,
+        side: AuthoritySideDuplicate,
+    ) -> Result<()> {
+        let PrepareToSettle {
+            caller,
+            caller_tokens,
+            rfq,
+            response,
+            mint,
+            escrow,
+            token_program,
+            ..
+        } = &ctx.accounts;
+
+        let token_amount = response.get_leg_amount_to_transfer(rfq, leg_index, side.into());
+
+        if token_amount > 0 {
+            let transfer_accounts = Transfer {
+                from: caller_tokens.to_account_info(),
+                to: escrow.to_account_info(),
+                authority: caller.to_account_info(),
+            };
+            let transfer_ctx = CpiContext::new(token_program.to_account_info(), transfer_accounts);
+            transfer(transfer_ctx, token_amount as u64)?;
+        }
+
         Ok(())
     }
 
@@ -81,10 +114,36 @@ pub mod hxro_instrument {
         Ok(())
     }
 
-    pub fn revert_preparation(_ctx: Context<RevertPreparation>) -> Result<()> {
+    pub fn revert_preparation(
+        ctx: Context<RevertPreparation>,
+        leg_index: u8,
+        side: AuthoritySideDuplicate,
+    ) -> Result<()> {
+        let RevertPreparation {
+            rfq,
+            response,
+            escrow,
+            tokens,
+            token_program,
+            ..
+        } = &ctx.accounts;
+
+        let side: AuthoritySide = side.into();
+        side.validate_is_associated_token_account(rfq, response, escrow.mint, tokens.key())?;
+
+        if side == response.get_leg_assets_receiver(rfq, leg_index).revert() {
+            transfer_from_an_escrow(
+                escrow,
+                tokens,
+                response.key(),
+                leg_index,
+                *ctx.bumps.get("escrow").unwrap(),
+                token_program,
+            )?;
+        }
+
         Ok(())
     }
-
     pub fn clean_up(_ctx: Context<CleanUp>) -> Result<()> {
         Ok(())
     }
@@ -222,6 +281,39 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
     Ok(())
 }
 
+fn transfer_from_an_escrow<'info>(
+    escrow: &Account<'info, TokenAccount>,
+    receiver: &Account<'info, TokenAccount>,
+    response: Pubkey,
+    leg_index: u8,
+    bump: u8,
+    token_program: &Program<'info, Token>,
+) -> Result<()> {
+    let amount = escrow.amount;
+    let transfer_accounts = Transfer {
+        from: escrow.to_account_info(),
+        to: receiver.to_account_info(),
+        authority: escrow.to_account_info(),
+    };
+    let response_key = response.key();
+    let leg_index_seed = [leg_index];
+    let bump_seed = [bump];
+    let escrow_seed = &[&[
+        ESCROW_SEED.as_bytes(),
+        response_key.as_ref(),
+        &leg_index_seed,
+        &bump_seed,
+    ][..]];
+    let transfer_ctx = CpiContext::new_with_signer(
+        token_program.to_account_info(),
+        transfer_accounts,
+        escrow_seed,
+    );
+    transfer(transfer_ctx, amount)?;
+
+    Ok(())
+}
+
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
     /// protocol provided
@@ -247,7 +339,30 @@ pub struct ValidateData<'info> {
 }
 
 #[derive(Accounts)]
-pub struct PrepareToSettle {}
+#[instruction(leg_index: u8, side: AuthoritySide)]
+pub struct PrepareToSettle<'info> {
+    /// protocol provided
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
+    pub rfq: Box<Account<'info, Rfq>>,
+    pub response: Account<'info, Response>,
+
+    /// user provided
+    #[account(mut)]
+    pub caller: Signer<'info>,
+    #[account(mut, constraint = caller_tokens.mint == mint.key() @ HxroError::PassedMintDoesNotMatch)]
+    pub caller_tokens: Account<'info, TokenAccount>,
+
+    pub mint: Account<'info, Mint>,
+
+    #[account(init_if_needed, payer = caller, token::mint = mint, token::authority = escrow,
+    seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    pub escrow: Account<'info, TokenAccount>,
+
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
+}
 
 #[derive(Accounts)]
 pub struct Settle<'info> {
@@ -320,7 +435,22 @@ pub struct Settle<'info> {
 }
 
 #[derive(Accounts)]
-pub struct RevertPreparation {}
+#[instruction(leg_index: u8)]
+pub struct RevertPreparation<'info> {
+    /// protocol provided
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
+    pub rfq: Box<Account<'info, Rfq>>,
+    pub response: Account<'info, Response>,
+
+    /// user provided
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    pub escrow: Account<'info, TokenAccount>,
+    #[account(mut, constraint = tokens.mint == escrow.mint @ HxroError::PassedMintDoesNotMatch)]
+    pub tokens: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
+}
 
 #[derive(Accounts)]
 pub struct CleanUp {}

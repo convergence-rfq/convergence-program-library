@@ -1,11 +1,14 @@
 import * as anchor from "@project-serum/anchor";
-import { PublicKey} from "@solana/web3.js";
+import {PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY} from "@solana/web3.js";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { HxroInstrument as HxroInstrumentIdl } from "../../../target/types/hxro_instrument";
 import {BN} from "@project-serum/anchor";
 import {OptionType} from "../../dependencies/tokenized-euros/src";
+import {AuthoritySide} from "../types";
+import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {getInstrumentEscrowPda} from "../pdas";
 
 let hxroInstrumentProgram = null;
 export function getHxroInstrumentProgram(): anchor.Program<HxroInstrumentIdl> {
@@ -111,7 +114,30 @@ export class HxroInstrument implements Instrument {
         rfq: Rfq,
         response: Response
     ) {
-        return [];
+        const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+
+        return [
+            { pubkey: caller.publicKey, isSigner: true, isWritable: true },
+            {
+                pubkey: await await Token.getAssociatedTokenAddress(
+                    ASSOCIATED_TOKEN_PROGRAM_ID,
+                    TOKEN_PROGRAM_ID,
+                    this.mint.publicKey,
+                    caller.publicKey
+                ),
+                isSigner: false,
+                isWritable: true,
+            },
+            { pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
+            {
+                pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+                isSigner: false,
+                isWritable: true,
+            },
+            { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+            { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+            { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+        ];
     }
 
     async getSettleAccounts(assetReceiver: PublicKey, legIndex: number, rfq: Rfq, response: Response) {

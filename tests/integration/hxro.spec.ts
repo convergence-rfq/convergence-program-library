@@ -2,10 +2,10 @@ import {Program} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import { HxroInstrument as HxroInstrumentType } from '../../target/types/hxro_instrument';
 import { DexIdl, Dex } from '../../hxro-instrument/dex-cpi/types';
-import { Side } from "../utilities/types"
+import {AuthoritySide, Quote, Side} from "../utilities/types"
 import { Context, getContext } from "../utilities/wrappers";
 import { HxroInstrument } from "../utilities/instruments/hxroInstrument";
-import {withTokenDecimals} from "../utilities/helpers";
+import {toAbsolutePrice, toLegMultiplier, withTokenDecimals} from "../utilities/helpers";
 import {SpotInstrument} from "../utilities/instruments/spotInstrument";
 
 function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): string {
@@ -55,6 +55,15 @@ describe("RFQ HXRO instrument integration tests", () => {
                             riskAndFeeSigner: riskAndFeeSigner,
                         })],
             });
+            // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
+            const response = await rfq.respond({
+                bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
+                ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
+            });
+            // taker confirms to buy 1 bitcoin
+            await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
+            await response.prepareSettlement(AuthoritySide.Taker);
+            await response.prepareSettlement(AuthoritySide.Maker);
         } catch (e) {
             console.log("ERROR", e)
         }
