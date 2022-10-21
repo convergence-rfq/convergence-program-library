@@ -26,4 +26,8 @@ pub enum HxroError {
     InvalidRiskOutputRegister,
     #[msg("This risk and fee signer is not equal to the expected one")]
     InvalidRiskAndFeeSigner,
+    #[msg("Passed backup address should be an associated account of protocol owner")]
+    InvalidBackupAddress,
+    #[msg("Passed address is not of a party first to prepare for settlement")]
+    NotFirstToPrepare,
 }

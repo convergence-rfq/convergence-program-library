@@ -3,8 +3,9 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
+use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
-    transfer, Mint, Token, TokenAccount, Transfer,
+    close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
@@ -108,9 +109,6 @@ pub mod hxro_instrument {
     pub fn settle(ctx: Context<Settle>, data: SettleParams) -> Result<()> {
         call_initialize_print_trade(&ctx, &data)?;
         call_sign_print_trade(&ctx, &data)?;
-
-        msg!("Sent!");
-
         Ok(())
     }
 
@@ -137,14 +135,57 @@ pub mod hxro_instrument {
                 tokens,
                 response.key(),
                 leg_index,
-                *ctx.bumps.get("escrow").unwrap(),
+                *ctx.bumps.get(ESCROW_SEED).unwrap(),
                 token_program,
             )?;
         }
 
         Ok(())
     }
-    pub fn clean_up(_ctx: Context<CleanUp>) -> Result<()> {
+    pub fn clean_up(ctx: Context<CleanUp>, leg_index: u8) -> Result<()> {
+        let CleanUp {
+            protocol,
+            rfq,
+            response,
+            first_to_prepare,
+            escrow,
+            backup_receiver,
+            token_program,
+            ..
+        } = &ctx.accounts;
+
+        require!(
+            get_associated_token_address(&protocol.authority, &escrow.mint)
+                == backup_receiver.key(),
+            HxroError::InvalidBackupAddress
+        );
+
+        let expected_first_to_prepare = response.leg_preparations_initialized_by
+            [leg_index as usize]
+            .to_public_key(rfq, response);
+        require!(
+            first_to_prepare.key() == expected_first_to_prepare,
+            HxroError::NotFirstToPrepare
+        );
+
+        transfer_from_an_escrow(
+            escrow,
+            backup_receiver,
+            response.key(),
+            leg_index,
+            *ctx.bumps.get(ESCROW_SEED).unwrap(),
+            token_program,
+        )?;
+
+        close_escrow_account(
+            escrow,
+            first_to_prepare,
+            response.key(),
+            leg_index,
+            *ctx.bumps.get(ESCROW_SEED).unwrap(),
+            token_program,
+        )?;
+
         Ok(())
     }
 }
@@ -314,6 +355,39 @@ fn transfer_from_an_escrow<'info>(
     Ok(())
 }
 
+fn close_escrow_account<'info>(
+    escrow: &Account<'info, TokenAccount>,
+    sol_receiver: &UncheckedAccount<'info>,
+    response: Pubkey,
+    leg_index: u8,
+    bump: u8,
+    token_program: &Program<'info, Token>,
+) -> Result<()> {
+    let close_tokens_account = CloseAccount {
+        account: escrow.to_account_info(),
+        destination: sol_receiver.to_account_info(),
+        authority: escrow.to_account_info(),
+    };
+
+    let response_key = response.key();
+    let leg_index_seed = [leg_index];
+    let bump_seed = [bump];
+    let escrow_seed = &[&[
+        ESCROW_SEED.as_bytes(),
+        response_key.as_ref(),
+        &leg_index_seed,
+        &bump_seed,
+    ][..]];
+
+    let close_tokens_account_ctx = CpiContext::new_with_signer(
+        token_program.to_account_info(),
+        close_tokens_account,
+        escrow_seed,
+    );
+
+    close_account(close_tokens_account_ctx)
+}
+
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
     /// protocol provided
@@ -453,4 +527,22 @@ pub struct RevertPreparation<'info> {
 }
 
 #[derive(Accounts)]
-pub struct CleanUp {}
+#[instruction(leg_index: u8)]
+pub struct CleanUp<'info> {
+    /// protocol provided
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
+    pub rfq: Box<Account<'info, Rfq>>,
+    pub response: Account<'info, Response>,
+
+    /// user provided
+    /// CHECK: is an authority first to prepare for settlement
+    #[account(mut)]
+    pub first_to_prepare: UncheckedAccount<'info>,
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    pub escrow: Account<'info, TokenAccount>,
+    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ HxroError::PassedMintDoesNotMatch)]
+    pub backup_receiver: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
+}
