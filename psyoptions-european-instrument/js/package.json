@@ -1,9 +1,13 @@
 {
-  "name": "psyoptions-european-instrument",
+  "name": "@convergence-rfq/psyoptions-european-instrument",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.15.2"
-  }
+    "@metaplex-foundation/solita": "^0.18.0"
+  },
+  "exports": "./generated/index.ts",
+  "files": [
+    "generated",
+    "idl"
+  ]
 }
