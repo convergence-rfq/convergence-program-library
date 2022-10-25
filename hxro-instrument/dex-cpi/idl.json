@@ -701,6 +701,16 @@
           "name": "marketProductGroupVault",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "capitalLimits",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whitelistAtaAcct",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [

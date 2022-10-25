@@ -5,7 +5,7 @@ use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
-    close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
+    close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer
 };
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
@@ -107,6 +107,7 @@ pub mod hxro_instrument {
     }
 
     pub fn settle(ctx: Context<Settle>, data: SettleParams) -> Result<()> {
+        call_deposit_funds(&ctx, &data)?;
         call_initialize_print_trade(&ctx, &data)?;
         call_sign_print_trade(&ctx, &data)?;
         Ok(())
@@ -142,6 +143,7 @@ pub mod hxro_instrument {
 
         Ok(())
     }
+
     pub fn clean_up(ctx: Context<CleanUp>, leg_index: u8) -> Result<()> {
         let CleanUp {
             protocol,
@@ -188,6 +190,28 @@ pub mod hxro_instrument {
 
         Ok(())
     }
+}
+
+fn call_deposit_funds(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {
+    let cpi_accounts = dex_cpi::cpi::accounts::DepositFunds {
+        token_program: ctx.accounts.token_program.to_account_info(),
+        user: ctx.accounts.counterparty_owner.to_account_info(),
+        user_token_account: ctx.accounts.counter_party_token_account.to_account_info(),
+        trader_risk_group: ctx.accounts.counterparty.to_account_info(),
+        market_product_group: ctx.accounts.market_product_group.to_account_info(),
+        market_product_group_vault: ctx.accounts.market_product_group_vault.to_account_info(),
+        capital_limits: ctx.accounts.capital_limits.to_account_info(),
+        whitelist_ata_acct: ctx.accounts.whitelist_ata_acct.to_account_info(),
+    };
+
+    let cpi_params = dex_cpi::typedefs::DepositFundsParams {
+        quantity: data.price.to_dex_fractional(),
+    };
+
+    dex::cpi::deposit_funds(
+        CpiContext::new(ctx.accounts.dex.to_account_info(), cpi_accounts),
+        cpi_params,
+    )
 }
 
 fn call_initialize_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {
@@ -500,12 +524,24 @@ pub struct Settle<'info> {
     #[account(mut)]
     pub counterparty_trader_risk_state_acct: AccountInfo<'info>,
 
+    #[account(mut)]
+    pub counter_party_token_account: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub market_product_group_vault: Box<Account<'info, TokenAccount>>,
+
+    /// CHECK:
+    pub capital_limits: AccountInfo<'info>,
+    pub whitelist_ata_acct: Box<Account<'info, TokenAccount>>,
+
     /// CHECK:
     #[account(mut)]
     pub s_account: AccountInfo<'info>,
     /// CHECK:
     #[account(mut)]
     pub r_account: AccountInfo<'info>,
+
+    token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]

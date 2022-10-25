@@ -7,6 +7,7 @@ import { Context, getContext } from "../utilities/wrappers";
 import { HxroInstrument } from "../utilities/instruments/hxroInstrument";
 import {toAbsolutePrice, toLegMultiplier, withTokenDecimals} from "../utilities/helpers";
 import {SpotInstrument} from "../utilities/instruments/spotInstrument";
+import * as spl_token from "@solana/spl-token";
 
 function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): string {
     return "trdr_grp1:test" + name
@@ -72,6 +73,13 @@ describe("RFQ HXRO instrument integration tests", () => {
     it("Settle", async () => {
         const payer = anchor.web3.Keypair.generate();
         const counterpartyPayer = anchor.web3.Keypair.generate();
+
+        const vaultMint = new spl_token.Token(
+            program.provider.connection,
+            new anchor.web3.PublicKey("HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"),
+            spl_token.TOKEN_PROGRAM_ID,
+            payer
+        );
 
         let airdropTX = await program.provider.connection.requestAirdrop(
             payer.publicKey,
@@ -264,6 +272,53 @@ describe("RFQ HXRO instrument integration tests", () => {
                 ],
                 riskEngineProgram);
 
+        const [marketProductGroupVault, ] = await anchor.web3.PublicKey.findProgramAddress(
+            [
+                Buffer.from("market_vault"),
+                marketProductGroup.toBytes(),
+            ],
+            new anchor.web3.PublicKey("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL")
+        )
+        const [capitalLimitsState, ] = await anchor.web3.PublicKey.findProgramAddress(
+            [
+                Buffer.from("capital_limits_state"),
+                marketProductGroup.toBytes(),
+            ],
+            new anchor.web3.PublicKey("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL")
+        )
+        const whitelistAtaAcct = new anchor.web3.PublicKey("BFnmwPU9UPSXc2MWcYwXWMgqm87fc7ZsPyrG8hsqjDXJ");
+        const counterPartyTokenAccount = await vaultMint.createAssociatedTokenAccount(counterpartyPayer.publicKey)
+        console.log(
+            {
+                dex: dex.toString(),
+                creatorOwner: payer.publicKey.toString(),
+                counterpartyOwner: counterpartyPayer.publicKey.toString(),
+                creator: creator.toString(),
+                counterparty: counterparty.toString(),
+                operator: operator.toString(),
+                marketProductGroup: marketProductGroup.toString(),
+                product: product.toString(),
+                printTrade: printTrade.toString(),
+                systemProgram: anchor.web3.SystemProgram.programId.toString(),
+                feeModelProgram: feeModelProgram.toString(),
+                feeModelConfigurationAcct: feeModelConfigurationAcct.toString(),
+                feeOutputRegister: feeOutputRegister.toString(),
+                riskEngineProgram: riskEngineProgram.toString(),
+                riskModelConfigurationAcct: riskModelConfigurationAcct.toString(),
+                riskOutputRegister: riskOutputRegister.toString(),
+                riskAndFeeSigner: riskAndFeeSigner.toString(),
+                creatorTraderFeeStateAcct: creatorTraderFeeStateAcct.toString(),
+                creatorTraderRiskStateAcct: creatorTraderRiskStateAcct.toString(),
+                counterpartyTraderFeeStateAcct: counterpartyTraderFeeStateAcct.toString(),
+                counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct.toString(),
+                sAccount: s_account.toString(),
+                rAccount: r_account.toString(),
+                marketProductGroupVault: marketProductGroupVault.toString(),
+                capitalLimitsState: capitalLimitsState.toString(),
+                whitelistAtaAcct: whitelistAtaAcct.toString(),
+                counterPartyTokenAccount: counterPartyTokenAccount.toString(),
+            }
+        )
         let tx = await program.methods.settle(
             // @ts-ignore
             {
@@ -312,40 +367,17 @@ describe("RFQ HXRO instrument integration tests", () => {
                 counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct,
                 sAccount: s_account,
                 rAccount: r_account,
+                tokenProgram: spl_token.TOKEN_PROGRAM_ID,
+                marketProductGroupVault: marketProductGroupVault,
+                capitalLimits: capitalLimitsState,
+                whitelistAtaAcct: whitelistAtaAcct,
+                counterPartyTokenAccount: counterPartyTokenAccount,
             }
         ).signers(
             [payer, counterpartyPayer]
         ).transaction();
 
         tx.feePayer = payer.publicKey;
-
-        console.log(
-            {
-                dex: dex.toString(),
-                creatorOwner: payer.publicKey.toString(),
-                counterpartyOwner: counterpartyPayer.publicKey.toString(),
-                creator: creator.toString(),
-                counterparty: counterparty.toString(),
-                operator: operator.toString(),
-                marketProductGroup: marketProductGroup.toString(),
-                product: product.toString(),
-                printTrade: printTrade.toString(),
-                systemProgram: anchor.web3.SystemProgram.programId.toString(),
-                feeModelProgram: feeModelProgram.toString(),
-                feeModelConfigurationAcct: feeModelConfigurationAcct.toString(),
-                feeOutputRegister: feeOutputRegister.toString(),
-                riskEngineProgram: riskEngineProgram.toString(),
-                riskModelConfigurationAcct: riskModelConfigurationAcct.toString(),
-                riskOutputRegister: riskOutputRegister.toString(),
-                riskAndFeeSigner: riskAndFeeSigner.toString(),
-                creatorTraderFeeStateAcct: creatorTraderFeeStateAcct.toString(),
-                creatorTraderRiskStateAcct: creatorTraderRiskStateAcct.toString(),
-                counterpartyTraderFeeStateAcct: counterpartyTraderFeeStateAcct.toString(),
-                counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct.toString(),
-                sAccount: s_account.toString(),
-                rAccount: r_account.toString(),
-            }
-        )
 
         let txHash = await anchor.web3.sendAndConfirmTransaction(
             program.provider.connection,
