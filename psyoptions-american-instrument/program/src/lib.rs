@@ -8,7 +8,7 @@ use psy_american::OptionMarket;
 
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
-declare_id!("22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG");
+declare_id!("2XYQhTq6k3anvDSdiQ6hyNyzLS3m4TbAgokVr8EGAPHf");
 
 const ESCROW_SEED: &str = "escrow";
 

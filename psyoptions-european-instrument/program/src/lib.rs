@@ -12,7 +12,7 @@ mod errors;
 mod euro_options;
 mod state;
 
-declare_id!("3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm");
+declare_id!("94sxcX64yqe1s7zY2Hx8tEN8tqisK86dASfizAKkxK7A");
 
 const ESCROW_SEED: &str = "escrow";
 
@@ -29,7 +29,8 @@ pub mod psyoptions_european_instrument {
     ) -> Result<()> {
         let euro_meta_acc = &ctx.accounts.euro_meta;
         require!(
-            data_size as usize == std::mem::size_of::<Pubkey>() * 2 + std::mem::size_of::<OptionType>(),
+            data_size as usize
+                == std::mem::size_of::<Pubkey>() * 2 + std::mem::size_of::<OptionType>(),
             PsyoptionsEuropeanError::InvalidDataSize
         );
         require!(
@@ -159,7 +160,8 @@ pub mod psyoptions_european_instrument {
         } = &ctx.accounts;
 
         require!(
-            get_associated_token_address(&protocol.authority, &escrow.mint) == backup_receiver.key(),
+            get_associated_token_address(&protocol.authority, &escrow.mint)
+                == backup_receiver.key(),
             PsyoptionsEuropeanError::InvalidBackupAddress
         );
 

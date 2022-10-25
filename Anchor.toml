@@ -1,24 +1,24 @@
 anchor_version = "0.25.0"
 
 [programs.localnet]
-rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
-risk_engine = "7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth"
-spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
-psyoptions_european_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
-psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
+rfq = "J2rDyo2NpZn4FQ5rGXmdwh3i2y1h11ynodYrrcUxfErq"
+risk_engine = "9sEUmfZPhH8qVEoFmfdbJhKcfWP5LCCZfb2Cu7zffs4b"
+spot_instrument = "826r9RA3AGHPas5E4DgbN9MpYa8gE2ZDUPUJW6GEZ3cT"
+psyoptions_european_instrument = "94sxcX64yqe1s7zY2Hx8tEN8tqisK86dASfizAKkxK7A"
+psyoptions_american_instrument = "2XYQhTq6k3anvDSdiQ6hyNyzLS3m4TbAgokVr8EGAPHf"
 
 [programs.devnet]
-rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
-risk_engine = "7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth"
-spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
-psyoptions_european_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
-psyoptions_american_instrument = "22zZosk6iF3nnWgqrpKjFtzr8jKj4phwFZoFNghTDnaG"
+rfq = "J2rDyo2NpZn4FQ5rGXmdwh3i2y1h11ynodYrrcUxfErq"
+risk_engine = "9sEUmfZPhH8qVEoFmfdbJhKcfWP5LCCZfb2Cu7zffs4b"
+spot_instrument = "826r9RA3AGHPas5E4DgbN9MpYa8gE2ZDUPUJW6GEZ3cT"
+psyoptions_european_instrument = "94sxcX64yqe1s7zY2Hx8tEN8tqisK86dASfizAKkxK7A"
+psyoptions_american_instrument = "2XYQhTq6k3anvDSdiQ6hyNyzLS3m4TbAgokVr8EGAPHf"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/convergence-v2.json"
 
 [workspace]
