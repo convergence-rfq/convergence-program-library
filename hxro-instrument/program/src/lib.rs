@@ -109,7 +109,7 @@ pub mod hxro_instrument {
     pub fn settle(ctx: Context<Settle>, data: SettleParams) -> Result<()> {
         call_deposit_funds(&ctx, &data)?;
         call_initialize_print_trade(&ctx, &data)?;
-        call_sign_print_trade(&ctx, &data)?;
+        // call_sign_print_trade(&ctx, &data)?;
         Ok(())
     }
 
@@ -195,9 +195,9 @@ pub mod hxro_instrument {
 fn call_deposit_funds(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::DepositFunds {
         token_program: ctx.accounts.token_program.to_account_info(),
-        user: ctx.accounts.counterparty_owner.to_account_info(),
-        user_token_account: ctx.accounts.counter_party_token_account.to_account_info(),
-        trader_risk_group: ctx.accounts.counterparty.to_account_info(),
+        user: ctx.accounts.creator_owner.to_account_info(),
+        user_token_account: ctx.accounts.escrow.to_account_info(),
+        trader_risk_group: ctx.accounts.creator.to_account_info(),
         market_product_group: ctx.accounts.market_product_group.to_account_info(),
         market_product_group_vault: ctx.accounts.market_product_group_vault.to_account_info(),
         capital_limits: ctx.accounts.capital_limits.to_account_info(),
@@ -462,11 +462,13 @@ pub struct PrepareToSettle<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+#[instruction(data: SettleParams)]
 #[derive(Accounts)]
 pub struct Settle<'info> {
     /// CHECK:
     pub dex: AccountInfo<'info>,
 
+    // initialize print trade
     #[account(mut)]
     pub creator_owner: Signer<'info>,
     #[account(mut)]
@@ -494,6 +496,7 @@ pub struct Settle<'info> {
     /// CHECK:
     pub system_program: Program<'info, System>,
 
+    // sign print trade
     /// CHECK:
     pub fee_model_program: AccountInfo<'info>,
     /// CHECK:
@@ -523,17 +526,6 @@ pub struct Settle<'info> {
     /// CHECK:
     #[account(mut)]
     pub counterparty_trader_risk_state_acct: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub counter_party_token_account: Box<Account<'info, TokenAccount>>,
-
-    #[account(mut)]
-    pub market_product_group_vault: Box<Account<'info, TokenAccount>>,
-
-    /// CHECK:
-    pub capital_limits: AccountInfo<'info>,
-    pub whitelist_ata_acct: Box<Account<'info, TokenAccount>>,
-
     /// CHECK:
     #[account(mut)]
     pub s_account: AccountInfo<'info>,
@@ -541,6 +533,14 @@ pub struct Settle<'info> {
     #[account(mut)]
     pub r_account: AccountInfo<'info>,
 
+    // deposit
+    #[account(mut)]
+    pub market_product_group_vault: Box<Account<'info, TokenAccount>>,
+    /// CHECK:
+    pub capital_limits: AccountInfo<'info>,
+    pub whitelist_ata_acct: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub escrow: Box<Account<'info, TokenAccount>>,
     token_program: Program<'info, Token>,
 }
 

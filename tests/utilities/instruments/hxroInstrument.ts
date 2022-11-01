@@ -5,7 +5,6 @@ import { Instrument, InstrumentController } from "../instrument";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { HxroInstrument as HxroInstrumentIdl } from "../../../target/types/hxro_instrument";
 import {BN} from "@project-serum/anchor";
-import {OptionType} from "../../dependencies/tokenized-euros/src";
 import {AuthoritySide} from "../types";
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {getInstrumentEscrowPda} from "../pdas";
@@ -20,6 +19,8 @@ export function getHxroInstrumentProgram(): anchor.Program<HxroInstrumentIdl> {
 }
 
 export class HxroInstrument implements Instrument {
+    taker: anchor.web3.Keypair;
+    maker: anchor.web3.Keypair;
     private amount: BN;
     private side: { bid: {} } | { ask: {} };
     private dex: PublicKey;

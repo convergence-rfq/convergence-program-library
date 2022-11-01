@@ -5,6 +5,7 @@ use crate::custom_data_types::{Fractional, Side};
 #[repr(C)]
 #[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Debug, Clone)]
 pub struct SettleParams {
+    pub leg_index: u8,
     pub product_index: u64,
     pub size: Fractional,
     pub price: Fractional,

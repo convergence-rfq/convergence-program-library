@@ -3,11 +3,12 @@ import * as anchor from "@project-serum/anchor";
 import { HxroInstrument as HxroInstrumentType } from '../../target/types/hxro_instrument';
 import { DexIdl, Dex } from '../../hxro-instrument/dex-cpi/types';
 import {AuthoritySide, Quote, Side} from "../utilities/types"
-import { Context, getContext } from "../utilities/wrappers";
+import {Context, getContext, Mint} from "../utilities/wrappers";
 import { HxroInstrument } from "../utilities/instruments/hxroInstrument";
 import {toAbsolutePrice, toLegMultiplier, withTokenDecimals} from "../utilities/helpers";
-import {SpotInstrument} from "../utilities/instruments/spotInstrument";
 import * as spl_token from "@solana/spl-token";
+import {ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {DEFAULT_COLLATERAL_FUNDED} from "../utilities/constants";
 
 function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): string {
     return "trdr_grp1:test" + name
@@ -16,6 +17,17 @@ function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): s
 
 describe("RFQ HXRO instrument integration tests", () => {
     anchor.setProvider(anchor.AnchorProvider.env())
+
+    const payer = anchor.web3.Keypair.fromSecretKey(
+        Buffer.from(
+            JSON.parse(
+                require("fs").readFileSync(process.env.ANCHOR_WALLET, {
+                    encoding: "utf-8",
+                })
+            )
+        )
+    );
+    const counterpartyPayer = anchor.web3.Keypair.generate();
 
     const dex = new anchor.web3.PublicKey("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL");
     const marketProductGroup = new anchor.web3.PublicKey("HyWxreWnng9ZBDPYpuYugAfpCMkRkJ1oz93oyoybDFLB");
@@ -27,6 +39,8 @@ describe("RFQ HXRO instrument integration tests", () => {
     const riskOutputRegister = new anchor.web3.PublicKey("DevB1VB5Tt3YAeYZ8XTB1fXiFtXBqcP7PbfWGB71YyCE");
     const riskAndFeeSigner = new anchor.web3.PublicKey("AQJYsJ9k47ahEEXhvnNBFca4yH3zcFUfVaKrLPLgftYg");
 
+    let response_key: anchor.web3.PublicKey;
+
     const program = anchor.workspace.HxroInstrument as Program<HxroInstrumentType>;
 
     let context: Context;
@@ -36,13 +50,28 @@ describe("RFQ HXRO instrument integration tests", () => {
     });
 
     it("Create two-way RFQ with one hxro leg", async () => {
-        // create a two-way RFQ specifying 1 bitcoin as a leg
+        const vaultMint = new spl_token.Token(
+            context.provider.connection,
+            new anchor.web3.PublicKey("HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"),
+            spl_token.TOKEN_PROGRAM_ID,
+            payer,
+        )
+
+        await context.quoteToken.createAssociatedAccountWithTokens(
+            payer.publicKey
+        )
+        await context.quoteToken.createAssociatedAccountWithTokens(
+            counterpartyPayer.publicKey
+        )
         try {
+            const vaultMintWrapped = await Mint.wrap(context, vaultMint.publicKey);
+
             const rfq = await context.createRfq({
                 legs: [
                     HxroInstrument.create(
                         context,
                         {
+                            mint: vaultMintWrapped,
                             amount: withTokenDecimals(1),
                             side: Side.Bid,
                             dex: dex,
@@ -58,9 +87,10 @@ describe("RFQ HXRO instrument integration tests", () => {
             });
             // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
             const response = await rfq.respond({
-                bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
-                ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
+                bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+                ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
             });
+            response_key = response.account;
             // taker confirms to buy 1 bitcoin
             await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
             await response.prepareSettlement(AuthoritySide.Taker);
@@ -71,31 +101,14 @@ describe("RFQ HXRO instrument integration tests", () => {
     });
 
     it("Settle", async () => {
-        const payer = anchor.web3.Keypair.generate();
-        const counterpartyPayer = anchor.web3.Keypair.generate();
-
-        const vaultMint = new spl_token.Token(
-            program.provider.connection,
-            new anchor.web3.PublicKey("HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"),
-            spl_token.TOKEN_PROGRAM_ID,
-            payer
-        );
-
-        let airdropTX = await program.provider.connection.requestAirdrop(
-            payer.publicKey,
-            anchor.web3.LAMPORTS_PER_SOL * 2,
+        const [escrow, ] = await anchor.web3.PublicKey.findProgramAddress(
+            [
+                Buffer.from("escrow"),
+                response_key.toBytes(),
+                Uint8Array.of(0)
+            ],
+            program.programId
         )
-
-        console.log("airdropTX", airdropTX)
-
-        // sleep
-        await new Promise( resolve => { setTimeout(resolve, 10000) });
-
-        let airdropTX2 = await program.provider.connection.requestAirdrop(
-            counterpartyPayer.publicKey,
-            anchor.web3.LAMPORTS_PER_SOL * 2
-        )
-        console.log("airdropTX2", airdropTX2)
 
         const dexProgram = new anchor.Program(DexIdl as anchor.Idl, dex, anchor.getProvider()) as Program<Dex>;
         const product = new anchor.web3.PublicKey("3ERnKTAEcXGMQkT9kkwAi5ECPmvpKzVfAvymV2Bc13YU");
@@ -272,22 +285,23 @@ describe("RFQ HXRO instrument integration tests", () => {
                 ],
                 riskEngineProgram);
 
-        const [marketProductGroupVault, ] = await anchor.web3.PublicKey.findProgramAddress(
-            [
-                Buffer.from("market_vault"),
-                marketProductGroup.toBytes(),
-            ],
-            new anchor.web3.PublicKey("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL")
-        )
+        const marketProductGroupVault = new anchor.web3.PublicKey("HLzQZ9DndaXkrwfwq8RbZFsDdSQ91Hufht6ekBSmfbQq")
         const [capitalLimitsState, ] = await anchor.web3.PublicKey.findProgramAddress(
             [
                 Buffer.from("capital_limits_state"),
                 marketProductGroup.toBytes(),
             ],
-            new anchor.web3.PublicKey("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL")
+            dex
         )
-        const whitelistAtaAcct = new anchor.web3.PublicKey("BFnmwPU9UPSXc2MWcYwXWMgqm87fc7ZsPyrG8hsqjDXJ");
-        const counterPartyTokenAccount = await vaultMint.createAssociatedTokenAccount(counterpartyPayer.publicKey)
+        const whitelistMint = new anchor.web3.PublicKey("6QFnukEmE8kgaYD6Cn2kTbuQp9vUHw6MDnaZbRFBy7BL");
+
+        const whitelistAtaAcct = await spl_token.Token.getAssociatedTokenAddress(
+            spl_token.ASSOCIATED_TOKEN_PROGRAM_ID,
+            spl_token.TOKEN_PROGRAM_ID,
+            whitelistMint,
+            payer.publicKey
+        );
+
         console.log(
             {
                 dex: dex.toString(),
@@ -316,7 +330,7 @@ describe("RFQ HXRO instrument integration tests", () => {
                 marketProductGroupVault: marketProductGroupVault.toString(),
                 capitalLimitsState: capitalLimitsState.toString(),
                 whitelistAtaAcct: whitelistAtaAcct.toString(),
-                counterPartyTokenAccount: counterPartyTokenAccount.toString(),
+                escrow: escrow.toString(),
             }
         )
         let tx = await program.methods.settle(
@@ -371,7 +385,7 @@ describe("RFQ HXRO instrument integration tests", () => {
                 marketProductGroupVault: marketProductGroupVault,
                 capitalLimits: capitalLimitsState,
                 whitelistAtaAcct: whitelistAtaAcct,
-                counterPartyTokenAccount: counterPartyTokenAccount,
+                escrow: escrow,
             }
         ).signers(
             [payer, counterpartyPayer]

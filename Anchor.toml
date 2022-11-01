@@ -28,5 +28,44 @@ members = [
     "psyoptions-european-instrument/program",
 ]
 
+[test]
+startup_wait = 100000
+
+[test.validator]
+url = "https://api.devnet.solana.com"
+
+[[test.validator.clone]]
+address = "FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL"
+[[test.validator.clone]]
+address = "5AZioCPiC7uZ4zRmkKSg5nsb2A98RhmW89a1pMwiDoeT"
+[[test.validator.clone]]
+address = "GbA1vNKFzGQogorVNF4yWrU7mWdb1gKAMJCSmirEApXg"
+[[test.validator.clone]]
+address = "HyWxreWnng9ZBDPYpuYugAfpCMkRkJ1oz93oyoybDFLB"
+[[test.validator.clone]]
+address = "3ERnKTAEcXGMQkT9kkwAi5ECPmvpKzVfAvymV2Bc13YU"
+[[test.validator.clone]]
+address = "4Zwghg3tNaHZuzpQHDWA4mbSyoVrNEfvS765z7s4tNYd"
+[[test.validator.clone]]
+address = "rPnaqXrvo3aBMChVLywnVz6nykSfXwvBYu1Yz1p6crv"
+[[test.validator.clone]]
+address = "92wdgEqyiDKrcbFHoBTg8HxMj932xweRCKaciGSW3uMr"
+[[test.validator.clone]]
+address = "DevB1VB5Tt3YAeYZ8XTB1fXiFtXBqcP7PbfWGB71YyCE"
+[[test.validator.clone]]
+address = "9bZkeo1WavFs81sNuaaqKsfVLE8qdBKPBunRYQrwhtcb"
+[[test.validator.clone]]
+address = "HRN2jtzB9NrttYibXefVThwf7LocyVYKxoVMUSrZe52C"
+[[test.validator.clone]]
+address = "86V5ZKCjUzabYh7CmkRovpGxE9AKooeU6PyC4WdpyUJK"
+[[test.validator.clone]]
+address = "BFnmwPU9UPSXc2MWcYwXWMgqm87fc7ZsPyrG8hsqjDXJ"
+[[test.validator.clone]]
+address = "HLzQZ9DndaXkrwfwq8RbZFsDdSQ91Hufht6ekBSmfbQq"
+[[test.validator.clone]]
+address = "HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"
+[[test.validator.clone]]
+address = "VEpJVENzwhQDMj8MHPaP8UtAUvvDcdhfkqhXTPofoBG"
+
 [scripts]
-test_hxro = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/hxro.spec.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
