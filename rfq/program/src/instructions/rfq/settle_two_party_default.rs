@@ -2,7 +2,7 @@ use crate::{
     common::{transfer_collateral_token, unlock_response_collateral},
     constants::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
-    states::{
+    state::{
         CollateralInfo, DefaultingParty, ProtocolState, Response, ResponseState, Rfq,
         StoredResponseState,
     },

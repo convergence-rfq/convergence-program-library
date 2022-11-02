@@ -4,7 +4,7 @@ use solana_program::{instruction::Instruction, program::invoke_signed};
 use crate::{
     constants::PROTOCOL_SEED,
     errors::ProtocolError,
-    states::{AuthoritySide, Leg, ProtocolState, Response, Rfq},
+    state::{AuthoritySide, Leg, ProtocolState, Response, Rfq},
     utils::ToAccountMeta,
 };
 

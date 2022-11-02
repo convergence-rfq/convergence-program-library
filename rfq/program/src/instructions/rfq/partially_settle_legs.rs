@@ -2,7 +2,7 @@ use crate::{
     constants::PROTOCOL_SEED,
     errors::ProtocolError,
     interfaces::instrument::settle,
-    states::{ProtocolState, Response, ResponseState, Rfq},
+    state::{ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
 

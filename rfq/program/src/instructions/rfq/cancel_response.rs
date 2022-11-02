@@ -1,7 +1,7 @@
 use crate::{
     constants::PROTOCOL_SEED,
     errors::ProtocolError,
-    states::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
+    state::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;
 

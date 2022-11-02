@@ -2,7 +2,7 @@ use crate::{
     constants::PROTOCOL_SEED,
     errors::ProtocolError,
     interfaces::instrument::revert_preparation,
-    states::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
+    state::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;
 

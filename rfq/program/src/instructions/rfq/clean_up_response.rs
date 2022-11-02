@@ -3,7 +3,7 @@ use crate::{
     constants::{PROTOCOL_SEED, QUOTE_ESCROW_SEED},
     errors::ProtocolError,
     interfaces::instrument::clean_up,
-    states::{ProtocolState, Response, ResponseState, Rfq},
+    state::{ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{

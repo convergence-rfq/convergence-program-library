@@ -1,8 +1,8 @@
 use crate::{
-    constants::{MAX_LEGS_AMOUNT, PROTOCOL_SEED},
+    constants::PROTOCOL_SEED,
     errors::ProtocolError,
     interfaces::instrument::validate_instrument_data,
-    states::{Leg, ProtocolState, Rfq, RfqState},
+    state::{Leg, ProtocolState, Rfq, RfqState},
 };
 use anchor_lang::prelude::*;
 
@@ -30,7 +30,7 @@ fn validate<'info>(
 
     require!(legs.len() > 0, ProtocolError::EmptyLegsNotSupported);
     require!(
-        legs.len() + rfq.legs.len() <= MAX_LEGS_AMOUNT as usize,
+        legs.len() + rfq.legs.len() <= Rfq::MAX_LEGS_AMOUNT as usize,
         ProtocolError::TooManyLegs
     );
 

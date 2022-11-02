@@ -96,6 +96,7 @@ export class Context {
   ) {
     await this.program.methods
       .addInstrument(
+        { spot: {} },
         validateDataAccounts,
         prepareToSettleAccounts,
         settleAccounts,

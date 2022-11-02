@@ -1,7 +1,7 @@
 use crate::{
     constants::{COLLATERAL_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
-    states::{CollateralInfo, ProtocolState, Rfq, RfqState},
+    state::{CollateralInfo, ProtocolState, Rfq, RfqState},
 };
 use anchor_lang::prelude::*;
 

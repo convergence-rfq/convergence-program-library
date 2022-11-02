@@ -1,10 +1,10 @@
 use std::mem;
 
 use crate::{
-    constants::{MAX_LEGS_AMOUNT, MAX_LEGS_SIZE, PROTOCOL_SEED},
+    constants::PROTOCOL_SEED,
     errors::ProtocolError,
     interfaces::instrument::validate_instrument_data,
-    states::{FixedSize, Leg, OrderType, ProtocolState, Rfq, StoredRfqState},
+    state::{FixedSize, Leg, OrderType, ProtocolState, Rfq, StoredRfqState},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
@@ -34,11 +34,11 @@ fn validate_legs<'info>(
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
     require!(
-        legs.len() <= MAX_LEGS_AMOUNT as usize,
+        legs.len() <= Rfq::MAX_LEGS_AMOUNT as usize,
         ProtocolError::TooManyLegs
     );
     require!(
-        expected_leg_size <= MAX_LEGS_SIZE,
+        expected_leg_size <= Rfq::MAX_LEGS_SIZE,
         ProtocolError::LegsDataTooBig
     );
 

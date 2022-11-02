@@ -5,7 +5,7 @@ use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 
 use crate::{
     constants::{COLLATERAL_SEED, QUOTE_ESCROW_SEED},
-    states::{AuthoritySide, CollateralInfo, Response, Rfq, StoredResponseState},
+    state::{AuthoritySide, CollateralInfo, Response, Rfq, StoredResponseState},
 };
 
 pub fn unlock_response_collateral(

@@ -2,7 +2,7 @@ use crate::{
     constants::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_confirmation,
-    states::{
+    state::{
         CollateralInfo, Confirmation, ProtocolState, Quote, Response, ResponseState, Rfq, RfqState,
         Side, StoredResponseState,
     },

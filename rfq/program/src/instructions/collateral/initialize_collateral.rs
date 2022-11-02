@@ -3,7 +3,7 @@ use std::mem;
 use crate::{
     constants::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
-    states::{CollateralInfo, ProtocolState},
+    state::{CollateralInfo, ProtocolState},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};

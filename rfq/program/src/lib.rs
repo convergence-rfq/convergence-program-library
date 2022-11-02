@@ -10,7 +10,7 @@ pub mod constants;
 pub mod errors;
 pub mod instructions;
 pub mod interfaces;
-pub mod states;
+pub mod state;
 pub mod utils;
 
 use instructions::collateral::fund_collateral::*;
@@ -38,7 +38,7 @@ use instructions::rfq::settle_one_party_default::*;
 use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
 use instructions::rfq::unlock_rfq_collateral::*;
-use states::*;
+use state::{AuthoritySide, FeeParameters, FixedSize, InstrumentType, Leg, OrderType, Quote, Side};
 
 security_txt! {
     name: "Convergence RFQ",
@@ -67,6 +67,7 @@ pub mod rfq {
 
     pub fn add_instrument(
         ctx: Context<AddInstrumentAccounts>,
+        instrument_type: InstrumentType,
         validate_data_account_amount: u8,
         prepare_to_settle_account_amount: u8,
         settle_account_amount: u8,
@@ -75,6 +76,7 @@ pub mod rfq {
     ) -> Result<()> {
         add_instrument_instruction(
             ctx,
+            instrument_type,
             validate_data_account_amount,
             prepare_to_settle_account_amount,
             settle_account_amount,

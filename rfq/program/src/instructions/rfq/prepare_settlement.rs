@@ -3,7 +3,7 @@ use crate::{
     constants::{PROTOCOL_SEED, QUOTE_ESCROW_SEED},
     errors::ProtocolError,
     interfaces::instrument::prepare_to_settle,
-    states::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq},
+    state::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};

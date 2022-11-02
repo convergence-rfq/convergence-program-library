@@ -6,7 +6,7 @@ use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
 use euro_options::{EuroMeta, OptionType};
-use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
+use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
 
 mod errors;
 mod euro_options;
@@ -29,7 +29,8 @@ pub mod psyoptions_european_instrument {
     ) -> Result<()> {
         let euro_meta_acc = &ctx.accounts.euro_meta;
         require!(
-            data_size as usize == std::mem::size_of::<Pubkey>() * 2 + std::mem::size_of::<OptionType>(),
+            data_size as usize
+                == std::mem::size_of::<Pubkey>() * 2 + std::mem::size_of::<OptionType>(),
             PsyoptionsEuropeanError::InvalidDataSize
         );
         require!(
@@ -159,7 +160,8 @@ pub mod psyoptions_european_instrument {
         } = &ctx.accounts;
 
         require!(
-            get_associated_token_address(&protocol.authority, &escrow.mint) == backup_receiver.key(),
+            get_associated_token_address(&protocol.authority, &escrow.mint)
+                == backup_receiver.key(),
             PsyoptionsEuropeanError::InvalidBackupAddress
         );
 

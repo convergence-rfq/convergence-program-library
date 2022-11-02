@@ -5,7 +5,7 @@ use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
-use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
+use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
 
 mod errors;
 mod state;
