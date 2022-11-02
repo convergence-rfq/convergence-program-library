@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/rfq",
-  "version": "1.0.0",
+  "version": "2.0.4",
   "license": "MIT",
   "devDependencies": {
     "@metaplex-foundation/solita": "^0.18.0"
