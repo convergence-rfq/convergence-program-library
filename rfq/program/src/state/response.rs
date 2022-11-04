@@ -79,9 +79,33 @@ impl Response {
     pub fn get_leg_amount_to_transfer(&self, rfq: &Rfq, leg_index: u8, side: AuthoritySide) -> i64 {
         let leg = &rfq.legs[leg_index as usize];
         let confirmation = self.confirmed.unwrap();
+        let leg_multiplier_bps = self.calculate_confirmed_legs_multiplier_bps(rfq);
+
+        let result = leg.instrument_amount as u128 * leg_multiplier_bps as u128
+            / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS);
+        let mut result = result as i64;
+
+        if let Side::Ask = leg.side {
+            result = -result;
+        }
+        if let AuthoritySide::Taker = side {
+            result = -result;
+        }
+        if let Side::Bid = confirmation.side {
+            result = -result;
+        }
+
+        result
+    }
+
+    pub fn calculate_confirmed_legs_multiplier_bps(&self, rfq: &Rfq) -> u64 {
         let quote = self.get_confirmed_quote().unwrap();
 
-        let leg_multiplier_bps = match quote {
+        self.calculate_legs_multiplier_bps_for_quote(rfq, quote)
+    }
+
+    pub fn calculate_legs_multiplier_bps_for_quote(&self, rfq: &Rfq, quote: Quote) -> u64 {
+        match quote {
             Quote::Standart {
                 price_quote: _,
                 legs_multiplier_bps,
@@ -105,23 +129,7 @@ impl Response {
                     leg_multiplier_bps as u64
                 }
             },
-        };
-
-        let result = leg.instrument_amount as u128 * leg_multiplier_bps as u128
-            / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS);
-        let mut result = result as i64;
-
-        if let Side::Ask = leg.side {
-            result = -result;
         }
-        if let Side::Bid = confirmation.side {
-            result = -result;
-        }
-        if let AuthoritySide::Taker = side {
-            result = -result;
-        }
-
-        result
     }
 
     pub fn get_quote_amount_to_transfer(&self, rfq: &Rfq, side: AuthoritySide) -> i64 {

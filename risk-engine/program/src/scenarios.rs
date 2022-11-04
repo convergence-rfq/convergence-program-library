@@ -7,7 +7,16 @@ pub struct Scenario {
     pub volatility_change: Fraction,
 }
 
-pub fn select_scenarious(legs: &Vec<&Leg>, risk_category: RiskCategory) -> Vec<Scenario> {
+impl Scenario {
+    pub fn new(base_price_change: Fraction, volatility_change: Fraction) -> Self {
+        Scenario {
+            base_price_change,
+            volatility_change,
+        }
+    }
+}
+
+pub fn select_scenarious(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec<Scenario> {
     vec![
         Scenario {
             base_price_change: Fraction::new(2, 2),

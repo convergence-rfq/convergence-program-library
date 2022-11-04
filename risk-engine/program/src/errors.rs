@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub enum Error {
     #[msg("Overflow occured during calculations")]
     MathOverflow,
+    #[msg("Can't convert value because it causes an overflow")]
+    MathInvalidConversion,
     #[msg("Not enough accounts for collateral calculations")]
     NotEnoughAccounts,
     #[msg("Failed to extract price")]

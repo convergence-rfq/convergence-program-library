@@ -81,9 +81,21 @@ pub struct BaseAssetIndex {
     value: u16,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+impl BaseAssetIndex {
+    pub fn new(value: u16) -> Self {
+        Self { value }
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
 pub struct RiskCategory {
     value: u8,
+}
+
+impl RiskCategory {
+    pub fn new(value: u8) -> Self {
+        Self { value }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
