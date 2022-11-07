@@ -7,8 +7,8 @@ use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer
 };
-use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
+use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 use dex_cpi as dex;
 use errors::HxroError;
 use params::SettleParams;
@@ -107,9 +107,9 @@ pub mod hxro_instrument {
     }
 
     pub fn settle(ctx: Context<Settle>, data: SettleParams) -> Result<()> {
-        call_deposit_funds(&ctx, &data)?;
+        // call_deposit_funds(&ctx, &data)?;
         call_initialize_print_trade(&ctx, &data)?;
-        // call_sign_print_trade(&ctx, &data)?;
+        call_sign_print_trade(&ctx, &data)?;
         Ok(())
     }
 
@@ -192,6 +192,7 @@ pub mod hxro_instrument {
     }
 }
 
+/*
 fn call_deposit_funds(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::DepositFunds {
         token_program: ctx.accounts.token_program.to_account_info(),
@@ -213,6 +214,7 @@ fn call_deposit_funds(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> 
         cpi_params,
     )
 }
+*/
 
 fn call_initialize_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::InitializePrintTrade {
@@ -277,6 +279,7 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
             .clone(),
         ctx.accounts.risk_output_register.to_account_info().clone(),
         ctx.accounts.risk_and_fee_signer.to_account_info().clone(),
+        ctx.accounts.system_clock.to_account_info().clone(),
         ctx.accounts
             .creator_trader_fee_state_acct
             .to_account_info()
@@ -299,6 +302,7 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
             .clone(),
         ctx.accounts.s_account.to_account_info().clone(),
         ctx.accounts.r_account.to_account_info().clone(),
+        ctx.accounts.mark_prices.to_account_info().clone(),
     ];
 
     solana_program::program::invoke(
@@ -320,6 +324,7 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
                 AccountMeta::new_readonly(ctx.accounts.risk_model_configuration_acct.key(), false),
                 AccountMeta::new(ctx.accounts.risk_output_register.key(), false),
                 AccountMeta::new_readonly(ctx.accounts.risk_and_fee_signer.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.system_clock.key(), false),
                 AccountMeta::new(ctx.accounts.creator_trader_fee_state_acct.key(), false),
                 AccountMeta::new(ctx.accounts.creator_trader_risk_state_acct.key(), false),
                 AccountMeta::new(ctx.accounts.counterparty_trader_fee_state_acct.key(), false),
@@ -333,6 +338,7 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
                 ),
                 AccountMeta::new(ctx.accounts.s_account.key(), false),
                 AccountMeta::new(ctx.accounts.r_account.key(), false),
+                AccountMeta::new(ctx.accounts.mark_prices.key(), false),
             ],
             data: dex_cpi::instruction::SignPrintTrade {
                 _params: cpi_params,
@@ -495,6 +501,7 @@ pub struct Settle<'info> {
     pub print_trade: AccountInfo<'info>,
     /// CHECK:
     pub system_program: Program<'info, System>,
+    pub system_clock: Sysvar<'info, Clock>,
 
     // sign print trade
     /// CHECK:
@@ -532,8 +539,12 @@ pub struct Settle<'info> {
     /// CHECK:
     #[account(mut)]
     pub r_account: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub mark_prices: AccountInfo<'info>,
 
     // deposit
+    /*
     #[account(mut)]
     pub market_product_group_vault: Box<Account<'info, TokenAccount>>,
     /// CHECK:
@@ -542,6 +553,7 @@ pub struct Settle<'info> {
     #[account(mut)]
     pub escrow: Box<Account<'info, TokenAccount>>,
     token_program: Program<'info, Token>,
+    */
 }
 
 #[derive(Accounts)]

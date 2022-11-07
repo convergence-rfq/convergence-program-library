@@ -110,6 +110,22 @@ describe("RFQ HXRO instrument integration tests", () => {
             program.programId
         )
 
+        let airdropTX = await program.provider.connection.requestAirdrop(
+            payer.publicKey,
+            anchor.web3.LAMPORTS_PER_SOL * 2,
+        )
+
+        console.log("airdropTX", airdropTX)
+
+        // sleep
+        await new Promise( resolve => { setTimeout(resolve, 10000) });
+
+        let airdropTX2 = await program.provider.connection.requestAirdrop(
+            counterpartyPayer.publicKey,
+            anchor.web3.LAMPORTS_PER_SOL * 2
+        )
+        console.log("airdropTX2", airdropTX2)
+
         const dexProgram = new anchor.Program(DexIdl as anchor.Idl, dex, anchor.getProvider()) as Program<Dex>;
         const product = new anchor.web3.PublicKey("3ERnKTAEcXGMQkT9kkwAi5ECPmvpKzVfAvymV2Bc13YU");
 
@@ -302,6 +318,14 @@ describe("RFQ HXRO instrument integration tests", () => {
             payer.publicKey
         );
 
+        const [markPrices, ] = await anchor.web3.PublicKey.findProgramAddress(
+            [
+                Buffer.from("mark_prices"),
+                marketProductGroup.toBuffer(),
+            ],
+            dex,
+        )
+
         console.log(
             {
                 dex: dex.toString(),
@@ -327,69 +351,80 @@ describe("RFQ HXRO instrument integration tests", () => {
                 counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct.toString(),
                 sAccount: s_account.toString(),
                 rAccount: r_account.toString(),
+                /*
                 marketProductGroupVault: marketProductGroupVault.toString(),
                 capitalLimitsState: capitalLimitsState.toString(),
                 whitelistAtaAcct: whitelistAtaAcct.toString(),
+                 */
                 escrow: escrow.toString(),
             }
         )
-        let tx = await program.methods.settle(
-            // @ts-ignore
-            {
-                productIndex: new anchor.BN(0),
-                size: {
-                    m: new anchor.BN(0),
-                    exp: new anchor.BN(0),
-                },
-                price: {
-                    m: new anchor.BN(0),
-                    exp: new anchor.BN(0),
-                },
-                creatorSide: Side.Ask,
-                counterpartySide: Side.Bid,
-                operatorCreatorFeeProportion: {
-                    m: new anchor.BN(0),
-                    exp: new anchor.BN(0),
-                },
-                operatorCounterpartyFeeProportion: {
-                    m: new anchor.BN(0),
-                    exp: new anchor.BN(0),
-                },
-            }
-        ).accounts(
-            {
-                dex: dex,
-                creatorOwner: payer.publicKey,
-                counterpartyOwner: counterpartyPayer.publicKey,
-                creator: creator,
-                counterparty: counterparty,
-                operator: operator,
-                marketProductGroup: marketProductGroup,
-                product: product,
-                printTrade: printTrade,
-                systemProgram: anchor.web3.SystemProgram.programId,
-                feeModelProgram: feeModelProgram,
-                feeModelConfigurationAcct: feeModelConfigurationAcct,
-                feeOutputRegister: feeOutputRegister,
-                riskEngineProgram: riskEngineProgram,
-                riskModelConfigurationAcct: riskModelConfigurationAcct,
-                riskOutputRegister: riskOutputRegister,
-                riskAndFeeSigner: riskAndFeeSigner,
-                creatorTraderFeeStateAcct: creatorTraderFeeStateAcct,
-                creatorTraderRiskStateAcct: creatorTraderRiskStateAcct,
-                counterpartyTraderFeeStateAcct: counterpartyTraderFeeStateAcct,
-                counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct,
-                sAccount: s_account,
-                rAccount: r_account,
-                tokenProgram: spl_token.TOKEN_PROGRAM_ID,
-                marketProductGroupVault: marketProductGroupVault,
-                capitalLimits: capitalLimitsState,
-                whitelistAtaAcct: whitelistAtaAcct,
-                escrow: escrow,
-            }
-        ).signers(
-            [payer, counterpartyPayer]
-        ).transaction();
+        let tx;
+        try {
+            tx = await program.methods.settle(
+                // @ts-ignore
+                {
+                    productIndex: new anchor.BN(0),
+                    size: {
+                        m: new anchor.BN(0),
+                        exp: new anchor.BN(0),
+                    },
+                    price: {
+                        m: new anchor.BN(0),
+                        exp: new anchor.BN(0),
+                    },
+                    creatorSide: Side.Ask,
+                    counterpartySide: Side.Bid,
+                    operatorCreatorFeeProportion: {
+                        m: new anchor.BN(0),
+                        exp: new anchor.BN(0),
+                    },
+                    operatorCounterpartyFeeProportion: {
+                        m: new anchor.BN(0),
+                        exp: new anchor.BN(0),
+                    },
+                }
+            ).accounts(
+                {
+                    dex: dex,
+                    creatorOwner: payer.publicKey,
+                    counterpartyOwner: counterpartyPayer.publicKey,
+                    creator: creator,
+                    counterparty: counterparty,
+                    operator: operator,
+                    marketProductGroup: marketProductGroup,
+                    product: product,
+                    printTrade: printTrade,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                    systemClock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+                    feeModelProgram: feeModelProgram,
+                    feeModelConfigurationAcct: feeModelConfigurationAcct,
+                    feeOutputRegister: feeOutputRegister,
+                    riskEngineProgram: riskEngineProgram,
+                    riskModelConfigurationAcct: riskModelConfigurationAcct,
+                    riskOutputRegister: riskOutputRegister,
+                    riskAndFeeSigner: riskAndFeeSigner,
+                    creatorTraderFeeStateAcct: creatorTraderFeeStateAcct,
+                    creatorTraderRiskStateAcct: creatorTraderRiskStateAcct,
+                    counterpartyTraderFeeStateAcct: counterpartyTraderFeeStateAcct,
+                    counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct,
+                    sAccount: s_account,
+                    rAccount: r_account,
+                    markPrices: markPrices
+                    /*
+                    marketProductGroupVault: marketProductGroupVault,
+                    capitalLimits: capitalLimitsState,
+                    whitelistAtaAcct: whitelistAtaAcct,
+                    */
+                }
+            ).signers(
+                [payer, counterpartyPayer]
+            ).transaction();
+        } catch (e) {
+                console.log(e)
+        }
+
+        console.log("here")
 
         tx.feePayer = payer.publicKey;
 
