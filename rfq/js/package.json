@@ -1,10 +1,10 @@
 {
   "name": "@convergence-rfq/rfq",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "license": "MIT",
-  "devDependencies": {
-    "@metaplex-foundation/solita": "^0.18.0",
-    "typescript": "^4.8.4"
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -13,5 +13,9 @@
   ],
   "scripts": {
     "prepublish": "tsc"
+  },
+  "devDependencies": {
+    "@metaplex-foundation/solita": "^0.18.0",
+    "typescript": "^4.8.4"
   }
 }
