@@ -5,7 +5,7 @@ use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
-use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
+use rfq::state::{AuthoritySide, Leg, MintInfo, ProtocolState, Response, Rfq};
 
 mod errors;
 mod state;
@@ -19,18 +19,26 @@ pub mod spot_instrument {
 
     use super::*;
 
-    pub fn validate_data(
-        ctx: Context<ValidateData>,
-        data_size: u32,
-        mint_address: Pubkey,
-    ) -> Result<()> {
+    pub fn validate_leg(ctx: Context<ValidateLeg>, leg: Leg) -> Result<()> {
+        let mint_info = &ctx.accounts.mint_info;
+
         require!(
-            data_size as usize == std::mem::size_of::<Pubkey>(),
+            leg.instrument_data.len() == std::mem::size_of::<Pubkey>(),
             SpotError::InvalidDataSize
         );
+        let mint_in_data: Pubkey = AnchorDeserialize::try_from_slice(&leg.instrument_data)?;
         require!(
-            mint_address == ctx.accounts.mint.key(),
+            mint_in_data == mint_info.mint_address,
             SpotError::PassedMintDoesNotMatch
+        );
+
+        require!(
+            leg.instrument_decimals == mint_info.decimals,
+            SpotError::DecimalsAmountDoesNotMatch
+        );
+        require!(
+            leg.base_asset_index == mint_info.base_asset_index,
+            SpotError::BaseAssetDoesNotMatch
         );
         Ok(())
     }
@@ -249,13 +257,13 @@ fn close_escrow_account<'info>(
 }
 
 #[derive(Accounts)]
-pub struct ValidateData<'info> {
+pub struct ValidateLeg<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
 
     /// user provided
-    pub mint: Account<'info, Mint>,
+    pub mint_info: Account<'info, MintInfo>,
 }
 
 #[derive(Accounts)]

@@ -1,7 +1,7 @@
 use crate::{
-    constants::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_rfq,
+    seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     state::{CollateralInfo, ProtocolState, Rfq, RfqState, StoredRfqState},
 };
 use anchor_lang::prelude::*;

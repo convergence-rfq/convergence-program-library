@@ -153,7 +153,7 @@ mod tests {
         let base_assets = vec![BaseAssetInfo {
             index: btc_index,
             bump: Default::default(),
-            risk_category: RiskCategory::new(0),
+            risk_category: RiskCategory::VeryLow,
             price_oracle: PriceOracle::Switchboard(Default::default()),
             ticker: Default::default(),
         }];
@@ -209,7 +209,7 @@ mod tests {
         let base_assets = vec![BaseAssetInfo {
             index: btc_index,
             bump: Default::default(),
-            risk_category: RiskCategory::new(0),
+            risk_category: RiskCategory::VeryLow,
             price_oracle: PriceOracle::Switchboard(Default::default()),
             ticker: Default::default(),
         }];
@@ -267,14 +267,14 @@ mod tests {
             BaseAssetInfo {
                 index: btc_index,
                 bump: Default::default(),
-                risk_category: RiskCategory::new(0),
+                risk_category: RiskCategory::VeryLow,
                 price_oracle: PriceOracle::Switchboard(Default::default()),
                 ticker: Default::default(),
             },
             BaseAssetInfo {
                 index: sol_index,
                 bump: Default::default(),
-                risk_category: RiskCategory::new(1),
+                risk_category: RiskCategory::Medium,
                 price_oracle: PriceOracle::Switchboard(Default::default()),
                 ticker: Default::default(),
             },
@@ -286,7 +286,7 @@ mod tests {
         ]);
 
         fn scenarios_selector(_legs: &Vec<&Leg>, risk_category: RiskCategory) -> Vec<Scenario> {
-            if risk_category == RiskCategory::new(0) {
+            if risk_category == RiskCategory::VeryLow {
                 vec![
                     Scenario::new(Fraction::new(1, 1), 0.into()),
                     Scenario::new(Fraction::new(-1, 1), 0.into()),

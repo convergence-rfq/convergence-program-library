@@ -1,6 +1,6 @@
 use crate::{
-    constants::PROTOCOL_SEED,
     errors::ProtocolError,
+    seeds::PROTOCOL_SEED,
     state::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;

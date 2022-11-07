@@ -1,6 +1,6 @@
 use crate::{
-    constants::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
+    seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     state::{CollateralInfo, ProtocolState},
 };
 use anchor_lang::prelude::*;

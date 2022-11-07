@@ -11,6 +11,8 @@ pub enum OptionType {
     PUT = 1,
 }
 
+pub const TOKEN_DECIMALS: u8 = 4;
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct EuroMeta {
     pub underlying_mint: Pubkey,

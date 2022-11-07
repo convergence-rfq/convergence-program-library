@@ -1,5 +1,5 @@
 use crate::{
-    constants::PROTOCOL_SEED,
+    seeds::PROTOCOL_SEED,
     state::{FeeParameters, ProtocolState},
 };
 use anchor_lang::prelude::*;

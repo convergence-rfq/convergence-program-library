@@ -6,7 +6,7 @@ use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
 use euro_options::{EuroMeta, OptionType};
-use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
+use rfq::state::{AuthoritySide, Leg, MintInfo, ProtocolState, Response, Rfq};
 
 mod errors;
 mod euro_options;
@@ -20,30 +20,41 @@ const ESCROW_SEED: &str = "escrow";
 pub mod psyoptions_european_instrument {
     use super::*;
 
-    pub fn validate_data(
-        ctx: Context<ValidateData>,
-        data_size: u32,
-        mint_address: Pubkey,
-        euro_meta: Pubkey,
-        option_type: OptionType,
-    ) -> Result<()> {
-        let euro_meta_acc = &ctx.accounts.euro_meta;
+    pub fn validate_leg(ctx: Context<ValidateLeg>, leg: Leg) -> Result<()> {
+        let ValidateLeg {
+            euro_meta,
+            mint_info,
+            ..
+        } = &ctx.accounts;
+
         require!(
-            data_size as usize
+            leg.instrument_data.len()
                 == std::mem::size_of::<Pubkey>() * 2 + std::mem::size_of::<OptionType>(),
             PsyoptionsEuropeanError::InvalidDataSize
         );
+        let (mint_address, euro_meta_key, option_type): (Pubkey, Pubkey, OptionType) =
+            AnchorDeserialize::try_from_slice(&leg.instrument_data)?;
         require!(
-            euro_meta == euro_meta_acc.key(),
-            PsyoptionsEuropeanError::PassedMintDoesNotMatch
+            euro_meta_key == euro_meta.key(),
+            PsyoptionsEuropeanError::PassedEuroMetaDoesNotMatch
         );
         let expected_mint = match option_type {
-            OptionType::CALL => euro_meta_acc.call_option_mint,
-            OptionType::PUT => euro_meta_acc.put_option_mint,
+            OptionType::CALL => euro_meta.call_option_mint,
+            OptionType::PUT => euro_meta.put_option_mint,
         };
         require!(
             mint_address == expected_mint,
             PsyoptionsEuropeanError::PassedMintDoesNotMatch
+        );
+
+        require!(
+            leg.instrument_decimals == euro_options::TOKEN_DECIMALS,
+            PsyoptionsEuropeanError::DecimalsAmountDoesNotMatch
+        );
+
+        require!(
+            leg.base_asset_index == mint_info.base_asset_index,
+            PsyoptionsEuropeanError::BaseAssetDoesNotMatch
         );
         Ok(())
     }
@@ -262,13 +273,15 @@ fn close_escrow_account<'info>(
 }
 
 #[derive(Accounts)]
-pub struct ValidateData<'info> {
+pub struct ValidateLeg<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
 
     /// user provided
     pub euro_meta: Account<'info, EuroMeta>,
+    #[account(mut, constraint = euro_meta.underlying_mint == mint_info.mint_address @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
+    pub mint_info: Account<'info, MintInfo>,
 }
 
 #[derive(Accounts)]

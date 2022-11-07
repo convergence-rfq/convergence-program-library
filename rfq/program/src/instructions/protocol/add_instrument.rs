@@ -1,6 +1,6 @@
 use crate::{
-    constants::PROTOCOL_SEED,
     errors::ProtocolError,
+    seeds::PROTOCOL_SEED,
     state::{Instrument, InstrumentType, ProtocolState},
 };
 use anchor_lang::prelude::*;

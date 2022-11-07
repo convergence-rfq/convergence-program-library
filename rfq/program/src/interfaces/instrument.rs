@@ -2,13 +2,13 @@ use anchor_lang::prelude::*;
 use solana_program::{instruction::Instruction, program::invoke_signed};
 
 use crate::{
-    constants::PROTOCOL_SEED,
     errors::ProtocolError,
+    seeds::PROTOCOL_SEED,
     state::{AuthoritySide, Leg, ProtocolState, Response, Rfq},
     utils::ToAccountMeta,
 };
 
-const VALIDATE_DATA_SELECTOR: [u8; 8] = [181, 2, 45, 238, 64, 129, 254, 198];
+const VALIDATE_LEG_SELECTOR: [u8; 8] = [59, 45, 150, 112, 199, 116, 193, 136];
 const PREPARE_TO_SETTLE_SELECTOR: [u8; 8] = [254, 209, 39, 188, 15, 5, 140, 146];
 const SETTLE_SELECTOR: [u8; 8] = [175, 42, 185, 87, 144, 131, 102, 212];
 const REVERT_PREPARATION_SELECTOR: [u8; 8] = [32, 185, 171, 189, 112, 246, 209, 149];
@@ -19,8 +19,8 @@ pub fn validate_instrument_data<'a, 'info: 'a>(
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
-    let mut data = VALIDATE_DATA_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&leg.instrument_data, &mut data)?;
+    let mut data = VALIDATE_LEG_SELECTOR.to_vec();
+    AnchorSerialize::serialize(&leg, &mut data)?;
 
     let instrument_key = leg.instrument;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;

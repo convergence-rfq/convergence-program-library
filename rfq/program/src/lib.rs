@@ -6,18 +6,20 @@ use anchor_lang::prelude::*;
 use solana_security_txt::security_txt;
 
 pub mod common;
-pub mod constants;
 pub mod errors;
 pub mod instructions;
 pub mod interfaces;
+pub mod seeds;
 pub mod state;
 pub mod utils;
 
 use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;
 use instructions::collateral::withdraw_collateral::*;
+use instructions::protocol::add_base_asset::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::initialize_protocol::*;
+use instructions::protocol::register_mint::*;
 use instructions::rfq::add_legs_to_rfq::*;
 use instructions::rfq::cancel_response::*;
 use instructions::rfq::cancel_rfq::*;
@@ -38,7 +40,7 @@ use instructions::rfq::settle_one_party_default::*;
 use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
 use instructions::rfq::unlock_rfq_collateral::*;
-use state::{AuthoritySide, FeeParameters, FixedSize, InstrumentType, Leg, OrderType, Quote, Side};
+use state::*;
 
 security_txt! {
     name: "Convergence RFQ",
@@ -85,20 +87,18 @@ pub mod rfq {
         )
     }
 
-    pub fn prepare_settlement<'info>(
-        ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
-        side: AuthoritySide,
-        leg_amount_to_prepare: u8,
+    pub fn add_base_asset(
+        ctx: Context<AddBaseAssetAccounts>,
+        index: BaseAssetIndex,
+        ticker: String,
+        risk_category: RiskCategory,
+        price_oracle: PriceOracle,
     ) -> Result<()> {
-        prepare_settlement_instruction(ctx, side, leg_amount_to_prepare)
+        add_base_asset_instruction(ctx, index, ticker, risk_category, price_oracle)
     }
 
-    pub fn prepare_more_legs_settlement<'info>(
-        ctx: Context<'_, '_, '_, 'info, PrepareMoreLegsSettlementAccounts<'info>>,
-        side: AuthoritySide,
-        leg_amount_to_prepare: u8,
-    ) -> Result<()> {
-        prepare_more_legs_settlement_instruction(ctx, side, leg_amount_to_prepare)
+    pub fn register_mint(ctx: Context<RegisterMintAccounts>) -> Result<()> {
+        register_mint_instruction(ctx)
     }
 
     pub fn initialize_collateral(ctx: Context<InitializeCollateralAccounts>) -> Result<()> {
@@ -136,6 +136,13 @@ pub mod rfq {
         )
     }
 
+    pub fn add_legs_to_rfq<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddLegsToRfqAccounts<'info>>,
+        legs: Vec<Leg>,
+    ) -> Result<()> {
+        add_legs_to_rfq_instruction(ctx, legs)
+    }
+
     pub fn finalize_rfq_construction(ctx: Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
         finalize_rfq_construction_instruction(ctx)
     }
@@ -156,11 +163,20 @@ pub mod rfq {
         confirm_response_instruction(ctx, side, override_leg_multiplier_bps)
     }
 
-    pub fn add_legs_to_rfq<'info>(
-        ctx: Context<'_, '_, '_, 'info, AddLegsToRfqAccounts<'info>>,
-        legs: Vec<Leg>,
+    pub fn prepare_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
+        side: AuthoritySide,
+        leg_amount_to_prepare: u8,
     ) -> Result<()> {
-        add_legs_to_rfq_instruction(ctx, legs)
+        prepare_settlement_instruction(ctx, side, leg_amount_to_prepare)
+    }
+
+    pub fn prepare_more_legs_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareMoreLegsSettlementAccounts<'info>>,
+        side: AuthoritySide,
+        leg_amount_to_prepare: u8,
+    ) -> Result<()> {
+        prepare_more_legs_settlement_instruction(ctx, side, leg_amount_to_prepare)
     }
 
     pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {

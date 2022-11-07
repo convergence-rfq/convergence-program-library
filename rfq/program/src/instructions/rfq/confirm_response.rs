@@ -1,7 +1,7 @@
 use crate::{
-    constants::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_confirmation,
+    seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     state::{
         CollateralInfo, Confirmation, ProtocolState, Quote, Response, ResponseState, Rfq, RfqState,
         Side, StoredResponseState,
@@ -128,14 +128,10 @@ pub fn confirm_response_instruction(
     }
     response.taker_collateral_locked = taker_collateral;
 
-    require!(
-        maker_collateral <= response.maker_collateral_locked,
-        ProtocolError::CanNotLockAdditionalMakerCollateral
-    );
-    let maker_collateral_to_unlock = response.maker_collateral_locked - maker_collateral;
-    if maker_collateral_to_unlock > 0 {
-        maker_collateral_info.unlock_collateral(maker_collateral_to_unlock);
-        response.maker_collateral_locked -= maker_collateral_to_unlock;
+    if maker_collateral < response.maker_collateral_locked {
+        let to_unlock = response.maker_collateral_locked - maker_collateral;
+        maker_collateral_info.unlock_collateral(to_unlock);
+        response.maker_collateral_locked -= to_unlock;
     }
 
     Ok(())

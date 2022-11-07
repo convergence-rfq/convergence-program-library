@@ -1,9 +1,9 @@
 use std::mem;
 
 use crate::{
-    constants::PROTOCOL_SEED,
     errors::ProtocolError,
     interfaces::instrument::validate_instrument_data,
+    seeds::PROTOCOL_SEED,
     state::{FixedSize, Leg, OrderType, ProtocolState, Rfq, StoredRfqState},
 };
 use anchor_lang::prelude::*;

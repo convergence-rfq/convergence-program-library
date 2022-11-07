@@ -87,15 +87,19 @@ impl BaseAssetIndex {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
-pub struct RiskCategory {
-    value: u8,
+impl From<BaseAssetIndex> for u16 {
+    fn from(converted: BaseAssetIndex) -> Self {
+        converted.value
+    }
 }
 
-impl RiskCategory {
-    pub fn new(value: u8) -> Self {
-        Self { value }
-    }
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+pub enum RiskCategory {
+    VeryLow,
+    Low,
+    Medium,
+    High,
+    VeryHigh,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -108,4 +112,5 @@ pub struct MintInfo {
     pub bump: u8,
     pub mint_address: Pubkey,
     pub decimals: u8,
+    pub base_asset_index: BaseAssetIndex,
 }

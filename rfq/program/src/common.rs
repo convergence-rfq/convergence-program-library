@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 
 use crate::{
-    constants::{COLLATERAL_SEED, QUOTE_ESCROW_SEED},
+    seeds::{COLLATERAL_SEED, QUOTE_ESCROW_SEED},
     state::{AuthoritySide, CollateralInfo, Response, Rfq, StoredResponseState},
 };
 
