@@ -1,13 +1,17 @@
 {
   "name": "@convergence-rfq/rfq",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "license": "MIT",
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.18.0"
+    "@metaplex-foundation/solita": "^0.18.0",
+    "typescript": "^4.8.4"
   },
-  "exports": "./generated/index.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
-    "generated",
-    "idl"
-  ]
+    "dist"
+  ],
+  "scripts": {
+    "prepublish": "tsc"
+  }
 }

@@ -1,2 +1,4 @@
 idl/
 generated/
+dist/
+lib/
