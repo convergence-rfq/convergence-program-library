@@ -27,6 +27,8 @@ export const DEFAULT_LEG_MULTIPLIER = new BN(1).mul(new BN(10).pow(new BN(LEG_MU
 export const DEFAULT_ACTIVE_WINDOW = 10;
 export const DEFAULT_SETTLING_WINDOW = 60;
 export const DEFAULT_MINT_DECIMALS = 9;
+export const DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ = new BN(1_000_000_000);
+export const DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ = new BN(2_000_000_000);
 
 export const INSTRUMENT_ESCROW_SEED = "escrow";
 
