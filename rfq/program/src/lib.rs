@@ -143,20 +143,22 @@ pub mod rfq {
         add_legs_to_rfq_instruction(ctx, legs)
     }
 
-    pub fn finalize_rfq_construction(ctx: Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
+    pub fn finalize_rfq_construction<'info>(
+        ctx: Context<'_, '_, '_, 'info, FinalizeRfqConstructionAccounts<'info>>,
+    ) -> Result<()> {
         finalize_rfq_construction_instruction(ctx)
     }
 
-    pub fn respond_to_rfq(
-        ctx: Context<RespondToRfqAccounts>,
+    pub fn respond_to_rfq<'info>(
+        ctx: Context<'_, '_, '_, 'info, RespondToRfqAccounts<'info>>,
         bid: Option<Quote>,
         ask: Option<Quote>,
     ) -> Result<()> {
         respond_to_rfq_instruction(ctx, bid, ask)
     }
 
-    pub fn confirm_response(
-        ctx: Context<ConfirmResponseAccounts>,
+    pub fn confirm_response<'info>(
+        ctx: Context<'_, '_, '_, 'info, ConfirmResponseAccounts<'info>>,
         side: Side,
         override_leg_multiplier_bps: Option<u64>,
     ) -> Result<()> {

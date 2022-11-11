@@ -5,10 +5,26 @@ import {
   PROTOCOL_SEED,
   QUOTE_ESCROW_SEED,
   INSTRUMENT_ESCROW_SEED,
+  BASE_ASSET_INFO_SEED,
+  MINT_INFO_SEED,
 } from "./constants";
+import { toLittleEndian } from "./helpers";
 
 export async function getProtocolPda(programId: PublicKey) {
   const [pda] = await PublicKey.findProgramAddress([Buffer.from(PROTOCOL_SEED)], programId);
+  return pda;
+}
+
+export async function getBaseAssetPda(index: number, programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress(
+    [Buffer.from(BASE_ASSET_INFO_SEED), toLittleEndian(index, 2)],
+    programId
+  );
+  return pda;
+}
+
+export async function getMintInfoPda(mintAddress: PublicKey, programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress([Buffer.from(MINT_INFO_SEED), mintAddress.toBuffer()], programId);
   return pda;
 }
 

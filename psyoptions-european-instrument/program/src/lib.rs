@@ -20,13 +20,14 @@ const ESCROW_SEED: &str = "escrow";
 pub mod psyoptions_european_instrument {
     use super::*;
 
-    pub fn validate_leg(ctx: Context<ValidateLeg>, leg: Leg) -> Result<()> {
+    pub fn validate_leg(ctx: Context<ValidateLeg>, leg_data: Vec<u8>) -> Result<()> {
         let ValidateLeg {
             euro_meta,
             mint_info,
             ..
         } = &ctx.accounts;
 
+        let leg: Leg = AnchorDeserialize::try_from_slice(&leg_data)?;
         require!(
             leg.instrument_data.len()
                 == std::mem::size_of::<Pubkey>() * 2 + std::mem::size_of::<OptionType>(),
@@ -280,7 +281,7 @@ pub struct ValidateLeg<'info> {
 
     /// user provided
     pub euro_meta: Account<'info, EuroMeta>,
-    #[account(mut, constraint = euro_meta.underlying_mint == mint_info.mint_address @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
+    #[account(constraint = euro_meta.underlying_mint == mint_info.mint_address @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
     pub mint_info: Account<'info, MintInfo>,
 }
 

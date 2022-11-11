@@ -19,8 +19,12 @@ pub fn validate_instrument_data<'a, 'info: 'a>(
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
+    // we serialize leg with it's leg to work around an anchor issue with imported types in instruction
+    let mut leg_data = AnchorSerialize::try_to_vec(leg)?;
+
     let mut data = VALIDATE_LEG_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&leg, &mut data)?;
+    AnchorSerialize::serialize(&(leg_data.len() as u32), &mut data)?;
+    data.append(&mut leg_data);
 
     let instrument_key = leg.instrument;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;

@@ -36,10 +36,17 @@ describe("Psyoptions European instrument integration tests", () => {
     // create a two way RFQ specifying 1 option call as a leg
     const rfq = await context.createRfq({
       legs: [
-        PsyoptionsEuropeanInstrument.create(context, options.callMint, options.metaKey, OptionType.CALL, {
-          amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
-          side: Side.Bid,
-        }),
+        PsyoptionsEuropeanInstrument.create(
+          context,
+          options.callMint,
+          context.assetToken,
+          options.metaKey,
+          OptionType.CALL,
+          {
+            amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
+            side: Side.Bid,
+          }
+        ),
       ],
     });
     // response with agreeing to sell 2 options for 500$ or buy 5 for 450$
@@ -75,10 +82,17 @@ describe("Psyoptions European instrument integration tests", () => {
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
-        PsyoptionsEuropeanInstrument.create(context, options.putMint, options.metaKey, OptionType.PUT, {
-          amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
-          side: Side.Bid,
-        }),
+        PsyoptionsEuropeanInstrument.create(
+          context,
+          options.putMint,
+          context.assetToken,
+          options.metaKey,
+          OptionType.PUT,
+          {
+            amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
+            side: Side.Bid,
+          }
+        ),
       ],
     });
     // response with agreeing to buy 5 options for 450$

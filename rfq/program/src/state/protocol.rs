@@ -104,7 +104,7 @@ pub enum RiskCategory {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum PriceOracle {
-    Switchboard(Pubkey),
+    Switchboard { address: Pubkey },
 }
 
 #[account]

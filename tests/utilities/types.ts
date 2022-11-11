@@ -16,6 +16,22 @@ export const AuthoritySide = {
   Maker: { maker: {} },
 };
 
+export enum RiskCategory {
+  VeryLow,
+  Low,
+  Medium,
+  High,
+  VeryHigh,
+}
+
+export function riskCategoryToObject(value: RiskCategory) {
+  const stringValue = RiskCategory[value];
+  const uncapitalizedValue = stringValue.charAt(0).toLowerCase() + stringValue.slice(1);
+  return {
+    [uncapitalizedValue]: {},
+  };
+}
+
 export const Quote = {
   getStandart: (priceBps: BN, legsMultiplierBps: BN) => {
     return {

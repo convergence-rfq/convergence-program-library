@@ -40,13 +40,15 @@ pub fn extract_prices(
 
 fn does_oracle_match(base_asset: &BaseAssetInfo, address: Pubkey) -> bool {
     match base_asset.price_oracle {
-        PriceOracle::Switchboard(stored_address) => stored_address == address,
+        PriceOracle::Switchboard {
+            address: stored_address,
+        } => stored_address == address,
     }
 }
 
 fn extract_price(oracle: PriceOracle, account: &AccountInfo) -> Result<Fraction> {
     match oracle {
-        PriceOracle::Switchboard(_) => extract_switchboard_price(account),
+        PriceOracle::Switchboard { address: _ } => extract_switchboard_price(account),
     }
 }
 

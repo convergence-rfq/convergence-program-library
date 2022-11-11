@@ -53,7 +53,14 @@ export function calculateLegsSize(legs: InstrumentController[]) {
   return legs.map((leg) => EMPTY_LEG_SIZE + leg.getInstrumendDataSize()).reduce((x, y) => x + y, 4);
 }
 
-type MeasuredToken = "quote" | "asset" | "walletCollateral" | "unlockedCollateral" | "totalCollateral" | Mint;
+type MeasuredToken =
+  | "quote"
+  | "asset"
+  | "additionalAsset"
+  | "walletCollateral"
+  | "unlockedCollateral"
+  | "totalCollateral"
+  | Mint;
 
 export class TokenChangeMeasurer {
   private constructor(
@@ -93,6 +100,8 @@ export class TokenChangeMeasurer {
       return context.quoteToken.getAssociatedBalance(user);
     } else if (token == "asset") {
       return context.assetToken.getAssociatedBalance(user);
+    } else if (token == "additionalAsset") {
+      return context.additionalAssetToken.getAssociatedBalance(user);
     } else if (token == "unlockedCollateral") {
       return context.collateralToken.getUnlockedCollateral(user);
     } else if (token == "totalCollateral") {
@@ -127,4 +136,10 @@ export class TokenChangeMeasurer {
       );
     }
   }
+}
+
+export function toLittleEndian(value: number, bytes: number) {
+  const buf = Buffer.allocUnsafe(bytes);
+  buf.writeUIntLE(value, 0, bytes);
+  return buf;
 }

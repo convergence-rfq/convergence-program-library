@@ -2,8 +2,9 @@ use anchor_lang::prelude::*;
 use rfq::state::{AuthoritySide, FixedSize, Leg, OrderType, Quote, Response, Rfq, Side};
 
 use base_asset_extractor::extract_base_assets;
+use fraction::Fraction;
 use price_extractor::extract_prices;
-use risk_calculator::RiskCalculator;
+use risk_calculator::{RiskCalculator, COLLATERAL_DECIMALS};
 use scenarios::select_scenarious;
 
 pub mod base_asset_extractor;
@@ -18,9 +19,8 @@ declare_id!("7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth");
 pub const VARIABLE_SIZE_COLLATERAL_REQUIREMENT: u64 = 1_000_000_000;
 pub const FIXED_QUOTE_ASSET_SIZE_COLLATERAL_REQUIREMENT: u64 = 2_000_000_000;
 
+#[program]
 pub mod risk_engine {
-    use crate::fraction::Fraction;
-
     use super::*;
 
     pub fn calculate_collateral_for_rfq(
@@ -60,6 +60,12 @@ pub mod risk_engine {
             }
         };
 
+        msg!(
+            "Required collateral: {} with {} decimals",
+            required_collateral,
+            COLLATERAL_DECIMALS
+        );
+
         Ok(required_collateral)
     }
 
@@ -93,6 +99,12 @@ pub mod risk_engine {
             collateral = u64::max(collateral, get_collateral_for_quote(quote, Side::Ask)?);
         }
 
+        msg!(
+            "Required collateral: {} with {} decimals",
+            collateral,
+            COLLATERAL_DECIMALS
+        );
+
         Ok(collateral)
     }
 
@@ -121,6 +133,14 @@ pub mod risk_engine {
             AuthoritySide::Maker,
             confirmed_side,
         )?;
+
+        msg!(
+            "Required collateral, taker: {}, maker: {}. With {} decimals",
+            taker_collateral,
+            maker_collateral,
+            COLLATERAL_DECIMALS
+        );
+
         Ok((taker_collateral, maker_collateral))
     }
 }

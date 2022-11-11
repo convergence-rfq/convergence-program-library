@@ -19,7 +19,8 @@ pub mod spot_instrument {
 
     use super::*;
 
-    pub fn validate_leg(ctx: Context<ValidateLeg>, leg: Leg) -> Result<()> {
+    pub fn validate_leg(ctx: Context<ValidateLeg>, leg_data: Vec<u8>) -> Result<()> {
+        let leg: Leg = AnchorDeserialize::try_from_slice(&leg_data)?;
         let mint_info = &ctx.accounts.mint_info;
 
         require!(

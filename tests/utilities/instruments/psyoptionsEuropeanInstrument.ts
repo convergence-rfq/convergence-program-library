@@ -35,28 +35,37 @@ export function getEuroOptionsInstrumentProgram(): Program<PsyoptionsEuropeanIns
 export class PsyoptionsEuropeanInstrument implements Instrument {
   constructor(
     private context: Context,
-    private mint: Mint,
+    private optionMint: Mint,
+    private underlyingMint: Mint,
     private euroMeta: PublicKey,
     private optionType: OptionType
   ) {}
 
   static create(
     context: Context,
-    mint: Mint,
+    optionMint: Mint,
+    underlyingMint: Mint,
     euroMeta: PublicKey,
     optionType: OptionType,
     { amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
-    const instrument = new PsyoptionsEuropeanInstrument(context, mint, euroMeta, optionType);
-    return new InstrumentController(instrument, amount, side ?? DEFAULT_INSTRUMENT_SIDE);
+    const instrument = new PsyoptionsEuropeanInstrument(context, optionMint, underlyingMint, euroMeta, optionType);
+    underlyingMint.assertRegistered();
+    return new InstrumentController(
+      instrument,
+      amount,
+      side ?? DEFAULT_INSTRUMENT_SIDE,
+      underlyingMint.baseAssetIndex,
+      4
+    );
   }
 
   static async addInstrument(context: Context) {
-    await context.addInstrument(getEuroOptionsInstrumentProgram().programId, 1, 7, 3, 3, 4);
+    await context.addInstrument(getEuroOptionsInstrumentProgram().programId, 2, 7, 3, 3, 4);
   }
 
   serializeLegData(): Buffer {
-    const mint = this.mint.publicKey.toBytes();
+    const mint = this.optionMint.publicKey.toBytes();
     const meta = this.euroMeta.toBytes();
     return Buffer.from(new Uint8Array([...mint, ...meta, this.optionType == OptionType.CALL ? 0 : 1]));
   }
@@ -66,7 +75,10 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
   }
 
   async getValidationAccounts() {
-    return [{ pubkey: this.euroMeta, isSigner: false, isWritable: false }];
+    return [
+      { pubkey: this.euroMeta, isSigner: false, isWritable: false },
+      { pubkey: this.underlyingMint.mintInfoAddress, isSigner: false, isWritable: false },
+    ];
   }
 
   async getPrepareSettlementAccounts(
@@ -83,13 +95,13 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
         pubkey: await Token.getAssociatedTokenAddress(
           ASSOCIATED_TOKEN_PROGRAM_ID,
           TOKEN_PROGRAM_ID,
-          this.mint.publicKey,
+          this.optionMint.publicKey,
           caller.publicKey
         ),
         isSigner: false,
         isWritable: true,
       },
-      { pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
+      { pubkey: this.optionMint.publicKey, isSigner: false, isWritable: false },
       {
         pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
         isSigner: false,
@@ -109,7 +121,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(assetReceiver),
+        pubkey: await this.optionMint.getAssociatedAddress(assetReceiver),
         isSigner: false,
         isWritable: true,
       },
@@ -132,7 +144,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
+        pubkey: await this.optionMint.getAssociatedAddress(caller.publicKey),
         isSigner: false,
         isWritable: true,
       },
@@ -153,7 +165,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(this.context.dao.publicKey),
+        pubkey: await this.optionMint.getAssociatedAddress(this.context.dao.publicKey),
         isSigner: false,
         isWritable: true,
       },

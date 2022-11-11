@@ -25,7 +25,14 @@ export class SpotInstrument implements Instrument {
     { mint = context.assetToken, amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
     const instrument = new SpotInstrument(context, mint);
-    return new InstrumentController(instrument, amount, side ?? DEFAULT_INSTRUMENT_SIDE);
+    mint.assertRegistered();
+    return new InstrumentController(
+      instrument,
+      amount,
+      side ?? DEFAULT_INSTRUMENT_SIDE,
+      mint.baseAssetIndex,
+      mint.decimals
+    );
   }
 
   static async addInstrument(context: Context) {
@@ -41,7 +48,7 @@ export class SpotInstrument implements Instrument {
   }
 
   async getValidationAccounts() {
-    return [{ pubkey: this.mint.publicKey, isSigner: false, isWritable: false }];
+    return [{ pubkey: this.mint.mintInfoAddress, isSigner: false, isWritable: false }];
   }
 
   async getPrepareSettlementAccounts(

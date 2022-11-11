@@ -88,8 +88,8 @@ fn validate(
     Ok(())
 }
 
-pub fn confirm_response_instruction(
-    ctx: Context<ConfirmResponseAccounts>,
+pub fn confirm_response_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, ConfirmResponseAccounts<'info>>,
     side: Side,
     override_leg_multiplier_bps: Option<u64>,
 ) -> Result<()> {
@@ -113,9 +113,10 @@ pub fn confirm_response_instruction(
     response.exit(ctx.program_id)?;
 
     let (taker_collateral, maker_collateral) = calculate_required_collateral_for_confirmation(
-        &rfq.to_account_info(),
-        &response.to_account_info(),
+        rfq.to_account_info(),
+        response.to_account_info(),
         risk_engine,
+        ctx.remaining_accounts,
     )?;
 
     let collateral_from_already_deposited =

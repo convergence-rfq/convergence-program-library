@@ -20,42 +20,6 @@ pub fn select_scenarious(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec
     vec![
         Scenario {
             base_price_change: Fraction::new(2, 2),
-            volatility_change: 0.into(),
-        },
-        Scenario {
-            base_price_change: Fraction::new(1, 2),
-            volatility_change: 0.into(),
-        },
-        Scenario {
-            base_price_change: 0.into(),
-            volatility_change: 0.into(),
-        },
-        Scenario {
-            base_price_change: Fraction::new(-1, 2),
-            volatility_change: 0.into(),
-        },
-        Scenario {
-            base_price_change: Fraction::new(-2, 2),
-            volatility_change: 0.into(),
-        },
-        Scenario {
-            base_price_change: Fraction::new(2, 2),
-            volatility_change: Fraction::new(2, 1),
-        },
-        Scenario {
-            base_price_change: Fraction::new(1, 2),
-            volatility_change: Fraction::new(2, 1),
-        },
-        Scenario {
-            base_price_change: 0.into(),
-            volatility_change: Fraction::new(2, 1),
-        },
-        Scenario {
-            base_price_change: Fraction::new(-1, 2),
-            volatility_change: Fraction::new(2, 1),
-        },
-        Scenario {
-            base_price_change: Fraction::new(-2, 2),
             volatility_change: Fraction::new(2, 1),
         },
         Scenario {
@@ -63,16 +27,8 @@ pub fn select_scenarious(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec
             volatility_change: Fraction::new(-2, 1),
         },
         Scenario {
-            base_price_change: Fraction::new(1, 2),
-            volatility_change: Fraction::new(-2, 1),
-        },
-        Scenario {
-            base_price_change: 0.into(),
-            volatility_change: Fraction::new(-2, 1),
-        },
-        Scenario {
-            base_price_change: Fraction::new(-1, 2),
-            volatility_change: Fraction::new(-2, 1),
+            base_price_change: Fraction::new(-2, 2),
+            volatility_change: Fraction::new(2, 1),
         },
         Scenario {
             base_price_change: Fraction::new(-2, 2),

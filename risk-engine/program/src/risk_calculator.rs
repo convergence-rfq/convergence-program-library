@@ -6,7 +6,7 @@ use crate::{errors::Error, fraction::Fraction, scenarios::Scenario};
 
 const SAFETY_PRICE_SHIFT_FACTOR: Fraction = Fraction::new(1, 2);
 const OVERALL_SAFETY_FACTOR: Fraction = Fraction::new(1, 1);
-const COLLATERAL_DECIMALS: u8 = 8;
+pub const COLLATERAL_DECIMALS: u8 = 9;
 
 pub struct RiskCalculator<'a> {
     pub legs: Vec<Leg>,
@@ -154,7 +154,9 @@ mod tests {
             index: btc_index,
             bump: Default::default(),
             risk_category: RiskCategory::VeryLow,
-            price_oracle: PriceOracle::Switchboard(Default::default()),
+            price_oracle: PriceOracle::Switchboard {
+                address: Default::default(),
+            },
             ticker: Default::default(),
         }];
 
@@ -210,7 +212,9 @@ mod tests {
             index: btc_index,
             bump: Default::default(),
             risk_category: RiskCategory::VeryLow,
-            price_oracle: PriceOracle::Switchboard(Default::default()),
+            price_oracle: PriceOracle::Switchboard {
+                address: Default::default(),
+            },
             ticker: Default::default(),
         }];
 
@@ -268,14 +272,18 @@ mod tests {
                 index: btc_index,
                 bump: Default::default(),
                 risk_category: RiskCategory::VeryLow,
-                price_oracle: PriceOracle::Switchboard(Default::default()),
+                price_oracle: PriceOracle::Switchboard {
+                    address: Default::default(),
+                },
                 ticker: Default::default(),
             },
             BaseAssetInfo {
                 index: sol_index,
                 bump: Default::default(),
                 risk_category: RiskCategory::Medium,
-                price_oracle: PriceOracle::Switchboard(Default::default()),
+                price_oracle: PriceOracle::Switchboard {
+                    address: Default::default(),
+                },
                 ticker: Default::default(),
             },
         ];

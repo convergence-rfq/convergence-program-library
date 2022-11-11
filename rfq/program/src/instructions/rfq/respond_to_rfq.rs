@@ -83,8 +83,8 @@ fn validate(
     Ok(())
 }
 
-pub fn respond_to_rfq_instruction(
-    ctx: Context<RespondToRfqAccounts>,
+pub fn respond_to_rfq_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, RespondToRfqAccounts<'info>>,
     bid: Option<Quote>,
     ask: Option<Quote>,
 ) -> Result<()> {
@@ -119,9 +119,10 @@ pub fn respond_to_rfq_instruction(
     response.exit(ctx.program_id)?;
 
     let required_collateral = calculate_required_collateral_for_response(
-        &rfq.to_account_info(),
-        &response.to_account_info(),
+        rfq.to_account_info(),
+        response.to_account_info(),
         risk_engine,
+        ctx.remaining_accounts,
     )?;
     collateral_info.lock_collateral(collateral_token, required_collateral)?;
     response.maker_collateral_locked = required_collateral;

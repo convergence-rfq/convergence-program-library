@@ -3,13 +3,12 @@ use std::mem;
 use crate::{
     errors::ProtocolError,
     seeds::{MINT_INFO_SEED, PROTOCOL_SEED},
-    state::{BaseAssetIndex, BaseAssetInfo, MintInfo, ProtocolState},
+    state::{BaseAssetInfo, MintInfo, ProtocolState},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
-#[instruction(index: BaseAssetIndex, ticker: String)]
 pub struct RegisterMintAccounts<'info> {
     #[account(mut, constraint = protocol.authority == authority.key() @ ProtocolError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,

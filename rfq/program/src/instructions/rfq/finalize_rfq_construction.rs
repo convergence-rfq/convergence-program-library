@@ -45,8 +45,8 @@ fn validate(ctx: &Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
     Ok(())
 }
 
-pub fn finalize_rfq_construction_instruction(
-    ctx: Context<FinalizeRfqConstructionAccounts>,
+pub fn finalize_rfq_construction_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, FinalizeRfqConstructionAccounts<'info>>,
 ) -> Result<()> {
     validate(&ctx)?;
 
@@ -58,8 +58,11 @@ pub fn finalize_rfq_construction_instruction(
         ..
     } = ctx.accounts;
 
-    let required_collateral =
-        calculate_required_collateral_for_rfq(&rfq.to_account_info(), risk_engine)?;
+    let required_collateral = calculate_required_collateral_for_rfq(
+        rfq.to_account_info(),
+        risk_engine,
+        ctx.remaining_accounts,
+    )?;
 
     collateral_info.lock_collateral(collateral_token, required_collateral)?;
     rfq.non_response_taker_collateral_locked = required_collateral;
