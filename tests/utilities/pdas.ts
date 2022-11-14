@@ -7,6 +7,7 @@ import {
   INSTRUMENT_ESCROW_SEED,
   BASE_ASSET_INFO_SEED,
   MINT_INFO_SEED,
+  RISK_ENGINE_CONFIG_SEED,
 } from "./constants";
 import { toLittleEndian } from "./helpers";
 
@@ -48,5 +49,10 @@ export async function getInstrumentEscrowPda(response: PublicKey, legIndex: numb
     [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
     programId
   );
+  return pda;
+}
+
+export async function getRiskEngineConfig(programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress([Buffer.from(RISK_ENGINE_CONFIG_SEED)], programId);
   return pda;
 }

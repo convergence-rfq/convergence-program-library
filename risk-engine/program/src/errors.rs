@@ -18,4 +18,6 @@ pub enum Error {
     RiskCanNotBeNegative,
     #[msg("Price for a base asset is missing")]
     MissingPriceForABaseAsset,
+    #[msg("Require protocol authority")]
+    NotAProtocolAuthority,
 }

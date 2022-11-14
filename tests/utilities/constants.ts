@@ -27,13 +27,20 @@ export const DEFAULT_LEG_MULTIPLIER = new BN(1).mul(new BN(10).pow(new BN(LEG_MU
 export const DEFAULT_ACTIVE_WINDOW = 10;
 export const DEFAULT_SETTLING_WINDOW = 60;
 export const DEFAULT_MINT_DECIMALS = 9;
-export const DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ = new BN(1_000_000_000);
-export const DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ = new BN(2_000_000_000);
 
 export const INSTRUMENT_ESCROW_SEED = "escrow";
 
 export const BITCOIN_BASE_ASSET_INDEX = 0;
 export const SOLANA_BASE_ASSET_INDEX = 1;
 
+// Risk engine
+
 export const SWITCHBOARD_BTC_ORACLE = new PublicKey("8SXvChNYFhRq4EZuZvnhjrB3jJRQCv4k3P4W6hesH3Ee");
 export const SWITCHBOARD_SOL_ORACLE = new PublicKey("GvDMxPzN1sCj7L26YDK2HnMRXEQmQ2aemov8YBtPS7vR");
+
+export const RISK_ENGINE_CONFIG_SEED = "config";
+
+export const DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ = new BN(1_000_000_000);
+export const DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ = new BN(2_000_000_000);
+export const DEFAULT_SAFETY_PRICE_SHIFT_FACTOR = { mantissa: new BN(1), decimals: 2 };
+export const DEFAULT_OVERALL_SAFETY_FACTOR = { mantissa: new BN(1), decimals: 1 };

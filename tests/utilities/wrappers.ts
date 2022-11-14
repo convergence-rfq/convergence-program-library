@@ -3,7 +3,7 @@ import { BN } from "@project-serum/anchor";
 import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
-import { RiskEngine } from "../../target/types/risk_engine";
+import { RiskEngine as RiskEngineIdl } from "../../target/types/risk_engine";
 import {
   getBaseAssetPda,
   getCollateralInfoPda,
@@ -11,6 +11,7 @@ import {
   getMintInfoPda,
   getProtocolPda,
   getQuoteEscrowPda,
+  getRiskEngineConfig,
 } from "./pdas";
 import {
   DEFAULT_ACTIVE_WINDOW,
@@ -27,6 +28,10 @@ import {
   DEFAULT_MINT_DECIMALS,
   SWITCHBOARD_BTC_ORACLE,
   SWITCHBOARD_SOL_ORACLE,
+  DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
+  DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
+  DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
+  DEFAULT_OVERALL_SAFETY_FACTOR,
 } from "./constants";
 import { AuthoritySide, Quote, Side, FixedSize, RiskCategory, riskCategoryToObject } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
@@ -36,7 +41,7 @@ import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanIn
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
-  public riskEngine: anchor.Program<RiskEngine>;
+  public riskEngine: RiskEngine;
   public provider: anchor.Provider;
   public dao: Keypair;
   public taker: Keypair;
@@ -52,7 +57,7 @@ export class Context {
     this.provider = anchor.AnchorProvider.env();
     anchor.setProvider(this.provider);
     this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
-    this.riskEngine = anchor.workspace.RiskEngine as anchor.Program<RiskEngine>;
+    this.riskEngine = new RiskEngine(this);
     this.baseAssets = {};
   }
 
@@ -252,6 +257,65 @@ export class Context {
     await txConstructor.rpc();
 
     return rfqObject;
+  }
+}
+
+export class RiskEngine {
+  public program: anchor.Program<RiskEngineIdl>;
+  public programId: PublicKey;
+  public configAddress?: PublicKey;
+
+  constructor(private context: Context) {
+    this.program = anchor.workspace.RiskEngine as anchor.Program<RiskEngineIdl>;
+    this.programId = this.program.programId;
+  }
+
+  async initializeDefaultConfig() {
+    this.configAddress = await getRiskEngineConfig(this.programId);
+
+    await this.program.methods
+      .initializeConfig(
+        DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
+        DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
+        DEFAULT_MINT_DECIMALS,
+        DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
+        DEFAULT_OVERALL_SAFETY_FACTOR
+      )
+      .accounts({
+        signer: this.context.dao.publicKey,
+        config: this.configAddress,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.dao])
+      .rpc();
+  }
+
+  async updateConfig({
+    collateralForVariableSizeRfq = null,
+    collateralForFixedQuoteAmountRfq = null,
+    collateralMintDecimals = null,
+    safetyPriceShiftFactor = null,
+    overallSafetyFactor = null,
+  } = {}) {
+    await this.program.methods
+      .updateConfig(
+        collateralForVariableSizeRfq,
+        collateralForFixedQuoteAmountRfq,
+        collateralMintDecimals,
+        safetyPriceShiftFactor,
+        overallSafetyFactor
+      )
+      .accounts({
+        authority: this.context.dao.publicKey,
+        protocol: this.context.protocolPda,
+        config: this.configAddress,
+      })
+      .signers([this.context.dao])
+      .rpc();
+  }
+
+  async getConfig() {
+    return this.program.account.config.fetch(this.configAddress);
   }
 }
 
@@ -459,6 +523,8 @@ export class Rfq {
   }
 
   async getRiskEngineAccounts() {
+    const config = { pubkey: this.context.riskEngine.configAddress, isSigner: false, isWritable: false };
+
     let uniqueIndecies = Array.from(new Set(this.legs.map((leg) => leg.baseAssetIndex)));
     const addresses = await Promise.all(
       uniqueIndecies.map((index) => getBaseAssetPda(index, this.context.program.programId))
@@ -473,7 +539,7 @@ export class Rfq {
         return { pubkey: address, isSigner: false, isWritable: false };
       });
 
-    return [...baseAssets, ...oracles];
+    return [config, ...baseAssets, ...oracles];
   }
 }
 
@@ -800,6 +866,9 @@ export async function getContext() {
   await context.initializeProtocol();
 
   await executeInParallel(
+    async () => {
+      await context.riskEngine.initializeDefaultConfig();
+    },
     async () => {
       await SpotInstrument.addInstrument(context);
     },

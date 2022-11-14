@@ -1,6 +1,7 @@
+use anchor_lang::prelude::*;
 use std::ops::Neg;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
 pub struct Fraction {
     mantissa: i128,
     decimals: u8,

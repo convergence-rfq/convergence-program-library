@@ -2,14 +2,11 @@ use anchor_lang::prelude::*;
 use rfq::state::{AuthoritySide, BaseAssetIndex, BaseAssetInfo, Leg, RiskCategory, Side};
 use std::collections::HashMap;
 
-use crate::{errors::Error, fraction::Fraction, scenarios::Scenario};
-
-const SAFETY_PRICE_SHIFT_FACTOR: Fraction = Fraction::new(1, 2);
-const OVERALL_SAFETY_FACTOR: Fraction = Fraction::new(1, 1);
-pub const COLLATERAL_DECIMALS: u8 = 9;
+use crate::{errors::Error, fraction::Fraction, scenarios::Scenario, state::Config};
 
 pub struct RiskCalculator<'a> {
     pub legs: Vec<Leg>,
+    pub config: &'a Config,
     pub base_assets: Vec<BaseAssetInfo>,
     pub prices: HashMap<BaseAssetIndex, Fraction>,
     pub scenarios_selector: &'a dyn Fn(&Vec<&Leg>, RiskCategory) -> Vec<Scenario>,
@@ -21,6 +18,24 @@ impl<'a> RiskCalculator<'a> {
         leg_multiplier: Fraction,
         authority_side: AuthoritySide,
         quote_side: Side,
+    ) -> Result<u64> {
+        let mut portfolio_inverted = false;
+
+        if let Side::Bid = quote_side {
+            portfolio_inverted = !portfolio_inverted;
+        }
+
+        if let AuthoritySide::Taker = authority_side {
+            portfolio_inverted = !portfolio_inverted;
+        }
+
+        self.calculate_concrete_portfolio_risk(leg_multiplier, portfolio_inverted)
+    }
+
+    pub fn calculate_concrete_portfolio_risk(
+        &self,
+        leg_multiplier: Fraction,
+        portfolio_inverted: bool,
     ) -> Result<u64> {
         let mut risk_sum = 0;
         for base_asset in self.base_assets.iter() {
@@ -36,11 +51,11 @@ impl<'a> RiskCalculator<'a> {
             for scenario in scenarios.iter() {
                 let scenario_calculator = ScenarioRiskCalculator {
                     legs: &legs,
+                    config: self.config,
                     scenario,
                     price: *price,
                     leg_multiplier,
-                    authority_side,
-                    quote_side,
+                    portfolio_inverted,
                 };
 
                 let risk = scenario_calculator.calculate()?;
@@ -52,11 +67,15 @@ impl<'a> RiskCalculator<'a> {
                 u64::try_from(-biggest_risk).map_err(|_| error!(Error::MathInvalidConversion))?;
         }
 
-        Self::apply_overall_risk_factor(risk_sum)
+        self.apply_overall_risk_factor(risk_sum)
     }
 
-    fn apply_overall_risk_factor(risk_sum: u64) -> Result<u64> {
-        let multiplier = OVERALL_SAFETY_FACTOR.checked_add(1.into()).unwrap();
+    fn apply_overall_risk_factor(&self, risk_sum: u64) -> Result<u64> {
+        let multiplier = self
+            .config
+            .overall_safety_factor
+            .checked_add(1.into())
+            .unwrap();
         let result = Fraction::from(risk_sum)
             .checked_mul(multiplier)
             .ok_or(error!(Error::MathOverflow))?
@@ -69,11 +88,11 @@ impl<'a> RiskCalculator<'a> {
 
 struct ScenarioRiskCalculator<'a, 'b> {
     legs: &'a Vec<&'b Leg>,
+    config: &'a Config,
     scenario: &'a Scenario,
     price: Fraction,
     leg_multiplier: Fraction,
-    authority_side: AuthoritySide,
-    quote_side: Side,
+    portfolio_inverted: bool,
 }
 
 impl ScenarioRiskCalculator<'_, '_> {
@@ -97,18 +116,14 @@ impl ScenarioRiskCalculator<'_, '_> {
             .ok_or(error!(Error::MathOverflow))?
             .checked_mul(self.leg_multiplier)
             .ok_or(error!(Error::MathOverflow))?
-            .to_i128_with_decimals(COLLATERAL_DECIMALS)
+            .to_i128_with_decimals(self.config.collateral_mint_decimals)
             .ok_or(error!(Error::MathOverflow))
     }
 
     fn calculate_leg_unit_pnl(&self, leg: &Leg) -> Result<Fraction> {
         let mut unit_pnl_value = self.price;
 
-        if let Side::Bid = self.quote_side {
-            unit_pnl_value = -unit_pnl_value;
-        }
-
-        if let AuthoritySide::Taker = self.authority_side {
+        if self.portfolio_inverted {
             unit_pnl_value = -unit_pnl_value;
         }
 
@@ -122,7 +137,7 @@ impl ScenarioRiskCalculator<'_, '_> {
 
         let safety_constituent = unit_pnl_value
             .abs()
-            .checked_mul(SAFETY_PRICE_SHIFT_FACTOR)
+            .checked_mul(self.config.safety_price_shift_factor)
             .ok_or(error!(Error::MathOverflow))?;
 
         pnl_constituent
@@ -136,6 +151,15 @@ mod tests {
     use rfq::state::PriceOracle;
 
     use super::*;
+
+    const CONFIG: Config = Config {
+        bump: 0,
+        collateral_for_variable_size_rfq_creation: 0,
+        collateral_for_fixed_quote_amount_rfq_creation: 0,
+        collateral_mint_decimals: 9,
+        safety_price_shift_factor: Fraction::new(1, 2),
+        overall_safety_factor: Fraction::new(1, 1),
+    };
 
     #[test]
     fn one_spot_bitcoin_leg() {
@@ -171,6 +195,7 @@ mod tests {
 
         let risk_calculator = RiskCalculator {
             legs,
+            config: &CONFIG,
             base_assets,
             prices,
             scenarios_selector: &scenarios_selector,
@@ -181,7 +206,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             required_collateral,
-            14520 * 10_u64.pow(COLLATERAL_DECIMALS as u32)
+            14520 * 10_u64.pow(CONFIG.collateral_mint_decimals as u32)
         );
     }
 
@@ -229,6 +254,7 @@ mod tests {
 
         let risk_calculator = RiskCalculator {
             legs,
+            config: &CONFIG,
             base_assets,
             prices,
             scenarios_selector: &scenarios_selector,
@@ -239,7 +265,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             required_collateral,
-            2640 * 10_u64.pow(COLLATERAL_DECIMALS as u32)
+            2640 * 10_u64.pow(CONFIG.collateral_mint_decimals as u32)
         );
     }
 
@@ -309,6 +335,7 @@ mod tests {
 
         let risk_calculator = RiskCalculator {
             legs,
+            config: &CONFIG,
             base_assets,
             prices,
             scenarios_selector: &scenarios_selector,
@@ -319,7 +346,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             required_collateral,
-            9339 * 10_u64.pow(COLLATERAL_DECIMALS as u32)
+            9339 * 10_u64.pow(CONFIG.collateral_mint_decimals as u32)
         );
     }
 }
