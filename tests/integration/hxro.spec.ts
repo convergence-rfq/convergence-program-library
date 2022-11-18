@@ -38,6 +38,7 @@ describe("RFQ HXRO instrument integration tests", () => {
     const feeOutputRegister = new anchor.web3.PublicKey("rPnaqXrvo3aBMChVLywnVz6nykSfXwvBYu1Yz1p6crv");
     const riskOutputRegister = new anchor.web3.PublicKey("DevB1VB5Tt3YAeYZ8XTB1fXiFtXBqcP7PbfWGB71YyCE");
     const riskAndFeeSigner = new anchor.web3.PublicKey("AQJYsJ9k47ahEEXhvnNBFca4yH3zcFUfVaKrLPLgftYg");
+    const BTCUSDPythOracle = new anchor.web3.PublicKey("HovQMDrbAgAYPCmHVSrezcSmkMtXSSUsLDFANExrZh2J");
 
     let response_key: anchor.web3.PublicKey;
 
@@ -323,7 +324,7 @@ describe("RFQ HXRO instrument integration tests", () => {
                 Buffer.from("mark_prices"),
                 marketProductGroup.toBuffer(),
             ],
-            dex,
+            riskEngineProgram,
         )
 
         console.log(
@@ -351,15 +352,67 @@ describe("RFQ HXRO instrument integration tests", () => {
                 counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct.toString(),
                 sAccount: s_account.toString(),
                 rAccount: r_account.toString(),
-                /*
-                marketProductGroupVault: marketProductGroupVault.toString(),
-                capitalLimitsState: capitalLimitsState.toString(),
-                whitelistAtaAcct: whitelistAtaAcct.toString(),
-                 */
                 escrow: escrow.toString(),
+                markPrices: markPrices.toString(),
+                btcusdPythOracle: BTCUSDPythOracle.toString(),
             }
         )
         let tx;
+        try {
+            tx = await program.methods.preSettle(
+                // @ts-ignore
+                {
+                    productIndex: new anchor.BN(0),
+                    size: {
+                        m: new anchor.BN(0),
+                        exp: new anchor.BN(0),
+                    },
+                    price: {
+                        m: new anchor.BN(0),
+                        exp: new anchor.BN(0),
+                    },
+                    creatorSide: Side.Ask,
+                    counterpartySide: Side.Bid,
+                    operatorCreatorFeeProportion: {
+                        m: new anchor.BN(0),
+                        exp: new anchor.BN(0),
+                    },
+                    operatorCounterpartyFeeProportion: {
+                        m: new anchor.BN(0),
+                        exp: new anchor.BN(0),
+                    },
+                }
+            ).accounts(
+                {
+                    dex: dex,
+                    creatorOwner: payer.publicKey,
+                    counterpartyOwner: counterpartyPayer.publicKey,
+                    creator: creator,
+                    counterparty: counterparty,
+                    operator: operator,
+                    marketProductGroup: marketProductGroup,
+                    product: product,
+                    printTrade: printTrade,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                }
+            ).signers(
+                [payer, counterpartyPayer]
+            ).transaction();
+        } catch (e) {
+            console.log(e)
+        }
+
+        tx.feePayer = payer.publicKey;
+
+        let txHash = await anchor.web3.sendAndConfirmTransaction(
+            program.provider.connection,
+            tx,
+            [payer, counterpartyPayer]
+        ).catch(e => {
+            console.log(e)
+        });
+        console.log("PreSettle TX:", txHash);
+
         try {
             tx = await program.methods.settle(
                 // @ts-ignore
@@ -410,7 +463,8 @@ describe("RFQ HXRO instrument integration tests", () => {
                     counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct,
                     sAccount: s_account,
                     rAccount: r_account,
-                    markPrices: markPrices
+                    markPrices: markPrices,
+                    btcusdPythOracle: BTCUSDPythOracle,
                     /*
                     marketProductGroupVault: marketProductGroupVault,
                     capitalLimits: capitalLimitsState,
@@ -424,17 +478,15 @@ describe("RFQ HXRO instrument integration tests", () => {
                 console.log(e)
         }
 
-        console.log("here")
-
         tx.feePayer = payer.publicKey;
 
-        let txHash = await anchor.web3.sendAndConfirmTransaction(
+        txHash = await anchor.web3.sendAndConfirmTransaction(
             program.provider.connection,
             tx,
             [payer, counterpartyPayer]
         ).catch(e => {
             console.log(e)
         });
-        console.log("TX:", txHash);
+        console.log("Settle TX:", txHash);
     });
 });

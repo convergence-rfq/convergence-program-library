@@ -148,9 +148,9 @@ dependencies = [
 
 [[package]]
 name = "anchor-gen"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82c66ee428b58005d2f2e3a8f3f795a83ee77e0ae92634f2f10d38e8223be413"
+checksum = "7a3b9def91d1f0c23b99be210afea0990f931a1edae439ea30e0da50baeaea8f"
 dependencies = [
  "anchor-generate-cpi-crate",
  "anchor-generate-cpi-interface",
@@ -762,6 +762,7 @@ dependencies = [
  "borsh",
  "dex-cpi",
  "rfq",
+ "risk-cpi",
 ]
 
 [[package]]
@@ -1180,6 +1181,14 @@ dependencies = [
  "solana-program",
  "solana-security-txt",
  "spl-token",
+]
+
+[[package]]
+name = "risk-cpi"
+version = "0.1.0"
+dependencies = [
+ "anchor-gen",
+ "anchor-lang",
 ]
 
 [[package]]

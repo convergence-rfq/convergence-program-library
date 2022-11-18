@@ -12,5 +12,6 @@ name = "hxro_instrument"
 anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }
 anchor-spl = "0.24.2"
 dex-cpi = { path="../dex-cpi", features=["cpi"] }
+risk-cpi = { path="../risk-cpi", features=["cpi"] }
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
 borsh = "0.9.3"

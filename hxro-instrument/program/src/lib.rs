@@ -1,17 +1,20 @@
-use crate::state::AuthoritySideDuplicate;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::Id;
 use anchor_lang::InstructionData;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
-    close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer
+    close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
+use std::str::FromStr;
 
-use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 use dex_cpi as dex;
+use risk_cpi as risk;
 use errors::HxroError;
-use params::SettleParams;
+use params::{PreSettleParams, SettleParams};
+use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
+use state::AuthoritySideDuplicate;
 
 mod custom_data_types;
 mod errors;
@@ -21,6 +24,15 @@ mod state;
 declare_id!("5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL");
 
 const ESCROW_SEED: &str = "escrow";
+
+#[derive(Debug, Clone)]
+pub struct Dex;
+
+impl Id for Dex {
+    fn id() -> Pubkey {
+        Pubkey::from_str("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL").unwrap()
+    }
+}
 
 #[program]
 pub mod hxro_instrument {
@@ -106,9 +118,12 @@ pub mod hxro_instrument {
         Ok(())
     }
 
-    pub fn settle(ctx: Context<Settle>, data: SettleParams) -> Result<()> {
-        // call_deposit_funds(&ctx, &data)?;
+    pub fn pre_settle(ctx: Context<PreSettle>, data: PreSettleParams) -> Result<()> {
         call_initialize_print_trade(&ctx, &data)?;
+        Ok(())
+    }
+
+    pub fn settle(ctx: Context<Settle>, data: SettleParams) -> Result<()> {
         call_sign_print_trade(&ctx, &data)?;
         Ok(())
     }
@@ -216,7 +231,7 @@ fn call_deposit_funds(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> 
 }
 */
 
-fn call_initialize_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {
+fn call_initialize_print_trade(ctx: &Context<PreSettle>, data: &PreSettleParams) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::InitializePrintTrade {
         user: ctx.accounts.creator_owner.to_account_info(),
         creator: ctx.accounts.creator.to_account_info(),
@@ -303,6 +318,7 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
         ctx.accounts.s_account.to_account_info().clone(),
         ctx.accounts.r_account.to_account_info().clone(),
         ctx.accounts.mark_prices.to_account_info().clone(),
+        ctx.accounts.btcusd_pyth_oracle.to_account_info().clone(),
     ];
 
     solana_program::program::invoke(
@@ -332,13 +348,10 @@ fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<(
                     ctx.accounts.counterparty_trader_risk_state_acct.key(),
                     false,
                 ),
-                AccountMeta::new(
-                    ctx.accounts.counterparty_trader_risk_state_acct.key(),
-                    false,
-                ),
                 AccountMeta::new(ctx.accounts.s_account.key(), false),
                 AccountMeta::new(ctx.accounts.r_account.key(), false),
                 AccountMeta::new(ctx.accounts.mark_prices.key(), false),
+                AccountMeta::new(ctx.accounts.btcusd_pyth_oracle.key(), false),
             ],
             data: dex_cpi::instruction::SignPrintTrade {
                 _params: cpi_params,
@@ -468,17 +481,18 @@ pub struct PrepareToSettle<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[instruction(data: SettleParams)]
+#[instruction(data: PreSettleParams)]
 #[derive(Accounts)]
-pub struct Settle<'info> {
+pub struct PreSettle<'info> {
     /// CHECK:
-    pub dex: AccountInfo<'info>,
+    pub dex: Program<'info, Dex>,
 
     // initialize print trade
     #[account(mut)]
     pub creator_owner: Signer<'info>,
+    /// CHECK:
     #[account(mut)]
-    pub counterparty_owner: Signer<'info>,
+    pub counterparty_owner: AccountInfo<'info>,
     /// CHECK:
     #[account(mut)]
     pub creator: AccountInfo<'info>,
@@ -501,9 +515,43 @@ pub struct Settle<'info> {
     pub print_trade: AccountInfo<'info>,
     /// CHECK:
     pub system_program: Program<'info, System>,
+}
+
+#[instruction(data: SettleParams)]
+#[derive(Accounts)]
+pub struct Settle<'info> {
+    /// CHECK:
+    pub dex: Program<'info, Dex>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub creator_owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub counterparty_owner: Signer<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub creator: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub counterparty: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub operator: AccountInfo<'info>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub market_product_group: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub product: AccountInfo<'info>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub print_trade: Box<Account<'info, dex::state::PrintTrade>>,
+    /// CHECK:
+    pub system_program: Program<'info, System>,
     pub system_clock: Sysvar<'info, Clock>,
 
-    // sign print trade
     /// CHECK:
     pub fee_model_program: AccountInfo<'info>,
     /// CHECK:
@@ -538,22 +586,13 @@ pub struct Settle<'info> {
     pub s_account: AccountInfo<'info>,
     /// CHECK:
     #[account(mut)]
-    pub r_account: AccountInfo<'info>,
+    pub r_account: Box<Account<'info, risk::state::CorrelationMatrix>>,
     /// CHECK:
     #[account(mut)]
     pub mark_prices: AccountInfo<'info>,
-
-    // deposit
-    /*
-    #[account(mut)]
-    pub market_product_group_vault: Box<Account<'info, TokenAccount>>,
     /// CHECK:
-    pub capital_limits: AccountInfo<'info>,
-    pub whitelist_ata_acct: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub escrow: Box<Account<'info, TokenAccount>>,
-    token_program: Program<'info, Token>,
-    */
+    pub btcusd_pyth_oracle: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]

@@ -66,6 +66,10 @@ address = "HLzQZ9DndaXkrwfwq8RbZFsDdSQ91Hufht6ekBSmfbQq"
 address = "HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"
 [[test.validator.clone]]
 address = "VEpJVENzwhQDMj8MHPaP8UtAUvvDcdhfkqhXTPofoBG"
+[[test.validator.clone]]
+address = "BPFxey5mZm4bKHQQdFygBVbZjmpqESNPJ3zJjiYey19y"
+[[test.validator.clone]]
+address = "HovQMDrbAgAYPCmHVSrezcSmkMtXSSUsLDFANExrZh2J"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
