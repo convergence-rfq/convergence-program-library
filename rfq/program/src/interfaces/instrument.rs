@@ -26,7 +26,7 @@ pub fn validate_instrument_data<'a, 'info: 'a>(
     AnchorSerialize::serialize(&(leg_data.len() as u32), &mut data)?;
     data.append(&mut leg_data);
 
-    let instrument_key = leg.instrument;
+    let instrument_key = leg.instrument_program;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
 
     call_instrument(
@@ -53,7 +53,7 @@ pub fn prepare_to_settle<'a, 'info: 'a>(
     AnchorSerialize::serialize(&leg_index, &mut data)?;
     AnchorSerialize::serialize(&side, &mut data)?;
 
-    let instrument_key = leg.instrument;
+    let instrument_key = leg.instrument_program;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
 
     call_instrument(
@@ -78,7 +78,7 @@ pub fn settle<'a, 'info: 'a>(
     let mut data = SETTLE_SELECTOR.to_vec();
     AnchorSerialize::serialize(&leg_index, &mut data)?;
 
-    let instrument_key = leg.instrument;
+    let instrument_key = leg.instrument_program;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
 
     call_instrument(
@@ -105,7 +105,7 @@ pub fn revert_preparation<'a, 'info: 'a>(
     AnchorSerialize::serialize(&leg_index, &mut data)?;
     AnchorSerialize::serialize(&side, &mut data)?;
 
-    let instrument_key = leg.instrument;
+    let instrument_key = leg.instrument_program;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
 
     call_instrument(
@@ -130,7 +130,7 @@ pub fn clean_up<'a, 'info: 'a>(
     let mut data = CLEAN_UP_SELECTOR.to_vec();
     AnchorSerialize::serialize(&leg_index, &mut data)?;
 
-    let instrument_key = leg.instrument;
+    let instrument_key = leg.instrument_program;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
 
     call_instrument(

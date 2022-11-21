@@ -1,5 +1,3 @@
-use std::mem;
-
 use anchor_lang::prelude::*;
 use rfq::state::{
     AuthoritySide, FixedSize, Leg, OrderType, ProtocolState, Quote, Response, Rfq, Side,
@@ -11,9 +9,10 @@ use fraction::Fraction;
 use price_extractor::extract_prices;
 use risk_calculator::RiskCalculator;
 use scenarios::select_scenarious;
-use state::Config;
+use state::{Config, InstrumentType, RiskCategoryInfo};
 
 pub mod base_asset_extractor;
+pub mod black_scholes;
 pub mod errors;
 pub mod fraction;
 pub mod price_extractor;
@@ -36,6 +35,7 @@ pub mod risk_engine {
         collateral_mint_decimals: u8,
         safety_price_shift_factor: Fraction,
         overall_safety_factor: Fraction,
+        risk_categories_info: [RiskCategoryInfo; 5],
     ) -> Result<()> {
         let config = &mut ctx.accounts.config;
 
@@ -46,6 +46,8 @@ pub mod risk_engine {
             collateral_mint_decimals,
             safety_price_shift_factor,
             overall_safety_factor,
+            risk_categories_info,
+            instrument_types: vec![],
         });
 
         Ok(())
@@ -79,6 +81,50 @@ pub mod risk_engine {
 
         if let Some(value) = overall_safety_factor {
             config.overall_safety_factor = value;
+        }
+
+        Ok(())
+    }
+
+    pub fn set_instrument_type(
+        ctx: Context<SetInstrumentTypeAccounts>,
+        instrument_program: Pubkey,
+        instrument_type: Option<InstrumentType>,
+    ) -> Result<()> {
+        let SetInstrumentTypeAccounts {
+            protocol, config, ..
+        } = ctx.accounts;
+
+        let types_list = &mut config.instrument_types;
+        let index_in_list = types_list.iter().position(|x| x.0 == instrument_program);
+        let exists_in_protocol = protocol
+            .instruments
+            .iter()
+            .any(|x| x.program_key == instrument_program);
+
+        if let Some(instrument_type) = instrument_type {
+            if let Some(index_in_list) = index_in_list {
+                // change instrument type in a list
+                require!(exists_in_protocol, Error::CannotChangeInstrument);
+
+                types_list[index_in_list] = (instrument_program, instrument_type);
+            } else {
+                // add instrument type to a list
+                require!(
+                    exists_in_protocol && types_list.len() < ProtocolState::MAX_INSTRUMENTS,
+                    Error::CannotAddInstrument
+                );
+
+                types_list.push((instrument_program, instrument_type));
+            }
+        } else {
+            // remove instrument type from a list
+            require!(
+                index_in_list.is_some() && !exists_in_protocol,
+                Error::CannotRemoveInstrument
+            );
+
+            types_list.remove(index_in_list.unwrap());
         }
 
         Ok(())
@@ -222,12 +268,16 @@ fn construct_risk_calculator<'a>(
 ) -> Result<RiskCalculator<'a>> {
     let base_assets = extract_base_assets(&legs, remaining_accounts)?;
     let prices = extract_prices(&base_assets, remaining_accounts)?;
+    let instrument_types = config.get_instrument_types_map();
+    let current_timestamp = Clock::get()?.unix_timestamp;
     Ok(RiskCalculator {
         legs,
+        instrument_types,
         config,
         base_assets,
         prices,
         scenarios_selector: &select_scenarious,
+        current_timestamp,
     })
 }
 
@@ -239,7 +289,7 @@ pub struct InitializeConfigAccounts<'info> {
         init,
         payer = signer,
         seeds = [CONFIG_SEED.as_bytes()],
-        space = mem::size_of::<Config>(),
+        space = Config::get_allocated_size(),
         bump
     )]
     pub config: Account<'info, Config>,
@@ -248,6 +298,15 @@ pub struct InitializeConfigAccounts<'info> {
 
 #[derive(Accounts)]
 pub struct UpdateConfigAccounts<'info> {
+    #[account(constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Account<'info, ProtocolState>,
+    #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
+    pub config: Account<'info, Config>,
+}
+
+#[derive(Accounts)]
+pub struct SetInstrumentTypeAccounts<'info> {
     #[account(constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
     pub protocol: Account<'info, ProtocolState>,

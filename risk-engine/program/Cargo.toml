@@ -14,3 +14,7 @@ anchor-spl = "0.25.0"
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
 switchboard-v2 = { version = "^0.1.14", features = ["devnet"] }
 shank = "0.0.8"
+borsh = { version = "0.9.1", features = ["const-generics"] }
+
+[dev-dependencies]
+float-cmp = "0.9.0"

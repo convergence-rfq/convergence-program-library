@@ -69,7 +69,6 @@ pub mod rfq {
 
     pub fn add_instrument(
         ctx: Context<AddInstrumentAccounts>,
-        instrument_type: InstrumentType,
         validate_data_account_amount: u8,
         prepare_to_settle_account_amount: u8,
         settle_account_amount: u8,
@@ -78,7 +77,6 @@ pub mod rfq {
     ) -> Result<()> {
         add_instrument_instruction(
             ctx,
-            instrument_type,
             validate_data_account_amount,
             prepare_to_settle_account_amount,
             settle_account_amount,

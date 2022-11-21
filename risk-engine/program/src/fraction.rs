@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
 use std::ops::Neg;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
+const F64_CONVERSION_DECIMALS: u32 = 8;
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, Default)]
 pub struct Fraction {
     mantissa: i128,
     decimals: u8,
@@ -61,12 +63,22 @@ impl Fraction {
     }
 }
 
-impl<T> From<T> for Fraction
-where
-    T: Into<i128>,
-{
-    fn from(value: T) -> Self {
-        Fraction::new(value.into(), 0)
+impl From<i128> for Fraction {
+    fn from(value: i128) -> Self {
+        Fraction::new(value, 0)
+    }
+}
+
+impl From<f64> for Fraction {
+    fn from(value: f64) -> Self {
+        let value_with_decimals = value * (10_u64.pow(F64_CONVERSION_DECIMALS) as f64);
+        Fraction::new(value_with_decimals as i128, F64_CONVERSION_DECIMALS as u8)
+    }
+}
+
+impl From<Fraction> for f64 {
+    fn from(value: Fraction) -> Self {
+        (value.mantissa as f64) / (10_u64.pow(value.decimals.into()) as f64)
     }
 }
 

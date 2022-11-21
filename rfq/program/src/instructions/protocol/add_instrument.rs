@@ -1,7 +1,7 @@
 use crate::{
     errors::ProtocolError,
     seeds::PROTOCOL_SEED,
-    state::{Instrument, InstrumentType, ProtocolState},
+    state::{Instrument, ProtocolState},
 };
 use anchor_lang::prelude::*;
 
@@ -37,7 +37,6 @@ fn validate(ctx: &Context<AddInstrumentAccounts>) -> Result<()> {
 
 pub fn add_instrument_instruction(
     ctx: Context<AddInstrumentAccounts>,
-    instrument_type: InstrumentType,
     validate_data_account_amount: u8,
     prepare_to_settle_account_amount: u8,
     settle_account_amount: u8,
@@ -54,7 +53,6 @@ pub fn add_instrument_instruction(
 
     protocol.instruments.push(Instrument {
         program_key: instrument_program.key(),
-        instrument_type,
         validate_data_account_amount,
         prepare_to_settle_account_amount,
         settle_account_amount,

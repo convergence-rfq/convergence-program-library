@@ -2,14 +2,22 @@ use anchor_lang::prelude::*;
 use rfq::state::{AuthoritySide, BaseAssetIndex, BaseAssetInfo, Leg, RiskCategory, Side};
 use std::collections::HashMap;
 
-use crate::{errors::Error, fraction::Fraction, scenarios::Scenario, state::Config};
+use crate::{
+    black_scholes::calculate_option_value,
+    errors::Error,
+    fraction::Fraction,
+    scenarios::Scenario,
+    state::{Config, InstrumentType, OptionCommonData},
+};
 
 pub struct RiskCalculator<'a> {
     pub legs: Vec<Leg>,
     pub config: &'a Config,
     pub base_assets: Vec<BaseAssetInfo>,
     pub prices: HashMap<BaseAssetIndex, Fraction>,
+    pub instrument_types: HashMap<Pubkey, InstrumentType>,
     pub scenarios_selector: &'a dyn Fn(&Vec<&Leg>, RiskCategory) -> Vec<Scenario>,
+    pub current_timestamp: i64,
 }
 
 impl<'a> RiskCalculator<'a> {
@@ -51,11 +59,14 @@ impl<'a> RiskCalculator<'a> {
             for scenario in scenarios.iter() {
                 let scenario_calculator = ScenarioRiskCalculator {
                     legs: &legs,
+                    instrument_types: &self.instrument_types,
                     config: self.config,
+                    risk_category: base_asset.risk_category,
                     scenario,
                     price: *price,
                     leg_multiplier,
                     portfolio_inverted,
+                    current_timestamp: self.current_timestamp,
                 };
 
                 let risk = scenario_calculator.calculate()?;
@@ -76,7 +87,7 @@ impl<'a> RiskCalculator<'a> {
             .overall_safety_factor
             .checked_add(1.into())
             .unwrap();
-        let result = Fraction::from(risk_sum)
+        let result = Fraction::from(risk_sum as i128)
             .checked_mul(multiplier)
             .ok_or(error!(Error::MathOverflow))?
             .to_i128_with_decimals(0)
@@ -88,11 +99,14 @@ impl<'a> RiskCalculator<'a> {
 
 struct ScenarioRiskCalculator<'a, 'b> {
     legs: &'a Vec<&'b Leg>,
+    instrument_types: &'a HashMap<Pubkey, InstrumentType>,
     config: &'a Config,
+    risk_category: RiskCategory,
     scenario: &'a Scenario,
     price: Fraction,
     leg_multiplier: Fraction,
     portfolio_inverted: bool,
+    current_timestamp: i64,
 }
 
 impl ScenarioRiskCalculator<'_, '_> {
@@ -121,61 +135,169 @@ impl ScenarioRiskCalculator<'_, '_> {
     }
 
     fn calculate_leg_unit_pnl(&self, leg: &Leg) -> Result<Fraction> {
-        let mut unit_pnl_value = self.price;
+        let unit_value = self.calculate_current_unit_value(leg)?;
+        let shocked_value = self.calculate_shocked_unit_value(leg)?;
+        let mut unit_pnl = shocked_value
+            .checked_sub(unit_value)
+            .ok_or(error!(Error::MathOverflow))?;
 
         if self.portfolio_inverted {
-            unit_pnl_value = -unit_pnl_value;
+            unit_pnl = -unit_pnl;
         }
 
         if let Side::Bid = leg.side {
-            unit_pnl_value = -unit_pnl_value;
+            unit_pnl = -unit_pnl;
         }
 
-        let pnl_constituent = unit_pnl_value
-            .checked_mul(self.scenario.base_price_change)
-            .ok_or(error!(Error::MathOverflow))?;
-
-        let safety_constituent = unit_pnl_value
+        let safety_constituent = unit_value
             .abs()
             .checked_mul(self.config.safety_price_shift_factor)
             .ok_or(error!(Error::MathOverflow))?;
 
-        pnl_constituent
+        unit_pnl
             .checked_sub(safety_constituent)
             .ok_or(error!(Error::MathOverflow))
+    }
+
+    fn calculate_current_unit_value(&self, leg: &Leg) -> Result<Fraction> {
+        let instrument_type = self
+            .instrument_types
+            .get(&leg.instrument_program)
+            .ok_or(error!(Error::MissingInstrument))?;
+
+        match instrument_type {
+            InstrumentType::Spot | InstrumentType::TermFuture | InstrumentType::PerpFuture => {
+                Ok(self.price)
+            }
+            InstrumentType::Option => {
+                let option_data: OptionCommonData =
+                    AnchorDeserialize::try_from_slice(&leg.instrument_data)?;
+                let risk_category_info = self.config.get_risk_info(self.risk_category);
+                let seconds_till_expiration =
+                    i64::max(0, option_data.expiration_timestamp - self.current_timestamp);
+
+                calculate_option_value(
+                    option_data.option_type,
+                    self.price,
+                    option_data.get_underlying_amount_per_contract(),
+                    option_data.get_strike_price(),
+                    risk_category_info.interest_rate,
+                    risk_category_info.yearly_volatility,
+                    seconds_till_expiration,
+                )
+                .ok_or(error!(Error::MathOverflow))
+            }
+        }
+    }
+
+    fn calculate_shocked_unit_value(&self, leg: &Leg) -> Result<Fraction> {
+        let instrument_type = self
+            .instrument_types
+            .get(&leg.instrument_program)
+            .ok_or(error!(Error::MissingInstrument))?;
+
+        match instrument_type {
+            InstrumentType::Spot | InstrumentType::TermFuture | InstrumentType::PerpFuture => self
+                .price
+                .checked_mul(
+                    self.scenario
+                        .base_price_change
+                        .checked_add(1.into())
+                        .unwrap(),
+                )
+                .ok_or(error!(Error::MathOverflow)),
+            InstrumentType::Option => {
+                let option_data: OptionCommonData =
+                    AnchorDeserialize::try_from_slice(&leg.instrument_data)?;
+
+                let risk_category_info = self.config.get_risk_info(self.risk_category);
+                let seconds_till_expiration =
+                    i64::max(0, option_data.expiration_timestamp - self.current_timestamp);
+
+                let shocked_price = self
+                    .price
+                    .checked_mul(
+                        Fraction::from(1)
+                            .checked_add(self.scenario.base_price_change)
+                            .ok_or(error!(Error::MathOverflow))?,
+                    )
+                    .ok_or(error!(Error::MathOverflow))?;
+                let shocked_volatility = risk_category_info
+                    .yearly_volatility
+                    .checked_mul(
+                        Fraction::from(1)
+                            .checked_add(self.scenario.volatility_change)
+                            .ok_or(error!(Error::MathOverflow))?,
+                    )
+                    .ok_or(error!(Error::MathOverflow))?;
+                calculate_option_value(
+                    option_data.option_type,
+                    shocked_price,
+                    option_data.get_underlying_amount_per_contract(),
+                    option_data.get_strike_price(),
+                    risk_category_info.interest_rate,
+                    shocked_volatility,
+                    seconds_till_expiration,
+                )
+                .ok_or(error!(Error::MathOverflow))
+            }
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use float_cmp::assert_approx_eq;
     use rfq::state::PriceOracle;
+
+    use crate::state::{OptionType, RiskCategoryInfo};
 
     use super::*;
 
-    const CONFIG: Config = Config {
-        bump: 0,
-        collateral_for_variable_size_rfq_creation: 0,
-        collateral_for_fixed_quote_amount_rfq_creation: 0,
-        collateral_mint_decimals: 9,
-        safety_price_shift_factor: Fraction::new(1, 2),
-        overall_safety_factor: Fraction::new(1, 1),
-    };
+    const BTC_INDEX: BaseAssetIndex = BaseAssetIndex::new(0);
+    const SOL_INDEX: BaseAssetIndex = BaseAssetIndex::new(1);
+
+    const SPOT_PUBKEY: Pubkey = Pubkey::new_from_array([1; 32]);
+    const OPTION_PUBKEY: Pubkey = Pubkey::new_from_array([2; 32]);
+
+    fn get_config() -> Config {
+        Config {
+            bump: 0,
+            collateral_for_variable_size_rfq_creation: 0,
+            collateral_for_fixed_quote_amount_rfq_creation: 0,
+            collateral_mint_decimals: 9,
+            safety_price_shift_factor: Fraction::new(1, 2),
+            overall_safety_factor: Fraction::new(1, 1),
+            risk_categories_info: [RiskCategoryInfo {
+                interest_rate: Fraction::new(5, 2),
+                yearly_volatility: Fraction::new(5, 1),
+            }; 5],
+            instrument_types: vec![],
+        }
+    }
+
+    fn get_instrument_type_map() -> HashMap<Pubkey, InstrumentType> {
+        HashMap::from([
+            (SPOT_PUBKEY, InstrumentType::Spot),
+            (OPTION_PUBKEY, InstrumentType::Option),
+        ])
+    }
 
     #[test]
     fn one_spot_bitcoin_leg() {
-        let btc_index = BaseAssetIndex::new(0);
+        let config = get_config();
 
         let legs = vec![Leg {
             instrument_amount: 2 * 10_u64.pow(6),
             instrument_decimals: 6,
             side: Side::Bid,
-            base_asset_index: btc_index,
-            instrument: Default::default(),
+            base_asset_index: BTC_INDEX,
+            instrument_program: SPOT_PUBKEY,
             instrument_data: Default::default(),
         }];
 
         let base_assets = vec![BaseAssetInfo {
-            index: btc_index,
+            index: BTC_INDEX,
             bump: Default::default(),
             risk_category: RiskCategory::VeryLow,
             price_oracle: PriceOracle::Switchboard {
@@ -184,7 +306,7 @@ mod tests {
             ticker: Default::default(),
         }];
 
-        let prices = HashMap::from([(btc_index, Fraction::new(20_000_000, 3))]);
+        let prices = HashMap::from([(BTC_INDEX, Fraction::new(20_000_000, 3))]);
 
         fn scenarios_selector(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec<Scenario> {
             vec![
@@ -195,10 +317,12 @@ mod tests {
 
         let risk_calculator = RiskCalculator {
             legs,
-            config: &CONFIG,
+            instrument_types: get_instrument_type_map(),
+            config: &config,
             base_assets,
             prices,
             scenarios_selector: &scenarios_selector,
+            current_timestamp: 0,
         };
 
         let required_collateral = risk_calculator
@@ -206,35 +330,35 @@ mod tests {
             .unwrap();
         assert_eq!(
             required_collateral,
-            14520 * 10_u64.pow(CONFIG.collateral_mint_decimals as u32)
+            14520 * 10_u64.pow(config.collateral_mint_decimals as u32)
         );
     }
 
     #[test]
     fn basis_bitcoin_rfq() {
-        let btc_index = BaseAssetIndex::new(0);
+        let config = get_config();
 
         let legs = vec![
             Leg {
                 instrument_amount: 2 * 10_u64.pow(6),
                 instrument_decimals: 6,
                 side: Side::Bid,
-                base_asset_index: btc_index,
-                instrument: Default::default(),
+                base_asset_index: BTC_INDEX,
+                instrument_program: SPOT_PUBKEY,
                 instrument_data: Default::default(),
             },
             Leg {
                 instrument_amount: 2 * 10_u64.pow(6),
                 instrument_decimals: 6,
                 side: Side::Ask,
-                base_asset_index: btc_index,
-                instrument: Default::default(),
+                base_asset_index: BTC_INDEX,
+                instrument_program: SPOT_PUBKEY,
                 instrument_data: Default::default(),
             },
         ];
 
         let base_assets = vec![BaseAssetInfo {
-            index: btc_index,
+            index: BTC_INDEX,
             bump: Default::default(),
             risk_category: RiskCategory::VeryLow,
             price_oracle: PriceOracle::Switchboard {
@@ -243,7 +367,7 @@ mod tests {
             ticker: Default::default(),
         }];
 
-        let prices = HashMap::from([(btc_index, Fraction::new(20_000_000, 3))]);
+        let prices = HashMap::from([(BTC_INDEX, Fraction::new(20_000_000, 3))]);
 
         fn scenarios_selector(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec<Scenario> {
             vec![
@@ -254,10 +378,12 @@ mod tests {
 
         let risk_calculator = RiskCalculator {
             legs,
-            config: &CONFIG,
+            instrument_types: get_instrument_type_map(),
+            config: &config,
             base_assets,
             prices,
             scenarios_selector: &scenarios_selector,
+            current_timestamp: 0,
         };
 
         let required_collateral = risk_calculator
@@ -265,37 +391,36 @@ mod tests {
             .unwrap();
         assert_eq!(
             required_collateral,
-            2640 * 10_u64.pow(CONFIG.collateral_mint_decimals as u32)
+            2640 * 10_u64.pow(config.collateral_mint_decimals as u32)
         );
     }
 
     #[test]
     fn buy_bitcoin_sell_solana_rfq() {
-        let btc_index = BaseAssetIndex::new(0);
-        let sol_index = BaseAssetIndex::new(1);
+        let config = get_config();
 
         let legs = vec![
             Leg {
                 instrument_amount: 1 * 10_u64.pow(6),
                 instrument_decimals: 6,
                 side: Side::Bid,
-                base_asset_index: btc_index,
-                instrument: Default::default(),
+                base_asset_index: BTC_INDEX,
+                instrument_program: SPOT_PUBKEY,
                 instrument_data: Default::default(),
             },
             Leg {
                 instrument_amount: 100 * 10_u64.pow(9),
                 instrument_decimals: 9,
                 side: Side::Ask,
-                base_asset_index: sol_index,
-                instrument: Default::default(),
+                base_asset_index: SOL_INDEX,
+                instrument_program: SPOT_PUBKEY,
                 instrument_data: Default::default(),
             },
         ];
 
         let base_assets = vec![
             BaseAssetInfo {
-                index: btc_index,
+                index: BTC_INDEX,
                 bump: Default::default(),
                 risk_category: RiskCategory::VeryLow,
                 price_oracle: PriceOracle::Switchboard {
@@ -304,7 +429,7 @@ mod tests {
                 ticker: Default::default(),
             },
             BaseAssetInfo {
-                index: sol_index,
+                index: SOL_INDEX,
                 bump: Default::default(),
                 risk_category: RiskCategory::Medium,
                 price_oracle: PriceOracle::Switchboard {
@@ -315,8 +440,8 @@ mod tests {
         ];
 
         let prices = HashMap::from([
-            (btc_index, Fraction::new(20_000_000, 3)),
-            (sol_index, Fraction::new(30_000_000, 6)),
+            (BTC_INDEX, Fraction::new(20_000_000, 3)),
+            (SOL_INDEX, Fraction::new(30_000_000, 6)),
         ]);
 
         fn scenarios_selector(_legs: &Vec<&Leg>, risk_category: RiskCategory) -> Vec<Scenario> {
@@ -335,10 +460,12 @@ mod tests {
 
         let risk_calculator = RiskCalculator {
             legs,
-            config: &CONFIG,
+            instrument_types: get_instrument_type_map(),
+            config: &config,
             base_assets,
             prices,
             scenarios_selector: &scenarios_selector,
+            current_timestamp: 0,
         };
 
         let required_collateral = risk_calculator
@@ -346,7 +473,73 @@ mod tests {
             .unwrap();
         assert_eq!(
             required_collateral,
-            9339 * 10_u64.pow(CONFIG.collateral_mint_decimals as u32)
+            9339 * 10_u64.pow(config.collateral_mint_decimals as u32)
+        );
+    }
+
+    #[test]
+    fn one_option_call() {
+        let config = get_config();
+
+        let option_data = OptionCommonData {
+            option_type: OptionType::Call,
+            underlying_amount_per_contract: 1 * 10_u64
+                .pow(OptionCommonData::UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS as u32 - 1),
+            strike_price: 22000 * 10_u64.pow(OptionCommonData::STRIKE_PRICE_DECIMALS as u32),
+            expiration_timestamp: 90 * 24 * 60 * 60,
+        };
+
+        let legs = vec![Leg {
+            instrument_amount: 1 * 10_u64.pow(6),
+            instrument_decimals: 6,
+            side: Side::Bid,
+            base_asset_index: BTC_INDEX,
+            instrument_program: OPTION_PUBKEY,
+            instrument_data: option_data.try_to_vec().unwrap(),
+        }];
+
+        let base_assets = vec![BaseAssetInfo {
+            index: BTC_INDEX,
+            bump: Default::default(),
+            risk_category: RiskCategory::VeryLow,
+            price_oracle: PriceOracle::Switchboard {
+                address: Default::default(),
+            },
+            ticker: Default::default(),
+        }];
+
+        let prices = HashMap::from([(BTC_INDEX, Fraction::new(20_000_000, 3))]);
+
+        fn scenarios_selector(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec<Scenario> {
+            vec![
+                Scenario::new(Fraction::new(1, 1), Fraction::new(2, 1)),
+                Scenario::new(Fraction::new(1, 1), Fraction::new(-2, 1)),
+                Scenario::new(Fraction::new(-1, 1), Fraction::new(2, 1)),
+                Scenario::new(Fraction::new(-1, 1), Fraction::new(-2, 1)),
+            ]
+        }
+
+        let risk_calculator = RiskCalculator {
+            legs,
+            instrument_types: get_instrument_type_map(),
+            config: &config,
+            base_assets,
+            prices,
+            scenarios_selector: &scenarios_selector,
+            current_timestamp: 0,
+        };
+
+        let required_collateral = risk_calculator
+            .calculate_risk(Fraction::new(3, 0), AuthoritySide::Taker, Side::Bid)
+            .unwrap();
+        assert_approx_eq!(
+            f64,
+            f64::from(Fraction::new(
+                required_collateral as i128,
+                config.collateral_mint_decimals
+            )),
+            471.9,
+            epsilon = 0.1
         );
     }
 }

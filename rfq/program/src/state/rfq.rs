@@ -69,7 +69,7 @@ impl Rfq {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct Leg {
-    pub instrument: Pubkey,
+    pub instrument_program: Pubkey,
     pub base_asset_index: BaseAssetIndex,
     pub instrument_data: Vec<u8>,
     pub instrument_amount: u64,

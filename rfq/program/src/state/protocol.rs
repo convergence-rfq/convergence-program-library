@@ -41,20 +41,11 @@ impl ProtocolState {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct Instrument {
     pub program_key: Pubkey,
-    pub instrument_type: InstrumentType,
     pub validate_data_account_amount: u8,
     pub prepare_to_settle_account_amount: u8,
     pub settle_account_amount: u8,
     pub revert_preparation_account_amount: u8,
     pub clean_up_account_amount: u8,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub enum InstrumentType {
-    Spot,
-    Option,
-    TermFuture,
-    PerpFuture,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -82,7 +73,7 @@ pub struct BaseAssetIndex {
 }
 
 impl BaseAssetIndex {
-    pub fn new(value: u16) -> Self {
+    pub const fn new(value: u16) -> Self {
         Self { value }
     }
 }
