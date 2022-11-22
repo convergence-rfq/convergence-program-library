@@ -6,6 +6,7 @@ import chaiBn from "chai-bn";
 import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
 import { InstrumentController } from "./instrument";
+import { Fraction } from "./types";
 
 chai.use(chaiBn(BN));
 
@@ -118,6 +119,7 @@ export class TokenChangeMeasurer {
       token: MeasuredToken;
       user: PublicKey;
       delta: BN;
+      precision?: BN;
     }[]
   ) {
     let extendedChanges = await Promise.all(
@@ -130,10 +132,18 @@ export class TokenChangeMeasurer {
     );
     for (const change of extendedChanges) {
       const snapshot = this.snapshots.find((x) => x.token == change.token && x.user.equals(change.user));
-      expect(change.delta).to.be.bignumber.equal(
-        change.currentBalance.sub(snapshot.balance),
-        `Balance change differs from expected! Token: ${change.token.toString()}, user: ${change.user.toString()}, balance before: ${snapshot.balance.toString()}, balance currenty: ${change.currentBalance.toString()}, expected change: ${change.delta.toString()}`
-      );
+      if (change.precision === undefined) {
+        expect(change.delta).to.be.bignumber.equal(
+          change.currentBalance.sub(snapshot.balance),
+          `Balance change differs from expected! Token: ${change.token.toString()}, user: ${change.user.toString()}, balance before: ${snapshot.balance.toString()}, balance currenty: ${change.currentBalance.toString()}, expected change: ${change.delta.toString()}`
+        );
+      } else {
+        let difference = change.delta.sub(change.currentBalance.sub(snapshot.balance)).abs();
+        expect(difference).to.be.bignumber.lessThan(
+          change.precision,
+          `Balance change differs from expected! Token: ${change.token.toString()}, user: ${change.user.toString()}, balance before: ${snapshot.balance.toString()}, balance currenty: ${change.currentBalance.toString()}, expected change: ${change.delta.toString()} with precision ${change.precision.toString()}`
+        );
+      }
     }
   }
 }

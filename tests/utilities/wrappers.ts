@@ -32,8 +32,18 @@ import {
   DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
   DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
   DEFAULT_OVERALL_SAFETY_FACTOR,
+  DEFAULT_RISK_CATEGORIES_INFO,
 } from "./constants";
-import { AuthoritySide, Quote, Side, FixedSize, RiskCategory, riskCategoryToObject } from "./types";
+import {
+  AuthoritySide,
+  Quote,
+  Side,
+  FixedSize,
+  RiskCategory,
+  riskCategoryToObject,
+  InstrumentType,
+  instrumentTypeToObject,
+} from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
 import { calculateLegsSize, executeInParallel, TokenChangeMeasurer } from "./helpers";
@@ -124,7 +134,6 @@ export class Context {
   ) {
     await this.program.methods
       .addInstrument(
-        { spot: {} },
         validateDataAccounts,
         prepareToSettleAccounts,
         settleAccounts,
@@ -279,7 +288,8 @@ export class RiskEngine {
         DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
         DEFAULT_MINT_DECIMALS,
         DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
-        DEFAULT_OVERALL_SAFETY_FACTOR
+        DEFAULT_OVERALL_SAFETY_FACTOR,
+        DEFAULT_RISK_CATEGORIES_INFO
       )
       .accounts({
         signer: this.context.dao.publicKey,
@@ -305,6 +315,23 @@ export class RiskEngine {
         safetyPriceShiftFactor,
         overallSafetyFactor
       )
+      .accounts({
+        authority: this.context.dao.publicKey,
+        protocol: this.context.protocolPda,
+        config: this.configAddress,
+      })
+      .signers([this.context.dao])
+      .rpc();
+  }
+
+  async setInstrumentType(program: PublicKey, instrumentType: InstrumentType | null) {
+    let idlInstrumentType = null;
+    if (instrumentType !== null) {
+      idlInstrumentType = instrumentTypeToObject(instrumentType);
+    }
+
+    await this.program.methods
+      .setInstrumentType(program, idlInstrumentType)
       .accounts({
         authority: this.context.dao.publicKey,
         protocol: this.context.protocolPda,

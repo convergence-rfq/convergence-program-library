@@ -15,7 +15,7 @@ describe("Withdraw collateral instruction", () => {
     dao = context.dao.publicKey;
   });
 
-  it.only("Can withdraw unlocked collateral", async () => {
+  it("Can withdraw unlocked collateral", async () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["walletCollateral"], [taker]);
     let withdrawAmount = withTokenDecimals(1);
 

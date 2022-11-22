@@ -20,4 +20,10 @@ pub enum PsyoptionsEuropeanError {
     InvalidBackupAddress,
     #[msg("Passed address is not of a party first to prepare for settlement")]
     NotFirstToPrepare,
+    #[msg("Passed underlying amount per contract does not match")]
+    PassedUnderlyingAmountPerContractDoesNotMatch,
+    #[msg("Passed strike price does not match")]
+    PassedStrikePriceDoesNotMatch,
+    #[msg("Passed expiration timestamp does not match")]
+    PassedExpirationTimestampDoesNotMatch,
 }

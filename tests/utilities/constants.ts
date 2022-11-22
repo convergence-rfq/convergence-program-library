@@ -1,6 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { OrderType, Side } from "./types";
+import { OrderType, Side, toFrational, toRiskCategoryInfo } from "./types";
 
 export const PROTOCOL_SEED = "protocol";
 export const COLLATERAL_SEED = "collateral_info";
@@ -42,5 +42,13 @@ export const RISK_ENGINE_CONFIG_SEED = "config";
 
 export const DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ = new BN(1_000_000_000);
 export const DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ = new BN(2_000_000_000);
-export const DEFAULT_SAFETY_PRICE_SHIFT_FACTOR = { mantissa: new BN(1), decimals: 2 };
-export const DEFAULT_OVERALL_SAFETY_FACTOR = { mantissa: new BN(1), decimals: 1 };
+export const DEFAULT_SAFETY_PRICE_SHIFT_FACTOR = toFrational(1, 2);
+export const DEFAULT_OVERALL_SAFETY_FACTOR = toFrational(1, 1);
+
+export const DEFAULT_RISK_CATEGORIES_INFO = [
+  toRiskCategoryInfo(toFrational(5, 2), toFrational(5, 1)), // very low
+  toRiskCategoryInfo(toFrational(5, 2), toFrational(8, 1)), // low
+  toRiskCategoryInfo(toFrational(5, 2), toFrational(12, 1)), // medium
+  toRiskCategoryInfo(toFrational(5, 2), toFrational(24, 1)), // high
+  toRiskCategoryInfo(toFrational(5, 2), toFrational(5, 0)), // very high
+];

@@ -170,8 +170,9 @@ impl ScenarioRiskCalculator<'_, '_> {
                 Ok(self.price)
             }
             InstrumentType::Option => {
-                let option_data: OptionCommonData =
-                    AnchorDeserialize::try_from_slice(&leg.instrument_data)?;
+                let option_data: OptionCommonData = AnchorDeserialize::try_from_slice(
+                    &leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
+                )?;
                 let risk_category_info = self.config.get_risk_info(self.risk_category);
                 let seconds_till_expiration =
                     i64::max(0, option_data.expiration_timestamp - self.current_timestamp);
@@ -207,8 +208,9 @@ impl ScenarioRiskCalculator<'_, '_> {
                 )
                 .ok_or(error!(Error::MathOverflow)),
             InstrumentType::Option => {
-                let option_data: OptionCommonData =
-                    AnchorDeserialize::try_from_slice(&leg.instrument_data)?;
+                let option_data: OptionCommonData = AnchorDeserialize::try_from_slice(
+                    &leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
+                )?;
 
                 let risk_category_info = self.config.get_risk_info(self.risk_category);
                 let seconds_till_expiration =

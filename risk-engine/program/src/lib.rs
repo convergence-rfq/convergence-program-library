@@ -9,7 +9,7 @@ use fraction::Fraction;
 use price_extractor::extract_prices;
 use risk_calculator::RiskCalculator;
 use scenarios::select_scenarious;
-use state::{Config, InstrumentType, RiskCategoryInfo};
+use state::{Config, InstrumentInfo, InstrumentType, RiskCategoryInfo};
 
 pub mod base_asset_extractor;
 pub mod black_scholes;
@@ -96,35 +96,50 @@ pub mod risk_engine {
         } = ctx.accounts;
 
         let types_list = &mut config.instrument_types;
-        let index_in_list = types_list.iter().position(|x| x.0 == instrument_program);
+        let index_in_list = types_list
+            .iter()
+            .position(|x| x.program == instrument_program);
         let exists_in_protocol = protocol
             .instruments
             .iter()
             .any(|x| x.program_key == instrument_program);
 
         if let Some(instrument_type) = instrument_type {
+            let instrument_info = InstrumentInfo {
+                program: instrument_program,
+                r#type: instrument_type,
+            };
+
             if let Some(index_in_list) = index_in_list {
-                // change instrument type in a list
                 require!(exists_in_protocol, Error::CannotChangeInstrument);
 
-                types_list[index_in_list] = (instrument_program, instrument_type);
+                types_list[index_in_list] = instrument_info;
+                msg!(
+                    "{} instrument type is changed to {:?}",
+                    instrument_program,
+                    instrument_type
+                );
             } else {
-                // add instrument type to a list
                 require!(
                     exists_in_protocol && types_list.len() < ProtocolState::MAX_INSTRUMENTS,
                     Error::CannotAddInstrument
                 );
 
-                types_list.push((instrument_program, instrument_type));
+                types_list.push(instrument_info);
+                msg!(
+                    "{} instrument type is set to {:?}",
+                    instrument_program,
+                    instrument_type
+                );
             }
         } else {
-            // remove instrument type from a list
             require!(
                 index_in_list.is_some() && !exists_in_protocol,
                 Error::CannotRemoveInstrument
             );
 
             types_list.remove(index_in_list.unwrap());
+            msg!("{} instrument type is removed", instrument_program);
         }
 
         Ok(())

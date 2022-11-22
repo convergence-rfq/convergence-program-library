@@ -8,6 +8,9 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 name = "risk_engine"
 
+[features]
+no-entrypoint = []
+
 [dependencies]
 anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
 anchor-spl = "0.25.0"

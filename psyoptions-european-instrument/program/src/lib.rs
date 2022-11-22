@@ -1,12 +1,14 @@
-use crate::errors::PsyoptionsEuropeanError;
-use crate::state::AuthoritySideDuplicate;
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
-use euro_options::{EuroMeta, OptionType};
+use euro_options::EuroMeta;
 use rfq::state::{AuthoritySide, Leg, MintInfo, ProtocolState, Response, Rfq};
+use risk_engine::state::OptionType;
+
+use crate::errors::PsyoptionsEuropeanError;
+use crate::state::{AuthoritySideDuplicate, ParsedLegData};
 
 mod errors;
 mod euro_options;
@@ -28,24 +30,40 @@ pub mod psyoptions_european_instrument {
         } = &ctx.accounts;
 
         let leg: Leg = AnchorDeserialize::try_from_slice(&leg_data)?;
-        require!(
-            leg.instrument_data.len()
-                == std::mem::size_of::<Pubkey>() * 2 + std::mem::size_of::<OptionType>(),
+        require_eq!(
+            leg.instrument_data.len(),
+            ParsedLegData::SERIALIZED_SIZE,
             PsyoptionsEuropeanError::InvalidDataSize
         );
-        let (mint_address, euro_meta_key, option_type): (Pubkey, Pubkey, OptionType) =
-            AnchorDeserialize::try_from_slice(&leg.instrument_data)?;
+        let ParsedLegData {
+            option_common_data,
+            mint_address,
+            euro_meta_address,
+        } = AnchorDeserialize::try_from_slice(&leg.instrument_data)?;
         require!(
-            euro_meta_key == euro_meta.key(),
+            euro_meta_address == euro_meta.key(),
             PsyoptionsEuropeanError::PassedEuroMetaDoesNotMatch
         );
-        let expected_mint = match option_type {
-            OptionType::CALL => euro_meta.call_option_mint,
-            OptionType::PUT => euro_meta.put_option_mint,
+        let expected_mint = match option_common_data.option_type {
+            OptionType::Call => euro_meta.call_option_mint,
+            OptionType::Put => euro_meta.put_option_mint,
         };
         require!(
             mint_address == expected_mint,
             PsyoptionsEuropeanError::PassedMintDoesNotMatch
+        );
+        require!(
+            option_common_data.underlying_amount_per_contract
+                == euro_meta.underlying_amount_per_contract,
+            PsyoptionsEuropeanError::PassedUnderlyingAmountPerContractDoesNotMatch
+        );
+        require!(
+            option_common_data.strike_price == euro_meta.strike_price,
+            PsyoptionsEuropeanError::PassedStrikePriceDoesNotMatch
+        );
+        require!(
+            option_common_data.expiration_timestamp == euro_meta.expiration,
+            PsyoptionsEuropeanError::PassedExpirationTimestampDoesNotMatch
         );
 
         require!(
@@ -76,9 +94,9 @@ pub mod psyoptions_european_instrument {
             ..
         } = &ctx.accounts;
         let leg_data = &rfq.legs[leg_index as usize].instrument_data;
-        let expected_mint: Pubkey = AnchorDeserialize::try_from_slice(&leg_data[..32])?;
+        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(&leg_data)?;
         require!(
-            expected_mint == mint.key(),
+            mint_address == mint.key(),
             PsyoptionsEuropeanError::PassedMintDoesNotMatch
         );
 

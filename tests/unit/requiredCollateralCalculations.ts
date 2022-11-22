@@ -1,5 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
+import { OptionType } from "../dependencies/tokenized-euros/src";
 import {
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
   DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
@@ -11,6 +12,7 @@ import {
   toLegMultiplier,
   withTokenDecimals,
 } from "../utilities/helpers";
+import { EuroOptionsFacade, PsyoptionsEuropeanInstrument } from "../utilities/instruments/psyoptionsEuropeanInstrument";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { FixedSize, OrderType, Quote, Side } from "../utilities/types";
 import { Context, getContext, Rfq } from "../utilities/wrappers";
@@ -48,7 +50,7 @@ describe("Required collateral calculation and lock", () => {
     ]);
   });
 
-  it("Correct collateral locked for fixed leg structure size rfq creation", async () => {
+  it("Correct collateral locked for fixed leg structure size spot rfq creation", async () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
 
     // 1 bitcoin with price of 20k$
@@ -67,7 +69,7 @@ describe("Required collateral calculation and lock", () => {
     await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-660) }]);
   });
 
-  it("Correct collateral locked for responding to rfq", async () => {
+  it("Correct collateral locked for responding to spot rfq", async () => {
     // solana rfq with 20 tokens in the leg
     const rfq = await context.createRfq({
       orderType: OrderType.TwoWay,
@@ -120,6 +122,33 @@ describe("Required collateral calculation and lock", () => {
         delta: expectedCollateral.neg().add(DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ),
       },
       { token: "unlockedCollateral", user: maker, delta: expectedCollateral },
+    ]);
+  });
+
+  it("Correct collateral locked for option rfq", async () => {
+    const options = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
+      underlyingMint: context.assetToken,
+      stableMint: context.quoteToken,
+      underlyingPerContract: withTokenDecimals(0.1),
+      strikePrice: withTokenDecimals(22000),
+      expireIn: 90 * 24 * 60 * 60, // 90 days
+    });
+
+    let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
+    const rfq = await context.createRfq({
+      legs: [PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, { amount: 10000, side: Side.Bid })], // 1 contract with 4 decimals
+      fixedSize: FixedSize.None,
+    });
+    const response = await rfq.respond({ bid: Quote.getStandart(withTokenDecimals(200), toLegMultiplier(3)) });
+
+    await response.confirm();
+    await measurer.expectChange([
+      {
+        token: "unlockedCollateral",
+        user: taker,
+        delta: withTokenDecimals(-194),
+        precision: withTokenDecimals(1),
+      },
     ]);
   });
 });

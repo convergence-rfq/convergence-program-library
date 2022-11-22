@@ -40,7 +40,7 @@ export class InstrumentController {
 
   async toLegData() {
     return {
-      instrument: this.instrument.getProgramId(),
+      instrumentProgram: this.instrument.getProgramId(),
       baseAssetIndex: { value: this.baseAssetIndex },
       instrumentData: this.instrument.serializeLegData(),
       instrumentAmount: new BN(this.amount),

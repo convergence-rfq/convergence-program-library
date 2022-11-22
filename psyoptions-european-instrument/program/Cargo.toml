@@ -12,4 +12,5 @@ name = "psyoptions_european_instrument"
 anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
 anchor-spl = "0.25.0"
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
+risk-engine = { path = "../../risk-engine/program", features = ["no-entrypoint"] }
 shank = "0.0.8"

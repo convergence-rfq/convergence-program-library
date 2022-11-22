@@ -14,7 +14,7 @@ pub struct Config {
     pub safety_price_shift_factor: Fraction,
     pub overall_safety_factor: Fraction,
     pub risk_categories_info: [RiskCategoryInfo; 5],
-    pub instrument_types: Vec<(Pubkey, InstrumentType)>,
+    pub instrument_types: Vec<InstrumentInfo>,
 }
 
 impl Config {
@@ -30,8 +30,17 @@ impl Config {
     }
 
     pub fn get_instrument_types_map(&self) -> HashMap<Pubkey, InstrumentType> {
-        self.instrument_types.iter().cloned().collect()
+        self.instrument_types
+            .iter()
+            .map(|x| (x.program, x.r#type))
+            .collect()
     }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub struct InstrumentInfo {
+    pub program: Pubkey,
+    pub r#type: InstrumentType,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default)]
@@ -40,7 +49,7 @@ pub struct RiskCategoryInfo {
     pub yearly_volatility: Fraction,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
 pub enum InstrumentType {
     Spot,
     Option,
@@ -59,6 +68,7 @@ pub struct OptionCommonData {
 impl OptionCommonData {
     pub const STRIKE_PRICE_DECIMALS: u8 = 9;
     pub const UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS: u8 = 9;
+    pub const SERIALIZED_SIZE: usize = 1 + 8 + 8 + 8;
 
     pub fn get_strike_price(&self) -> Fraction {
         Fraction::new(self.strike_price.into(), Self::STRIKE_PRICE_DECIMALS)
