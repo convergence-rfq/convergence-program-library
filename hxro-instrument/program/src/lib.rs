@@ -124,6 +124,7 @@ pub mod hxro_instrument {
     }
 
     pub fn settle(ctx: Context<Settle>, data: SettleParams) -> Result<()> {
+        call_update_mark_price(&ctx)?;
         call_sign_print_trade(&ctx, &data)?;
         Ok(())
     }
@@ -258,6 +259,36 @@ fn call_initialize_print_trade(ctx: &Context<PreSettle>, data: &PreSettleParams)
         CpiContext::new(ctx.accounts.dex.to_account_info(), cpi_accounts),
         cpi_params,
     )
+}
+
+fn call_update_mark_price(ctx: &Context<Settle>) -> Result<()> {
+    let accounts_infos = &[
+        ctx.accounts.counterparty_owner.to_account_info(),
+        ctx.accounts.mark_prices.to_account_info(),
+        ctx.accounts.market_product_group.to_account_info(),
+        ctx.accounts.system_clock.to_account_info(),
+        ctx.accounts.btcusd_pyth_oracle.to_account_info(),
+    ];
+
+    let data = [50, 73, 243, 45, 10, 6, 220, 129].to_vec();
+
+    solana_program::program::invoke(
+        &Instruction {
+            program_id: ctx.accounts.risk_engine_program.key(),
+            accounts: vec![
+                AccountMeta::new(ctx.accounts.counterparty_owner.key(), true),
+                AccountMeta::new(ctx.accounts.mark_prices.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.market_product_group.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.system_clock.key(), false),
+                AccountMeta::new(ctx.accounts.btcusd_pyth_oracle.key(), false),
+            ],
+            data,
+        },
+        accounts_infos,
+    )
+        .unwrap();
+
+    Ok(())
 }
 
 fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {

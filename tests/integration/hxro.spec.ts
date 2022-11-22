@@ -327,48 +327,16 @@ describe("RFQ HXRO instrument integration tests", () => {
             riskEngineProgram,
         )
 
-        console.log(
-            {
-                dex: dex.toString(),
-                creatorOwner: payer.publicKey.toString(),
-                counterpartyOwner: counterpartyPayer.publicKey.toString(),
-                creator: creator.toString(),
-                counterparty: counterparty.toString(),
-                operator: operator.toString(),
-                marketProductGroup: marketProductGroup.toString(),
-                product: product.toString(),
-                printTrade: printTrade.toString(),
-                systemProgram: anchor.web3.SystemProgram.programId.toString(),
-                feeModelProgram: feeModelProgram.toString(),
-                feeModelConfigurationAcct: feeModelConfigurationAcct.toString(),
-                feeOutputRegister: feeOutputRegister.toString(),
-                riskEngineProgram: riskEngineProgram.toString(),
-                riskModelConfigurationAcct: riskModelConfigurationAcct.toString(),
-                riskOutputRegister: riskOutputRegister.toString(),
-                riskAndFeeSigner: riskAndFeeSigner.toString(),
-                creatorTraderFeeStateAcct: creatorTraderFeeStateAcct.toString(),
-                creatorTraderRiskStateAcct: creatorTraderRiskStateAcct.toString(),
-                counterpartyTraderFeeStateAcct: counterpartyTraderFeeStateAcct.toString(),
-                counterpartyTraderRiskStateAcct: counterpartyTraderRiskStateAcct.toString(),
-                sAccount: s_account.toString(),
-                rAccount: r_account.toString(),
-                escrow: escrow.toString(),
-                markPrices: markPrices.toString(),
-                btcusdPythOracle: BTCUSDPythOracle.toString(),
-            }
-        )
-        let tx;
-        try {
-            tx = await program.methods.preSettle(
+        let txHash = await program.methods.preSettle(
                 // @ts-ignore
                 {
                     productIndex: new anchor.BN(0),
                     size: {
-                        m: new anchor.BN(0),
+                        m: new anchor.BN(10),
                         exp: new anchor.BN(0),
                     },
                     price: {
-                        m: new anchor.BN(0),
+                        m: new anchor.BN(10),
                         exp: new anchor.BN(0),
                     },
                     creatorSide: Side.Ask,
@@ -396,34 +364,21 @@ describe("RFQ HXRO instrument integration tests", () => {
                     systemProgram: anchor.web3.SystemProgram.programId,
                 }
             ).signers(
-                [payer, counterpartyPayer]
-            ).transaction();
-        } catch (e) {
-            console.log(e)
-        }
+                [payer]
+            ).rpc().catch((e) => {console.log(e)});
 
-        tx.feePayer = payer.publicKey;
-
-        let txHash = await anchor.web3.sendAndConfirmTransaction(
-            program.provider.connection,
-            tx,
-            [payer, counterpartyPayer]
-        ).catch(e => {
-            console.log(e)
-        });
         console.log("PreSettle TX:", txHash);
 
-        try {
-            tx = await program.methods.settle(
+        txHash = await program.methods.settle(
                 // @ts-ignore
                 {
                     productIndex: new anchor.BN(0),
                     size: {
-                        m: new anchor.BN(0),
+                        m: new anchor.BN(10),
                         exp: new anchor.BN(0),
                     },
                     price: {
-                        m: new anchor.BN(0),
+                        m: new anchor.BN(10),
                         exp: new anchor.BN(0),
                     },
                     creatorSide: Side.Ask,
@@ -465,28 +420,11 @@ describe("RFQ HXRO instrument integration tests", () => {
                     rAccount: r_account,
                     markPrices: markPrices,
                     btcusdPythOracle: BTCUSDPythOracle,
-                    /*
-                    marketProductGroupVault: marketProductGroupVault,
-                    capitalLimits: capitalLimitsState,
-                    whitelistAtaAcct: whitelistAtaAcct,
-                    */
                 }
             ).signers(
-                [payer, counterpartyPayer]
-            ).transaction();
-        } catch (e) {
-                console.log(e)
-        }
+                [counterpartyPayer]
+            ).rpc().catch((e) => {console.log(e)});
 
-        tx.feePayer = payer.publicKey;
-
-        txHash = await anchor.web3.sendAndConfirmTransaction(
-            program.provider.connection,
-            tx,
-            [payer, counterpartyPayer]
-        ).catch(e => {
-            console.log(e)
-        });
         console.log("Settle TX:", txHash);
     });
 });
