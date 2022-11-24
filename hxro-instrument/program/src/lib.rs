@@ -120,6 +120,7 @@ pub mod hxro_instrument {
 
     pub fn pre_settle(ctx: Context<PreSettle>, data: PreSettleParams) -> Result<()> {
         call_initialize_print_trade(&ctx, &data)?;
+        call_deposit_funds(&ctx, &data)?;
         Ok(())
     }
 
@@ -208,8 +209,8 @@ pub mod hxro_instrument {
     }
 }
 
-/*
-fn call_deposit_funds(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {
+#[inline(never)]
+fn call_deposit_funds(ctx: &Context<PreSettle>, data: &PreSettleParams) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::DepositFunds {
         token_program: ctx.accounts.token_program.to_account_info(),
         user: ctx.accounts.creator_owner.to_account_info(),
@@ -230,7 +231,6 @@ fn call_deposit_funds(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> 
         cpi_params,
     )
 }
-*/
 
 fn call_initialize_print_trade(ctx: &Context<PreSettle>, data: &PreSettleParams) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::InitializePrintTrade {
@@ -291,6 +291,7 @@ fn call_update_mark_price(ctx: &Context<Settle>) -> Result<()> {
     Ok(())
 }
 
+#[inline(never)]
 fn call_sign_print_trade(ctx: &Context<Settle>, data: &SettleParams) -> Result<()> {
     let cpi_params = dex_cpi::typedefs::SignPrintTradeParams {
         product_index: data.product_index,
@@ -512,8 +513,8 @@ pub struct PrepareToSettle<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[instruction(data: PreSettleParams)]
 #[derive(Accounts)]
+#[instruction(data: PreSettleParams)]
 pub struct PreSettle<'info> {
     /// CHECK:
     pub dex: Program<'info, Dex>,
@@ -546,10 +547,22 @@ pub struct PreSettle<'info> {
     pub print_trade: AccountInfo<'info>,
     /// CHECK:
     pub system_program: Program<'info, System>,
+
+    pub token_program: Program<'info, Token>,
+    /// CHECK:
+    #[account(mut)]
+    pub escrow: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub market_product_group_vault: AccountInfo<'info>,
+    /// CHECK:
+    pub capital_limits: AccountInfo<'info>,
+    /// CHECK:
+    pub whitelist_ata_acct: AccountInfo<'info>,
 }
 
-#[instruction(data: SettleParams)]
 #[derive(Accounts)]
+#[instruction(data: SettleParams)]
 pub struct Settle<'info> {
     /// CHECK:
     pub dex: Program<'info, Dex>,

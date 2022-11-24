@@ -41,6 +41,7 @@ describe("RFQ HXRO instrument integration tests", () => {
     const BTCUSDPythOracle = new anchor.web3.PublicKey("HovQMDrbAgAYPCmHVSrezcSmkMtXSSUsLDFANExrZh2J");
 
     let response_key: anchor.web3.PublicKey;
+    let vaultMint: spl_token.Token;
 
     const program = anchor.workspace.HxroInstrument as Program<HxroInstrumentType>;
 
@@ -51,7 +52,7 @@ describe("RFQ HXRO instrument integration tests", () => {
     });
 
     it("Create two-way RFQ with one hxro leg", async () => {
-        const vaultMint = new spl_token.Token(
+        vaultMint = new spl_token.Token(
             context.provider.connection,
             new anchor.web3.PublicKey("HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"),
             spl_token.TOKEN_PROGRAM_ID,
@@ -102,14 +103,20 @@ describe("RFQ HXRO instrument integration tests", () => {
     });
 
     it("Settle", async () => {
-        const [escrow, ] = await anchor.web3.PublicKey.findProgramAddress(
+        /* const [escrow, ] = await anchor.web3.PublicKey.findProgramAddress(
             [
                 Buffer.from("escrow"),
                 response_key.toBytes(),
                 Uint8Array.of(0)
             ],
             program.programId
-        )
+        ) */
+        const escrow = await spl_token.Token.getAssociatedTokenAddress(
+            spl_token.ASSOCIATED_TOKEN_PROGRAM_ID,
+            spl_token.TOKEN_PROGRAM_ID,
+            vaultMint.publicKey,
+            payer.publicKey
+        );
 
         let airdropTX = await program.provider.connection.requestAirdrop(
             payer.publicKey,
@@ -327,6 +334,7 @@ describe("RFQ HXRO instrument integration tests", () => {
             riskEngineProgram,
         )
 
+        console.log("whitelistAtaAcct:", whitelistAtaAcct.toString())
         let txHash = await program.methods.preSettle(
                 // @ts-ignore
                 {
@@ -362,6 +370,11 @@ describe("RFQ HXRO instrument integration tests", () => {
                     product: product,
                     printTrade: printTrade,
                     systemProgram: anchor.web3.SystemProgram.programId,
+                    tokenProgram: spl_token.TOKEN_PROGRAM_ID,
+                    marketProductGroupVault,
+                    capitalLimits: capitalLimitsState,
+                    whitelistAtaAcct,
+                    escrow,
                 }
             ).signers(
                 [payer]
