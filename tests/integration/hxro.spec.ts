@@ -9,6 +9,7 @@ import {toAbsolutePrice, toLegMultiplier, withTokenDecimals} from "../utilities/
 import * as spl_token from "@solana/spl-token";
 import {ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {DEFAULT_COLLATERAL_FUNDED} from "../utilities/constants";
+import {Transaction} from "@solana/web3.js";
 
 function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): string {
     return "trdr_grp1:test" + name
@@ -59,47 +60,56 @@ describe("RFQ HXRO instrument integration tests", () => {
             payer,
         )
 
-        await context.quoteToken.createAssociatedAccountWithTokens(
+        const escrow = await spl_token.Token.getAssociatedTokenAddress(
+            spl_token.ASSOCIATED_TOKEN_PROGRAM_ID,
+            spl_token.TOKEN_PROGRAM_ID,
+            vaultMint.publicKey,
             payer.publicKey
-        )
-        await context.quoteToken.createAssociatedAccountWithTokens(
-            counterpartyPayer.publicKey
-        )
-        try {
-            const vaultMintWrapped = await Mint.wrap(context, vaultMint.publicKey);
+        );
 
-            const rfq = await context.createRfq({
-                legs: [
-                    HxroInstrument.create(
-                        context,
-                        {
-                            mint: vaultMintWrapped,
-                            amount: withTokenDecimals(1),
-                            side: Side.Bid,
-                            dex: dex,
-                            marketProductGroup: marketProductGroup,
-                            feeModelProgram: feeModelProgram,
-                            riskEngineProgram: riskEngineProgram,
-                            feeModelConfigurationAcct: feeModelConfigurationAcct,
-                            riskModelConfigurationAcct: riskModelConfigurationAcct,
-                            feeOutputRegister: feeOutputRegister,
-                            riskOutputRegister: riskOutputRegister,
-                            riskAndFeeSigner: riskAndFeeSigner,
-                        })],
-            });
+        const vaultMintWrapped = await Mint.wrap(context, vaultMint.publicKey);
+        const maker = (await vaultMint.getOrCreateAssociatedAccountInfo(context.maker.publicKey)).address
+
+        const transferTx = await vaultMint.transfer(
+                escrow,
+                maker,
+                payer,
+                [payer],
+                10 * (10 ** 6)
+        ).catch((e) => {console.log(e)});
+        console.log("transferTx", transferTx);
+
+        const rfq = await context.createRfq({
+            legs: [
+                HxroInstrument.create(
+                    context,
+                    {
+                        mint: vaultMintWrapped,
+                        amount: 10 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                    })],
+        });
+
             // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
-            const response = await rfq.respond({
+        const response = await rfq.respond({
                 bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
                 ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
-            });
-            response_key = response.account;
+        });
+
+        response_key = response.account;
             // taker confirms to buy 1 bitcoin
-            await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
-            await response.prepareSettlement(AuthoritySide.Taker);
-            await response.prepareSettlement(AuthoritySide.Maker);
-        } catch (e) {
-            console.log("ERROR", e)
-        }
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
+        await response.prepareSettlement(AuthoritySide.Taker);
+        await response.prepareSettlement(AuthoritySide.Maker);
     });
 
     it("Settle", async () => {
