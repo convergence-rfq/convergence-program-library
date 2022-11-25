@@ -213,9 +213,9 @@ pub mod hxro_instrument {
 fn call_deposit_funds(ctx: &Context<PreSettle>, data: &PreSettleParams) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::DepositFunds {
         token_program: ctx.accounts.token_program.to_account_info(),
-        user: ctx.accounts.creator_owner.to_account_info(),
+        user: ctx.accounts.counterparty_owner.to_account_info(),
         user_token_account: ctx.accounts.escrow.to_account_info(),
-        trader_risk_group: ctx.accounts.creator.to_account_info(),
+        trader_risk_group: ctx.accounts.counterparty.to_account_info(),
         market_product_group: ctx.accounts.market_product_group.to_account_info(),
         market_product_group_vault: ctx.accounts.market_product_group_vault.to_account_info(),
         capital_limits: ctx.accounts.capital_limits.to_account_info(),
@@ -524,7 +524,7 @@ pub struct PreSettle<'info> {
     pub creator_owner: Signer<'info>,
     /// CHECK:
     #[account(mut)]
-    pub counterparty_owner: AccountInfo<'info>,
+    pub counterparty_owner: Signer<'info>,
     /// CHECK:
     #[account(mut)]
     pub creator: AccountInfo<'info>,

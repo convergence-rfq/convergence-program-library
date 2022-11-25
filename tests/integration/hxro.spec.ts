@@ -19,7 +19,7 @@ function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): s
 describe("RFQ HXRO instrument integration tests", () => {
     anchor.setProvider(anchor.AnchorProvider.env())
 
-    const payer = anchor.web3.Keypair.fromSecretKey(
+    const counterpartyPayer = anchor.web3.Keypair.fromSecretKey(
         Buffer.from(
             JSON.parse(
                 require("fs").readFileSync(process.env.ANCHOR_WALLET, {
@@ -28,7 +28,7 @@ describe("RFQ HXRO instrument integration tests", () => {
             )
         )
     );
-    const counterpartyPayer = anchor.web3.Keypair.generate();
+    const payer = anchor.web3.Keypair.generate();
 
     const dex = new anchor.web3.PublicKey("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL");
     const marketProductGroup = new anchor.web3.PublicKey("HyWxreWnng9ZBDPYpuYugAfpCMkRkJ1oz93oyoybDFLB");
@@ -49,6 +49,22 @@ describe("RFQ HXRO instrument integration tests", () => {
     let context: Context;
 
     before(async () => {
+        let airdropTX = await program.provider.connection.requestAirdrop(
+            payer.publicKey,
+            anchor.web3.LAMPORTS_PER_SOL * 2,
+        )
+
+        console.log("airdropTX", airdropTX)
+
+        // sleep
+        await new Promise( resolve => { setTimeout(resolve, 10000) });
+
+        let airdropTX2 = await program.provider.connection.requestAirdrop(
+            counterpartyPayer.publicKey,
+            anchor.web3.LAMPORTS_PER_SOL * 2
+        )
+        console.log("airdropTX2", airdropTX2)
+
         context = await getContext();
     });
 
@@ -64,7 +80,7 @@ describe("RFQ HXRO instrument integration tests", () => {
             spl_token.ASSOCIATED_TOKEN_PROGRAM_ID,
             spl_token.TOKEN_PROGRAM_ID,
             vaultMint.publicKey,
-            payer.publicKey
+            counterpartyPayer.publicKey
         );
 
         const vaultMintWrapped = await Mint.wrap(context, vaultMint.publicKey);
@@ -73,8 +89,8 @@ describe("RFQ HXRO instrument integration tests", () => {
         const transferTx = await vaultMint.transfer(
                 escrow,
                 maker,
-                payer,
-                [payer],
+            counterpartyPayer,
+                [counterpartyPayer],
                 10 * (10 ** 6)
         ).catch((e) => {console.log(e)});
         console.log("transferTx", transferTx);
@@ -125,24 +141,8 @@ describe("RFQ HXRO instrument integration tests", () => {
             spl_token.ASSOCIATED_TOKEN_PROGRAM_ID,
             spl_token.TOKEN_PROGRAM_ID,
             vaultMint.publicKey,
-            payer.publicKey
+            counterpartyPayer.publicKey
         );
-
-        let airdropTX = await program.provider.connection.requestAirdrop(
-            payer.publicKey,
-            anchor.web3.LAMPORTS_PER_SOL * 2,
-        )
-
-        console.log("airdropTX", airdropTX)
-
-        // sleep
-        await new Promise( resolve => { setTimeout(resolve, 10000) });
-
-        let airdropTX2 = await program.provider.connection.requestAirdrop(
-            counterpartyPayer.publicKey,
-            anchor.web3.LAMPORTS_PER_SOL * 2
-        )
-        console.log("airdropTX2", airdropTX2)
 
         const dexProgram = new anchor.Program(DexIdl as anchor.Idl, dex, anchor.getProvider()) as Program<Dex>;
         const product = new anchor.web3.PublicKey("3ERnKTAEcXGMQkT9kkwAi5ECPmvpKzVfAvymV2Bc13YU");
@@ -333,7 +333,7 @@ describe("RFQ HXRO instrument integration tests", () => {
             spl_token.ASSOCIATED_TOKEN_PROGRAM_ID,
             spl_token.TOKEN_PROGRAM_ID,
             whitelistMint,
-            payer.publicKey
+            counterpartyPayer.publicKey
         );
 
         const [markPrices, ] = await anchor.web3.PublicKey.findProgramAddress(
@@ -387,7 +387,7 @@ describe("RFQ HXRO instrument integration tests", () => {
                     escrow,
                 }
             ).signers(
-                [payer]
+                [payer, counterpartyPayer]
             ).rpc().catch((e) => {console.log(e)});
 
         console.log("PreSettle TX:", txHash);
