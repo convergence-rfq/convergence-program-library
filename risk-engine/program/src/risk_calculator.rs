@@ -1,22 +1,22 @@
 use anchor_lang::prelude::*;
-use rfq::state::{AuthoritySide, BaseAssetIndex, BaseAssetInfo, Leg, RiskCategory, Side};
+use rfq::state::{AuthoritySide, BaseAssetIndex, BaseAssetInfo, RiskCategory, Side};
 use std::collections::HashMap;
 
 use crate::{
     black_scholes::calculate_option_value,
     errors::Error,
     fraction::Fraction,
-    scenarios::Scenario,
-    state::{Config, InstrumentType, OptionCommonData},
+    state::{Config, InstrumentType, OptionCommonData, Scenario},
+    LegWithMetadata,
 };
 
 pub struct RiskCalculator<'a> {
-    pub legs: Vec<Leg>,
+    pub legs_with_meta: Vec<LegWithMetadata<'a>>,
     pub config: &'a Config,
     pub base_assets: Vec<BaseAssetInfo>,
     pub prices: HashMap<BaseAssetIndex, Fraction>,
-    pub instrument_types: HashMap<Pubkey, InstrumentType>,
-    pub scenarios_selector: &'a dyn Fn(&Vec<&Leg>, RiskCategory) -> Vec<Scenario>,
+    pub scenarios_selector:
+        Box<dyn Fn(&Vec<LegWithMetadata<'a>>, RiskCategory) -> Vec<Scenario> + 'a>,
     pub current_timestamp: i64,
 }
 
@@ -47,10 +47,11 @@ impl<'a> RiskCalculator<'a> {
     ) -> Result<u64> {
         let mut risk_sum = 0;
         for base_asset in self.base_assets.iter() {
-            let legs: Vec<&Leg> = self
-                .legs
+            let legs: Vec<LegWithMetadata> = self
+                .legs_with_meta
                 .iter()
-                .filter(|leg| leg.base_asset_index == base_asset.index)
+                .filter(|x| x.leg.base_asset_index == base_asset.index)
+                .cloned()
                 .collect();
             let scenarios = (self.scenarios_selector)(&legs, base_asset.risk_category);
             let price = self.prices.get(&base_asset.index).unwrap();
@@ -58,8 +59,7 @@ impl<'a> RiskCalculator<'a> {
             let mut biggest_risk = i128::MAX;
             for scenario in scenarios.iter() {
                 let scenario_calculator = ScenarioRiskCalculator {
-                    legs: &legs,
-                    instrument_types: &self.instrument_types,
+                    legs_with_meta: &legs,
                     config: self.config,
                     risk_category: base_asset.risk_category,
                     scenario,
@@ -97,9 +97,8 @@ impl<'a> RiskCalculator<'a> {
     }
 }
 
-struct ScenarioRiskCalculator<'a, 'b> {
-    legs: &'a Vec<&'b Leg>,
-    instrument_types: &'a HashMap<Pubkey, InstrumentType>,
+struct ScenarioRiskCalculator<'a> {
+    legs_with_meta: &'a Vec<LegWithMetadata<'a>>,
     config: &'a Config,
     risk_category: RiskCategory,
     scenario: &'a Scenario,
@@ -109,23 +108,23 @@ struct ScenarioRiskCalculator<'a, 'b> {
     current_timestamp: i64,
 }
 
-impl ScenarioRiskCalculator<'_, '_> {
+impl ScenarioRiskCalculator<'_> {
     fn calculate(self) -> Result<i128> {
         let mut total_pnl = 0;
 
-        for leg in self.legs.iter() {
-            let pnl = self.calculate_leg_pnl(leg)?;
+        for leg_with_meta in self.legs_with_meta.iter() {
+            let pnl = self.calculate_leg_pnl(leg_with_meta)?;
             total_pnl += pnl;
         }
 
         Ok(total_pnl)
     }
 
-    fn calculate_leg_pnl(&self, leg: &Leg) -> Result<i128> {
-        self.calculate_leg_unit_pnl(leg)?
+    fn calculate_leg_pnl(&self, leg_with_meta: &LegWithMetadata) -> Result<i128> {
+        self.calculate_leg_unit_pnl(leg_with_meta)?
             .checked_mul(Fraction::new(
-                leg.instrument_amount.into(),
-                leg.instrument_decimals,
+                leg_with_meta.leg.instrument_amount.into(),
+                leg_with_meta.leg.instrument_decimals,
             ))
             .ok_or(error!(Error::MathOverflow))?
             .checked_mul(self.leg_multiplier)
@@ -134,9 +133,9 @@ impl ScenarioRiskCalculator<'_, '_> {
             .ok_or(error!(Error::MathOverflow))
     }
 
-    fn calculate_leg_unit_pnl(&self, leg: &Leg) -> Result<Fraction> {
-        let unit_value = self.calculate_current_unit_value(leg)?;
-        let shocked_value = self.calculate_shocked_unit_value(leg)?;
+    fn calculate_leg_unit_pnl(&self, leg_with_meta: &LegWithMetadata) -> Result<Fraction> {
+        let unit_value = self.calculate_current_unit_value(leg_with_meta)?;
+        let shocked_value = self.calculate_shocked_unit_value(leg_with_meta)?;
         let mut unit_pnl = shocked_value
             .checked_sub(unit_value)
             .ok_or(error!(Error::MathOverflow))?;
@@ -145,7 +144,7 @@ impl ScenarioRiskCalculator<'_, '_> {
             unit_pnl = -unit_pnl;
         }
 
-        if let Side::Bid = leg.side {
+        if let Side::Bid = leg_with_meta.leg.side {
             unit_pnl = -unit_pnl;
         }
 
@@ -159,19 +158,14 @@ impl ScenarioRiskCalculator<'_, '_> {
             .ok_or(error!(Error::MathOverflow))
     }
 
-    fn calculate_current_unit_value(&self, leg: &Leg) -> Result<Fraction> {
-        let instrument_type = self
-            .instrument_types
-            .get(&leg.instrument_program)
-            .ok_or(error!(Error::MissingInstrument))?;
-
-        match instrument_type {
+    fn calculate_current_unit_value(&self, leg_with_meta: &LegWithMetadata) -> Result<Fraction> {
+        match leg_with_meta.instrument_type {
             InstrumentType::Spot | InstrumentType::TermFuture | InstrumentType::PerpFuture => {
                 Ok(self.price)
             }
             InstrumentType::Option => {
                 let option_data: OptionCommonData = AnchorDeserialize::try_from_slice(
-                    &leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
+                    &leg_with_meta.leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
                 )?;
                 let risk_category_info = self.config.get_risk_info(self.risk_category);
                 let seconds_till_expiration =
@@ -191,25 +185,20 @@ impl ScenarioRiskCalculator<'_, '_> {
         }
     }
 
-    fn calculate_shocked_unit_value(&self, leg: &Leg) -> Result<Fraction> {
-        let instrument_type = self
-            .instrument_types
-            .get(&leg.instrument_program)
-            .ok_or(error!(Error::MissingInstrument))?;
-
-        match instrument_type {
+    fn calculate_shocked_unit_value(&self, leg_with_meta: &LegWithMetadata) -> Result<Fraction> {
+        match leg_with_meta.instrument_type {
             InstrumentType::Spot | InstrumentType::TermFuture | InstrumentType::PerpFuture => self
                 .price
                 .checked_mul(
                     self.scenario
-                        .base_price_change
+                        .base_asset_price_change
                         .checked_add(1.into())
                         .unwrap(),
                 )
                 .ok_or(error!(Error::MathOverflow)),
             InstrumentType::Option => {
                 let option_data: OptionCommonData = AnchorDeserialize::try_from_slice(
-                    &leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
+                    &leg_with_meta.leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
                 )?;
 
                 let risk_category_info = self.config.get_risk_info(self.risk_category);
@@ -220,7 +209,7 @@ impl ScenarioRiskCalculator<'_, '_> {
                     .price
                     .checked_mul(
                         Fraction::from(1)
-                            .checked_add(self.scenario.base_price_change)
+                            .checked_add(self.scenario.base_asset_price_change)
                             .ok_or(error!(Error::MathOverflow))?,
                     )
                     .ok_or(error!(Error::MathOverflow))?;
@@ -250,7 +239,7 @@ impl ScenarioRiskCalculator<'_, '_> {
 #[cfg(test)]
 mod tests {
     use float_cmp::assert_approx_eq;
-    use rfq::state::PriceOracle;
+    use rfq::state::{Leg, PriceOracle};
 
     use crate::state::{OptionType, RiskCategoryInfo};
 
@@ -258,9 +247,6 @@ mod tests {
 
     const BTC_INDEX: BaseAssetIndex = BaseAssetIndex::new(0);
     const SOL_INDEX: BaseAssetIndex = BaseAssetIndex::new(1);
-
-    const SPOT_PUBKEY: Pubkey = Pubkey::new_from_array([1; 32]);
-    const OPTION_PUBKEY: Pubkey = Pubkey::new_from_array([2; 32]);
 
     fn get_config() -> Config {
         Config {
@@ -273,29 +259,27 @@ mod tests {
             risk_categories_info: [RiskCategoryInfo {
                 interest_rate: Fraction::new(5, 2),
                 yearly_volatility: Fraction::new(5, 1),
+                scenarios_per_settlement_period: Default::default(),
             }; 5],
             instrument_types: vec![],
         }
-    }
-
-    fn get_instrument_type_map() -> HashMap<Pubkey, InstrumentType> {
-        HashMap::from([
-            (SPOT_PUBKEY, InstrumentType::Spot),
-            (OPTION_PUBKEY, InstrumentType::Option),
-        ])
     }
 
     #[test]
     fn one_spot_bitcoin_leg() {
         let config = get_config();
 
-        let legs = vec![Leg {
+        let leg = Leg {
             instrument_amount: 2 * 10_u64.pow(6),
             instrument_decimals: 6,
             side: Side::Bid,
             base_asset_index: BTC_INDEX,
-            instrument_program: SPOT_PUBKEY,
+            instrument_program: Default::default(),
             instrument_data: Default::default(),
+        };
+        let legs_with_meta = vec![LegWithMetadata {
+            leg: &leg,
+            instrument_type: InstrumentType::Spot,
         }];
 
         let base_assets = vec![BaseAssetInfo {
@@ -310,7 +294,10 @@ mod tests {
 
         let prices = HashMap::from([(BTC_INDEX, Fraction::new(20_000_000, 3))]);
 
-        fn scenarios_selector(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec<Scenario> {
+        fn scenarios_selector(
+            _legs: &Vec<LegWithMetadata>,
+            _risk_category: RiskCategory,
+        ) -> Vec<Scenario> {
             vec![
                 Scenario::new(Fraction::new(1, 1), 0.into()),
                 Scenario::new(Fraction::new(-1, 1), 0.into()),
@@ -318,12 +305,11 @@ mod tests {
         }
 
         let risk_calculator = RiskCalculator {
-            legs,
-            instrument_types: get_instrument_type_map(),
+            legs_with_meta,
             config: &config,
             base_assets,
             prices,
-            scenarios_selector: &scenarios_selector,
+            scenarios_selector: Box::new(scenarios_selector),
             current_timestamp: 0,
         };
 
@@ -346,7 +332,7 @@ mod tests {
                 instrument_decimals: 6,
                 side: Side::Bid,
                 base_asset_index: BTC_INDEX,
-                instrument_program: SPOT_PUBKEY,
+                instrument_program: Default::default(),
                 instrument_data: Default::default(),
             },
             Leg {
@@ -354,8 +340,18 @@ mod tests {
                 instrument_decimals: 6,
                 side: Side::Ask,
                 base_asset_index: BTC_INDEX,
-                instrument_program: SPOT_PUBKEY,
+                instrument_program: Default::default(),
                 instrument_data: Default::default(),
+            },
+        ];
+        let legs_with_meta = vec![
+            LegWithMetadata {
+                leg: &legs[0],
+                instrument_type: InstrumentType::Spot,
+            },
+            LegWithMetadata {
+                leg: &legs[1],
+                instrument_type: InstrumentType::Spot,
             },
         ];
 
@@ -371,7 +367,10 @@ mod tests {
 
         let prices = HashMap::from([(BTC_INDEX, Fraction::new(20_000_000, 3))]);
 
-        fn scenarios_selector(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec<Scenario> {
+        fn scenarios_selector(
+            _legs: &Vec<LegWithMetadata>,
+            _risk_category: RiskCategory,
+        ) -> Vec<Scenario> {
             vec![
                 Scenario::new(Fraction::new(1, 1), 0.into()),
                 Scenario::new(Fraction::new(-1, 1), 0.into()),
@@ -379,12 +378,11 @@ mod tests {
         }
 
         let risk_calculator = RiskCalculator {
-            legs,
-            instrument_types: get_instrument_type_map(),
+            legs_with_meta,
             config: &config,
             base_assets,
             prices,
-            scenarios_selector: &scenarios_selector,
+            scenarios_selector: Box::new(scenarios_selector),
             current_timestamp: 0,
         };
 
@@ -407,7 +405,7 @@ mod tests {
                 instrument_decimals: 6,
                 side: Side::Bid,
                 base_asset_index: BTC_INDEX,
-                instrument_program: SPOT_PUBKEY,
+                instrument_program: Default::default(),
                 instrument_data: Default::default(),
             },
             Leg {
@@ -415,8 +413,18 @@ mod tests {
                 instrument_decimals: 9,
                 side: Side::Ask,
                 base_asset_index: SOL_INDEX,
-                instrument_program: SPOT_PUBKEY,
+                instrument_program: Default::default(),
                 instrument_data: Default::default(),
+            },
+        ];
+        let legs_with_meta = vec![
+            LegWithMetadata {
+                leg: &legs[0],
+                instrument_type: InstrumentType::Spot,
+            },
+            LegWithMetadata {
+                leg: &legs[1],
+                instrument_type: InstrumentType::Spot,
             },
         ];
 
@@ -446,7 +454,10 @@ mod tests {
             (SOL_INDEX, Fraction::new(30_000_000, 6)),
         ]);
 
-        fn scenarios_selector(_legs: &Vec<&Leg>, risk_category: RiskCategory) -> Vec<Scenario> {
+        fn scenarios_selector(
+            _legs: &Vec<LegWithMetadata>,
+            risk_category: RiskCategory,
+        ) -> Vec<Scenario> {
             if risk_category == RiskCategory::VeryLow {
                 vec![
                     Scenario::new(Fraction::new(1, 1), 0.into()),
@@ -461,12 +472,11 @@ mod tests {
         }
 
         let risk_calculator = RiskCalculator {
-            legs,
-            instrument_types: get_instrument_type_map(),
+            legs_with_meta,
             config: &config,
             base_assets,
             prices,
-            scenarios_selector: &scenarios_selector,
+            scenarios_selector: Box::new(scenarios_selector),
             current_timestamp: 0,
         };
 
@@ -491,13 +501,17 @@ mod tests {
             expiration_timestamp: 90 * 24 * 60 * 60,
         };
 
-        let legs = vec![Leg {
+        let leg = Leg {
             instrument_amount: 1 * 10_u64.pow(6),
             instrument_decimals: 6,
             side: Side::Bid,
             base_asset_index: BTC_INDEX,
-            instrument_program: OPTION_PUBKEY,
+            instrument_program: Default::default(),
             instrument_data: option_data.try_to_vec().unwrap(),
+        };
+        let legs_with_meta = vec![LegWithMetadata {
+            leg: &leg,
+            instrument_type: InstrumentType::Option,
         }];
 
         let base_assets = vec![BaseAssetInfo {
@@ -512,7 +526,10 @@ mod tests {
 
         let prices = HashMap::from([(BTC_INDEX, Fraction::new(20_000_000, 3))]);
 
-        fn scenarios_selector(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec<Scenario> {
+        fn scenarios_selector(
+            _legs: &Vec<LegWithMetadata>,
+            _risk_category: RiskCategory,
+        ) -> Vec<Scenario> {
             vec![
                 Scenario::new(Fraction::new(1, 1), Fraction::new(2, 1)),
                 Scenario::new(Fraction::new(1, 1), Fraction::new(-2, 1)),
@@ -522,12 +539,11 @@ mod tests {
         }
 
         let risk_calculator = RiskCalculator {
-            legs,
-            instrument_types: get_instrument_type_map(),
+            legs_with_meta,
             config: &config,
             base_assets,
             prices,
-            scenarios_selector: &scenarios_selector,
+            scenarios_selector: Box::new(scenarios_selector),
             current_timestamp: 0,
         };
 

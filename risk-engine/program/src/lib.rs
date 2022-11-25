@@ -8,7 +8,7 @@ use errors::Error;
 use fraction::Fraction;
 use price_extractor::extract_prices;
 use risk_calculator::RiskCalculator;
-use scenarios::select_scenarious;
+use scenarios::ScenarioSelector;
 use state::{Config, InstrumentInfo, InstrumentType, RiskCategoryInfo};
 
 pub mod base_asset_extractor;
@@ -156,7 +156,7 @@ pub mod risk_engine {
                 legs_multiplier_bps,
             } => {
                 let risk_calculator = construct_risk_calculator(
-                    ctx.accounts.rfq.legs.clone(),
+                    &ctx.accounts.rfq,
                     config,
                     &mut ctx.remaining_accounts,
                 )?;
@@ -201,8 +201,7 @@ pub mod risk_engine {
             config,
         } = ctx.accounts;
 
-        let risk_calculator =
-            construct_risk_calculator(rfq.legs.clone(), config, &mut ctx.remaining_accounts)?;
+        let risk_calculator = construct_risk_calculator(rfq, config, &mut ctx.remaining_accounts)?;
 
         let get_collateral_for_quote = |quote, side| {
             let legs_multiplier_bps = response.calculate_legs_multiplier_bps_for_quote(rfq, quote);
@@ -244,8 +243,7 @@ pub mod risk_engine {
             config,
         } = ctx.accounts;
 
-        let risk_calculator =
-            construct_risk_calculator(rfq.legs.clone(), config, &mut ctx.remaining_accounts)?;
+        let risk_calculator = construct_risk_calculator(rfq, config, &mut ctx.remaining_accounts)?;
 
         let legs_multiplier_bps = response.calculate_confirmed_legs_multiplier_bps(rfq);
         let legs_multiplier = Fraction::new(
@@ -276,22 +274,48 @@ pub mod risk_engine {
     }
 }
 
+#[derive(Clone)]
+pub struct LegWithMetadata<'a> {
+    leg: &'a Leg,
+    instrument_type: InstrumentType,
+}
+
 fn construct_risk_calculator<'a>(
-    legs: Vec<Leg>,
+    rfq: &'a Rfq,
     config: &'a Config,
     remaining_accounts: &mut &[AccountInfo],
 ) -> Result<RiskCalculator<'a>> {
-    let base_assets = extract_base_assets(&legs, remaining_accounts)?;
+    let base_assets = extract_base_assets(&rfq.legs, remaining_accounts)?;
     let prices = extract_prices(&base_assets, remaining_accounts)?;
     let instrument_types = config.get_instrument_types_map();
     let current_timestamp = Clock::get()?.unix_timestamp;
+    let scenarios_selector = ScenarioSelector {
+        config,
+        settlement_period: rfq.settling_window,
+    };
+    let legs_with_meta = rfq
+        .legs
+        .iter()
+        .map(|leg| -> Result<LegWithMetadata> {
+            let instrument_type = instrument_types
+                .get(&leg.instrument_program)
+                .ok_or(error!(Error::MissingInstrument))?
+                .clone();
+            Ok(LegWithMetadata {
+                leg: &leg,
+                instrument_type,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
     Ok(RiskCalculator {
-        legs,
-        instrument_types,
+        legs_with_meta,
         config,
         base_assets,
         prices,
-        scenarios_selector: &select_scenarious,
+        scenarios_selector: Box::new(move |legs, risk_category| {
+            scenarios_selector.select_scenarious(legs, risk_category)
+        }),
         current_timestamp,
     })
 }
@@ -307,7 +331,7 @@ pub struct InitializeConfigAccounts<'info> {
         space = Config::get_allocated_size(),
         bump
     )]
-    pub config: Account<'info, Config>,
+    pub config: Box<Account<'info, Config>>,
     pub system_program: Program<'info, System>,
 }
 
@@ -317,7 +341,7 @@ pub struct UpdateConfigAccounts<'info> {
     pub authority: Signer<'info>,
     pub protocol: Account<'info, ProtocolState>,
     #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Account<'info, Config>,
+    pub config: Box<Account<'info, Config>>,
 }
 
 #[derive(Accounts)]
@@ -326,14 +350,14 @@ pub struct SetInstrumentTypeAccounts<'info> {
     pub authority: Signer<'info>,
     pub protocol: Account<'info, ProtocolState>,
     #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Account<'info, Config>,
+    pub config: Box<Account<'info, Config>>,
 }
 
 #[derive(Accounts)]
 pub struct CalculateRequiredCollateralForRfq<'info> {
     pub rfq: Box<Account<'info, Rfq>>,
     #[account(seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Account<'info, Config>,
+    pub config: Box<Account<'info, Config>>,
 }
 
 #[derive(Accounts)]
@@ -341,7 +365,7 @@ pub struct CalculateRequiredCollateralForResponse<'info> {
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
     #[account(seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Account<'info, Config>,
+    pub config: Box<Account<'info, Config>>,
 }
 
 #[derive(Accounts)]
@@ -349,5 +373,5 @@ pub struct CalculateRequiredCollateralForConfirmation<'info> {
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
     #[account(seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Account<'info, Config>,
+    pub config: Box<Account<'info, Config>>,
 }

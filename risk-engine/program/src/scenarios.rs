@@ -1,38 +1,51 @@
-use rfq::state::{Leg, RiskCategory};
+use rfq::state::RiskCategory;
 
-use crate::fraction::Fraction;
+use crate::{
+    state::{Config, InstrumentType, Scenario},
+    LegWithMetadata,
+};
 
-pub struct Scenario {
-    pub base_price_change: Fraction,
-    pub volatility_change: Fraction,
+pub struct ScenarioSelector<'a> {
+    pub config: &'a Config,
+    pub settlement_period: u32,
 }
 
-impl Scenario {
-    pub fn new(base_price_change: Fraction, volatility_change: Fraction) -> Self {
-        Scenario {
-            base_price_change,
-            volatility_change,
+impl ScenarioSelector<'_> {
+    pub fn select_scenarious(
+        &self,
+        legs_with_meta: &Vec<LegWithMetadata>,
+        risk_category: RiskCategory,
+    ) -> Vec<Scenario> {
+        let have_option_legs = legs_with_meta
+            .iter()
+            .any(|x| matches!(x.instrument_type, InstrumentType::Option));
+
+        let base_scenario = self
+            .config
+            .get_risk_info(risk_category)
+            .get_base_scenario(self.settlement_period);
+
+        if have_option_legs {
+            vec![
+                base_scenario,
+                Scenario::new(
+                    base_scenario.base_asset_price_change,
+                    -base_scenario.volatility_change,
+                ),
+                Scenario::new(
+                    -base_scenario.base_asset_price_change,
+                    base_scenario.volatility_change,
+                ),
+                Scenario::new(
+                    -base_scenario.base_asset_price_change,
+                    -base_scenario.volatility_change,
+                ),
+            ]
+        } else {
+            vec![
+                Scenario::new(base_scenario.base_asset_price_change, 0.into()),
+                Scenario::new(-base_scenario.base_asset_price_change, 0.into()),
+            ]
         }
     }
-}
-
-pub fn select_scenarious(_legs: &Vec<&Leg>, _risk_category: RiskCategory) -> Vec<Scenario> {
-    vec![
-        Scenario {
-            base_price_change: Fraction::new(2, 2),
-            volatility_change: Fraction::new(2, 1),
-        },
-        Scenario {
-            base_price_change: Fraction::new(2, 2),
-            volatility_change: Fraction::new(-2, 1),
-        },
-        Scenario {
-            base_price_change: Fraction::new(-2, 2),
-            volatility_change: Fraction::new(2, 1),
-        },
-        Scenario {
-            base_price_change: Fraction::new(-2, 2),
-            volatility_change: Fraction::new(-2, 1),
-        },
-    ]
 }
