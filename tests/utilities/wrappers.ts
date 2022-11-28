@@ -288,8 +288,7 @@ export class RiskEngine {
         DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
         DEFAULT_MINT_DECIMALS,
         DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
-        DEFAULT_OVERALL_SAFETY_FACTOR,
-        DEFAULT_RISK_CATEGORIES_INFO
+        DEFAULT_OVERALL_SAFETY_FACTOR
       )
       .accounts({
         signer: this.context.dao.publicKey,

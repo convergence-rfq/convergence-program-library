@@ -259,7 +259,7 @@ mod tests {
             risk_categories_info: [RiskCategoryInfo {
                 interest_rate: Fraction::new(5, 2),
                 yearly_volatility: Fraction::new(5, 1),
-                scenarios_per_settlement_period: Default::default(),
+                scenario_per_settlement_period: Default::default(),
             }; 5],
             instrument_types: vec![],
         }

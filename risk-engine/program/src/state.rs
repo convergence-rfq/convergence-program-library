@@ -22,7 +22,7 @@ impl Config {
         // mem::size_of can include unwanted additional overhead padding
         // TODO: rework from pre-allocating to reallocating on new elements addition
         8 + mem::size_of::<Self>()
-            + ProtocolState::MAX_INSTRUMENTS * mem::size_of::<(Pubkey, InstrumentType)>()
+            + ProtocolState::MAX_INSTRUMENTS * mem::size_of::<InstrumentInfo>()
     }
 
     pub fn get_risk_info(&self, risk_category: RiskCategory) -> RiskCategoryInfo {
@@ -56,7 +56,7 @@ const SETTLEMENT_WINDOW_BREAKPOINS: [u32; SETTLEMENT_WINDOW_PEDIODS - 1] = [
 pub struct RiskCategoryInfo {
     pub interest_rate: Fraction,
     pub yearly_volatility: Fraction,
-    pub scenarios_per_settlement_period: [Scenario; SETTLEMENT_WINDOW_PEDIODS],
+    pub scenario_per_settlement_period: [Scenario; SETTLEMENT_WINDOW_PEDIODS],
 }
 
 impl RiskCategoryInfo {
@@ -69,7 +69,7 @@ impl RiskCategoryInfo {
             }
         }
 
-        self.scenarios_per_settlement_period[index]
+        self.scenario_per_settlement_period[index]
     }
 }
 

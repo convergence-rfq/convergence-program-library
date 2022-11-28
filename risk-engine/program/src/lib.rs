@@ -35,20 +35,38 @@ pub mod risk_engine {
         collateral_mint_decimals: u8,
         safety_price_shift_factor: Fraction,
         overall_safety_factor: Fraction,
-        risk_categories_info: [RiskCategoryInfo; 5],
     ) -> Result<()> {
         let config = &mut ctx.accounts.config;
 
-        config.set_inner(Config {
-            bump: *ctx.bumps.get("config").unwrap(),
-            collateral_for_variable_size_rfq_creation,
-            collateral_for_fixed_quote_amount_rfq_creation,
-            collateral_mint_decimals,
-            safety_price_shift_factor,
-            overall_safety_factor,
-            risk_categories_info,
-            instrument_types: vec![],
-        });
+        config.bump = *ctx.bumps.get("config").unwrap();
+        config.collateral_for_variable_size_rfq_creation =
+            collateral_for_variable_size_rfq_creation;
+        config.collateral_for_fixed_quote_amount_rfq_creation =
+            collateral_for_fixed_quote_amount_rfq_creation;
+        config.collateral_mint_decimals = collateral_mint_decimals;
+        config.safety_price_shift_factor = safety_price_shift_factor;
+        config.overall_safety_factor = overall_safety_factor;
+
+        Ok(())
+    }
+
+    // used only for passing data in set_risk_category_info instruction
+    #[derive(AnchorSerialize, AnchorDeserialize)]
+    pub struct RiskCategoryInfoWithIndex {
+        index: u8,
+        value: RiskCategoryInfo,
+    }
+
+    // risk categories size is too large to fully fit in one transaction, so this instruction is used to set them partially
+    pub fn set_risk_category_info(
+        ctx: Context<SetRiskCategoryInfo>,
+        changes: Vec<RiskCategoryInfoWithIndex>,
+    ) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+
+        for change in changes.into_iter() {
+            config.risk_categories_info[change.index as usize] = change.value;
+        }
 
         Ok(())
     }
@@ -333,6 +351,15 @@ pub struct InitializeConfigAccounts<'info> {
     )]
     pub config: Box<Account<'info, Config>>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct SetRiskCategoryInfo<'info> {
+    #[account(constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Account<'info, ProtocolState>,
+    #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
+    pub config: Box<Account<'info, Config>>,
 }
 
 #[derive(Accounts)]
