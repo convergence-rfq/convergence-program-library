@@ -42,6 +42,12 @@ export type Scenario = {
   volatilityChange: Fraction;
 };
 
+export type RiskCategoryInfo = {
+  interestRate: Fraction;
+  yearlyVolatility: Fraction;
+  scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario];
+};
+
 export enum InstrumentType {
   Spot,
   Option,
@@ -121,7 +127,7 @@ export function toRiskCategoryInfo(
   interestRate: Fraction,
   yearlyVolatility: Fraction,
   scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario]
-) {
+): RiskCategoryInfo {
   return {
     interestRate,
     yearlyVolatility,

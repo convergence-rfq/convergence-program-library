@@ -1,28 +1,24 @@
 use std::{collections::HashMap, mem};
 
 use anchor_lang::prelude::*;
-use rfq::state::{ProtocolState, RiskCategory};
+use rfq::state::RiskCategory;
 
 use crate::fraction::Fraction;
 
-#[account]
+#[account(zero_copy)]
 pub struct Config {
-    pub bump: u8,
     pub collateral_for_variable_size_rfq_creation: u64,
     pub collateral_for_fixed_quote_amount_rfq_creation: u64,
     pub collateral_mint_decimals: u8,
     pub safety_price_shift_factor: Fraction,
     pub overall_safety_factor: Fraction,
     pub risk_categories_info: [RiskCategoryInfo; 5],
-    pub instrument_types: Vec<InstrumentInfo>,
+    pub instrument_types: [InstrumentInfo; 50], // Embed ProtocolState::MAX_INSTRUMENTS to work around anchor idl generation issue
 }
 
 impl Config {
     pub fn get_allocated_size() -> usize {
-        // mem::size_of can include unwanted additional overhead padding
-        // TODO: rework from pre-allocating to reallocating on new elements addition
         8 + mem::size_of::<Self>()
-            + ProtocolState::MAX_INSTRUMENTS * mem::size_of::<InstrumentInfo>()
     }
 
     pub fn get_risk_info(&self, risk_category: RiskCategory) -> RiskCategoryInfo {
@@ -37,10 +33,16 @@ impl Config {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default)]
 pub struct InstrumentInfo {
     pub program: Pubkey,
     pub r#type: InstrumentType,
+}
+
+impl InstrumentInfo {
+    pub fn is_initialized(&self) -> bool {
+        self.program != Pubkey::default()
+    }
 }
 
 const SETTLEMENT_WINDOW_PEDIODS: usize = 6;
@@ -94,6 +96,12 @@ pub enum InstrumentType {
     Option,
     TermFuture,
     PerpFuture,
+}
+
+impl Default for InstrumentType {
+    fn default() -> Self {
+        Self::Spot
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

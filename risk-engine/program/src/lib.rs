@@ -26,6 +26,7 @@ pub const CONFIG_SEED: &str = "config";
 
 #[program]
 pub mod risk_engine {
+
     use super::*;
 
     pub fn initialize_config(
@@ -36,9 +37,8 @@ pub mod risk_engine {
         safety_price_shift_factor: Fraction,
         overall_safety_factor: Fraction,
     ) -> Result<()> {
-        let config = &mut ctx.accounts.config;
+        let mut config = ctx.accounts.config.load_init()?;
 
-        config.bump = *ctx.bumps.get("config").unwrap();
         config.collateral_for_variable_size_rfq_creation =
             collateral_for_variable_size_rfq_creation;
         config.collateral_for_fixed_quote_amount_rfq_creation =
@@ -50,22 +50,22 @@ pub mod risk_engine {
         Ok(())
     }
 
-    // used only for passing data in set_risk_category_info instruction
+    // used only for passing data in the set_risk_category_info instruction
     #[derive(AnchorSerialize, AnchorDeserialize)]
-    pub struct RiskCategoryInfoWithIndex {
-        index: u8,
-        value: RiskCategoryInfo,
+    pub struct RiskCategoryChange {
+        risk_category_index: u8,
+        new_value: RiskCategoryInfo,
     }
 
     // risk categories size is too large to fully fit in one transaction, so this instruction is used to set them partially
-    pub fn set_risk_category_info(
+    pub fn set_risk_categories_info(
         ctx: Context<SetRiskCategoryInfo>,
-        changes: Vec<RiskCategoryInfoWithIndex>,
+        changes: Vec<RiskCategoryChange>,
     ) -> Result<()> {
-        let config = &mut ctx.accounts.config;
+        let mut config = ctx.accounts.config.load_mut()?;
 
         for change in changes.into_iter() {
-            config.risk_categories_info[change.index as usize] = change.value;
+            config.risk_categories_info[change.risk_category_index as usize] = change.new_value;
         }
 
         Ok(())
@@ -79,7 +79,7 @@ pub mod risk_engine {
         safety_price_shift_factor: Option<Fraction>,
         overall_safety_factor: Option<Fraction>,
     ) -> Result<()> {
-        let config = &mut ctx.accounts.config;
+        let mut config = ctx.accounts.config.load_mut()?;
 
         if let Some(value) = collateral_for_variable_size_rfq_creation {
             config.collateral_for_variable_size_rfq_creation = value;
@@ -112,6 +112,7 @@ pub mod risk_engine {
         let SetInstrumentTypeAccounts {
             protocol, config, ..
         } = ctx.accounts;
+        let mut config = config.load_mut()?;
 
         let types_list = &mut config.instrument_types;
         let index_in_list = types_list
@@ -138,12 +139,14 @@ pub mod risk_engine {
                     instrument_type
                 );
             } else {
+                let empty_element_index = types_list.iter().position(|x| !x.is_initialized());
+
                 require!(
-                    exists_in_protocol && types_list.len() < ProtocolState::MAX_INSTRUMENTS,
+                    exists_in_protocol && empty_element_index.is_some(),
                     Error::CannotAddInstrument
                 );
 
-                types_list.push(instrument_info);
+                types_list[empty_element_index.unwrap()] = instrument_info;
                 msg!(
                     "{} instrument type is set to {:?}",
                     instrument_program,
@@ -156,7 +159,7 @@ pub mod risk_engine {
                 Error::CannotRemoveInstrument
             );
 
-            types_list.remove(index_in_list.unwrap());
+            types_list[index_in_list.unwrap()] = Default::default();
             msg!("{} instrument type is removed", instrument_program);
         }
 
@@ -167,6 +170,7 @@ pub mod risk_engine {
         mut ctx: Context<CalculateRequiredCollateralForRfq>,
     ) -> Result<u64> {
         let CalculateRequiredCollateralForRfq { rfq, config } = &ctx.accounts;
+        let config = config.load()?;
 
         let required_collateral = match rfq.fixed_size {
             FixedSize::None { padding: _ } => config.collateral_for_variable_size_rfq_creation,
@@ -175,7 +179,7 @@ pub mod risk_engine {
             } => {
                 let risk_calculator = construct_risk_calculator(
                     &ctx.accounts.rfq,
-                    config,
+                    &config,
                     &mut ctx.remaining_accounts,
                 )?;
                 let leg_multiplier = Fraction::new(
@@ -218,8 +222,9 @@ pub mod risk_engine {
             response,
             config,
         } = ctx.accounts;
+        let config = config.load()?;
 
-        let risk_calculator = construct_risk_calculator(rfq, config, &mut ctx.remaining_accounts)?;
+        let risk_calculator = construct_risk_calculator(rfq, &config, &mut ctx.remaining_accounts)?;
 
         let get_collateral_for_quote = |quote, side| {
             let legs_multiplier_bps = response.calculate_legs_multiplier_bps_for_quote(rfq, quote);
@@ -260,8 +265,9 @@ pub mod risk_engine {
             response,
             config,
         } = ctx.accounts;
+        let config = config.load()?;
 
-        let risk_calculator = construct_risk_calculator(rfq, config, &mut ctx.remaining_accounts)?;
+        let risk_calculator = construct_risk_calculator(rfq, &config, &mut ctx.remaining_accounts)?;
 
         let legs_multiplier_bps = response.calculate_confirmed_legs_multiplier_bps(rfq);
         let legs_multiplier = Fraction::new(
@@ -349,7 +355,7 @@ pub struct InitializeConfigAccounts<'info> {
         space = Config::get_allocated_size(),
         bump
     )]
-    pub config: Box<Account<'info, Config>>,
+    pub config: AccountLoader<'info, Config>,
     pub system_program: Program<'info, System>,
 }
 
@@ -358,8 +364,8 @@ pub struct SetRiskCategoryInfo<'info> {
     #[account(constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
     pub protocol: Account<'info, ProtocolState>,
-    #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Box<Account<'info, Config>>,
+    #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump)]
+    pub config: AccountLoader<'info, Config>,
 }
 
 #[derive(Accounts)]
@@ -367,8 +373,8 @@ pub struct UpdateConfigAccounts<'info> {
     #[account(constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
     pub protocol: Account<'info, ProtocolState>,
-    #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Box<Account<'info, Config>>,
+    #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump)]
+    pub config: AccountLoader<'info, Config>,
 }
 
 #[derive(Accounts)]
@@ -376,29 +382,29 @@ pub struct SetInstrumentTypeAccounts<'info> {
     #[account(constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
     pub protocol: Account<'info, ProtocolState>,
-    #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Box<Account<'info, Config>>,
+    #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump)]
+    pub config: AccountLoader<'info, Config>,
 }
 
 #[derive(Accounts)]
 pub struct CalculateRequiredCollateralForRfq<'info> {
     pub rfq: Box<Account<'info, Rfq>>,
-    #[account(seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Box<Account<'info, Config>>,
+    #[account(seeds = [CONFIG_SEED.as_bytes()], bump)]
+    pub config: AccountLoader<'info, Config>,
 }
 
 #[derive(Accounts)]
 pub struct CalculateRequiredCollateralForResponse<'info> {
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
-    #[account(seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Box<Account<'info, Config>>,
+    #[account(seeds = [CONFIG_SEED.as_bytes()], bump)]
+    pub config: AccountLoader<'info, Config>,
 }
 
 #[derive(Accounts)]
 pub struct CalculateRequiredCollateralForConfirmation<'info> {
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
-    #[account(seeds = [CONFIG_SEED.as_bytes()], bump = config.bump)]
-    pub config: Box<Account<'info, Config>>,
+    #[account(seeds = [CONFIG_SEED.as_bytes()], bump)]
+    pub config: AccountLoader<'info, Config>,
 }

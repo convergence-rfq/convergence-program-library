@@ -86,7 +86,7 @@ describe("Required collateral calculation and lock", () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [maker]);
     // respond with leg multiplier of 2
     await rfq.respond({ bid: Quote.getStandart(toAbsolutePrice(new BN(20)), toLegMultiplier(2)) });
-    await measurer.expectChange([{ token: "unlockedCollateral", user: maker, delta: withTokenDecimals(-39.6) }]);
+    await measurer.expectChange([{ token: "unlockedCollateral", user: maker, delta: withTokenDecimals(-92.4) }]);
   });
 
   it("Correct additional collateral locked for taker and unlocked for maker on lower confirmation", async () => {
@@ -114,7 +114,7 @@ describe("Required collateral calculation and lock", () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     // confirm multiplier leg multiplier of 1
     await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(1) });
-    let expectedCollateral = withTokenDecimals(858);
+    let expectedCollateral = withTokenDecimals(1122);
     await measurer.expectChange([
       {
         token: "unlockedCollateral",

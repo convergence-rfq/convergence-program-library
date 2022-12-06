@@ -239,7 +239,7 @@ impl ScenarioRiskCalculator<'_> {
 #[cfg(test)]
 mod tests {
     use float_cmp::assert_approx_eq;
-    use rfq::state::{Leg, PriceOracle};
+    use rfq::state::{Leg, PriceOracle, ProtocolState};
 
     use crate::state::{OptionType, RiskCategoryInfo};
 
@@ -250,7 +250,6 @@ mod tests {
 
     fn get_config() -> Config {
         Config {
-            bump: 0,
             collateral_for_variable_size_rfq_creation: 0,
             collateral_for_fixed_quote_amount_rfq_creation: 0,
             collateral_mint_decimals: 9,
@@ -261,7 +260,7 @@ mod tests {
                 yearly_volatility: Fraction::new(5, 1),
                 scenario_per_settlement_period: Default::default(),
             }; 5],
-            instrument_types: vec![],
+            instrument_types: [Default::default(); ProtocolState::MAX_INSTRUMENTS],
         }
     }
 

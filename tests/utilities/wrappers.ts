@@ -43,6 +43,7 @@ import {
   riskCategoryToObject,
   InstrumentType,
   instrumentTypeToObject,
+  RiskCategoryInfo,
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
@@ -297,6 +298,22 @@ export class RiskEngine {
       })
       .signers([this.context.dao])
       .rpc();
+
+    await executeInParallel(
+      async () => {
+        await this.setRiskCategoriesInfo([
+          { riskCategory: RiskCategory.VeryLow, newValue: DEFAULT_RISK_CATEGORIES_INFO[0] },
+          { riskCategory: RiskCategory.Low, newValue: DEFAULT_RISK_CATEGORIES_INFO[1] },
+          { riskCategory: RiskCategory.Medium, newValue: DEFAULT_RISK_CATEGORIES_INFO[2] },
+        ]);
+      },
+      async () => {
+        await this.setRiskCategoriesInfo([
+          { riskCategory: RiskCategory.High, newValue: DEFAULT_RISK_CATEGORIES_INFO[3] },
+          { riskCategory: RiskCategory.VeryHigh, newValue: DEFAULT_RISK_CATEGORIES_INFO[4] },
+        ]);
+      }
+    );
   }
 
   async updateConfig({
@@ -331,6 +348,30 @@ export class RiskEngine {
 
     await this.program.methods
       .setInstrumentType(program, idlInstrumentType)
+      .accounts({
+        authority: this.context.dao.publicKey,
+        protocol: this.context.protocolPda,
+        config: this.configAddress,
+      })
+      .signers([this.context.dao])
+      .rpc();
+  }
+
+  async setRiskCategoriesInfo(
+    changes: {
+      riskCategory: RiskCategory;
+      newValue: RiskCategoryInfo;
+    }[]
+  ) {
+    let changesForInstruction = changes.map((x) => {
+      return {
+        riskCategoryIndex: x.riskCategory.valueOf(),
+        newValue: x.newValue,
+      };
+    });
+
+    await this.program.methods
+      .setRiskCategoriesInfo(changesForInstruction)
       .accounts({
         authority: this.context.dao.publicKey,
         protocol: this.context.protocolPda,

@@ -22,7 +22,7 @@ pub struct ProtocolState {
 }
 
 impl ProtocolState {
-    pub const MAX_INSTRUMENTS: usize = 20;
+    pub const MAX_INSTRUMENTS: usize = 50;
 
     pub fn get_allocated_size() -> usize {
         // mem::size_of can include unwanted additional overhead padding

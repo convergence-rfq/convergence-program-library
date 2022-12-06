@@ -16,7 +16,7 @@ describe("Update Risk Engine config", () => {
     riskEngine = context.riskEngine;
   });
 
-  it("Successfully partially update risk engine config", async () => {
+  it.skip("Successfully partially update risk engine config", async () => {
     await riskEngine.updateConfig({
       collateralForVariableSizeRfq: new BN(100_000_000),
       collateralMintDecimals: 3,
