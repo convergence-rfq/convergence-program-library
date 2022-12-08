@@ -24,6 +24,7 @@ import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanIn
 import { PsyoptionsAmericanInstrument } from "./instruments/psyoptionsAmericanInstrument";
 import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
 import { PsyoptionsAmericanInstrument as PsyoptionsAmericanInstrumentIdl } from "../../target/types/psyoptions_american_instrument";
+import { EuroMeta } from "../dependencies/tokenized-euros/src/types";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
