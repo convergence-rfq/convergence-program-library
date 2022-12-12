@@ -1,6 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { BigNumber } from "bignumber.js";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, ComputeBudgetProgram } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
 import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, LEG_MULTIPLIER_DECIMALS } from "./constants";
@@ -153,3 +153,7 @@ export function toLittleEndian(value: number, bytes: number) {
   buf.writeUIntLE(value, 0, bytes);
   return buf;
 }
+
+export const expandComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+  units: 1400000,
+});

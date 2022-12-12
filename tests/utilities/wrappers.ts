@@ -47,7 +47,7 @@ import {
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
-import { calculateLegsSize, executeInParallel, TokenChangeMeasurer } from "./helpers";
+import { calculateLegsSize, executeInParallel, expandComputeUnits } from "./helpers";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
 
 export class Context {
@@ -258,6 +258,7 @@ export class Context {
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts(remainingAccounts)
+      .preInstructions([expandComputeUnits])
       .signers([this.taker, rfq]);
 
     if (finalize) {
@@ -502,6 +503,7 @@ export class Rfq {
       })
       .remainingAccounts(await this.getRiskEngineAccounts())
       .signers([this.context.maker, response])
+      .preInstructions([expandComputeUnits])
       .rpc();
 
     return new Response(this.context, this, this.context.maker, response.publicKey);
@@ -632,6 +634,7 @@ export class Response {
         riskEngine: this.context.riskEngine.programId,
       })
       .remainingAccounts(await this.rfq.getRiskEngineAccounts())
+      .preInstructions([expandComputeUnits])
       .signers([this.context.taker])
       .rpc();
   }
