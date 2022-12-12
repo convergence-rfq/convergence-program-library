@@ -26,7 +26,9 @@ pub fn extract_prices(
             .iter()
             .filter(|x| does_oracle_match(x, account.key()));
 
-        let first_matched_asset = matched_assets.next().ok_or(error!(Error::InvalidOracle))?;
+        let first_matched_asset = matched_assets
+            .next()
+            .ok_or_else(|| error!(Error::InvalidOracle))?;
         let price = extract_price(first_matched_asset.price_oracle, account)?;
         result.insert(first_matched_asset.index, price.clone());
 

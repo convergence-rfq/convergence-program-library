@@ -34,7 +34,7 @@ impl ProtocolState {
         self.instruments
             .iter()
             .find(|x| x.program_key == instrument_key)
-            .ok_or(error!(ProtocolError::NotAWhitelistedInstrument))
+            .ok_or_else(|| error!(ProtocolError::NotAWhitelistedInstrument))
     }
 }
 

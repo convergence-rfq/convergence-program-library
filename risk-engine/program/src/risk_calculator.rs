@@ -89,9 +89,9 @@ impl<'a> RiskCalculator<'a> {
             .unwrap();
         let result = Fraction::from(risk_sum as i128)
             .checked_mul(multiplier)
-            .ok_or(error!(Error::MathOverflow))?
+            .ok_or_else(|| error!(Error::MathOverflow))?
             .to_i128_with_decimals(0)
-            .ok_or(error!(Error::MathOverflow))?;
+            .ok_or_else(|| error!(Error::MathOverflow))?;
 
         u64::try_from(result).map_err(|_| error!(Error::MathInvalidConversion))
     }
@@ -126,11 +126,11 @@ impl ScenarioRiskCalculator<'_> {
                 leg_with_meta.leg.instrument_amount.into(),
                 leg_with_meta.leg.instrument_decimals,
             ))
-            .ok_or(error!(Error::MathOverflow))?
+            .ok_or_else(|| error!(Error::MathOverflow))?
             .checked_mul(self.leg_multiplier)
-            .ok_or(error!(Error::MathOverflow))?
+            .ok_or_else(|| error!(Error::MathOverflow))?
             .to_i128_with_decimals(self.config.collateral_mint_decimals)
-            .ok_or(error!(Error::MathOverflow))
+            .ok_or_else(|| error!(Error::MathOverflow))
     }
 
     fn calculate_leg_unit_pnl(&self, leg_with_meta: &LegWithMetadata) -> Result<Fraction> {
@@ -138,7 +138,7 @@ impl ScenarioRiskCalculator<'_> {
         let shocked_value = self.calculate_shocked_unit_value(leg_with_meta)?;
         let mut unit_pnl = shocked_value
             .checked_sub(unit_value)
-            .ok_or(error!(Error::MathOverflow))?;
+            .ok_or_else(|| error!(Error::MathOverflow))?;
 
         if self.portfolio_inverted {
             unit_pnl = -unit_pnl;
@@ -151,11 +151,11 @@ impl ScenarioRiskCalculator<'_> {
         let safety_constituent = unit_value
             .abs()
             .checked_mul(self.config.safety_price_shift_factor)
-            .ok_or(error!(Error::MathOverflow))?;
+            .ok_or_else(|| error!(Error::MathOverflow))?;
 
         unit_pnl
             .checked_sub(safety_constituent)
-            .ok_or(error!(Error::MathOverflow))
+            .ok_or_else(|| error!(Error::MathOverflow))
     }
 
     fn calculate_current_unit_value(&self, leg_with_meta: &LegWithMetadata) -> Result<Fraction> {
@@ -180,7 +180,7 @@ impl ScenarioRiskCalculator<'_> {
                     risk_category_info.yearly_volatility,
                     seconds_till_expiration,
                 )
-                .ok_or(error!(Error::MathOverflow))
+                .ok_or_else(|| error!(Error::MathOverflow))
             }
         }
     }
@@ -195,7 +195,7 @@ impl ScenarioRiskCalculator<'_> {
                         .checked_add(1.into())
                         .unwrap(),
                 )
-                .ok_or(error!(Error::MathOverflow)),
+                .ok_or_else(|| error!(Error::MathOverflow)),
             InstrumentType::Option => {
                 let option_data: OptionCommonData = AnchorDeserialize::try_from_slice(
                     &leg_with_meta.leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
@@ -210,17 +210,17 @@ impl ScenarioRiskCalculator<'_> {
                     .checked_mul(
                         Fraction::from(1)
                             .checked_add(self.scenario.base_asset_price_change)
-                            .ok_or(error!(Error::MathOverflow))?,
+                            .ok_or_else(|| error!(Error::MathOverflow))?,
                     )
-                    .ok_or(error!(Error::MathOverflow))?;
+                    .ok_or_else(|| error!(Error::MathOverflow))?;
                 let shocked_volatility = risk_category_info
                     .yearly_volatility
                     .checked_mul(
                         Fraction::from(1)
                             .checked_add(self.scenario.volatility_change)
-                            .ok_or(error!(Error::MathOverflow))?,
+                            .ok_or_else(|| error!(Error::MathOverflow))?,
                     )
-                    .ok_or(error!(Error::MathOverflow))?;
+                    .ok_or_else(|| error!(Error::MathOverflow))?;
                 calculate_option_value(
                     option_data.option_type,
                     shocked_price,
@@ -230,7 +230,7 @@ impl ScenarioRiskCalculator<'_> {
                     shocked_volatility,
                     seconds_till_expiration,
                 )
-                .ok_or(error!(Error::MathOverflow))
+                .ok_or_else(|| error!(Error::MathOverflow))
             }
         }
     }

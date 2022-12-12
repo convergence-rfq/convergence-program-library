@@ -323,7 +323,7 @@ fn construct_risk_calculator<'a>(
         .map(|leg| -> Result<LegWithMetadata> {
             let instrument_type = instrument_types
                 .get(&leg.instrument_program)
-                .ok_or(error!(Error::MissingInstrument))?
+                .ok_or_else(|| error!(Error::MissingInstrument))?
                 .clone();
             Ok(LegWithMetadata {
                 leg: &leg,
