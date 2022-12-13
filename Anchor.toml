@@ -15,7 +15,7 @@ url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "localnet"
-wallet = "~/.config/solana/convergence-v2.json"
+wallet = "~/.config/solana/id.json"
 
 [workspace]
 members = [
