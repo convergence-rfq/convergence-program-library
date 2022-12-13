@@ -1,0 +1,10 @@
+[scripts]
+test = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/psyoptionsEuropean.spec.ts"
+
+[[test.genesis]]
+address = "FASQhaZQT53W9eT9wWnPoBFw8xzZDey9TbMmJj6jCQTs"
+program = "../dependencies/euro_primitive.so"
+
+[[test.genesis]]
+address = "FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"
+program = "../dependencies/pseudo_pyth.so"

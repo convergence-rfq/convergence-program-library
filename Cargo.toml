@@ -1,4 +1,10 @@
 [workspace]
 members = [
-    "programs/*"
+    "rfq/program",
+    "risk-engine/program",
+    "spot-instrument/program",
+    "psyoptions-european-instrument/program",
 ]
+
+[profile.release]
+overflow-checks = true

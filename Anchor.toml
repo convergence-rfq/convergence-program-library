@@ -1,19 +1,26 @@
 [programs.localnet]
-rfq = "DkUaQbcXVW7XLeVa2Uo9y6hZcxUGSC5ZTBcccesSPEvq"
-       
-[programs.devnet]
-rfq = "DkUaQbcXVW7XLeVa2Uo9y6hZcxUGSC5ZTBcccesSPEvq"
+rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
+risk_engine = "7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth"
+spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
+psyoptions_european_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
 
-[programs.mainnet]
-rfq = "DkUaQbcXVW7XLeVa2Uo9y6hZcxUGSC5ZTBcccesSPEvq"
+[programs.devnet]
+rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
+risk_engine = "7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth"
+spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
+psyoptions_european_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
-wallet = "~/.config/solana/id.json"
+cluster = "localnet"
+wallet = "~/.config/solana/convergence-v2.json"
 
-[scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/rfq.spec.ts"
-#test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/psyamerican.spec.ts"
+[workspace]
+members = [
+    "rfq/program",
+    "risk-engine/program",
+    "spot-instrument/program",
+    "psyoptions-european-instrument/program",
+]
