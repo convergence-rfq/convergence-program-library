@@ -30,13 +30,21 @@ export interface Instrument {
 }
 
 export class InstrumentController {
-  constructor(protected instrument: Instrument, protected amount: BN, protected side: { bid: {} } | { ask: {} }) {}
+  constructor(
+    protected instrument: Instrument,
+    protected amount: BN,
+    protected side: { bid: {} } | { ask: {} },
+    public baseAssetIndex: number,
+    protected decimals: number
+  ) {}
 
   async toLegData() {
     return {
-      instrument: this.instrument.getProgramId(),
+      instrumentProgram: this.instrument.getProgramId(),
+      baseAssetIndex: { value: this.baseAssetIndex },
       instrumentData: this.instrument.serializeLegData(),
       instrumentAmount: new BN(this.amount),
+      instrumentDecimals: this.decimals,
       side: this.side,
     };
   }

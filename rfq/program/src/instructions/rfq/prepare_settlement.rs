@@ -1,9 +1,9 @@
 use crate::{
     common::update_state_after_preparation,
-    constants::{PROTOCOL_SEED, QUOTE_ESCROW_SEED},
     errors::ProtocolError,
     interfaces::instrument::prepare_to_settle,
-    states::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq},
+    seeds::{PROTOCOL_SEED, QUOTE_ESCROW_SEED},
+    state::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};

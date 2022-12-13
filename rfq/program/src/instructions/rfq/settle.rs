@@ -1,9 +1,9 @@
 use crate::{
     common::transfer_quote_escrow_token,
-    constants::{PROTOCOL_SEED, QUOTE_ESCROW_SEED},
     errors::ProtocolError,
     interfaces::instrument::settle,
-    states::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
+    seeds::{PROTOCOL_SEED, QUOTE_ESCROW_SEED},
+    state::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};

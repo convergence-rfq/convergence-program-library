@@ -1,7 +1,7 @@
 use crate::{
-    constants::PROTOCOL_SEED,
     errors::ProtocolError,
-    states::{Instrument, ProtocolState},
+    seeds::PROTOCOL_SEED,
+    state::{Instrument, ProtocolState},
 };
 use anchor_lang::prelude::*;
 

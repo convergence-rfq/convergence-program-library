@@ -1,8 +1,8 @@
 use crate::{
     common::unlock_response_collateral,
-    constants::{COLLATERAL_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
-    states::{CollateralInfo, ProtocolState, Response, ResponseState, Rfq},
+    seeds::{COLLATERAL_SEED, PROTOCOL_SEED},
+    state::{CollateralInfo, ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
 

@@ -4,7 +4,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AuthoritySide } from "../types";
+import { AuthoritySide, InstrumentType } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { SpotInstrument as SpotInstrumentIdl } from "../../../target/types/spot_instrument";
 
@@ -25,11 +25,19 @@ export class SpotInstrument implements Instrument {
     { mint = context.assetToken, amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
     const instrument = new SpotInstrument(context, mint);
-    return new InstrumentController(instrument, amount, side ?? DEFAULT_INSTRUMENT_SIDE);
+    mint.assertRegistered();
+    return new InstrumentController(
+      instrument,
+      amount,
+      side ?? DEFAULT_INSTRUMENT_SIDE,
+      mint.baseAssetIndex,
+      mint.decimals
+    );
   }
 
   static async addInstrument(context: Context) {
     await context.addInstrument(getSpotInstrumentProgram().programId, 1, 7, 3, 3, 4);
+    await context.riskEngine.setInstrumentType(getSpotInstrumentProgram().programId, InstrumentType.Spot);
   }
 
   serializeLegData(): Buffer {
@@ -41,7 +49,7 @@ export class SpotInstrument implements Instrument {
   }
 
   async getValidationAccounts() {
-    return [{ pubkey: this.mint.publicKey, isSigner: false, isWritable: false }];
+    return [{ pubkey: this.mint.mintInfoAddress, isSigner: false, isWritable: false }];
   }
 
   async getPrepareSettlementAccounts(

@@ -1,6 +1,6 @@
-import { BN, web3 } from "@project-serum/anchor";
+import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { MAKER_CONFIRMED_COLLATERAL, TAKER_CONFIRMED_COLLATERAL } from "../utilities/constants";
+import { BITCOIN_BASE_ASSET_INDEX } from "../utilities/constants";
 import {
   calculateLegsSize,
   sleep,
@@ -10,7 +10,7 @@ import {
   withTokenDecimals,
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
-import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
+import { AuthoritySide, FixedSize, OrderType, Quote, RiskCategory, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 
 describe("RFQ Spot instrument integration tests", () => {
@@ -56,62 +56,73 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create sell RFQ with two spot legs, respond and settle multiple responses", async () => {
-    const ethMint = await Mint.create(context);
-    // create a sell RFQ specifying 5 bitcoin bid and 10 eth ask
+    // create a sell RFQ specifying 5 bitcoin bid and 1000 sol ask
     const rfq = await context.createRfq({
       legs: [
         SpotInstrument.create(context, { amount: withTokenDecimals(5), side: Side.Bid }),
-        SpotInstrument.create(context, { mint: ethMint, amount: withTokenDecimals(10), side: Side.Ask }),
+        SpotInstrument.create(context, {
+          mint: context.additionalAssetToken,
+          amount: withTokenDecimals(1000),
+          side: Side.Ask,
+        }),
       ],
       orderType: OrderType.Sell,
     });
     // respond with quote for half of legs
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(90_000)), toLegMultiplier(0.5)),
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(70_000)), toLegMultiplier(0.5)),
     });
     // respond with quote for twice of legs once more with higher price
     const secondResponse = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(91_000)), toLegMultiplier(2)),
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(71_000)), toLegMultiplier(2)),
     });
 
     // taker confirms first response, but only half of it
     await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(0.25) });
-    const firstMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["asset", "quote", ethMint], [taker, maker]);
+    const firstMeasurer = await TokenChangeMeasurer.takeSnapshot(
+      context,
+      ["asset", "quote", "additionalAsset"],
+      [taker, maker]
+    );
     await response.prepareSettlement(AuthoritySide.Taker);
     await response.prepareSettlement(AuthoritySide.Maker);
-    // taker should spend 1.25 bitcoins, receive 2.5 eth and 22.5k$
+    // taker should spend 1.25 bitcoins, receive 250 sol and 17.5k$
     await response.settle(taker, [maker, taker]);
     await firstMeasurer.expectChange([
       { token: "asset", user: taker, delta: withTokenDecimals(-1.25) },
       { token: "asset", user: maker, delta: withTokenDecimals(1.25) },
-      { token: ethMint, user: taker, delta: withTokenDecimals(2.5) },
-      { token: ethMint, user: maker, delta: withTokenDecimals(-2.5) },
-      { token: "quote", user: taker, delta: withTokenDecimals(22_500) },
-      { token: "quote", user: maker, delta: withTokenDecimals(-22_500) },
+      { token: "additionalAsset", user: taker, delta: withTokenDecimals(250) },
+      { token: "additionalAsset", user: maker, delta: withTokenDecimals(-250) },
+      { token: "quote", user: taker, delta: withTokenDecimals(17_500) },
+      { token: "quote", user: maker, delta: withTokenDecimals(-17_500) },
     ]);
     await response.unlockResponseCollateral();
     await response.cleanUp();
 
     // taker confirms second response
     await secondResponse.confirm({ side: Side.Bid });
-    const secondMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["asset", "quote", ethMint], [taker, maker]);
+    const secondMeasurer = await TokenChangeMeasurer.takeSnapshot(
+      context,
+      ["asset", "quote", "additionalAsset"],
+      [taker, maker]
+    );
     await secondResponse.prepareSettlement(AuthoritySide.Taker);
     await secondResponse.prepareSettlement(AuthoritySide.Maker);
-    // taker should spend 10 bitcoins, receive 20 eth and 182k$
+    // taker should spend 10 bitcoins, receive 2000 sol and 142k$
     await secondResponse.settle(taker, [maker, taker]);
     await secondMeasurer.expectChange([
       { token: "asset", user: taker, delta: withTokenDecimals(-10) },
       { token: "asset", user: maker, delta: withTokenDecimals(10) },
-      { token: ethMint, user: taker, delta: withTokenDecimals(20) },
-      { token: ethMint, user: maker, delta: withTokenDecimals(-20) },
-      { token: "quote", user: taker, delta: withTokenDecimals(182_000) },
-      { token: "quote", user: maker, delta: withTokenDecimals(-182_000) },
+      { token: "additionalAsset", user: taker, delta: withTokenDecimals(2000) },
+      { token: "additionalAsset", user: maker, delta: withTokenDecimals(-2000) },
+      { token: "quote", user: taker, delta: withTokenDecimals(142_000) },
+      { token: "quote", user: maker, delta: withTokenDecimals(-142_000) },
     ]);
     await secondResponse.unlockResponseCollateral();
     await secondResponse.cleanUp();
   });
 
-  it("Create fixed quote size buy RFQ, respond and settle response", async () => {
+  it("Create fixed leg size buy RFQ, respond and settle response", async () => {
     // create a buy RFQ specifying 15 bitcoin as a leg(5 in leg with multiplier of 3)
     const rfq = await context.createRfq({
       legs: [SpotInstrument.create(context, { amount: withTokenDecimals(5), side: Side.Bid })],
@@ -221,9 +232,9 @@ describe("RFQ Spot instrument integration tests", () => {
     await response.cleanUp();
     await rfq.cleanUp();
     await tokenMeasurer.expectChange([
-      { token: "unlockedCollateral", user: taker, delta: TAKER_CONFIRMED_COLLATERAL.neg() },
-      { token: "unlockedCollateral", user: maker, delta: MAKER_CONFIRMED_COLLATERAL.neg() },
-      { token: "unlockedCollateral", user: dao, delta: TAKER_CONFIRMED_COLLATERAL.add(MAKER_CONFIRMED_COLLATERAL) },
+      { token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-660) },
+      { token: "unlockedCollateral", user: maker, delta: withTokenDecimals(-660) },
+      { token: "unlockedCollateral", user: dao, delta: withTokenDecimals(1320) },
     ]);
   });
 
@@ -254,10 +265,12 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create RFQ with a lot of spot legs and settle it", async () => {
-    const legAmount = 12;
+    const legAmount = 6;
     const mints = await Promise.all(
-      [...Array(legAmount)].map(() => {
-        return Mint.create(context);
+      [...Array(legAmount)].map(async () => {
+        const mint = await Mint.create(context);
+        await mint.register(BITCOIN_BASE_ASSET_INDEX);
+        return mint;
       })
     );
     const legs = mints.map((mint) =>
@@ -270,7 +283,8 @@ describe("RFQ Spot instrument integration tests", () => {
       legsSize: calculateLegsSize(legs),
       finalize: false,
     });
-    await rfq.addLegs(legs.slice(legAmount / 2));
+    await rfq.addLegs(legs.slice(legAmount / 2), false);
+    await rfq.finalizeConstruction();
     const response = await rfq.respond();
     await response.confirm();
     await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
@@ -293,10 +307,12 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create RFQ with a lot of spot legs and default with partial preparation", async () => {
-    const legAmount = 12;
+    const legAmount = 6;
     const mints = await Promise.all(
-      [...Array(legAmount)].map(() => {
-        return Mint.create(context);
+      [...Array(legAmount)].map(async () => {
+        const mint = await Mint.create(context);
+        await mint.register(BITCOIN_BASE_ASSET_INDEX);
+        return mint;
       })
     );
     const legs = mints.map((mint) =>
