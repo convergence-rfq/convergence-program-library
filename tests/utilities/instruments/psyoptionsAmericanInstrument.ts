@@ -185,16 +185,21 @@ export class AmericanPsyoptions {
     return program;
   }
 
+  public static createProgram2(context: Context) {
+    let program = createProgram(psyOptionsAmericanLocalNetProgramId, context.provider);
+    return program;
+  }
+
   // public async mintOptions(mintBy: Signer, amount: BN, optionType: OptionType) {}
 
   public static async initializeMarket(
+    program,
     expirationTimestamp: number,
     quoteMintPubkey: PublicKey,
     quoteAmountPerContract: number,
     underlyingAmountPerContract: number,
     underlyingMintPubkey: PublicKey
   ) {
-    let program = this.createProgram();
     let ix0 = await instructions.initializeMarket(program, {
       expirationUnixTimestamp: expirationTimestamp,
       quoteMint: quoteMintPubkey,
@@ -221,16 +226,20 @@ export class AmericanPsyoptions {
       quoteAmountPerContract = withTokenDecimals(10),
     } = {}
   ) {
-    const program = this.createProgram();
+    const program = this.createProgram2(context);
     const expiration = new BN(Date.now() / 1000 + 360000); // 1 hour in the future
     const psyOptMarket = await this.initializeMarket(
+      program,
       expiration,
       quoteMint.publicKey,
       quoteAmountPerContract,
       underlyingAmountPerContract,
       underlyingMint.publicKey
     );
-    console.log(psyOptMarket.tx);
+    let x = await context.provider.connection.confirmTransaction(psyOptMarket.tx);
+    let y = await context.provider.connection.getParsedTransaction(psyOptMarket.tx, { commitment: "confirmed" });
+    let z = await context.provider.connection.getAccountInfo(psyOptMarket.underlyingAssetPoolKey);
+    console.dir(z);
 
     const [callMint, callWriterMint] = await executeInParallel(
       () => Mint.wrap(context, psyOptMarket.optionMintKey),
@@ -250,13 +259,12 @@ export class AmericanPsyoptions {
   }
 
   public async mintPsyOPtions(mintBy: Signer, amount: anchor.BN, optiontype: OptionType) {
-    let program = AmericanPsyoptions.createProgram();
-    let optionMarketWithKey = await getOptionByKey(program, this.optionMarketKey);
+    let optionMarketWithKey = await getOptionByKey(this.program, this.optionMarketKey);
     console.log("Option market key is :", this.optionMarketKey.toBase58());
     console.log("op with key ..", optionMarketWithKey);
 
     let ix = await instructions.mintOptionV2Instruction(
-      program,
+      this.program,
       await this.callMint.getAssociatedAddress(mintBy.publicKey),
       await this.callWriterMint.getAssociatedAddress(mintBy.publicKey),
       await this.underlyingMint.getAssociatedAddress(mintBy.publicKey),
@@ -267,6 +275,7 @@ export class AmericanPsyoptions {
     let tx = new anchor.web3.Transaction();
     ix.signers.push(mintBy);
     tx.add(ix.ix);
+    console.log("!!!");
 
     let signature = await anchor.web3.sendAndConfirmTransaction(rpc, tx, ix.signers);
     console.log(signature);
