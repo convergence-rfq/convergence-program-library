@@ -21,7 +21,7 @@ import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
 import { calculateLegsSize, executeInParallel } from "./helpers";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
-import { PsyoptionsAmericanInstrument } from "./instruments/psyoptionsAmericanInstrument";
+
 import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
 import { PsyoptionsAmericanInstrument as PsyoptionsAmericanInstrumentIdl } from "../../target/types/psyoptions_american_instrument";
 import { EuroMeta } from "../dependencies/tokenized-euros/src/types";
@@ -713,7 +713,7 @@ export async function getContext() {
       await PsyoptionsEuropeanInstrument.addInstrument(context);
     },
     async () => {
-      await PsyoptionsAmericanInstrument.addInstrument(context);
+      // await PsyoptionsAmericanInstrument.addInstrument(context);
     },
     async () => {
       await context.initializeCollateral(context.taker);
