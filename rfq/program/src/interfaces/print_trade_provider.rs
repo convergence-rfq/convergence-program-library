@@ -10,6 +10,7 @@ use crate::{
 
 const VALIDATE_LEGS_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
 const CREATE_PRINT_TRADE_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+const SETTLE_PRINT_TRADE_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
 
 pub fn validate_instrument_data<'a, 'info: 'a>(
     legs: &Vec<Leg>,
@@ -64,11 +65,31 @@ pub fn create_print_trade<'a, 'info: 'a>(
     )
 }
 
-/*
-pub fn settle_print_trade<'a, 'info: 'a>() -> Result<()> {
-    call_instrument()
+pub fn settle_print_trade<'a, 'info: 'a>(
+    legs: &Vec<Leg>,
+    protocol: &Account<'info, ProtocolState>,
+    rfq: &Account<'info, Rfq>,
+    response: &Account<'info, Response>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
+    let data = SETTLE_PRINT_TRADE_SELECTOR.to_vec();
+
+    let print_trade_provider_key = legs[0].instrument_program;
+    let print_trade_provider_parameters =
+        protocol.get_print_trade_provider_parameters(print_trade_provider_key)?;
+
+    call_instrument(
+        data,
+        protocol,
+        &print_trade_provider_key,
+        print_trade_provider_parameters.settle_print_trade_account_amount as usize,
+        Some(rfq),
+        Some(response),
+        remaining_accounts,
+    )
 }
 
+/*
 pub fn clean_up<'a, 'info: 'a>() -> Result<()> {
     call_instrument()
 }
