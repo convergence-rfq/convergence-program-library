@@ -8,20 +8,22 @@ use crate::{
     utils::ToAccountMeta,
 };
 
-const VALIDATE_LEG_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+const VALIDATE_LEGS_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
 
 pub fn validate_instrument_data<'a, 'info: 'a>(
-    leg: &Leg,
+    legs: &Vec<Leg>,
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
-    let mut leg_data = AnchorSerialize::try_to_vec(leg)?;
+    assert!(!legs.is_empty());
 
-    let mut data = VALIDATE_LEG_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&(leg_data.len() as u32), &mut data)?;
-    data.append(&mut leg_data);
+    let mut legs_data = AnchorSerialize::try_to_vec(legs)?;
 
-    let print_trade_provider_key = leg.instrument_program;
+    let mut data = VALIDATE_LEGS_SELECTOR.to_vec();
+    AnchorSerialize::serialize(&(legs_data.len() as u32), &mut data)?;
+    data.append(&mut legs_data);
+
+    let print_trade_provider_key = legs[0].instrument_program;
     let print_trade_provider_parameters =
         protocol.get_instrument_parameters(print_trade_provider_key)?;
 
