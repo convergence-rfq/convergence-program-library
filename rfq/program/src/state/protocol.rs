@@ -19,6 +19,7 @@ pub struct ProtocolState {
     pub risk_engine: Pubkey,
     pub collateral_mint: Pubkey,
     pub instruments: Vec<Instrument>,
+    pub print_trade_providers: Vec<PrintTradeProvider>,
 }
 
 impl ProtocolState {
@@ -36,6 +37,13 @@ impl ProtocolState {
             .find(|x| x.program_key == instrument_key)
             .ok_or_else(|| error!(ProtocolError::NotAWhitelistedInstrument))
     }
+
+    pub fn get_print_trade_provider_parameters(&self, instrument_key: Pubkey) -> Result<&PrintTradeProvider> {
+        self.print_trade_providers
+            .iter()
+            .find(|x| x.program_key == instrument_key)
+            .ok_or_else(|| error!(ProtocolError::NotAWhitelistedPrintTradeProvider))
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -45,6 +53,15 @@ pub struct Instrument {
     pub prepare_to_settle_account_amount: u8,
     pub settle_account_amount: u8,
     pub revert_preparation_account_amount: u8,
+    pub clean_up_account_amount: u8,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub struct PrintTradeProvider {
+    pub program_key: Pubkey,
+    pub validate_data_account_amount: u8,
+    pub create_print_trade_account_amount: u8,
+    pub settle_print_trade_account_amount: u8,
     pub clean_up_account_amount: u8,
 }
 

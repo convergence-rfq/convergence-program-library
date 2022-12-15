@@ -26,6 +26,8 @@ pub enum ProtocolError {
     NotEnoughCollateral,
     #[msg("Not a whitelisted instrument")]
     NotAWhitelistedInstrument,
+    #[msg("Not a whitelisted print trade provider")]
+    NotAWhitelistedPrintTradeProvider,
     #[msg("Not enough accounts")]
     NotEnoughAccounts,
     #[msg("Passed program id differs from an instrument")]

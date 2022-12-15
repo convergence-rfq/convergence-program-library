@@ -4,11 +4,12 @@ use solana_program::{instruction::Instruction, program::invoke_signed};
 use crate::{
     errors::ProtocolError,
     seeds::PROTOCOL_SEED,
-    state::{Leg, ProtocolState, Response, Rfq},
+    state::{AuthoritySide, Leg, ProtocolState, Response, Rfq},
     utils::ToAccountMeta,
 };
 
 const VALIDATE_LEGS_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+const CREATE_PRINT_TRADE_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
 
 pub fn validate_instrument_data<'a, 'info: 'a>(
     legs: &Vec<Leg>,
@@ -25,7 +26,7 @@ pub fn validate_instrument_data<'a, 'info: 'a>(
 
     let print_trade_provider_key = legs[0].instrument_program;
     let print_trade_provider_parameters =
-        protocol.get_instrument_parameters(print_trade_provider_key)?;
+        protocol.get_print_trade_provider_parameters(print_trade_provider_key)?;
 
     call_instrument(
         data,
@@ -37,11 +38,33 @@ pub fn validate_instrument_data<'a, 'info: 'a>(
         remaining_accounts,
     )
 }
-/*
-pub fn create_print_trade<'a, 'info: 'a>() -> Result<()> {
-    call_instrument()
+pub fn create_print_trade<'a, 'info: 'a>(
+    legs: &Vec<Leg>,
+    side: AuthoritySide,
+    protocol: &Account<'info, ProtocolState>,
+    rfq: &Account<'info, Rfq>,
+    response: &Account<'info, Response>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
+    let mut data = CREATE_PRINT_TRADE_SELECTOR.to_vec();
+    AnchorSerialize::serialize(&side, &mut data)?;
+
+    let print_trade_provider_key = legs[0].instrument_program;
+    let print_trade_provider_parameters =
+        protocol.get_print_trade_provider_parameters(print_trade_provider_key)?;
+
+    call_instrument(
+        data,
+        protocol,
+        &print_trade_provider_key,
+        print_trade_provider_parameters.create_print_trade_account_amount as usize,
+        Some(rfq),
+        Some(response),
+        remaining_accounts,
+    )
 }
 
+/*
 pub fn settle_print_trade<'a, 'info: 'a>() -> Result<()> {
     call_instrument()
 }
