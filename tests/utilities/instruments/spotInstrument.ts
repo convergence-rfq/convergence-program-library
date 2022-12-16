@@ -4,7 +4,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AuthoritySide, InstrumentType } from "../types";
+import { AssetIdentifier, AuthoritySide, InstrumentType } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { SpotInstrument as SpotInstrumentIdl } from "../../../target/types/spot_instrument";
 
@@ -20,7 +20,7 @@ export function getSpotInstrumentProgram(): anchor.Program<SpotInstrumentIdl> {
 export class SpotInstrument implements Instrument {
   constructor(private context: Context, private mint: Mint) {}
 
-  static create(
+  static createForLeg(
     context: Context,
     { mint = context.assetToken, amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
@@ -28,19 +28,23 @@ export class SpotInstrument implements Instrument {
     mint.assertRegistered();
     return new InstrumentController(
       instrument,
-      amount,
-      side ?? DEFAULT_INSTRUMENT_SIDE,
-      mint.baseAssetIndex,
+      { amount, side: side ?? DEFAULT_INSTRUMENT_SIDE, baseAssetIndex: mint.baseAssetIndex },
       mint.decimals
     );
   }
 
+  static createForQuote(context: Context, mint = context.assetToken): InstrumentController {
+    const instrument = new SpotInstrument(context, mint);
+    mint.assertRegistered();
+    return new InstrumentController(instrument, null, mint.decimals);
+  }
+
   static async addInstrument(context: Context) {
-    await context.addInstrument(getSpotInstrumentProgram().programId, 1, 7, 3, 3, 4);
+    await context.addInstrument(getSpotInstrumentProgram().programId, true, 1, 7, 3, 3, 4);
     await context.riskEngine.setInstrumentType(getSpotInstrumentProgram().programId, InstrumentType.Spot);
   }
 
-  serializeLegData(): Buffer {
+  serializeInstrumentData(): Buffer {
     return Buffer.from(this.mint.publicKey.toBytes());
   }
 
@@ -54,7 +58,7 @@ export class SpotInstrument implements Instrument {
 
   async getPrepareSettlementAccounts(
     side: { taker: {} } | { maker: {} },
-    legIndex: number,
+    assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
@@ -74,7 +78,7 @@ export class SpotInstrument implements Instrument {
       },
       { pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
@@ -84,10 +88,10 @@ export class SpotInstrument implements Instrument {
     ];
   }
 
-  async getSettleAccounts(assetReceiver: PublicKey, legIndex: number, rfq: Rfq, response: Response) {
+  async getSettleAccounts(assetReceiver: PublicKey, assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
@@ -102,7 +106,7 @@ export class SpotInstrument implements Instrument {
 
   async getRevertSettlementPreparationAccounts(
     side: { taker: {} } | { maker: {} },
-    legIndex: number,
+    assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
@@ -110,7 +114,7 @@ export class SpotInstrument implements Instrument {
 
     return [
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
@@ -123,7 +127,7 @@ export class SpotInstrument implements Instrument {
     ];
   }
 
-  async getCleanUpAccounts(legIndex: number, rfq: Rfq, response: Response) {
+  async getCleanUpAccounts(assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
         pubkey: response.firstToPrepare,
@@ -131,7 +135,7 @@ export class SpotInstrument implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },

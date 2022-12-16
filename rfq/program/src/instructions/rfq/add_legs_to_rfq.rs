@@ -1,6 +1,6 @@
 use crate::{
     errors::ProtocolError,
-    interfaces::instrument::validate_instrument_data,
+    interfaces::instrument::validate_leg_instrument_data,
     seeds::PROTOCOL_SEED,
     state::{Leg, ProtocolState, Rfq, RfqState},
 };
@@ -25,7 +25,7 @@ fn validate<'info>(
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
     for leg in legs.iter() {
-        validate_instrument_data(leg, protocol, &mut remaining_accounts)?;
+        validate_leg_instrument_data(leg, protocol, &mut remaining_accounts)?;
     }
 
     require!(legs.len() > 0, ProtocolError::EmptyLegsNotSupported);

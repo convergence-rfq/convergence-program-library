@@ -69,6 +69,7 @@ pub mod rfq {
 
     pub fn add_instrument(
         ctx: Context<AddInstrumentAccounts>,
+        can_be_used_as_quote: bool,
         validate_data_account_amount: u8,
         prepare_to_settle_account_amount: u8,
         settle_account_amount: u8,
@@ -77,6 +78,7 @@ pub mod rfq {
     ) -> Result<()> {
         add_instrument_instruction(
             ctx,
+            can_be_used_as_quote,
             validate_data_account_amount,
             prepare_to_settle_account_amount,
             settle_account_amount,
@@ -119,6 +121,7 @@ pub mod rfq {
         expected_leg_size: u16,
         legs: Vec<Leg>,
         order_type: OrderType,
+        quote_asset: QuoteAsset,
         fixed_size: FixedSize,
         active_window: u32,
         settling_window: u32,
@@ -128,6 +131,7 @@ pub mod rfq {
             expected_leg_size,
             legs,
             order_type,
+            quote_asset,
             fixed_size,
             active_window,
             settling_window,

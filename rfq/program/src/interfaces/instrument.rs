@@ -4,27 +4,28 @@ use solana_program::{instruction::Instruction, program::invoke_signed};
 use crate::{
     errors::ProtocolError,
     seeds::PROTOCOL_SEED,
-    state::{AuthoritySide, Leg, ProtocolState, Response, Rfq},
+    state::{
+        AssetIdentifier, AuthoritySide, BaseAssetIndex, Leg, ProtocolState, QuoteAsset, Response,
+        Rfq,
+    },
     utils::ToAccountMeta,
 };
 
-const VALIDATE_LEG_SELECTOR: [u8; 8] = [59, 45, 150, 112, 199, 116, 193, 136];
+const VALIDATE_DATA_SELECTOR: [u8; 8] = [181, 2, 45, 238, 64, 129, 254, 198];
 const PREPARE_TO_SETTLE_SELECTOR: [u8; 8] = [254, 209, 39, 188, 15, 5, 140, 146];
 const SETTLE_SELECTOR: [u8; 8] = [175, 42, 185, 87, 144, 131, 102, 212];
 const REVERT_PREPARATION_SELECTOR: [u8; 8] = [32, 185, 171, 189, 112, 246, 209, 149];
 const CLEAN_UP_SELECTOR: [u8; 8] = [8, 182, 195, 138, 85, 137, 221, 250];
 
-pub fn validate_instrument_data<'a, 'info: 'a>(
+pub fn validate_leg_instrument_data<'a, 'info: 'a>(
     leg: &Leg,
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
-    // we serialize leg with it's leg to work around an anchor issue with imported types in instruction
-    let mut leg_data = AnchorSerialize::try_to_vec(leg)?;
-
-    let mut data = VALIDATE_LEG_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&(leg_data.len() as u32), &mut data)?;
-    data.append(&mut leg_data);
+    let mut data = VALIDATE_DATA_SELECTOR.to_vec();
+    AnchorSerialize::serialize(&leg.instrument_data, &mut data)?;
+    AnchorSerialize::serialize(&Some(leg.base_asset_index), &mut data)?;
+    AnchorSerialize::serialize(&leg.instrument_decimals, &mut data)?;
 
     let instrument_key = leg.instrument_program;
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
@@ -40,9 +41,32 @@ pub fn validate_instrument_data<'a, 'info: 'a>(
     )
 }
 
+pub fn validate_quote_instrument_data<'a, 'info: 'a>(
+    quote: &QuoteAsset,
+    protocol: &Account<'info, ProtocolState>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
+    let mut data = VALIDATE_DATA_SELECTOR.to_vec();
+    AnchorSerialize::serialize(&quote.instrument_data, &mut data)?;
+    AnchorSerialize::serialize(&Option::<BaseAssetIndex>::None, &mut data)?;
+    AnchorSerialize::serialize(&quote.instrument_decimals, &mut data)?;
+
+    let instrument_key = quote.instrument_program;
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+
+    call_instrument(
+        data,
+        protocol,
+        &instrument_key,
+        instrument_parameters.validate_data_account_amount as usize,
+        None,
+        None,
+        remaining_accounts,
+    )
+}
+
 pub fn prepare_to_settle<'a, 'info: 'a>(
-    leg: &Leg,
-    leg_index: u8,
+    asset_identifier: AssetIdentifier,
     side: AuthoritySide,
     protocol: &Account<'info, ProtocolState>,
     rfq: &Account<'info, Rfq>,
@@ -50,10 +74,10 @@ pub fn prepare_to_settle<'a, 'info: 'a>(
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = PREPARE_TO_SETTLE_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&leg_index, &mut data)?;
+    AnchorSerialize::serialize(&asset_identifier, &mut data)?;
     AnchorSerialize::serialize(&side, &mut data)?;
 
-    let instrument_key = leg.instrument_program;
+    let instrument_key = rfq.get_asset_instrument_program(asset_identifier);
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
 
     call_instrument(
@@ -68,17 +92,16 @@ pub fn prepare_to_settle<'a, 'info: 'a>(
 }
 
 pub fn settle<'a, 'info: 'a>(
-    leg: &Leg,
-    leg_index: u8,
+    asset_identifier: AssetIdentifier,
     protocol: &Account<'info, ProtocolState>,
     rfq: &Account<'info, Rfq>,
     response: &Account<'info, Response>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = SETTLE_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&leg_index, &mut data)?;
+    AnchorSerialize::serialize(&asset_identifier, &mut data)?;
 
-    let instrument_key = leg.instrument_program;
+    let instrument_key = rfq.get_asset_instrument_program(asset_identifier);
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
 
     call_instrument(
@@ -93,8 +116,7 @@ pub fn settle<'a, 'info: 'a>(
 }
 
 pub fn revert_preparation<'a, 'info: 'a>(
-    leg: &Leg,
-    leg_index: u8,
+    asset_identifier: AssetIdentifier,
     side: AuthoritySide,
     protocol: &Account<'info, ProtocolState>,
     rfq: &Account<'info, Rfq>,
@@ -102,10 +124,10 @@ pub fn revert_preparation<'a, 'info: 'a>(
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = REVERT_PREPARATION_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&leg_index, &mut data)?;
+    AnchorSerialize::serialize(&asset_identifier, &mut data)?;
     AnchorSerialize::serialize(&side, &mut data)?;
 
-    let instrument_key = leg.instrument_program;
+    let instrument_key = rfq.get_asset_instrument_program(asset_identifier);
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
 
     call_instrument(
@@ -120,17 +142,16 @@ pub fn revert_preparation<'a, 'info: 'a>(
 }
 
 pub fn clean_up<'a, 'info: 'a>(
-    leg: &Leg,
-    leg_index: u8,
+    asset_identifier: AssetIdentifier,
     protocol: &Account<'info, ProtocolState>,
     rfq: &Account<'info, Rfq>,
     response: &Account<'info, Response>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = CLEAN_UP_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&leg_index, &mut data)?;
+    AnchorSerialize::serialize(&asset_identifier, &mut data)?;
 
-    let instrument_key = leg.instrument_program;
+    let instrument_key = rfq.get_asset_instrument_program(asset_identifier);
     let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
 
     call_instrument(

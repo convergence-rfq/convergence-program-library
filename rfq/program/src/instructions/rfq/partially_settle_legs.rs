@@ -2,7 +2,7 @@ use crate::{
     errors::ProtocolError,
     interfaces::instrument::settle,
     seeds::PROTOCOL_SEED,
-    state::{ProtocolState, Response, ResponseState, Rfq},
+    state::{AssetIdentifier, ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
 
@@ -46,16 +46,9 @@ pub fn partially_settle_legs_instruction<'info>(
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    for (index, leg) in rfq
-        .legs
-        .iter()
-        .enumerate()
-        .skip(response.settled_legs as usize)
-        .take(leg_amount_to_settle as usize)
-    {
+    for leg_index in response.settled_legs..(response.settled_legs + leg_amount_to_settle) {
         settle(
-            leg,
-            index as u8,
+            AssetIdentifier::Leg { leg_index },
             &protocol,
             rfq,
             response,

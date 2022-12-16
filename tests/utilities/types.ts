@@ -134,3 +134,13 @@ export function toRiskCategoryInfo(
     scenarioPerSettlementPeriod: scenarioPerSettlementPeriod,
   };
 }
+
+export type AssetIdentifier = "quote" | { legIndex: number };
+
+export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
+  if (assetIdentifier == "quote") {
+    return Buffer.from([1, 0]);
+  } else {
+    return Buffer.from([0, assetIdentifier.legIndex]);
+  }
+}

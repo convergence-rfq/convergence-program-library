@@ -3,7 +3,10 @@ use anchor_spl::associated_token::get_associated_token_address;
 
 use crate::errors::ProtocolError;
 
-use super::rfq::{FixedSize, Rfq, Side};
+use super::{
+    rfq::{FixedSize, Rfq, Side},
+    AssetIdentifier,
+};
 
 #[account]
 pub struct Response {
@@ -74,6 +77,20 @@ impl Response {
             StoredResponseState::Defaulted => ResponseState::Defaulted,
         };
         Ok(state)
+    }
+
+    pub fn get_asset_amount_to_transfer(
+        &self,
+        rfq: &Rfq,
+        asset_identifier: AssetIdentifier,
+        side: AuthoritySide,
+    ) -> i64 {
+        match asset_identifier {
+            AssetIdentifier::Leg { leg_index } => {
+                self.get_leg_amount_to_transfer(rfq, leg_index, side)
+            }
+            AssetIdentifier::Quote => self.get_quote_amount_to_transfer(rfq, side),
+        }
     }
 
     pub fn get_leg_amount_to_transfer(&self, rfq: &Rfq, leg_index: u8, side: AuthoritySide) -> i64 {
@@ -179,6 +196,17 @@ impl Response {
         result
     }
 
+    pub fn get_assets_receiver(
+        &self,
+        rfq: &Rfq,
+        asset_identifier: AssetIdentifier,
+    ) -> AuthoritySide {
+        match asset_identifier {
+            AssetIdentifier::Leg { leg_index } => self.get_leg_assets_receiver(rfq, leg_index),
+            AssetIdentifier::Quote => self.get_quote_tokens_receiver(rfq),
+        }
+    }
+
     pub fn get_leg_assets_receiver(&self, rfq: &Rfq, leg_index: u8) -> AuthoritySide {
         let taker_amount = self.get_leg_amount_to_transfer(rfq, leg_index, AuthoritySide::Taker);
         if taker_amount > 0 {
@@ -259,6 +287,19 @@ impl Response {
 
     pub fn have_locked_collateral(&self) -> bool {
         self.taker_collateral_locked > 0 || self.maker_collateral_locked > 0
+    }
+
+    pub fn get_preparation_initialized_by(
+        &self,
+        asset_identifier: AssetIdentifier,
+    ) -> Option<AuthoritySide> {
+        match asset_identifier {
+            AssetIdentifier::Leg { leg_index } => self
+                .leg_preparations_initialized_by
+                .get(leg_index as usize)
+                .cloned(),
+            AssetIdentifier::Quote => self.leg_preparations_initialized_by.get(0).cloned(),
+        }
     }
 }
 
