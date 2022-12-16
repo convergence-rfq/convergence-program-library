@@ -180,7 +180,6 @@ export class Context {
     const remainingAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
     const rfq = new Keypair();
     const rfqObject = new Rfq(this, rfq.publicKey, legs);
-
     let txConstructor = await this.program.methods
       .createRfq(legsSize, legData, orderType, fixedSize, activeWindow, settlingWindow)
       .accounts({
@@ -196,8 +195,10 @@ export class Context {
     if (finalize) {
       txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeRfqInstruction()]);
     }
+    console.log("creating rfq");
+    let tx = await txConstructor.rpc();
 
-    await txConstructor.rpc();
+    console.log("createRfq Signature", tx);
 
     return rfqObject;
   }

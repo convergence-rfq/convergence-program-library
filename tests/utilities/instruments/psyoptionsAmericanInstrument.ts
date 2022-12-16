@@ -1,4 +1,4 @@
-import { Program, web3, BN, workspace } from "@project-serum/anchor";
+import { Program, web3, BN, workspace, AnchorError } from "@project-serum/anchor";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
@@ -20,6 +20,9 @@ import { executeInParallel, withTokenDecimals, sleep } from "../helpers";
 import * as Spl from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 import * as psyoptionAmerican from "@mithraic-labs/psy-american";
+import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+
+import { PsyoptionsAmericanInstrument } from "../../../target/types/psyoptions_american_instrument";
 
 enum OptionType {
   CALL = 0,
@@ -31,15 +34,15 @@ let payer = anchor.AnchorProvider.env().wallet as anchor.Wallet;
 let AnchorProvider = new anchor.AnchorProvider(rpc, payer, anchor.AnchorProvider.defaultOptions());
 let psyOptionsAmericanLocalNetProgramId = new anchor.web3.PublicKey("77i2wXGdwV5MkV9W6X2T3bXwZwK7tFSDqBdL7XMz5yBF");
 let psyoptionsAmericanInstrumentProgram = null;
-
 export function getAmericanOptionsInstrumentProgram() {
   if (psyoptionsAmericanInstrumentProgram === null) {
-    psyoptionsAmericanInstrumentProgram = createProgram(psyOptionsAmericanLocalNetProgramId, AnchorProvider);
+    psyoptionsAmericanInstrumentProgram =
+      workspace.PsyoptionsAmericanInstrument as Program<PsyoptionsAmericanInstrument>;
   }
-  return psyoptionsAmericanInstrumentProgram as Program<PsyAmerican>;
+  return psyoptionsAmericanInstrumentProgram;
 }
 
-export class PsyoptionsAmericanInstrument implements Instrument {
+export class PsyoptionsAmericanInstrumentClass implements Instrument {
   constructor(
     private context: Context,
     private mint: Mint,
@@ -54,7 +57,7 @@ export class PsyoptionsAmericanInstrument implements Instrument {
     Optiontype: OptionType,
     { amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
-    const instrument = new PsyoptionsAmericanInstrument(context, mint, OptionMarket, Optiontype);
+    const instrument = new PsyoptionsAmericanInstrumentClass(context, mint, OptionMarket, Optiontype);
     return new InstrumentController(instrument, amount, side ?? DEFAULT_INSTRUMENT_SIDE);
   }
 
@@ -171,7 +174,8 @@ export class PsyoptionsAmericanInstrument implements Instrument {
 
 export class AmericanPsyoptions {
   private constructor(
-    private program = createProgram(psyOptionsAmericanLocalNetProgramId, AnchorProvider),
+    public context: Context,
+    private program = AmericanPsyoptions.createProgramWithProvider(context.maker, context),
     public optionMint: PublicKey,
     public writerMint: PublicKey,
     public optionMarketKey: PublicKey,
@@ -185,8 +189,13 @@ export class AmericanPsyoptions {
     return program;
   }
 
-  public static createProgram2(context: Context) {
-    let program = createProgram(psyOptionsAmericanLocalNetProgramId, context.provider);
+  public static createProgramWithProvider(user: anchor.web3.Keypair, context: Context) {
+    const provider = new anchor.AnchorProvider(
+      context.provider.connection,
+      new NodeWallet(context.maker),
+      anchor.AnchorProvider.defaultOptions()
+    );
+    let program = createProgram(psyOptionsAmericanLocalNetProgramId, provider);
     return program;
   }
 
@@ -211,8 +220,8 @@ export class AmericanPsyoptions {
     return ix0;
   }
 
-  public static async getOptionMarketByKey(optionMarketPubkey: PublicKey) {
-    let program = this.createProgram();
+  public static async getOptionMarketByKey(context: Context, optionMarketPubkey: PublicKey) {
+    let program = this.createProgramWithProvider(context.maker, context);
     let optionMarkeyWithkey = await getOptionByKey(program, optionMarketPubkey);
     return optionMarkeyWithkey;
   }
@@ -226,7 +235,7 @@ export class AmericanPsyoptions {
       quoteAmountPerContract = withTokenDecimals(10),
     } = {}
   ) {
-    const program = this.createProgram2(context);
+    const program = this.createProgramWithProvider(context.maker, context);
     const expiration = new BN(Date.now() / 1000 + 360000); // 1 hour in the future
     const psyOptMarket = await this.initializeMarket(
       program,
@@ -239,7 +248,6 @@ export class AmericanPsyoptions {
     let x = await context.provider.connection.confirmTransaction(psyOptMarket.tx);
     let y = await context.provider.connection.getParsedTransaction(psyOptMarket.tx, { commitment: "confirmed" });
     let z = await context.provider.connection.getAccountInfo(psyOptMarket.underlyingAssetPoolKey);
-    console.dir(z);
 
     const [callMint, callWriterMint] = await executeInParallel(
       () => Mint.wrap(context, psyOptMarket.optionMintKey),
@@ -247,6 +255,7 @@ export class AmericanPsyoptions {
     );
 
     return new AmericanPsyoptions(
+      context,
       program,
       psyOptMarket.optionMintKey,
       psyOptMarket.writerMintKey,
@@ -258,10 +267,9 @@ export class AmericanPsyoptions {
     );
   }
 
-  public async mintPsyOPtions(mintBy: Signer, amount: anchor.BN, optiontype: OptionType) {
+  public async mintPsyOPtions(mintBy: Signer, amount: anchor.BN, optiontype: OptionType, context: Context) {
     let optionMarketWithKey = await getOptionByKey(this.program, this.optionMarketKey);
     console.log("Option market key is :", this.optionMarketKey.toBase58());
-    console.log("op with key ..", optionMarketWithKey);
 
     let ix = await instructions.mintOptionV2Instruction(
       this.program,
@@ -277,11 +285,14 @@ export class AmericanPsyoptions {
     tx.add(ix.ix);
     console.log("!!!");
 
-    let signature = await anchor.web3.sendAndConfirmTransaction(rpc, tx, ix.signers);
-    console.log(signature);
+    try {
+      //
+      let signature = await this.context.provider.sendAndConfirm(tx, ix.signers);
+      return signature;
+    } catch (e) {
+      console.error(e);
+    }
 
     console.log("done.... minting");
-
-    return signature;
   }
 }
