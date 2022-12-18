@@ -11,7 +11,7 @@ use errors::PsyoptionsAmericanError;
 use rfq::states::AuthoritySide;
 
 declare_id!("ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy");
-const ESCROW_SEED: &str = "psyoptions_american_escrow_token_account";
+const ESCROW_SEED: &str = "psyescrow";
 #[program]
 pub mod psyoptions_american_instrument {
 
@@ -54,12 +54,14 @@ pub mod psyoptions_american_instrument {
             rfq,
             response,
             mint,
-            escrow_token_account,
+            escrow,
             token_program,
             ..
         } = &ctx.accounts;
+        msg!("escrow pubkey");
+        msg!(ctx.accounts.escrow.key().to_string().as_str());
         let leg_data = &rfq.legs[leg_index as usize].instrument_data;
-        let expected_mint: Pubkey = AnchorDeserialize::try_from_slice(leg_data)?;
+        let expected_mint: Pubkey = AnchorDeserialize::try_from_slice(&leg_data[..32])?;
         require!(
             expected_mint == mint.key(),
             PsyoptionsAmericanError::PassedMintDoesNotMatch
@@ -70,11 +72,20 @@ pub mod psyoptions_american_instrument {
         );
 
         let token_amount = response.get_leg_amount_to_transfer(rfq, leg_index, side.into());
+        let bal = caller_token_account.amount;
+        let caller_pub = caller_token_account.owner.key();
+        msg!("token balance :{}", bal.to_string().as_str());
+        msg!("token accont owner  :{}", caller_pub.to_string().as_str());
+
+        msg!(
+            "token amount to transfer :{}",
+            token_amount.to_string().as_str()
+        );
 
         if token_amount > 0 {
             let transfer_accounts = Transfer {
                 from: caller_token_account.to_account_info(),
-                to: escrow_token_account.to_account_info(),
+                to: escrow.to_account_info(),
                 authority: caller.to_account_info(),
             };
             let transfer_ctx = CpiContext::new(token_program.to_account_info(), transfer_accounts);
@@ -88,7 +99,7 @@ pub mod psyoptions_american_instrument {
         let Settle {
             rfq,
             response,
-            escrow_token_account,
+            escrow,
             receiver_token_account,
             token_program,
             ..
@@ -99,16 +110,16 @@ pub mod psyoptions_american_instrument {
             .validate_is_associated_token_account(
                 rfq,
                 response,
-                escrow_token_account.mint,
+                escrow.mint,
                 receiver_token_account.key(),
             )?;
 
         transfer_from_an_escrow(
-            escrow_token_account,
+            escrow,
             receiver_token_account,
             response.key(),
             leg_index,
-            *ctx.bumps.get("escrow_token_account").unwrap(),
+            *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
 
@@ -123,27 +134,22 @@ pub mod psyoptions_american_instrument {
         let RevertPreparation {
             rfq,
             response,
-            escrow_token_account,
+            escrow,
             tokens,
             token_program,
             ..
         } = &ctx.accounts;
 
         let side: AuthoritySide = side.into();
-        side.validate_is_associated_token_account(
-            rfq,
-            response,
-            escrow_token_account.mint,
-            tokens.key(),
-        )?;
+        side.validate_is_associated_token_account(rfq, response, escrow.mint, tokens.key())?;
 
         if side == response.get_leg_assets_receiver(rfq, leg_index).revert() {
             transfer_from_an_escrow(
-                escrow_token_account,
+                escrow,
                 tokens,
                 response.key(),
                 leg_index,
-                *ctx.bumps.get("escrow_token_account").unwrap(),
+                *ctx.bumps.get("escrow").unwrap(),
                 token_program,
             )?;
         }
@@ -157,14 +163,14 @@ pub mod psyoptions_american_instrument {
             rfq,
             response,
             first_to_prepare,
-            escrow_token_account,
+            escrow,
             backup_receiver,
             token_program,
             ..
         } = &ctx.accounts;
 
         require!(
-            get_associated_token_address(&protocol.authority, &escrow_token_account.mint)
+            get_associated_token_address(&protocol.authority, &escrow.mint)
                 == backup_receiver.key(),
             PsyoptionsAmericanError::InvalidBackupAddress
         );
@@ -178,20 +184,20 @@ pub mod psyoptions_american_instrument {
         );
 
         transfer_from_an_escrow(
-            escrow_token_account,
+            escrow,
             backup_receiver,
             response.key(),
             leg_index,
-            *ctx.bumps.get("escrow_token_account").unwrap(),
+            *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
 
         close_escrow_account(
-            escrow_token_account,
+            escrow,
             first_to_prepare,
             response.key(),
             leg_index,
-            *ctx.bumps.get("escrow_token_account").unwrap(),
+            *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
 

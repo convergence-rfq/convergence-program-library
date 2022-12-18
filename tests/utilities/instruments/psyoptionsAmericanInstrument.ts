@@ -32,7 +32,7 @@ enum OptionType {
 let rpc = new anchor.web3.Connection("http://localhost:8899");
 let payer = anchor.AnchorProvider.env().wallet as anchor.Wallet;
 let AnchorProvider = new anchor.AnchorProvider(rpc, payer, anchor.AnchorProvider.defaultOptions());
-let psyOptionsAmericanLocalNetProgramId = new anchor.web3.PublicKey("77i2wXGdwV5MkV9W6X2T3bXwZwK7tFSDqBdL7XMz5yBF");
+let psyOptionsAmericanLocalNetProgramId = new anchor.web3.PublicKey("R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs");
 let psyoptionsAmericanInstrumentProgram = null;
 export function getAmericanOptionsInstrumentProgram() {
   if (psyoptionsAmericanInstrumentProgram === null) {
@@ -283,7 +283,6 @@ export class AmericanPsyoptions {
     let tx = new anchor.web3.Transaction();
     ix.signers.push(mintBy);
     tx.add(ix.ix);
-    console.log("!!!");
 
     try {
       //

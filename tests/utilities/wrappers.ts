@@ -23,7 +23,7 @@ import { calculateLegsSize, executeInParallel } from "./helpers";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
 
 import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
-import { PsyoptionsAmericanInstrument as PsyoptionsAmericanInstrumentIdl } from "../../target/types/psyoptions_american_instrument";
+import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmericanInstrument";
 import { EuroMeta } from "../dependencies/tokenized-euros/src/types";
 
 export class Context {
@@ -195,7 +195,7 @@ export class Context {
     if (finalize) {
       txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeRfqInstruction()]);
     }
-    console.log("creating rfq");
+
     let tx = await txConstructor.rpc();
 
     console.log("createRfq Signature", tx);
@@ -219,6 +219,9 @@ export class Mint {
       async () => await token.createAssociatedTokenAccount(context.taker.publicKey),
       async () => await token.createAssociatedTokenAccount(context.maker.publicKey),
       async () => await token.createAssociatedTokenAccount(context.dao.publicKey)
+      // async () => await mint.createAssociatedAccountWithTokens(context.taker.publicKey),
+      // async () => await mint.createAssociatedAccountWithTokens(context.maker.publicKey),
+      // async () => await mint.createAssociatedAccountWithTokens(context.dao.publicKey)
     );
 
     return mint;
@@ -412,6 +415,18 @@ export class Response {
 
   async prepareSettlement(side, legAmount = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    console.log("...token accc", caller.publicKey.toBase58());
+
+    // let t = await context.quoteToken.getAssociatedBalance(caller.publicKey);
+    // let g = t.toBuffer().readBigUInt64BE();
+
+    // console.log("...token bal", g.toString());
+
+    let t = await context.provider.connection.getTokenAccountBalance(
+      await context.quoteToken.getAssociatedAddress(context.taker.publicKey)
+    );
+    console.log(t.value.amount);
+    console.log(t.value.decimals);
     if (this.firstToPrepare.equals(PublicKey.default)) {
       this.firstToPrepare = caller.publicKey;
     }
@@ -714,7 +729,7 @@ export async function getContext() {
       await PsyoptionsEuropeanInstrument.addInstrument(context);
     },
     async () => {
-      // await PsyoptionsAmericanInstrument.addInstrument(context);
+      await PsyoptionsAmericanInstrumentClass.addInstrument(context);
     },
     async () => {
       await context.initializeCollateral(context.taker);

@@ -6,7 +6,7 @@ use super::errors;
 use errors::PsyoptionsAmericanError;
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
-const ESCROW_SEED: &str = "psyoptions_american_escrow_token_account";
+const ESCROW_SEED: &str = "psyescrow";
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
     /// protocol provided
@@ -34,9 +34,9 @@ pub struct PrepareToSettle<'info> {
 
     pub mint: Account<'info, Mint>,
 
-    #[account(init_if_needed, payer = caller, token::mint = mint, token::authority = escrow_token_account,
+    #[account(init_if_needed,payer = caller, token::mint = mint, token::authority = escrow,
         seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
-    pub escrow_token_account: Account<'info, TokenAccount>,
+    pub escrow: Account<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
@@ -53,8 +53,8 @@ pub struct Settle<'info> {
 
     /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
-    pub escrow_token_account: Account<'info, TokenAccount>,
-    #[account(mut, constraint = receiver_token_account.mint == escrow_token_account.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
+    pub escrow: Account<'info, TokenAccount>,
+    #[account(mut, constraint = receiver_token_account.mint == escrow.mint  @PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub receiver_token_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -71,8 +71,8 @@ pub struct RevertPreparation<'info> {
 
     /// user provided
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]],bump)]
-    pub escrow_token_account: Account<'info, TokenAccount>,
-    #[account(mut, constraint = tokens.mint == escrow_token_account.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
+    pub escrow: Account<'info, TokenAccount>,
+    #[account(mut, constraint = tokens.mint == escrow.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -92,8 +92,8 @@ pub struct CleanUp<'info> {
     #[account(mut)]
     pub first_to_prepare: UncheckedAccount<'info>,
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
-    pub escrow_token_account: Account<'info, TokenAccount>,
-    #[account(mut, constraint = backup_receiver.mint == escrow_token_account.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
+    pub escrow: Account<'info, TokenAccount>,
+    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub backup_receiver: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
 }
