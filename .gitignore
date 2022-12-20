@@ -17,5 +17,5 @@ risk-engine/js/node_modules
 spot-instrument/js/.crates
 spot-instrument/js/node_modules
 
-euro-options-instrument/js/.crates
-euro-options-instrument/js/node_modules
+psyoptions-european-instrument/js/.crates
+psyoptions-european-instrument/js/node_modules
