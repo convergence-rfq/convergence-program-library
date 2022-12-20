@@ -58,10 +58,17 @@ pub fn finalize_rfq_construction_instruction<'info>(
         ..
     } = ctx.accounts;
 
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
+
+    if rfq.is_settled_as_print_trade() {
+        // TODO implement rfq validation by the print trade provider
+        unimplemented!();
+    }
+
     let required_collateral = calculate_required_collateral_for_rfq(
         rfq.to_account_info(),
         risk_engine,
-        ctx.remaining_accounts,
+        &mut remaining_accounts,
     )?;
 
     collateral_info.lock_collateral(collateral_token, required_collateral)?;

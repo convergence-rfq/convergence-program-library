@@ -26,16 +26,19 @@ fn validate_quote<'a, 'info: 'a>(
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
     quote_asset: &QuoteAsset,
+    is_settled_as_print_trade: bool,
 ) -> Result<()> {
-    let instrument_parameters =
-        protocol.get_instrument_parameters(quote_asset.instrument_program)?;
+    if !is_settled_as_print_trade {
+        let instrument_parameters =
+            protocol.get_instrument_parameters(quote_asset.instrument_program)?;
 
-    require!(
-        instrument_parameters.can_be_used_as_quote,
-        ProtocolError::InvalidQuoteInstrument
-    );
+        require!(
+            instrument_parameters.can_be_used_as_quote,
+            ProtocolError::InvalidQuoteInstrument
+        );
 
-    validate_quote_instrument_data(quote_asset, protocol, remaining_accounts)?;
+        validate_quote_instrument_data(quote_asset, protocol, remaining_accounts)?;
+    }
 
     Ok(())
 }
@@ -45,6 +48,7 @@ fn validate_legs<'a, 'info: 'a>(
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
     expected_leg_size: u16,
     legs: &[Leg],
+    is_settled_as_print_trade: bool,
 ) -> Result<()> {
     require!(
         legs.len() <= Rfq::MAX_LEGS_AMOUNT as usize,
@@ -55,8 +59,10 @@ fn validate_legs<'a, 'info: 'a>(
         ProtocolError::LegsDataTooBig
     );
 
-    for leg in legs.iter() {
-        validate_leg_instrument_data(leg, protocol, remaining_accounts)?;
+    if !is_settled_as_print_trade {
+        for leg in legs.iter() {
+            validate_leg_instrument_data(leg, protocol, remaining_accounts)?;
+        }
     }
 
     Ok(())
@@ -66,6 +72,7 @@ pub fn create_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
     expected_leg_size: u16,
     legs: Vec<Leg>,
+    print_trade_provider: Option<Pubkey>,
     order_type: OrderType,
     quote_asset: QuoteAsset,
     fixed_size: FixedSize,
@@ -74,8 +81,19 @@ pub fn create_rfq_instruction<'info>(
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-    validate_quote(protocol, &mut remaining_accounts, &quote_asset)?;
-    validate_legs(protocol, &mut remaining_accounts, expected_leg_size, &legs)?;
+    validate_quote(
+        protocol,
+        &mut remaining_accounts,
+        &quote_asset,
+        print_trade_provider.is_some(),
+    )?;
+    validate_legs(
+        protocol,
+        &mut remaining_accounts,
+        expected_leg_size,
+        &legs,
+        print_trade_provider.is_some(),
+    )?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
 
@@ -96,6 +114,7 @@ pub fn create_rfq_instruction<'info>(
         total_responses: 0,
         cleared_responses: 0,
         confirmed_responses: 0,
+        print_trade_provider,
         legs,
     });
 

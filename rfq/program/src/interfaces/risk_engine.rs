@@ -13,15 +13,15 @@ const CALCULATE_REQUIRED_COLLATERAL_FOR_RESPONSE_SELECTOR: [u8; 8] =
 const CALCULATE_REQUIRED_COLLATERAL_FOR_CONFIRMATION_SELECTOR: [u8; 8] =
     [19, 61, 174, 220, 175, 92, 14, 8];
 
-pub fn calculate_required_collateral_for_rfq<'info>(
+pub fn calculate_required_collateral_for_rfq<'a, 'info: 'a>(
     rfq: AccountInfo<'info>,
     risk_engine: &AccountInfo<'info>,
-    remaining_accounts: &[AccountInfo<'info>],
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<u64> {
     let data = CALCULATE_REQUIRED_COLLATERAL_FOR_RFQ_SELECTOR.to_vec();
 
     let mut accounts = vec![rfq];
-    accounts.extend(remaining_accounts.iter().cloned());
+    accounts.extend(remaining_accounts.cloned());
     let accounts_meta: Vec<_> = accounts.iter().map(|x| x.to_account_meta()).collect();
     let instruction = Instruction {
         program_id: risk_engine.key(),
