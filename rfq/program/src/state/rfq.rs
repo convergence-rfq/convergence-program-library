@@ -26,12 +26,18 @@ pub struct Rfq {
     pub cleared_responses: u32,
     pub confirmed_responses: u32,
 
+    pub print_trade_provider: Option<Pubkey>, // move higher after replacing with nullable wrapper
+
     pub legs: Vec<Leg>, // TODO add limit for this size
 }
 
 impl Rfq {
     pub const MAX_LEGS_AMOUNT: u8 = 25;
     pub const MAX_LEGS_SIZE: u16 = 4096;
+
+    pub fn is_settled_as_print_trade(&self) -> bool {
+        self.print_trade_provider.is_some()
+    }
 
     pub fn get_state(&self) -> Result<RfqState> {
         let state = match self.state {
