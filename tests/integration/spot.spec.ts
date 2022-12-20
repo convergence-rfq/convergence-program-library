@@ -31,7 +31,7 @@ describe("RFQ Spot instrument integration tests", () => {
 
     // create a two way RFQ specifying 1 bitcoin as a leg
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.create(context, { amount: withTokenDecimals(1), side: Side.Bid })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: Side.Bid })],
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
     const response = await rfq.respond({
@@ -59,8 +59,8 @@ describe("RFQ Spot instrument integration tests", () => {
     // create a sell RFQ specifying 5 bitcoin bid and 1000 sol ask
     const rfq = await context.createRfq({
       legs: [
-        SpotInstrument.create(context, { amount: withTokenDecimals(5), side: Side.Bid }),
-        SpotInstrument.create(context, {
+        SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: Side.Bid }),
+        SpotInstrument.createForLeg(context, {
           mint: context.additionalAssetToken,
           amount: withTokenDecimals(1000),
           side: Side.Ask,
@@ -125,7 +125,7 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create fixed leg size buy RFQ, respond and settle response", async () => {
     // create a buy RFQ specifying 15 bitcoin as a leg(5 in leg with multiplier of 3)
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.create(context, { amount: withTokenDecimals(5), side: Side.Bid })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: Side.Bid })],
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(3)),
       orderType: OrderType.Buy,
     });
@@ -153,7 +153,7 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create fixed quote size sell RFQ, respond and settle response", async () => {
     // create a sell RFQ specifying 0.5 bitcoin in leg and fixed quote of 38.5k$
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.create(context, { amount: withTokenDecimals(0.5), side: Side.Bid })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(0.5), side: Side.Bid })],
       fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(38_500)),
       orderType: OrderType.Sell,
     });
@@ -274,7 +274,7 @@ describe("RFQ Spot instrument integration tests", () => {
       })
     );
     const legs = mints.map((mint) =>
-      SpotInstrument.create(context, {
+      SpotInstrument.createForLeg(context, {
         mint,
       })
     );
@@ -316,7 +316,7 @@ describe("RFQ Spot instrument integration tests", () => {
       })
     );
     const legs = mints.map((mint) =>
-      SpotInstrument.create(context, {
+      SpotInstrument.createForLeg(context, {
         mint,
       })
     );

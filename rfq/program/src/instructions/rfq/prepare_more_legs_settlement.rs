@@ -3,7 +3,7 @@ use crate::{
     errors::ProtocolError,
     interfaces::instrument::prepare_to_settle,
     seeds::PROTOCOL_SEED,
-    state::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq},
+    state::{AssetIdentifier, AuthoritySide, ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
 
@@ -78,16 +78,10 @@ pub fn prepare_more_legs_settlement_instruction<'info>(
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    for (index, leg) in rfq
-        .legs
-        .iter()
-        .enumerate()
-        .skip(response.get_prepared_legs(side) as usize)
-        .take(leg_amount_to_prepare as usize)
-    {
+    let start_index = response.get_prepared_legs(side);
+    for leg_index in start_index..(start_index + leg_amount_to_prepare) {
         prepare_to_settle(
-            leg,
-            index as u8,
+            AssetIdentifier::Leg { leg_index },
             side,
             protocol,
             rfq,

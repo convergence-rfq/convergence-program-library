@@ -1,23 +1,16 @@
 use crate::{
-    common::transfer_quote_escrow_token,
     errors::ProtocolError,
     interfaces::instrument::clean_up,
-    seeds::{PROTOCOL_SEED, QUOTE_ESCROW_SEED},
-    state::{ProtocolState, Response, ResponseState, Rfq},
+    seeds::PROTOCOL_SEED,
+    state::{AssetIdentifier, ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::get_associated_token_address,
-    token::{close_account, CloseAccount, Token, TokenAccount},
-};
 
 #[derive(Accounts)]
 pub struct CleanUpResponseAccounts<'info> {
     /// CHECK: is a maker address in this response
     #[account(mut, constraint = maker.key() == response.maker @ ProtocolError::NotAMaker)]
     pub maker: UncheckedAccount<'info>,
-    /// CHECK: is an authority first to prepare for settlement. If no preparation, it can be any account
-    pub first_to_prepare_quote: UncheckedAccount<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
@@ -25,24 +18,10 @@ pub struct CleanUpResponseAccounts<'info> {
     pub rfq: Box<Account<'info, Rfq>>,
     #[account(mut, close = maker, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
     pub response: Account<'info, Response>,
-
-    /// CHECK: can be either a valid escrow account or uninitialized account
-    #[account(mut, seeds = [QUOTE_ESCROW_SEED.as_bytes(), response.key().as_ref()], bump)]
-    pub quote_escrow: UncheckedAccount<'info>,
-    #[account(mut, constraint = quote_backup_tokens.mint == rfq.quote_mint @ ProtocolError::NotAQuoteMint)]
-    pub quote_backup_tokens: Account<'info, TokenAccount>,
-
-    pub token_program: Program<'info, Token>,
 }
 
 fn validate(ctx: &Context<CleanUpResponseAccounts>) -> Result<()> {
-    let CleanUpResponseAccounts {
-        protocol,
-        rfq,
-        response,
-        quote_backup_tokens,
-        ..
-    } = &ctx.accounts;
+    let CleanUpResponseAccounts { rfq, response, .. } = &ctx.accounts;
 
     let response_state = response.get_state(rfq)?;
     response_state.assert_state_in([
@@ -63,12 +42,6 @@ fn validate(ctx: &Context<CleanUpResponseAccounts>) -> Result<()> {
         ProtocolError::HaveCollateralLocked
     );
 
-    require!(
-        get_associated_token_address(&protocol.authority, &rfq.quote_mint)
-            == quote_backup_tokens.key(),
-        ProtocolError::InvalidBackupAddress
-    );
-
     Ok(())
 }
 
@@ -78,92 +51,36 @@ pub fn clean_up_response_instruction<'info>(
     validate(&ctx)?;
 
     let CleanUpResponseAccounts {
-        first_to_prepare_quote,
         protocol,
         rfq,
         response,
-        quote_escrow,
-        quote_backup_tokens,
-        token_program,
         ..
     } = ctx.accounts;
 
     if response.leg_preparations_initialized_by.len() > 0 {
-        let quote_escrow: Account<TokenAccount> = Account::try_from(quote_escrow)?;
-
-        let expected_first_to_prepare_quote =
-            response.leg_preparations_initialized_by[0].to_public_key(rfq, response);
-        require!(
-            first_to_prepare_quote.key() == expected_first_to_prepare_quote,
-            ProtocolError::NotFirstToPrepare
-        );
-
-        transfer_quote_escrow_token(
-            &quote_escrow,
-            quote_backup_tokens,
-            response.key(),
-            *ctx.bumps.get("quote_escrow").unwrap(),
-            token_program,
-        )?;
-
-        close_quote_escrow_account(
-            &quote_escrow,
-            first_to_prepare_quote,
-            response.key(),
-            *ctx.bumps.get("quote_escrow").unwrap(),
-            token_program,
-        )?;
-
         let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-        for (index, leg) in rfq
-            .legs
-            .iter()
-            .enumerate()
-            .take(response.leg_preparations_initialized_by.len())
-        {
+        let legs_to_revert = response.leg_preparations_initialized_by.len() as u8;
+        for leg_index in 0..legs_to_revert {
             clean_up(
-                leg,
-                index as u8,
+                AssetIdentifier::Leg { leg_index },
                 &protocol,
                 rfq,
                 response,
                 &mut remaining_accounts,
             )?;
         }
+
+        clean_up(
+            AssetIdentifier::Quote,
+            &protocol,
+            rfq,
+            response,
+            &mut remaining_accounts,
+        )?;
     }
 
     rfq.cleared_responses += 1;
 
     Ok(())
-}
-
-fn close_quote_escrow_account<'info>(
-    quote_escrow: &Account<'info, TokenAccount>,
-    sol_receiver: &UncheckedAccount<'info>,
-    response: Pubkey,
-    bump: u8,
-    token_program: &Program<'info, Token>,
-) -> Result<()> {
-    let close_tokens_account = CloseAccount {
-        account: quote_escrow.to_account_info(),
-        destination: sol_receiver.to_account_info(),
-        authority: quote_escrow.to_account_info(),
-    };
-
-    let response_key = response.key();
-    let bump_seed = [bump];
-    let escrow_seed = &[&[
-        QUOTE_ESCROW_SEED.as_bytes(),
-        response_key.as_ref(),
-        &bump_seed,
-    ][..]];
-
-    let close_escrow_account_ctx = CpiContext::new_with_signer(
-        token_program.to_account_info(),
-        close_tokens_account,
-        escrow_seed,
-    );
-
-    close_account(close_escrow_account_ctx)
 }
