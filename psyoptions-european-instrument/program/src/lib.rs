@@ -4,11 +4,11 @@ use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
 use euro_options::EuroMeta;
-use rfq::state::{AuthoritySide, Leg, MintInfo, ProtocolState, Response, Rfq};
+use rfq::state::{AssetIdentifier, AuthoritySide, MintInfo, ProtocolState, Response, Rfq};
 use risk_engine::state::OptionType;
 
 use crate::errors::PsyoptionsEuropeanError;
-use crate::state::{AuthoritySideDuplicate, ParsedLegData};
+use crate::state::{AssetIdentifierDuplicate, AuthoritySideDuplicate, ParsedLegData};
 
 mod errors;
 mod euro_options;
@@ -20,18 +20,24 @@ const ESCROW_SEED: &str = "escrow";
 
 #[program]
 pub mod psyoptions_european_instrument {
+    use rfq::state::MintType;
+
     use super::*;
 
-    pub fn validate_leg(ctx: Context<ValidateLeg>, leg_data: Vec<u8>) -> Result<()> {
-        let ValidateLeg {
+    pub fn validate_data(
+        ctx: Context<ValidateData>,
+        instrument_data: Vec<u8>,
+        base_asset_index: Option<u16>,
+        instrument_decimals: u8,
+    ) -> Result<()> {
+        let ValidateData {
             euro_meta,
             mint_info,
             ..
         } = &ctx.accounts;
 
-        let leg: Leg = AnchorDeserialize::try_from_slice(&leg_data)?;
         require_eq!(
-            leg.instrument_data.len(),
+            instrument_data.len(),
             ParsedLegData::SERIALIZED_SIZE,
             PsyoptionsEuropeanError::InvalidDataSize
         );
@@ -39,7 +45,7 @@ pub mod psyoptions_european_instrument {
             option_common_data,
             mint_address,
             euro_meta_address,
-        } = AnchorDeserialize::try_from_slice(&leg.instrument_data)?;
+        } = AnchorDeserialize::try_from_slice(&instrument_data)?;
         require!(
             euro_meta_address == euro_meta.key(),
             PsyoptionsEuropeanError::PassedEuroMetaDoesNotMatch
@@ -67,20 +73,27 @@ pub mod psyoptions_european_instrument {
         );
 
         require!(
-            leg.instrument_decimals == euro_options::TOKEN_DECIMALS,
+            instrument_decimals == euro_options::TOKEN_DECIMALS,
             PsyoptionsEuropeanError::DecimalsAmountDoesNotMatch
         );
 
-        require!(
-            leg.base_asset_index == mint_info.base_asset_index,
-            PsyoptionsEuropeanError::BaseAssetDoesNotMatch
-        );
+        if let (Some(passed_base_asset_index), MintType::AssetWithRisk { base_asset_index }) =
+            (base_asset_index, mint_info.mint_type)
+        {
+            require!(
+                passed_base_asset_index == base_asset_index.into(),
+                PsyoptionsEuropeanError::BaseAssetDoesNotMatch
+            );
+        } else {
+            err!(PsyoptionsEuropeanError::StablecoinAsBaseAssetIsNotSupported)?
+        }
+
         Ok(())
     }
 
     pub fn prepare_to_settle(
         ctx: Context<PrepareToSettle>,
-        leg_index: u8,
+        asset_identifier: AssetIdentifierDuplicate,
         side: AuthoritySideDuplicate,
     ) -> Result<()> {
         let PrepareToSettle {
@@ -93,14 +106,16 @@ pub mod psyoptions_european_instrument {
             token_program,
             ..
         } = &ctx.accounts;
-        let leg_data = &rfq.legs[leg_index as usize].instrument_data;
-        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(&leg_data)?;
+        let asset_data = rfq.get_asset_instrument_data(asset_identifier.into());
+        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(&asset_data)?;
+
         require!(
             mint_address == mint.key(),
             PsyoptionsEuropeanError::PassedMintDoesNotMatch
         );
 
-        let token_amount = response.get_leg_amount_to_transfer(rfq, leg_index, side.into());
+        let token_amount =
+            response.get_asset_amount_to_transfer(rfq, asset_identifier.into(), side.into());
 
         if token_amount > 0 {
             let transfer_accounts = Transfer {
@@ -115,7 +130,7 @@ pub mod psyoptions_european_instrument {
         Ok(())
     }
 
-    pub fn settle(ctx: Context<Settle>, leg_index: u8) -> Result<()> {
+    pub fn settle(ctx: Context<Settle>, asset_identifier: AssetIdentifierDuplicate) -> Result<()> {
         let Settle {
             rfq,
             response,
@@ -126,7 +141,7 @@ pub mod psyoptions_european_instrument {
         } = &ctx.accounts;
 
         response
-            .get_leg_assets_receiver(rfq, leg_index)
+            .get_assets_receiver(rfq, asset_identifier.into())
             .validate_is_associated_token_account(
                 rfq,
                 response,
@@ -138,7 +153,7 @@ pub mod psyoptions_european_instrument {
             escrow,
             receiver_tokens,
             response.key(),
-            leg_index,
+            asset_identifier.into(),
             *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
@@ -148,7 +163,7 @@ pub mod psyoptions_european_instrument {
 
     pub fn revert_preparation(
         ctx: Context<RevertPreparation>,
-        leg_index: u8,
+        asset_identifier: AssetIdentifierDuplicate,
         side: AuthoritySideDuplicate,
     ) -> Result<()> {
         let RevertPreparation {
@@ -163,12 +178,16 @@ pub mod psyoptions_european_instrument {
         let side: AuthoritySide = side.into();
         side.validate_is_associated_token_account(rfq, response, escrow.mint, tokens.key())?;
 
-        if side == response.get_leg_assets_receiver(rfq, leg_index).revert() {
+        if side
+            == response
+                .get_assets_receiver(rfq, asset_identifier.into())
+                .revert()
+        {
             transfer_from_an_escrow(
                 escrow,
                 tokens,
                 response.key(),
-                leg_index,
+                asset_identifier.into(),
                 *ctx.bumps.get("escrow").unwrap(),
                 token_program,
             )?;
@@ -177,7 +196,10 @@ pub mod psyoptions_european_instrument {
         Ok(())
     }
 
-    pub fn clean_up(ctx: Context<CleanUp>, leg_index: u8) -> Result<()> {
+    pub fn clean_up(
+        ctx: Context<CleanUp>,
+        asset_identifier: AssetIdentifierDuplicate,
+    ) -> Result<()> {
         let CleanUp {
             protocol,
             rfq,
@@ -195,8 +217,9 @@ pub mod psyoptions_european_instrument {
             PsyoptionsEuropeanError::InvalidBackupAddress
         );
 
-        let expected_first_to_prepare = response.leg_preparations_initialized_by
-            [leg_index as usize]
+        let expected_first_to_prepare = response
+            .get_preparation_initialized_by(asset_identifier.into())
+            .unwrap()
             .to_public_key(rfq, response);
         require!(
             first_to_prepare.key() == expected_first_to_prepare,
@@ -207,7 +230,7 @@ pub mod psyoptions_european_instrument {
             escrow,
             backup_receiver,
             response.key(),
-            leg_index,
+            asset_identifier.into(),
             *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
@@ -216,7 +239,7 @@ pub mod psyoptions_european_instrument {
             escrow,
             first_to_prepare,
             response.key(),
-            leg_index,
+            asset_identifier.into(),
             *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
@@ -229,7 +252,7 @@ fn transfer_from_an_escrow<'info>(
     escrow: &Account<'info, TokenAccount>,
     receiver: &Account<'info, TokenAccount>,
     response: Pubkey,
-    leg_index: u8,
+    asset_identifier: AssetIdentifier,
     bump: u8,
     token_program: &Program<'info, Token>,
 ) -> Result<()> {
@@ -240,7 +263,7 @@ fn transfer_from_an_escrow<'info>(
         authority: escrow.to_account_info(),
     };
     let response_key = response.key();
-    let leg_index_seed = [leg_index];
+    let leg_index_seed = asset_identifier.to_seed_bytes();
     let bump_seed = [bump];
     let escrow_seed = &[&[
         ESCROW_SEED.as_bytes(),
@@ -262,7 +285,7 @@ fn close_escrow_account<'info>(
     escrow: &Account<'info, TokenAccount>,
     sol_receiver: &UncheckedAccount<'info>,
     response: Pubkey,
-    leg_index: u8,
+    asset_identifier: AssetIdentifier,
     bump: u8,
     token_program: &Program<'info, Token>,
 ) -> Result<()> {
@@ -273,7 +296,7 @@ fn close_escrow_account<'info>(
     };
 
     let response_key = response.key();
-    let leg_index_seed = [leg_index];
+    let leg_index_seed = asset_identifier.to_seed_bytes();
     let bump_seed = [bump];
     let escrow_seed = &[&[
         ESCROW_SEED.as_bytes(),
@@ -292,7 +315,7 @@ fn close_escrow_account<'info>(
 }
 
 #[derive(Accounts)]
-pub struct ValidateLeg<'info> {
+pub struct ValidateData<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
@@ -304,7 +327,7 @@ pub struct ValidateLeg<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(leg_index: u8, side: AuthoritySide)]
+#[instruction(asset_identifier: AssetIdentifier)]
 pub struct PrepareToSettle<'info> {
     /// protocol provided
     #[account(signer)]
@@ -321,7 +344,7 @@ pub struct PrepareToSettle<'info> {
     pub mint: Account<'info, Mint>,
 
     #[account(init_if_needed, payer = caller, token::mint = mint, token::authority = escrow,
-        seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+        seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
 
     pub system_program: Program<'info, System>,
@@ -330,7 +353,7 @@ pub struct PrepareToSettle<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(leg_index: u8)]
+#[instruction(asset_identifier: AssetIdentifier)]
 pub struct Settle<'info> {
     /// protocol provided
     #[account(signer)]
@@ -339,7 +362,7 @@ pub struct Settle<'info> {
     pub response: Account<'info, Response>,
 
     /// user provided
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
     pub receiver_tokens: Account<'info, TokenAccount>,
@@ -348,7 +371,7 @@ pub struct Settle<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(leg_index: u8)]
+#[instruction(asset_identifier: AssetIdentifier)]
 pub struct RevertPreparation<'info> {
     /// protocol provided
     #[account(signer)]
@@ -357,7 +380,7 @@ pub struct RevertPreparation<'info> {
     pub response: Account<'info, Response>,
 
     /// user provided
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = tokens.mint == escrow.mint @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
     pub tokens: Account<'info, TokenAccount>,
@@ -366,7 +389,7 @@ pub struct RevertPreparation<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(leg_index: u8)]
+#[instruction(asset_identifier: AssetIdentifier)]
 pub struct CleanUp<'info> {
     /// protocol provided
     #[account(signer)]
@@ -378,7 +401,7 @@ pub struct CleanUp<'info> {
     /// CHECK: is an authority first to prepare for settlement
     #[account(mut)]
     pub first_to_prepare: UncheckedAccount<'info>,
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = backup_receiver.mint == escrow.mint @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
     pub backup_receiver: Account<'info, TokenAccount>,

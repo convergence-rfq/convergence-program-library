@@ -18,4 +18,6 @@ pub enum SpotError {
     InvalidBackupAddress,
     #[msg("Passed address is not of a party first to prepare for settlement")]
     NotFirstToPrepare,
+    #[msg("Mint type does not match. Either stablecoin passed as leg asset or asset with risk passed as quote")]
+    MintTypeDoesNotMatch,
 }

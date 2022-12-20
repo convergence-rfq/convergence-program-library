@@ -57,7 +57,7 @@ describe("Required collateral calculation and lock", () => {
     await context.createRfq({
       orderType: OrderType.TwoWay,
       legs: [
-        SpotInstrument.create(context, {
+        SpotInstrument.createForLeg(context, {
           mint: context.assetToken,
           amount: withTokenDecimals(1),
           side: Side.Bid,
@@ -74,7 +74,7 @@ describe("Required collateral calculation and lock", () => {
     const rfq = await context.createRfq({
       orderType: OrderType.TwoWay,
       legs: [
-        SpotInstrument.create(context, {
+        SpotInstrument.createForLeg(context, {
           mint: context.additionalAssetToken,
           amount: withTokenDecimals(20),
           side: Side.Bid,
@@ -94,12 +94,12 @@ describe("Required collateral calculation and lock", () => {
     const rfq = await context.createRfq({
       orderType: OrderType.TwoWay,
       legs: [
-        SpotInstrument.create(context, {
+        SpotInstrument.createForLeg(context, {
           mint: context.assetToken,
           amount: withTokenDecimals(1),
           side: Side.Bid,
         }),
-        SpotInstrument.create(context, {
+        SpotInstrument.createForLeg(context, {
           mint: context.additionalAssetToken,
           amount: withTokenDecimals(200),
           side: Side.Ask,

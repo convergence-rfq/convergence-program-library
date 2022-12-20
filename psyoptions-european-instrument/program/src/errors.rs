@@ -26,4 +26,6 @@ pub enum PsyoptionsEuropeanError {
     PassedStrikePriceDoesNotMatch,
     #[msg("Passed expiration timestamp does not match")]
     PassedExpirationTimestampDoesNotMatch,
+    #[msg("Stablecoin as base asset is not supported")]
+    StablecoinAsBaseAssetIsNotSupported,
 }

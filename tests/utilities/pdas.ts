@@ -10,6 +10,7 @@ import {
   RISK_ENGINE_CONFIG_SEED,
 } from "./constants";
 import { toLittleEndian } from "./helpers";
+import { AssetIdentifier, assetIdentifierToSeedBytes } from "./types";
 
 export async function getProtocolPda(programId: PublicKey) {
   const [pda] = await PublicKey.findProgramAddress([Buffer.from(PROTOCOL_SEED)], programId);
@@ -44,9 +45,13 @@ export async function getQuoteEscrowPda(response: PublicKey, programId: PublicKe
   return pda;
 }
 
-export async function getInstrumentEscrowPda(response: PublicKey, legIndex: number, programId: PublicKey) {
+export async function getInstrumentEscrowPda(
+  response: PublicKey,
+  assetIdentifier: AssetIdentifier,
+  programId: PublicKey
+) {
   const [pda] = await PublicKey.findProgramAddress(
-    [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
+    [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), assetIdentifierToSeedBytes(assetIdentifier)],
     programId
   );
   return pda;

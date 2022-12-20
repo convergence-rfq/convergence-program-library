@@ -41,6 +41,7 @@ impl ProtocolState {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct Instrument {
     pub program_key: Pubkey,
+    pub can_be_used_as_quote: bool,
     pub validate_data_account_amount: u8,
     pub prepare_to_settle_account_amount: u8,
     pub settle_account_amount: u8,
@@ -103,5 +104,11 @@ pub struct MintInfo {
     pub bump: u8,
     pub mint_address: Pubkey,
     pub decimals: u8,
-    pub base_asset_index: BaseAssetIndex,
+    pub mint_type: MintType,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum MintType {
+    Stablecoin,
+    AssetWithRisk { base_asset_index: BaseAssetIndex },
 }

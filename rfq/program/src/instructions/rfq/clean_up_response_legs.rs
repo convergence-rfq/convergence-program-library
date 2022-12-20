@@ -2,7 +2,7 @@ use crate::{
     errors::ProtocolError,
     interfaces::instrument::clean_up,
     seeds::PROTOCOL_SEED,
-    state::{ProtocolState, Response, ResponseState, Rfq},
+    state::{AssetIdentifier, ProtocolState, Response, ResponseState, Rfq},
 };
 use anchor_lang::prelude::*;
 
@@ -60,12 +60,11 @@ pub fn clean_up_response_legs_instruction<'info>(
     } = ctx.accounts;
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-    let initialized_legs = response.leg_preparations_initialized_by.len();
-    let starting_index = initialized_legs - leg_amount_to_clear as usize;
-    for (index, leg) in rfq.legs.iter().enumerate().skip(starting_index) {
+    let initialized_legs = response.leg_preparations_initialized_by.len() as u8;
+    let starting_index = initialized_legs - leg_amount_to_clear;
+    for leg_index in starting_index..initialized_legs {
         clean_up(
-            leg,
-            index as u8,
+            AssetIdentifier::Leg { leg_index },
             &protocol,
             rfq,
             response,

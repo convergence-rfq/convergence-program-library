@@ -3,7 +3,7 @@ use std::mem;
 use crate::{
     errors::ProtocolError,
     seeds::{MINT_INFO_SEED, PROTOCOL_SEED},
-    state::{BaseAssetInfo, MintInfo, ProtocolState},
+    state::{protocol::MintType, BaseAssetInfo, MintInfo, ProtocolState},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
@@ -17,7 +17,8 @@ pub struct RegisterMintAccounts<'info> {
     #[account(init, payer = authority, space = 8 + mem::size_of::<MintInfo>(),
                 seeds = [MINT_INFO_SEED.as_bytes(), mint.key().as_ref()], bump)]
     pub mint_info: Account<'info, MintInfo>,
-    pub base_asset: Account<'info, BaseAssetInfo>,
+    /// CHECK: is either a base asset or default account in case of stablecoin
+    pub base_asset: UncheckedAccount<'info>,
 
     pub mint: Account<'info, Mint>,
 
@@ -32,10 +33,20 @@ pub fn register_mint_instruction(ctx: Context<RegisterMintAccounts>) -> Result<(
         ..
     } = ctx.accounts;
 
+    let mint_type = if base_asset.key() == Pubkey::default() {
+        MintType::Stablecoin
+    } else {
+        let base_asset: BaseAssetInfo =
+            BaseAssetInfo::try_deserialize(&mut base_asset.try_borrow_data()?.as_ref())?;
+        MintType::AssetWithRisk {
+            base_asset_index: base_asset.index,
+        }
+    };
+
     mint_info.set_inner(MintInfo {
         bump: *ctx.bumps.get("mint_info").unwrap(),
         mint_address: mint.key(),
-        base_asset_index: base_asset.index,
+        mint_type,
         decimals: mint.decimals,
     });
 

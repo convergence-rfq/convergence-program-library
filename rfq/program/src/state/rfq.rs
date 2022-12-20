@@ -11,7 +11,7 @@ pub struct Rfq {
     pub order_type: OrderType,
     pub last_look_enabled: bool,
     pub fixed_size: FixedSize,
-    pub quote_mint: Pubkey,
+    pub quote_asset: QuoteAsset,
     pub access_manager: Option<Pubkey>, // replase with nullable wrapper
 
     pub creation_timestamp: i64,
@@ -65,6 +65,27 @@ impl Rfq {
     pub fn is_fixed_size(&self) -> bool {
         !matches!(self.fixed_size, FixedSize::None { padding: _ })
     }
+
+    pub fn get_asset_instrument_data(&self, asset_identifier: AssetIdentifier) -> &Vec<u8> {
+        match asset_identifier {
+            AssetIdentifier::Leg { leg_index } => &self.legs[leg_index as usize].instrument_data,
+            AssetIdentifier::Quote => &self.quote_asset.instrument_data,
+        }
+    }
+
+    pub fn get_asset_instrument_program(&self, asset_identifier: AssetIdentifier) -> Pubkey {
+        match asset_identifier {
+            AssetIdentifier::Leg { leg_index } => self.legs[leg_index as usize].instrument_program,
+            AssetIdentifier::Quote => self.quote_asset.instrument_program,
+        }
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct QuoteAsset {
+    pub instrument_program: Pubkey,
+    pub instrument_data: Vec<u8>,
+    pub instrument_decimals: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -127,4 +148,19 @@ impl RfqState {
 pub enum Side {
     Bid,
     Ask,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum AssetIdentifier {
+    Leg { leg_index: u8 },
+    Quote,
+}
+
+impl AssetIdentifier {
+    pub fn to_seed_bytes(self) -> [u8; 2] {
+        match self {
+            AssetIdentifier::Leg { leg_index } => [0, leg_index],
+            AssetIdentifier::Quote => [1, 0],
+        }
+    }
 }
