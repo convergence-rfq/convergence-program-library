@@ -94,6 +94,6 @@ pub enum ProtocolError {
     MaxInstruments,
     #[msg("Current instrument cannot be used as a quote asset")]
     InvalidQuoteInstrument,
-    #[msg("Not a whitelisted print trade provider")]
-    NotAWhitelistedPrintTradeProvider,
+    #[msg("Print trade provider program ID wasn't provided")]
+    NoPrintTradeProvider,
 }

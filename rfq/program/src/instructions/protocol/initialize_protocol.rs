@@ -45,7 +45,6 @@ pub fn initialize_protocol_instruction(
         collateral_mint: collateral_mint.key(),
         print_trade_providers: Default::default(),
         instruments: Default::default(),
-        print_trade_providers: Default::default(),
     });
 
     Ok(())
