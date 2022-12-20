@@ -36,7 +36,7 @@ describe("Psyoptions European instrument integration tests", () => {
     // create a two way RFQ specifying 1 option call as a leg
     const rfq = await context.createRfq({
       legs: [
-        PsyoptionsEuropeanInstrument.create(context, options.callMint, options.metaKey, OptionType.CALL, {
+        PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, {
           amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
           side: Side.Bid,
         }),
@@ -75,7 +75,7 @@ describe("Psyoptions European instrument integration tests", () => {
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
-        PsyoptionsEuropeanInstrument.create(context, options.putMint, options.metaKey, OptionType.PUT, {
+        PsyoptionsEuropeanInstrument.create(context, options, OptionType.PUT, {
           amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
           side: Side.Bid,
         }),
