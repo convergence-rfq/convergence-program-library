@@ -20,11 +20,7 @@ pub fn validate_instrument_data<'a, 'info: 'a>(
 ) -> Result<()> {
     assert!(!legs.is_empty());
 
-    let mut legs_data = AnchorSerialize::try_to_vec(legs)?;
-
-    let mut data = VALIDATE_LEGS_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&(legs_data.len() as u32), &mut data)?;
-    data.append(&mut legs_data);
+    let data = VALIDATE_LEGS_SELECTOR.to_vec();
 
     let print_trade_provider_key = legs[0].instrument_program;
     let print_trade_provider_parameters =
