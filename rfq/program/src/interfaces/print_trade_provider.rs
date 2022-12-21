@@ -31,7 +31,7 @@ pub fn validate_print_trade_data<'a, 'info: 'a>(
         protocol,
         &print_trade_provider_key,
         Some(print_trade_provider_parameters.validate_data_accounts as usize),
-        None,
+        Some(rfq),
         None,
         remaining_accounts,
     )
@@ -135,18 +135,17 @@ fn call_instrument<'a, 'info: 'a>(
         accounts.push(acc.to_account_info());
     }
 
-    match accounts_number {
-        None => accounts.extend(remaining_accounts.cloned()),
-        Some(accounts_to_take) => {
-            let accounts_number_before = accounts.len();
+    if let Some(accounts_to_take) = accounts_number {
+        let accounts_number_before = accounts.len();
 
-            accounts.extend(remaining_accounts.take(accounts_to_take).cloned());
+        accounts.extend(remaining_accounts.take(accounts_to_take).cloned());
 
-            require!(
-                accounts.len() == accounts_to_take + accounts_number_before,
-                ProtocolError::NotEnoughAccounts
-            )
-        }
+        require!(
+            accounts.len() == accounts_to_take + accounts_number_before,
+            ProtocolError::NotEnoughAccounts
+        );
+    } else {
+        accounts.extend(remaining_accounts.cloned());
     }
 
     let account_metas: Vec<AccountMeta> = accounts.iter().map(|x| x.to_account_meta()).collect();
