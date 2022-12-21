@@ -26,6 +26,8 @@ pub enum ProtocolError {
     NotEnoughCollateral,
     #[msg("Not a whitelisted instrument")]
     NotAWhitelistedInstrument,
+    #[msg("Not a whitelisted print trade provider")]
+    NotAWhitelistedPrintTradeProvider,
     #[msg("Not enough accounts")]
     NotEnoughAccounts,
     #[msg("Passed program id differs from an instrument")]
@@ -92,6 +94,6 @@ pub enum ProtocolError {
     MaxInstruments,
     #[msg("Current instrument cannot be used as a quote asset")]
     InvalidQuoteInstrument,
-    #[msg("Not a whitelisted print trade provider")]
-    NotAWhitelistedPrintTradeProvider,
+    #[msg("Print trade provider program ID wasn't provided")]
+    NoPrintTradeProvider,
 }
