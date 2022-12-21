@@ -202,17 +202,17 @@
           "isSigner": false
         },
         {
-          "name": "product",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "printTrade",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "operatorOwner",
           "isMut": false,
           "isSigner": false
         }
