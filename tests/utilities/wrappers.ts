@@ -415,18 +415,7 @@ export class Response {
 
   async prepareSettlement(side, legAmount = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
-    console.log("...token accc", caller.publicKey.toBase58());
 
-    // let t = await context.quoteToken.getAssociatedBalance(caller.publicKey);
-    // let g = t.toBuffer().readBigUInt64BE();
-
-    // console.log("...token bal", g.toString());
-
-    let t = await context.provider.connection.getTokenAccountBalance(
-      await context.quoteToken.getAssociatedAddress(context.taker.publicKey)
-    );
-    console.log(t.value.amount);
-    console.log(t.value.decimals);
     if (this.firstToPrepare.equals(PublicKey.default)) {
       this.firstToPrepare = caller.publicKey;
     }

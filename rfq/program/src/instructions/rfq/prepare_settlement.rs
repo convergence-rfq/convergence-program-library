@@ -93,6 +93,11 @@ pub fn prepare_settlement_instruction<'info>(
         ..
     } = ctx.accounts;
 
+    msg!(
+        "token account address in prepare_settlement:{}",
+        quote_tokens.key().to_string().as_str()
+    );
+
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
     for (index, leg) in rfq

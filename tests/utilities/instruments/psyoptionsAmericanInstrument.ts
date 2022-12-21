@@ -1,6 +1,6 @@
 import { Program, web3, BN, workspace, AnchorError } from "@project-serum/anchor";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
+import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer, Keypair } from "@solana/web3.js";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
@@ -192,7 +192,7 @@ export class AmericanPsyoptions {
   public static createProgramWithProvider(user: anchor.web3.Keypair, context: Context) {
     const provider = new anchor.AnchorProvider(
       context.provider.connection,
-      new NodeWallet(context.maker),
+      new NodeWallet(user),
       anchor.AnchorProvider.defaultOptions()
     );
     let program = createProgram(psyOptionsAmericanLocalNetProgramId, provider);
@@ -220,14 +220,15 @@ export class AmericanPsyoptions {
     return ix0;
   }
 
-  public static async getOptionMarketByKey(context: Context, optionMarketPubkey: PublicKey) {
-    let program = this.createProgramWithProvider(context.maker, context);
+  public static async getOptionMarketByKey(context: Context, optionMarketPubkey: PublicKey, user: Keypair) {
+    let program = this.createProgramWithProvider(user, context);
     let optionMarkeyWithkey = await getOptionByKey(program, optionMarketPubkey);
     return optionMarkeyWithkey;
   }
 
   public static async initalizeNewPsyoptionsAmerican(
     context: Context,
+    user: Keypair,
     {
       underlyingMint = context.assetToken,
       quoteMint = context.quoteToken,
@@ -235,7 +236,7 @@ export class AmericanPsyoptions {
       quoteAmountPerContract = withTokenDecimals(10),
     } = {}
   ) {
-    const program = this.createProgramWithProvider(context.maker, context);
+    const program = this.createProgramWithProvider(user, context);
     const expiration = new BN(Date.now() / 1000 + 360000); // 1 hour in the future
     const psyOptMarket = await this.initializeMarket(
       program,

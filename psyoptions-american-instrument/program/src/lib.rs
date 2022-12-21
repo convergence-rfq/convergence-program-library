@@ -76,6 +76,10 @@ pub mod psyoptions_american_instrument {
         let caller_pub = caller_token_account.owner.key();
         msg!("token balance :{}", bal.to_string().as_str());
         msg!("token accont owner  :{}", caller_pub.to_string().as_str());
+        msg!(
+            "token account address:{}",
+            caller_token_account.key().to_string().as_str()
+        );
 
         msg!(
             "token amount to transfer :{}",
