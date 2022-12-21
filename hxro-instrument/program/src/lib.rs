@@ -13,10 +13,11 @@ use dex_cpi as dex;
 use errors::HxroError;
 use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
 use risk_cpi as risk;
-use state::AuthoritySideDuplicate;
+use state::{AuthoritySideDuplicate, ParsedLegData};
 
 mod errors;
 mod state;
+mod helpers;
 
 declare_id!("5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL");
 
@@ -33,54 +34,13 @@ impl Id for Dex {
 pub mod hxro_instrument {
     use super::*;
 
-    pub fn validate_data(
-        ctx: Context<ValidateData>,
-        data_size: u32,
-        dex: Pubkey,
-        fee_model_program: Pubkey,
-        risk_engine_program: Pubkey,
-        fee_model_configuration_acct: Pubkey,
-        risk_model_configuration_acct: Pubkey,
-        fee_output_register: Pubkey,
-        risk_output_register: Pubkey,
-        risk_and_fee_signer: Pubkey,
-    ) -> Result<()> {
-        let legs = &ctx.accounts.rfq.legs;
-        let quote = &ctx.accounts.rfq.quote_asset;
-        require!(
-            data_size as usize == std::mem::size_of::<Pubkey>() * 8,
-            HxroError::InvalidDataSize
-        );
+    pub fn validate_data(ctx: Context<ValidateData>) -> Result<()> {
+        for leg in ctx.accounts.rfq.legs.clone() {
+            helpers::validate_instrument_data(&ctx, &leg.instrument_data)?;
+        }
 
-        require!(dex == ctx.accounts.dex.key(), HxroError::InvalidDex);
-        require!(
-            fee_model_program == ctx.accounts.fee_model_program.key(),
-            HxroError::InvalidFeeModelProgram
-        );
-        require!(
-            risk_engine_program == ctx.accounts.risk_engine_program.key(),
-            HxroError::InvalidRiskEngineProgram
-        );
-        require!(
-            fee_model_configuration_acct == ctx.accounts.fee_model_configuration_acct.key(),
-            HxroError::InvalidFeeModelConfigurationAcct
-        );
-        require!(
-            risk_model_configuration_acct == ctx.accounts.risk_model_configuration_acct.key(),
-            HxroError::InvalidRiskModelConfigurationAcct
-        );
-        require!(
-            fee_output_register == ctx.accounts.fee_output_register.key(),
-            HxroError::InvalidFeeOutputRegister
-        );
-        require!(
-            risk_output_register == ctx.accounts.risk_output_register.key(),
-            HxroError::InvalidRiskOutputRegister
-        );
-        require!(
-            risk_and_fee_signer == ctx.accounts.risk_and_fee_signer.key(),
-            HxroError::InvalidRiskAndFeeSigner
-        );
+        helpers::validate_instrument_data(&ctx, &ctx.accounts.rfq.quote_asset.instrument_data)?;
+
         Ok(())
     }
 
@@ -92,7 +52,7 @@ pub mod hxro_instrument {
         Ok(())
     }
 
-    pub fn clean_up(ctx: Context<CleanUp>, leg_index: u8) -> Result<()> {
+    pub fn clean_up(ctx: Context<CleanUp>) -> Result<()> {
         Ok(())
     }
 }

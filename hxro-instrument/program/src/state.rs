@@ -16,3 +16,15 @@ impl From<AuthoritySideDuplicate> for AuthoritySide {
         }
     }
 }
+
+#[derive(AnchorDeserialize)]
+pub struct ParsedLegData {
+    pub dex: Pubkey,
+    pub fee_model_program: Pubkey,
+    pub risk_engine_program: Pubkey,
+    pub fee_model_configuration_acct: Pubkey,
+    pub risk_model_configuration_acct: Pubkey,
+    pub fee_output_register: Pubkey,
+    pub risk_output_register: Pubkey,
+    pub risk_and_fee_signer: Pubkey,
+}
