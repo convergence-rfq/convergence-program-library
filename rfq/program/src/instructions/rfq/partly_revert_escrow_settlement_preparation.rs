@@ -10,7 +10,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct PartlyRevertSettlementPreparationAccounts<'info> {
+pub struct PartlyRevertEscrowSettlementPreparationAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Box<Account<'info, Rfq>>,
@@ -19,11 +19,11 @@ pub struct PartlyRevertSettlementPreparationAccounts<'info> {
 }
 
 fn validate(
-    ctx: &Context<PartlyRevertSettlementPreparationAccounts>,
+    ctx: &Context<PartlyRevertEscrowSettlementPreparationAccounts>,
     side: AuthoritySide,
     leg_amount_to_revert: u8,
 ) -> Result<()> {
-    let PartlyRevertSettlementPreparationAccounts { rfq, response, .. } = &ctx.accounts;
+    let PartlyRevertEscrowSettlementPreparationAccounts { rfq, response, .. } = &ctx.accounts;
 
     response
         .get_state(rfq)?
@@ -40,14 +40,14 @@ fn validate(
     Ok(())
 }
 
-pub fn partly_revert_settlement_preparation_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, PartlyRevertSettlementPreparationAccounts<'info>>,
+pub fn partly_revert_escrow_settlement_preparation_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, PartlyRevertEscrowSettlementPreparationAccounts<'info>>,
     side: AuthoritySide,
     leg_amount_to_revert: u8,
 ) -> Result<()> {
     validate(&ctx, side, leg_amount_to_revert)?;
 
-    let PartlyRevertSettlementPreparationAccounts {
+    let PartlyRevertEscrowSettlementPreparationAccounts {
         protocol,
         rfq,
         response,

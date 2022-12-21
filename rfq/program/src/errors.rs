@@ -98,6 +98,10 @@ pub enum ProtocolError {
     InvalidQuoteInstrument,
     #[msg("Print trade provider program ID wasn't provided")]
     NoPrintTradeProvider,
-    #[msg("InvalidSettlingMethod")]
-    InvalidSettlingMethod,
+    #[msg("This instruction is used for settling flow of another type of rfq")]
+    InvalidSettlingFlow,
+    #[msg("No print trade to clean up")]
+    NoPrintTradeToCleanUp,
+    #[msg("Print trade not cleaned up")]
+    PrintTradeNotCleanedUp,
 }

@@ -1,7 +1,10 @@
 use crate::{
     errors::ProtocolError,
     seeds::PROTOCOL_SEED,
-    state::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
+    state::{
+        AuthoritySide, DefaultingParty, ProtocolState, Response, ResponseState, Rfq,
+        StoredResponseState,
+    },
 };
 use anchor_lang::prelude::*;
 
@@ -27,7 +30,7 @@ fn validate(ctx: &Context<ExecutePrintTradeSettlementAccounts>, side: AuthorityS
 
     require!(
         rfq.is_settled_as_print_trade(),
-        ProtocolError::InvalidSettlingMethod
+        ProtocolError::InvalidSettlingFlow
     );
 
     let actual_side = response.get_authority_side(rfq, &caller.key());
@@ -63,9 +66,15 @@ pub fn execute_print_trade_settlement_instruction<'info>(
     } = ctx.accounts;
 
     // TODO implement print trade execution by the print trade provider
+    let defaulting_party: Option<DefaultingParty> = None;
     unimplemented!();
 
-    response.state = StoredResponseState::Settled;
+    if let Some(defaulting_party) = defaulting_party {
+        response.defaulting_party = Some(defaulting_party);
+        response.state = StoredResponseState::Defaulted;
+    } else {
+        response.state = StoredResponseState::Settled;
+    }
 
     Ok(())
 }

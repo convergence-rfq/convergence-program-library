@@ -33,7 +33,7 @@ fn validate(
 
     require!(
         !rfq.is_settled_as_print_trade(),
-        ProtocolError::InvalidSettlingMethod
+        ProtocolError::InvalidSettlingFlow
     );
 
     let actual_side = response.get_authority_side(rfq, &caller.key());

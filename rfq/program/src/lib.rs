@@ -25,19 +25,19 @@ use instructions::rfq::add_legs_to_rfq::*;
 use instructions::rfq::cancel_response::*;
 use instructions::rfq::cancel_rfq::*;
 use instructions::rfq::clean_up_response::*;
-use instructions::rfq::clean_up_response_legs::*;
+use instructions::rfq::clean_up_response_escrow_legs::*;
 use instructions::rfq::clean_up_rfq::*;
 use instructions::rfq::confirm_response::*;
 use instructions::rfq::create_rfq::*;
 use instructions::rfq::execute_print_trade_settlement::*;
 use instructions::rfq::finalize_rfq_construction::*;
 use instructions::rfq::partially_settle_escrow_legs::*;
-use instructions::rfq::partly_revert_settlement_preparation::*;
+use instructions::rfq::partly_revert_escrow_settlement_preparation::*;
 use instructions::rfq::prepare_escrow_settlement::*;
 use instructions::rfq::prepare_more_escrow_legs_settlement::*;
 use instructions::rfq::prepare_print_trade_settlement::*;
 use instructions::rfq::respond_to_rfq::*;
-use instructions::rfq::revert_settlement_preparation::*;
+use instructions::rfq::revert_escrow_settlement_preparation::*;
 use instructions::rfq::settle_escrow::*;
 use instructions::rfq::settle_one_party_default::*;
 use instructions::rfq::settle_two_party_default::*;
@@ -222,19 +222,19 @@ pub mod rfq {
         execute_print_trade_settlement_instruction(ctx, side)
     }
 
-    pub fn revert_settlement_preparation<'info>(
-        ctx: Context<'_, '_, '_, 'info, RevertSettlementPreparationAccounts<'info>>,
+    pub fn revert_escrow_settlement_preparation<'info>(
+        ctx: Context<'_, '_, '_, 'info, RevertEscrowSettlementPreparationAccounts<'info>>,
         side: AuthoritySide,
     ) -> Result<()> {
-        revert_settlement_preparation_instruction(ctx, side)
+        revert_escrow_settlement_preparation_instruction(ctx, side)
     }
 
-    pub fn partly_revert_settlement_preparation<'info>(
-        ctx: Context<'_, '_, '_, 'info, PartlyRevertSettlementPreparationAccounts<'info>>,
+    pub fn partly_revert_escrow_settlement_preparation<'info>(
+        ctx: Context<'_, '_, '_, 'info, PartlyRevertEscrowSettlementPreparationAccounts<'info>>,
         side: AuthoritySide,
         leg_amount_to_revert: u8,
     ) -> Result<()> {
-        partly_revert_settlement_preparation_instruction(ctx, side, leg_amount_to_revert)
+        partly_revert_escrow_settlement_preparation_instruction(ctx, side, leg_amount_to_revert)
     }
 
     pub fn unlock_response_collateral(
@@ -261,11 +261,11 @@ pub mod rfq {
         clean_up_response_instruction(ctx)
     }
 
-    pub fn clean_up_response_legs<'info>(
-        ctx: Context<'_, '_, '_, 'info, CleanUpResponseLegsAccounts<'info>>,
+    pub fn clean_up_response_escrow_legs<'info>(
+        ctx: Context<'_, '_, '_, 'info, CleanUpResponseEscrowLegsAccounts<'info>>,
         leg_amount_to_clear: u8,
     ) -> Result<()> {
-        clean_up_response_legs_instruction(ctx, leg_amount_to_clear)
+        clean_up_response_escrow_legs_instruction(ctx, leg_amount_to_clear)
     }
 
     pub fn clean_up_rfq<'info>(

@@ -10,7 +10,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct RevertSettlementPreparationAccounts<'info> {
+pub struct RevertEscrowSettlementPreparationAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Box<Account<'info, Rfq>>,
@@ -18,8 +18,16 @@ pub struct RevertSettlementPreparationAccounts<'info> {
     pub response: Account<'info, Response>,
 }
 
-fn validate(ctx: &Context<RevertSettlementPreparationAccounts>, side: AuthoritySide) -> Result<()> {
-    let RevertSettlementPreparationAccounts { rfq, response, .. } = &ctx.accounts;
+fn validate(
+    ctx: &Context<RevertEscrowSettlementPreparationAccounts>,
+    side: AuthoritySide,
+) -> Result<()> {
+    let RevertEscrowSettlementPreparationAccounts { rfq, response, .. } = &ctx.accounts;
+
+    require!(
+        !rfq.is_settled_as_print_trade(),
+        ProtocolError::InvalidSettlingFlow
+    );
 
     response
         .get_state(rfq)?
@@ -33,13 +41,13 @@ fn validate(ctx: &Context<RevertSettlementPreparationAccounts>, side: AuthorityS
     Ok(())
 }
 
-pub fn revert_settlement_preparation_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, RevertSettlementPreparationAccounts<'info>>,
+pub fn revert_escrow_settlement_preparation_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, RevertEscrowSettlementPreparationAccounts<'info>>,
     side: AuthoritySide,
 ) -> Result<()> {
     validate(&ctx, side)?;
 
-    let RevertSettlementPreparationAccounts {
+    let RevertEscrowSettlementPreparationAccounts {
         protocol,
         rfq,
         response,
