@@ -1,5 +1,5 @@
 use crate::{
-    common::update_state_after_preparation,
+    common::update_state_after_escrow_preparation,
     errors::ProtocolError,
     interfaces::instrument::prepare_to_settle,
     seeds::PROTOCOL_SEED,
@@ -8,7 +8,8 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct PrepareMoreLegsSettlementAccounts<'info> {
+pub struct PrepareEscrowSettlementAccounts<'info> {
+    #[account(mut)]
     pub caller: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
@@ -19,16 +20,21 @@ pub struct PrepareMoreLegsSettlementAccounts<'info> {
 }
 
 fn validate(
-    ctx: &Context<PrepareMoreLegsSettlementAccounts>,
+    ctx: &Context<PrepareEscrowSettlementAccounts>,
     side: AuthoritySide,
     leg_amount_to_prepare: u8,
 ) -> Result<()> {
-    let PrepareMoreLegsSettlementAccounts {
+    let PrepareEscrowSettlementAccounts {
         caller,
         rfq,
         response,
         ..
     } = &ctx.accounts;
+
+    require!(
+        !rfq.is_settled_as_print_trade(),
+        ProtocolError::InvalidSettlingMethod
+    );
 
     let actual_side = response.get_authority_side(rfq, &caller.key());
     require!(
@@ -36,9 +42,8 @@ fn validate(
         ProtocolError::NotAPassedAuthority
     );
 
-    let legs_left_to_prepare = rfq.legs.len() - response.get_prepared_legs(side) as usize;
     require!(
-        leg_amount_to_prepare > 0 && leg_amount_to_prepare as usize <= legs_left_to_prepare,
+        leg_amount_to_prepare > 0 && leg_amount_to_prepare as usize <= rfq.legs.len(),
         ProtocolError::InvalidSpecifiedLegAmount
     );
 
@@ -55,21 +60,21 @@ fn validate(
     };
 
     require!(
-        response.get_prepared_legs(side) > 0,
-        ProtocolError::HaveNotStartedToPrepare
+        response.get_prepared_legs(side) == 0,
+        ProtocolError::AlreadyStartedToPrepare
     );
 
     Ok(())
 }
 
-pub fn prepare_more_legs_settlement_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, PrepareMoreLegsSettlementAccounts<'info>>,
+pub fn prepare_escrow_settlement_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, PrepareEscrowSettlementAccounts<'info>>,
     side: AuthoritySide,
     leg_amount_to_prepare: u8,
 ) -> Result<()> {
     validate(&ctx, side, leg_amount_to_prepare)?;
 
-    let PrepareMoreLegsSettlementAccounts {
+    let PrepareEscrowSettlementAccounts {
         protocol,
         rfq,
         response,
@@ -78,8 +83,16 @@ pub fn prepare_more_legs_settlement_instruction<'info>(
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    let start_index = response.get_prepared_legs(side);
-    for leg_index in start_index..(start_index + leg_amount_to_prepare) {
+    prepare_to_settle(
+        AssetIdentifier::Quote,
+        side,
+        protocol,
+        rfq,
+        response,
+        &mut remaining_accounts,
+    )?;
+
+    for leg_index in 0..leg_amount_to_prepare {
         prepare_to_settle(
             AssetIdentifier::Leg { leg_index },
             side,
@@ -90,7 +103,7 @@ pub fn prepare_more_legs_settlement_instruction<'info>(
         )?;
     }
 
-    update_state_after_preparation(side, leg_amount_to_prepare, rfq, response);
+    update_state_after_escrow_preparation(side, leg_amount_to_prepare, rfq, response);
 
     Ok(())
 }

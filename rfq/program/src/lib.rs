@@ -18,6 +18,7 @@ use instructions::collateral::initialize_collateral::*;
 use instructions::collateral::withdraw_collateral::*;
 use instructions::protocol::add_base_asset::*;
 use instructions::protocol::add_instrument::*;
+use instructions::protocol::add_print_trade_provider::*;
 use instructions::protocol::initialize_protocol::*;
 use instructions::protocol::register_mint::*;
 use instructions::rfq::add_legs_to_rfq::*;
@@ -28,14 +29,16 @@ use instructions::rfq::clean_up_response_legs::*;
 use instructions::rfq::clean_up_rfq::*;
 use instructions::rfq::confirm_response::*;
 use instructions::rfq::create_rfq::*;
+use instructions::rfq::execute_print_trade_settlement::*;
 use instructions::rfq::finalize_rfq_construction::*;
-use instructions::rfq::partially_settle_legs::*;
+use instructions::rfq::partially_settle_escrow_legs::*;
 use instructions::rfq::partly_revert_settlement_preparation::*;
-use instructions::rfq::prepare_more_legs_settlement::*;
-use instructions::rfq::prepare_settlement::*;
+use instructions::rfq::prepare_escrow_settlement::*;
+use instructions::rfq::prepare_more_escrow_legs_settlement::*;
+use instructions::rfq::prepare_print_trade_settlement::*;
 use instructions::rfq::respond_to_rfq::*;
 use instructions::rfq::revert_settlement_preparation::*;
-use instructions::rfq::settle::*;
+use instructions::rfq::settle_escrow::*;
 use instructions::rfq::settle_one_party_default::*;
 use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
@@ -85,6 +88,13 @@ pub mod rfq {
             revert_preparation_account_amount,
             clean_up_account_amount,
         )
+    }
+
+    pub fn add_print_trade_provider(
+        ctx: Context<AddPrintTradeProviderAccounts>,
+        validate_data_accounts: u8,
+    ) -> Result<()> {
+        add_print_trade_provider_instruction(ctx, validate_data_accounts)
     }
 
     pub fn add_base_asset(
@@ -169,31 +179,47 @@ pub mod rfq {
         confirm_response_instruction(ctx, side, override_leg_multiplier_bps)
     }
 
-    pub fn prepare_settlement<'info>(
-        ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
+    pub fn prepare_escrow_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareEscrowSettlementAccounts<'info>>,
         side: AuthoritySide,
         leg_amount_to_prepare: u8,
     ) -> Result<()> {
-        prepare_settlement_instruction(ctx, side, leg_amount_to_prepare)
+        prepare_escrow_settlement_instruction(ctx, side, leg_amount_to_prepare)
     }
 
-    pub fn prepare_more_legs_settlement<'info>(
-        ctx: Context<'_, '_, '_, 'info, PrepareMoreLegsSettlementAccounts<'info>>,
+    pub fn prepare_more_escrow_legs_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareMoreEscrowLegsSettlementAccounts<'info>>,
         side: AuthoritySide,
         leg_amount_to_prepare: u8,
     ) -> Result<()> {
-        prepare_more_legs_settlement_instruction(ctx, side, leg_amount_to_prepare)
+        prepare_more_escrow_legs_settlement_instruction(ctx, side, leg_amount_to_prepare)
     }
 
-    pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {
-        settle_instruction(ctx)
+    pub fn prepare_print_trade_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, PreparePrintTradeSettlementAccounts<'info>>,
+        side: AuthoritySide,
+    ) -> Result<()> {
+        prepare_print_trade_settlement_instruction(ctx, side)
     }
 
-    pub fn partially_settle_legs<'info>(
-        ctx: Context<'_, '_, '_, 'info, PartiallySettleLegsAccounts<'info>>,
+    pub fn settle_escrow<'info>(
+        ctx: Context<'_, '_, '_, 'info, SettleEscrowAccounts<'info>>,
+    ) -> Result<()> {
+        settle_escrow_instruction(ctx)
+    }
+
+    pub fn partially_settle_escrow_legs<'info>(
+        ctx: Context<'_, '_, '_, 'info, PartiallySettleEscrowLegsAccounts<'info>>,
         leg_amount_to_settle: u8,
     ) -> Result<()> {
-        partially_settle_legs_instruction(ctx, leg_amount_to_settle)
+        partially_settle_escrow_legs_instruction(ctx, leg_amount_to_settle)
+    }
+
+    pub fn execute_print_trade_settlement<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecutePrintTradeSettlementAccounts<'info>>,
+        side: AuthoritySide,
+    ) -> Result<()> {
+        execute_print_trade_settlement_instruction(ctx, side)
     }
 
     pub fn revert_settlement_preparation<'info>(

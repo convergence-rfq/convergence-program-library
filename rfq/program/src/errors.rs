@@ -6,8 +6,10 @@ use anchor_lang::prelude::*;
 pub enum ProtocolError {
     #[msg("Require protocol authority")]
     NotAProtocolAuthority,
-    #[msg("Instrument already added")]
-    InstrumentAlreadyAdded,
+    #[msg("Program is already added")]
+    AlreadyAdded,
+    #[msg("Can't add because the max limit is reached")]
+    CannotAddBecauseOfMaxAmountLimit,
     #[msg("Invalid risk engine register")]
     InvalidRiskEngineRegister,
     #[msg("Passed mint is not a collateral mint")]
@@ -96,4 +98,6 @@ pub enum ProtocolError {
     InvalidQuoteInstrument,
     #[msg("Print trade provider program ID wasn't provided")]
     NoPrintTradeProvider,
+    #[msg("InvalidSettlingMethod")]
+    InvalidSettlingMethod,
 }

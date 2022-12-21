@@ -9,7 +9,7 @@ pub use self::rfq::{
 pub use collateral::CollateralInfo;
 pub use protocol::{
     BaseAssetIndex, BaseAssetInfo, FeeParameters, Instrument, MintInfo, MintType, PriceOracle,
-    ProtocolState, RiskCategory,
+    PrintTradeProvider, ProtocolState, RiskCategory,
 };
 pub use response::{
     AuthoritySide, Confirmation, DefaultingParty, Quote, Response, ResponseState,

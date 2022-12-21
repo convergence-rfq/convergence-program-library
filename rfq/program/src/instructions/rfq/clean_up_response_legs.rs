@@ -27,7 +27,7 @@ fn validate(ctx: &Context<CleanUpResponseLegsAccounts>, leg_amount_to_clear: u8)
     ])?;
     if let ResponseState::Defaulted = response_state {
         require!(
-            response.taker_prepared_legs == 0 && response.maker_prepared_legs == 0,
+            response.taker_prepared_escrow_legs == 0 && response.maker_prepared_escrow_legs == 0,
             ProtocolError::PendingPreparations
         );
     }
@@ -39,7 +39,7 @@ fn validate(ctx: &Context<CleanUpResponseLegsAccounts>, leg_amount_to_clear: u8)
 
     require!(
         leg_amount_to_clear > 0
-            && leg_amount_to_clear < response.leg_preparations_initialized_by.len() as u8,
+            && leg_amount_to_clear < response.escrow_leg_preparations_initialized_by.len() as u8,
         ProtocolError::InvalidSpecifiedLegAmount
     );
 
@@ -60,7 +60,7 @@ pub fn clean_up_response_legs_instruction<'info>(
     } = ctx.accounts;
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-    let initialized_legs = response.leg_preparations_initialized_by.len() as u8;
+    let initialized_legs = response.escrow_leg_preparations_initialized_by.len() as u8;
     let starting_index = initialized_legs - leg_amount_to_clear;
     for leg_index in starting_index..initialized_legs {
         clean_up(
@@ -73,7 +73,7 @@ pub fn clean_up_response_legs_instruction<'info>(
     }
 
     for _ in 0..leg_amount_to_clear {
-        response.leg_preparations_initialized_by.pop();
+        response.escrow_leg_preparations_initialized_by.pop();
     }
 
     Ok(())
