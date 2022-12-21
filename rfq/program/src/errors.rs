@@ -88,4 +88,10 @@ pub enum ProtocolError {
     TooManyLegs,
     #[msg("LegsDataSizeExceedsMaximumLimit")]
     LegsDataTooBig,
+    #[msg("Can't add new instrument because maximum amout of instruments already added")]
+    MaxInstruments,
+    #[msg("Current instrument cannot be used as a quote asset")]
+    InvalidQuoteInstrument,
+    #[msg("Not a whitelisted print trade provider")]
+    NotAWhitelistedPrintTradeProvider,
 }

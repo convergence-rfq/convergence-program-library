@@ -1,6 +1,5 @@
 [scripts]
-test = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/psyoptionsEuropean.spec.ts"
-test_hxro = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/hxro.spec.ts"
+test = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/*.ts"
 
 [[test.genesis]]
 address = "FASQhaZQT53W9eT9wWnPoBFw8xzZDey9TbMmJj6jCQTs"
@@ -9,3 +8,11 @@ program = "../dependencies/euro_primitive.so"
 [[test.genesis]]
 address = "FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"
 program = "../dependencies/pseudo_pyth.so"
+
+[[test.validator.account]]
+address = "8SXvChNYFhRq4EZuZvnhjrB3jJRQCv4k3P4W6hesH3Ee"
+filename = "../dependencies/btc_20000_oracle_switchboard.json"
+
+[[test.validator.account]]
+address = "GvDMxPzN1sCj7L26YDK2HnMRXEQmQ2aemov8YBtPS7vR"
+filename = "../dependencies/sol_30_oracle_switchboard.json"

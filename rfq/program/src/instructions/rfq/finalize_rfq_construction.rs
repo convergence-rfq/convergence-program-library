@@ -1,8 +1,8 @@
 use crate::{
-    constants::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_rfq,
-    states::{CollateralInfo, ProtocolState, Rfq, RfqState, StoredRfqState},
+    seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
+    state::{CollateralInfo, ProtocolState, Rfq, RfqState, StoredRfqState},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
@@ -45,8 +45,8 @@ fn validate(ctx: &Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
     Ok(())
 }
 
-pub fn finalize_rfq_construction_instruction(
-    ctx: Context<FinalizeRfqConstructionAccounts>,
+pub fn finalize_rfq_construction_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, FinalizeRfqConstructionAccounts<'info>>,
 ) -> Result<()> {
     validate(&ctx)?;
 
@@ -58,8 +58,18 @@ pub fn finalize_rfq_construction_instruction(
         ..
     } = ctx.accounts;
 
-    let required_collateral =
-        calculate_required_collateral_for_rfq(&rfq.to_account_info(), risk_engine)?;
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
+
+    if rfq.is_settled_as_print_trade() {
+        // TODO implement rfq validation by the print trade provider
+        unimplemented!();
+    }
+
+    let required_collateral = calculate_required_collateral_for_rfq(
+        rfq.to_account_info(),
+        risk_engine,
+        &mut remaining_accounts,
+    )?;
 
     collateral_info.lock_collateral(collateral_token, required_collateral)?;
     rfq.non_response_taker_collateral_locked = required_collateral;

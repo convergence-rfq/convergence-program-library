@@ -1,8 +1,8 @@
 use crate::{
-    constants::{MAX_LEGS_AMOUNT, PROTOCOL_SEED},
     errors::ProtocolError,
-    interfaces::instrument::validate_instrument_data,
-    states::{Leg, ProtocolState, Rfq, RfqState},
+    interfaces::instrument::validate_leg_instrument_data,
+    seeds::PROTOCOL_SEED,
+    state::{Leg, ProtocolState, Rfq, RfqState},
 };
 use anchor_lang::prelude::*;
 
@@ -24,13 +24,15 @@ fn validate<'info>(
     let AddLegsToRfqAccounts { protocol, rfq, .. } = &ctx.accounts;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    for leg in legs.iter() {
-        validate_instrument_data(leg, protocol, &mut remaining_accounts)?;
+    if rfq.is_settled_as_print_trade() {
+        for leg in legs.iter() {
+            validate_leg_instrument_data(leg, protocol, &mut remaining_accounts)?;
+        }
     }
 
     require!(legs.len() > 0, ProtocolError::EmptyLegsNotSupported);
     require!(
-        legs.len() + rfq.legs.len() <= MAX_LEGS_AMOUNT as usize,
+        legs.len() + rfq.legs.len() <= Rfq::MAX_LEGS_AMOUNT as usize,
         ProtocolError::TooManyLegs
     );
 

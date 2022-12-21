@@ -1,8 +1,6 @@
-use std::mem;
-
 use crate::{
-    constants::PROTOCOL_SEED,
-    states::{FeeParameters, ProtocolState},
+    seeds::PROTOCOL_SEED,
+    state::{FeeParameters, ProtocolState},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
@@ -15,8 +13,7 @@ pub struct InitializeProtocolAccounts<'info> {
         init,
         payer = signer,
         seeds = [PROTOCOL_SEED.as_bytes()],
-        space = 8 + mem::size_of::<ProtocolState>()
-            + ProtocolState::INSTRUMENT_SIZE * ProtocolState::MAX_INSTRUMENTS,
+        space = ProtocolState::get_allocated_size(),
         bump
     )]
     pub protocol: Account<'info, ProtocolState>,
@@ -46,6 +43,7 @@ pub fn initialize_protocol_instruction(
         default_fees,
         risk_engine: risk_engine.key(),
         collateral_mint: collateral_mint.key(),
+        print_trade_providers: Default::default(),
         instruments: Default::default(),
     });
 

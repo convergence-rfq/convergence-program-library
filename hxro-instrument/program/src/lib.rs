@@ -45,6 +45,8 @@ pub mod hxro_instrument {
         risk_output_register: Pubkey,
         risk_and_fee_signer: Pubkey,
     ) -> Result<()> {
+        let legs = &ctx.accounts.rfq.legs;
+        let quote = ctx.accounts.rfq.quote_mint;
         require!(
             data_size as usize == std::mem::size_of::<Pubkey>() * 8,
             HxroError::InvalidDataSize
@@ -100,6 +102,8 @@ pub struct ValidateData<'info> {
     /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
+
+    pub rfq: Account<'info, Rfq>,
 
     /// CHECK:
     pub dex: AccountInfo<'info>,

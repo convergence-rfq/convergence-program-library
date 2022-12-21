@@ -5,10 +5,28 @@ import {
   PROTOCOL_SEED,
   QUOTE_ESCROW_SEED,
   INSTRUMENT_ESCROW_SEED,
+  BASE_ASSET_INFO_SEED,
+  MINT_INFO_SEED,
+  RISK_ENGINE_CONFIG_SEED,
 } from "./constants";
+import { toLittleEndian } from "./helpers";
+import { AssetIdentifier, assetIdentifierToSeedBytes } from "./types";
 
 export async function getProtocolPda(programId: PublicKey) {
   const [pda] = await PublicKey.findProgramAddress([Buffer.from(PROTOCOL_SEED)], programId);
+  return pda;
+}
+
+export async function getBaseAssetPda(index: number, programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress(
+    [Buffer.from(BASE_ASSET_INFO_SEED), toLittleEndian(index, 2)],
+    programId
+  );
+  return pda;
+}
+
+export async function getMintInfoPda(mintAddress: PublicKey, programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress([Buffer.from(MINT_INFO_SEED), mintAddress.toBuffer()], programId);
   return pda;
 }
 
@@ -27,10 +45,19 @@ export async function getQuoteEscrowPda(response: PublicKey, programId: PublicKe
   return pda;
 }
 
-export async function getInstrumentEscrowPda(response: PublicKey, legIndex: number, programId: PublicKey) {
+export async function getInstrumentEscrowPda(
+  response: PublicKey,
+  assetIdentifier: AssetIdentifier,
+  programId: PublicKey
+) {
   const [pda] = await PublicKey.findProgramAddress(
-    [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
+    [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), assetIdentifierToSeedBytes(assetIdentifier)],
     programId
   );
+  return pda;
+}
+
+export async function getRiskEngineConfig(programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress([Buffer.from(RISK_ENGINE_CONFIG_SEED)], programId);
   return pda;
 }

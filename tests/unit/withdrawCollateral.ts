@@ -2,7 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import { expectError, TokenChangeMeasurer, withTokenDecimals } from "../utilities/helpers";
 import { Context, getContext } from "../utilities/wrappers";
 
-describe("RFQ Spot instrument integration tests", () => {
+describe("Withdraw collateral instruction", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;

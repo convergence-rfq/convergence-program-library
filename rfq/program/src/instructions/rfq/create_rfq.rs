@@ -1,13 +1,12 @@
 use std::mem;
 
 use crate::{
-    constants::{MAX_LEGS_AMOUNT, MAX_LEGS_SIZE, PROTOCOL_SEED},
     errors::ProtocolError,
-    interfaces::instrument::validate_instrument_data,
-    states::{FixedSize, Leg, OrderType, ProtocolState, Rfq, StoredRfqState},
+    interfaces::instrument::{validate_leg_instrument_data, validate_quote_instrument_data},
+    seeds::PROTOCOL_SEED,
+    state::{rfq::QuoteAsset, FixedSize, Leg, OrderType, ProtocolState, Rfq, StoredRfqState},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
 #[instruction(expected_leg_size: u16)]
@@ -20,30 +19,50 @@ pub struct CreateRfqAccounts<'info> {
     #[account(init, payer = taker, space = 8 + mem::size_of::<Rfq>() + expected_leg_size as usize)]
     pub rfq: Box<Account<'info, Rfq>>,
 
-    pub quote_mint: Account<'info, Mint>,
-
     pub system_program: Program<'info, System>,
 }
 
-fn validate_legs<'info>(
-    ctx: &Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
+fn validate_quote<'a, 'info: 'a>(
+    protocol: &Account<'info, ProtocolState>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+    quote_asset: &QuoteAsset,
+    is_settled_as_print_trade: bool,
+) -> Result<()> {
+    if !is_settled_as_print_trade {
+        let instrument_parameters =
+            protocol.get_instrument_parameters(quote_asset.instrument_program)?;
+
+        require!(
+            instrument_parameters.can_be_used_as_quote,
+            ProtocolError::InvalidQuoteInstrument
+        );
+
+        validate_quote_instrument_data(quote_asset, protocol, remaining_accounts)?;
+    }
+
+    Ok(())
+}
+
+fn validate_legs<'a, 'info: 'a>(
+    protocol: &Account<'info, ProtocolState>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
     expected_leg_size: u16,
     legs: &[Leg],
+    is_settled_as_print_trade: bool,
 ) -> Result<()> {
-    let CreateRfqAccounts { protocol, .. } = &ctx.accounts;
-    let mut remaining_accounts = ctx.remaining_accounts.iter();
-
     require!(
-        legs.len() <= MAX_LEGS_AMOUNT as usize,
+        legs.len() <= Rfq::MAX_LEGS_AMOUNT as usize,
         ProtocolError::TooManyLegs
     );
     require!(
-        expected_leg_size <= MAX_LEGS_SIZE,
+        expected_leg_size <= Rfq::MAX_LEGS_SIZE,
         ProtocolError::LegsDataTooBig
     );
 
-    for leg in legs.iter() {
-        validate_instrument_data(leg, protocol, &mut remaining_accounts)?;
+    if !is_settled_as_print_trade {
+        for leg in legs.iter() {
+            validate_leg_instrument_data(leg, protocol, remaining_accounts)?;
+        }
     }
 
     Ok(())
@@ -53,26 +72,37 @@ pub fn create_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
     expected_leg_size: u16,
     legs: Vec<Leg>,
+    print_trade_provider: Option<Pubkey>,
     order_type: OrderType,
+    quote_asset: QuoteAsset,
     fixed_size: FixedSize,
     active_window: u32,
     settling_window: u32,
 ) -> Result<()> {
-    validate_legs(&ctx, expected_leg_size, &legs)?;
+    let protocol = &ctx.accounts.protocol;
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
+    validate_quote(
+        protocol,
+        &mut remaining_accounts,
+        &quote_asset,
+        print_trade_provider.is_some(),
+    )?;
+    validate_legs(
+        protocol,
+        &mut remaining_accounts,
+        expected_leg_size,
+        &legs,
+        print_trade_provider.is_some(),
+    )?;
 
-    let CreateRfqAccounts {
-        taker,
-        rfq,
-        quote_mint,
-        ..
-    } = ctx.accounts;
+    let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
 
     rfq.set_inner(Rfq {
         taker: taker.key(),
         order_type,
         last_look_enabled: false, // TODO add logic later
-        fixed_size,               // TODO add logic later
-        quote_mint: quote_mint.key(),
+        fixed_size,
+        quote_asset,
         access_manager: None, // TODO add logic later
         creation_timestamp: 0,
         active_window,
@@ -84,6 +114,7 @@ pub fn create_rfq_instruction<'info>(
         total_responses: 0,
         cleared_responses: 0,
         confirmed_responses: 0,
+        print_trade_provider,
         legs,
     });
 
