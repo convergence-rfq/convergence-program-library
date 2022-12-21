@@ -9,8 +9,8 @@ crate-type = ["cdylib", "lib"]
 name = "hxro_instrument"
 
 [dependencies]
-anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }
-anchor-spl = "0.24.2"
+anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
+anchor-spl = "0.25.0"
 dex-cpi = { path="../dex-cpi", features=["cpi"] }
 risk-cpi = { path="../risk-cpi", features=["cpi"] }
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }

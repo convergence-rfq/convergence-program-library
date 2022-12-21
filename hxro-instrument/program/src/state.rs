@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use rfq::states::AuthoritySide;
+use rfq::state::AuthoritySide;
 
 // Duplicate required because anchor doesn't generate IDL for imported structs
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]

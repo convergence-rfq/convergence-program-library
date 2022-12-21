@@ -11,7 +11,7 @@ use std::str::FromStr;
 
 use dex_cpi as dex;
 use errors::HxroError;
-use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
+use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
 use risk_cpi as risk;
 use state::AuthoritySideDuplicate;
 
@@ -46,7 +46,7 @@ pub mod hxro_instrument {
         risk_and_fee_signer: Pubkey,
     ) -> Result<()> {
         let legs = &ctx.accounts.rfq.legs;
-        let quote = ctx.accounts.rfq.quote_mint;
+        let quote = &ctx.accounts.rfq.quote_asset;
         require!(
             data_size as usize == std::mem::size_of::<Pubkey>() * 8,
             HxroError::InvalidDataSize
