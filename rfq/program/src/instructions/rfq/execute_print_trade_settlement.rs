@@ -5,6 +5,7 @@ use crate::{
         AuthoritySide, DefaultingParty, ProtocolState, Response, ResponseState, Rfq,
         StoredResponseState,
     },
+    interfaces::print_trade_provider::settle_print_trade,
 };
 use anchor_lang::prelude::*;
 
@@ -65,9 +66,12 @@ pub fn execute_print_trade_settlement_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    // TODO implement print trade execution by the print trade provider
+    // TODO implement receiving the defaulting party
     let defaulting_party: Option<DefaultingParty> = None;
-    unimplemented!();
+
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
+
+    settle_print_trade(protocol, rfq, response, &mut remaining_accounts)?;
 
     if let Some(defaulting_party) = defaulting_party {
         response.defaulting_party = Some(defaulting_party);

@@ -1,6 +1,9 @@
 use crate::{
     errors::ProtocolError,
-    interfaces::risk_engine::calculate_required_collateral_for_rfq,
+    interfaces::{
+        risk_engine::calculate_required_collateral_for_rfq,
+        print_trade_provider::validate_print_trade_data,
+    },
     seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     state::{CollateralInfo, ProtocolState, Rfq, RfqState, StoredRfqState},
 };
@@ -55,14 +58,15 @@ pub fn finalize_rfq_construction_instruction<'info>(
         collateral_info,
         collateral_token,
         risk_engine,
+        protocol,
         ..
     } = ctx.accounts;
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
+    // rfq validation by the print trade provider
     if rfq.is_settled_as_print_trade() {
-        // TODO implement rfq validation by the print trade provider
-        unimplemented!();
+        validate_print_trade_data(rfq, protocol, &mut remaining_accounts)?;
     }
 
     let required_collateral = calculate_required_collateral_for_rfq(

@@ -2,6 +2,7 @@ use crate::{
     errors::ProtocolError,
     seeds::PROTOCOL_SEED,
     state::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
+    interfaces::print_trade_provider::clean_up,
 };
 use anchor_lang::prelude::*;
 
@@ -51,8 +52,9 @@ pub fn clean_up_print_trade_instruction<'info>(
         response.exit(ctx.program_id)?;
     }
 
-    // TODO implement print trade cleanup by the print trade provider
-    unimplemented!();
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
+
+    clean_up(protocol, rfq, response, &mut remaining_accounts)?;
 
     response.print_trade_prepared_by = None;
 

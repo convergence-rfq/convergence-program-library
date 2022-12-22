@@ -2,6 +2,7 @@ use crate::{
     errors::ProtocolError,
     seeds::PROTOCOL_SEED,
     state::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq},
+    interfaces::print_trade_provider::create_print_trade,
 };
 use anchor_lang::prelude::*;
 
@@ -56,8 +57,9 @@ pub fn prepare_print_trade_settlement_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    // TODO implement print trade creation by the print trade provider
-    unimplemented!();
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
+
+    create_print_trade(side, protocol, rfq, response, &mut remaining_accounts)?;
 
     response.print_trade_prepared_by = Some(side);
 
