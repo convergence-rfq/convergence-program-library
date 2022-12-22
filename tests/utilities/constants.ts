@@ -27,4 +27,4 @@ export const DEFAULT_SETTLING_WINDOW = 60;
 export const TAKER_CONFIRMED_COLLATERAL = new BN(3_000_000_000);
 export const MAKER_CONFIRMED_COLLATERAL = new BN(1_000_000_000);
 
-export const INSTRUMENT_ESCROW_SEED = "psyescrow";
+export const INSTRUMENT_ESCROW_SEED = "escrow";

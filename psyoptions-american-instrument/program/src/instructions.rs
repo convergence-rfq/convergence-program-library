@@ -6,7 +6,7 @@ use super::errors;
 use errors::PsyoptionsAmericanError;
 use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
 
-const ESCROW_SEED: &str = "psyescrow";
+const ESCROW_SEED: &str = "escrow";
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
     /// protocol provided

@@ -11,7 +11,7 @@ use errors::PsyoptionsAmericanError;
 use rfq::states::AuthoritySide;
 
 declare_id!("ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy");
-const ESCROW_SEED: &str = "psyescrow";
+const ESCROW_SEED: &str = "escrow";
 #[program]
 pub mod psyoptions_american_instrument {
 
