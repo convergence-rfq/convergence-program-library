@@ -33,7 +33,7 @@ fn validate(ctx: &Context<AddPrintTradeProviderAccounts>) -> Result<()> {
     );
 
     require!(
-        protocol.print_trade_providers.len() == ProtocolState::MAX_PRINT_TRADE_PROVIDERS,
+        protocol.print_trade_providers.len() < ProtocolState::MAX_PRINT_TRADE_PROVIDERS,
         ProtocolError::CannotAddBecauseOfMaxAmountLimit
     );
 

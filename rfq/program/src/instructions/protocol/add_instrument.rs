@@ -33,7 +33,7 @@ fn validate(ctx: &Context<AddInstrumentAccounts>) -> Result<()> {
     );
 
     require!(
-        protocol.instruments.len() == ProtocolState::MAX_INSTRUMENTS,
+        protocol.instruments.len() < ProtocolState::MAX_INSTRUMENTS,
         ProtocolError::CannotAddBecauseOfMaxAmountLimit
     );
 
