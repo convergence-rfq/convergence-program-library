@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/psyoptions-european-instrument",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
@@ -8,7 +8,7 @@
   },
   "repository": "https://github.com/convergence-rfq/convergence-program-library.git",
   "author": "Convergence RFQ Maintainers <contact@tradersguild.so>",
-  "main": "./generated/index.ts",
+  "main": "./generated/index.js",
   "files": [
     "generated",
     "idl"
