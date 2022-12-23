@@ -1102,13 +1102,18 @@
             "type": "publicKey"
           },
           {
-            "name": "product",
-            "type": "publicKey"
+            "name": "numProducts",
+            "type": "u64"
           },
           {
-            "name": "size",
+            "name": "products",
             "type": {
-              "defined": "Fractional"
+              "array": [
+                {
+                  "defined": "PrintTradeProduct"
+                },
+                6
+              ]
             }
           },
           {
@@ -1138,6 +1143,10 @@
             "type": {
               "defined": "Fractional"
             }
+          },
+          {
+            "name": "isOperatorSigner",
+            "type": "bool"
           },
           {
             "name": "bump",
@@ -1265,7 +1274,7 @@
   ],
   "types": [
     {
-      "name": "SignPrintTradeParams",
+      "name": "PrintTradeProductIndex",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1277,6 +1286,29 @@
             "name": "size",
             "type": {
               "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializePrintTradeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "numProducts",
+            "type": "u64"
+          },
+          {
+            "name": "products",
+            "type": {
+              "array": [
+                {
+                  "defined": "PrintTradeProductIndex"
+                },
+                6
+              ]
             }
           },
           {
@@ -1302,23 +1334,32 @@
             "type": {
               "defined": "Fractional"
             }
+          },
+          {
+            "name": "isOperatorSigner",
+            "type": "bool"
           }
         ]
       }
     },
     {
-      "name": "InitializePrintTradeParams",
+      "name": "SignPrintTradeParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "productIndex",
+            "name": "numProducts",
             "type": "u64"
           },
           {
-            "name": "size",
+            "name": "products",
             "type": {
-              "defined": "Fractional"
+              "array": [
+                {
+                  "defined": "PrintTradeProductIndex"
+                },
+                6
+              ]
             }
           },
           {
@@ -2683,6 +2724,24 @@
                 }
               }
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "PrintTradeProduct",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "productKey",
+            "type": "publicKey"
+          },
+          {
+            "name": "size",
+            "type": {
+              "defined": "Fractional"
+            }
           }
         ]
       }

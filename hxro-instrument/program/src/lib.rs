@@ -45,7 +45,7 @@ pub mod hxro_instrument {
     }
 
     pub fn create_print_trade(ctx: Context<CreatePrintTrade>) -> Result<()> {
-        Ok(())
+        helpers::create_print_trade(&ctx)
     }
 
     pub fn settle_print_trade(ctx: Context<SettlePrintTrade>) -> Result<()> {
@@ -84,7 +84,41 @@ pub struct ValidateData<'info> {
 }
 
 #[derive(Accounts)]
-pub struct CreatePrintTrade {}
+pub struct CreatePrintTrade<'info> {
+    pub rfq: Account<'info, Rfq>,
+
+    pub response: Account<'info, Response>,
+
+    /// CHECK:
+    pub dex: Program<'info, Dex>,
+
+    #[account(mut)]
+    pub creator_owner: Signer<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub counterparty_owner: Signer<'info>,
+    #[account(mut)]
+    pub operator_owner: Signer<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub creator: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub counterparty: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub operator: AccountInfo<'info>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub market_product_group: AccountInfo<'info>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub print_trade: AccountInfo<'info>,
+    /// CHECK:
+    pub system_program: Program<'info, System>,
+}
 
 #[derive(Accounts)]
 pub struct SettlePrintTrade {}
