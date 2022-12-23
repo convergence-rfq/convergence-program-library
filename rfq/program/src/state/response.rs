@@ -17,13 +17,15 @@ pub struct Response {
     pub maker_collateral_locked: u64,
     pub taker_collateral_locked: u64,
     pub state: StoredResponseState,
-    pub taker_prepared_legs: u8,
-    pub maker_prepared_legs: u8,
-    pub settled_legs: u8,
+
+    pub taker_prepared_escrow_legs: u8,
+    pub maker_prepared_escrow_legs: u8,
+    pub settled_escrow_legs: u8,
 
     pub confirmed: Option<Confirmation>,
     pub defaulting_party: Option<DefaultingParty>,
-    pub leg_preparations_initialized_by: Vec<AuthoritySide>,
+    pub print_trade_prepared_by: Option<AuthoritySide>,
+    pub escrow_leg_preparations_initialized_by: Vec<AuthoritySide>,
     pub bid: Option<Quote>,
     pub ask: Option<Quote>,
 }
@@ -268,20 +270,24 @@ impl Response {
     }
 
     pub fn is_prepared(&self, side: AuthoritySide, rfq: &Rfq) -> bool {
-        self.get_prepared_legs(side) as usize == rfq.legs.len()
+        if rfq.is_settled_as_print_trade() {
+            self.print_trade_prepared_by == Some(side)
+        } else {
+            self.get_prepared_legs(side) as usize == rfq.legs.len()
+        }
     }
 
     pub fn get_prepared_legs(&self, side: AuthoritySide) -> u8 {
         match side {
-            AuthoritySide::Taker => self.taker_prepared_legs,
-            AuthoritySide::Maker => self.maker_prepared_legs,
+            AuthoritySide::Taker => self.taker_prepared_escrow_legs,
+            AuthoritySide::Maker => self.maker_prepared_escrow_legs,
         }
     }
 
     pub fn get_prepared_legs_mut(&mut self, side: AuthoritySide) -> &mut u8 {
         match side {
-            AuthoritySide::Taker => &mut self.taker_prepared_legs,
-            AuthoritySide::Maker => &mut self.maker_prepared_legs,
+            AuthoritySide::Taker => &mut self.taker_prepared_escrow_legs,
+            AuthoritySide::Maker => &mut self.maker_prepared_escrow_legs,
         }
     }
 
@@ -295,10 +301,10 @@ impl Response {
     ) -> Option<AuthoritySide> {
         match asset_identifier {
             AssetIdentifier::Leg { leg_index } => self
-                .leg_preparations_initialized_by
+                .escrow_leg_preparations_initialized_by
                 .get(leg_index as usize)
                 .cloned(),
-            AssetIdentifier::Quote => self.leg_preparations_initialized_by.get(0).cloned(),
+            AssetIdentifier::Quote => self.escrow_leg_preparations_initialized_by.get(0).cloned(),
         }
     }
 }

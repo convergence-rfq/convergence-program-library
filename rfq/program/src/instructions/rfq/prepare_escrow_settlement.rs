@@ -1,5 +1,5 @@
 use crate::{
-    common::update_state_after_preparation,
+    common::update_state_after_escrow_preparation,
     errors::ProtocolError,
     interfaces::instrument::prepare_to_settle,
     seeds::PROTOCOL_SEED,
@@ -8,7 +8,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct PrepareSettlementAccounts<'info> {
+pub struct PrepareEscrowSettlementAccounts<'info> {
     #[account(mut)]
     pub caller: Signer<'info>,
 
@@ -20,16 +20,21 @@ pub struct PrepareSettlementAccounts<'info> {
 }
 
 fn validate(
-    ctx: &Context<PrepareSettlementAccounts>,
+    ctx: &Context<PrepareEscrowSettlementAccounts>,
     side: AuthoritySide,
     leg_amount_to_prepare: u8,
 ) -> Result<()> {
-    let PrepareSettlementAccounts {
+    let PrepareEscrowSettlementAccounts {
         caller,
         rfq,
         response,
         ..
     } = &ctx.accounts;
+
+    require!(
+        !rfq.is_settled_as_print_trade(),
+        ProtocolError::InvalidSettlingFlow
+    );
 
     let actual_side = response.get_authority_side(rfq, &caller.key());
     require!(
@@ -62,14 +67,14 @@ fn validate(
     Ok(())
 }
 
-pub fn prepare_settlement_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, PrepareSettlementAccounts<'info>>,
+pub fn prepare_escrow_settlement_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, PrepareEscrowSettlementAccounts<'info>>,
     side: AuthoritySide,
     leg_amount_to_prepare: u8,
 ) -> Result<()> {
     validate(&ctx, side, leg_amount_to_prepare)?;
 
-    let PrepareSettlementAccounts {
+    let PrepareEscrowSettlementAccounts {
         protocol,
         rfq,
         response,
@@ -98,7 +103,7 @@ pub fn prepare_settlement_instruction<'info>(
         )?;
     }
 
-    update_state_after_preparation(side, leg_amount_to_prepare, rfq, response);
+    update_state_after_escrow_preparation(side, leg_amount_to_prepare, rfq, response);
 
     Ok(())
 }

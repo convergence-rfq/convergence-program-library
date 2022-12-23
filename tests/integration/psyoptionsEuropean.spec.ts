@@ -50,13 +50,13 @@ describe("Psyoptions European instrument integration tests", () => {
     // taker confirms to buy 1 option
     await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
 
-    await response.prepareSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
 
     await options.mintOptions(context.maker, new BN(1), OptionType.CALL);
-    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
 
     // taker should receive 1 option, maker should receive 500$ and lose 1 bitcoin as option collateral
-    await response.settle(maker, [taker]);
+    await response.settleEscrow(maker, [taker]);
     await tokenMeasurer.expectChange([
       { token: options.callMint, user: taker, delta: new BN(1).mul(CONTRACT_DECIMALS_BN) },
       { token: "quote", user: taker, delta: withTokenDecimals(-500) },
@@ -91,10 +91,10 @@ describe("Psyoptions European instrument integration tests", () => {
     await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
 
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.putMint], [taker]);
-    await response.prepareSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
     await sleep(3000);
 
-    await response.revertSettlementPreparation(AuthoritySide.Taker);
+    await response.revertEscrowSettlementPreparation(AuthoritySide.Taker);
 
     // taker have returned his assets
     await tokenMeasurer.expectChange([{ token: options.putMint, user: taker, delta: new BN(0) }]);

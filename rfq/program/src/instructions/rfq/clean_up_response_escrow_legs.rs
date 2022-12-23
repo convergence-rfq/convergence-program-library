@@ -7,7 +7,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct CleanUpResponseLegsAccounts<'info> {
+pub struct CleanUpResponseEscrowLegsAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Box<Account<'info, Rfq>>,
@@ -15,8 +15,11 @@ pub struct CleanUpResponseLegsAccounts<'info> {
     pub response: Account<'info, Response>,
 }
 
-fn validate(ctx: &Context<CleanUpResponseLegsAccounts>, leg_amount_to_clear: u8) -> Result<()> {
-    let CleanUpResponseLegsAccounts { rfq, response, .. } = &ctx.accounts;
+fn validate(
+    ctx: &Context<CleanUpResponseEscrowLegsAccounts>,
+    leg_amount_to_clear: u8,
+) -> Result<()> {
+    let CleanUpResponseEscrowLegsAccounts { rfq, response, .. } = &ctx.accounts;
 
     let response_state = response.get_state(rfq)?;
     response_state.assert_state_in([
@@ -27,7 +30,7 @@ fn validate(ctx: &Context<CleanUpResponseLegsAccounts>, leg_amount_to_clear: u8)
     ])?;
     if let ResponseState::Defaulted = response_state {
         require!(
-            response.taker_prepared_legs == 0 && response.maker_prepared_legs == 0,
+            response.taker_prepared_escrow_legs == 0 && response.maker_prepared_escrow_legs == 0,
             ProtocolError::PendingPreparations
         );
     }
@@ -39,20 +42,20 @@ fn validate(ctx: &Context<CleanUpResponseLegsAccounts>, leg_amount_to_clear: u8)
 
     require!(
         leg_amount_to_clear > 0
-            && leg_amount_to_clear < response.leg_preparations_initialized_by.len() as u8,
+            && leg_amount_to_clear < response.escrow_leg_preparations_initialized_by.len() as u8,
         ProtocolError::InvalidSpecifiedLegAmount
     );
 
     Ok(())
 }
 
-pub fn clean_up_response_legs_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, CleanUpResponseLegsAccounts<'info>>,
+pub fn clean_up_response_escrow_legs_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, CleanUpResponseEscrowLegsAccounts<'info>>,
     leg_amount_to_clear: u8,
 ) -> Result<()> {
     validate(&ctx, leg_amount_to_clear)?;
 
-    let CleanUpResponseLegsAccounts {
+    let CleanUpResponseEscrowLegsAccounts {
         protocol,
         rfq,
         response,
@@ -60,7 +63,7 @@ pub fn clean_up_response_legs_instruction<'info>(
     } = ctx.accounts;
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-    let initialized_legs = response.leg_preparations_initialized_by.len() as u8;
+    let initialized_legs = response.escrow_leg_preparations_initialized_by.len() as u8;
     let starting_index = initialized_legs - leg_amount_to_clear;
     for leg_index in starting_index..initialized_legs {
         clean_up(
@@ -73,7 +76,7 @@ pub fn clean_up_response_legs_instruction<'info>(
     }
 
     for _ in 0..leg_amount_to_clear {
-        response.leg_preparations_initialized_by.pop();
+        response.escrow_leg_preparations_initialized_by.pop();
     }
 
     Ok(())

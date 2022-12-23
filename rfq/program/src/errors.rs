@@ -6,8 +6,10 @@ use anchor_lang::prelude::*;
 pub enum ProtocolError {
     #[msg("Require protocol authority")]
     NotAProtocolAuthority,
-    #[msg("Instrument already added")]
-    InstrumentAlreadyAdded,
+    #[msg("Program is already added")]
+    AlreadyAdded,
+    #[msg("Can't add because the max limit is reached")]
+    CannotAddBecauseOfMaxAmountLimit,
     #[msg("Invalid risk engine register")]
     InvalidRiskEngineRegister,
     #[msg("Passed mint is not a collateral mint")]
@@ -26,6 +28,8 @@ pub enum ProtocolError {
     NotEnoughCollateral,
     #[msg("Not a whitelisted instrument")]
     NotAWhitelistedInstrument,
+    #[msg("Not a whitelisted print trade provider")]
+    NotAWhitelistedPrintTradeProvider,
     #[msg("Not enough accounts")]
     NotEnoughAccounts,
     #[msg("Passed program id differs from an instrument")]
@@ -92,6 +96,12 @@ pub enum ProtocolError {
     MaxInstruments,
     #[msg("Current instrument cannot be used as a quote asset")]
     InvalidQuoteInstrument,
-    #[msg("Not a whitelisted print trade provider")]
-    NotAWhitelistedPrintTradeProvider,
+    #[msg("Print trade provider program ID wasn't provided")]
+    NoPrintTradeProvider,
+    #[msg("This instruction is used for settling flow of another type of rfq")]
+    InvalidSettlingFlow,
+    #[msg("No print trade to clean up")]
+    NoPrintTradeToCleanUp,
+    #[msg("Print trade not cleaned up")]
+    PrintTradeNotCleanedUp,
 }

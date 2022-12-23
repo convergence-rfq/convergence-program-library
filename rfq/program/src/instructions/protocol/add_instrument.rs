@@ -29,7 +29,12 @@ fn validate(ctx: &Context<AddInstrumentAccounts>) -> Result<()> {
             .iter()
             .find(|x| x.program_key == instrument_program.key())
             .is_none(),
-        ProtocolError::InstrumentAlreadyAdded
+        ProtocolError::AlreadyAdded
+    );
+
+    require!(
+        protocol.instruments.len() < ProtocolState::MAX_INSTRUMENTS,
+        ProtocolError::CannotAddBecauseOfMaxAmountLimit
     );
 
     Ok(())

@@ -32,10 +32,15 @@ fn validate(ctx: &Context<CleanUpResponseAccounts>) -> Result<()> {
     ])?;
     if let ResponseState::Defaulted = response_state {
         require!(
-            response.taker_prepared_legs == 0 && response.maker_prepared_legs == 0,
+            response.taker_prepared_escrow_legs == 0 && response.maker_prepared_escrow_legs == 0,
             ProtocolError::PendingPreparations
         );
     }
+
+    require!(
+        response.print_trade_prepared_by.is_none(),
+        ProtocolError::PrintTradeNotCleanedUp
+    );
 
     require!(
         !response.have_locked_collateral(),
@@ -57,10 +62,10 @@ pub fn clean_up_response_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    if response.leg_preparations_initialized_by.len() > 0 {
+    if response.escrow_leg_preparations_initialized_by.len() > 0 {
         let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-        let legs_to_revert = response.leg_preparations_initialized_by.len() as u8;
+        let legs_to_revert = response.escrow_leg_preparations_initialized_by.len() as u8;
         for leg_index in 0..legs_to_revert {
             clean_up(
                 AssetIdentifier::Leg { leg_index },

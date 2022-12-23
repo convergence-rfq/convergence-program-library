@@ -56,7 +56,7 @@ pub fn transfer_collateral_token<'info>(
     Ok(())
 }
 
-pub fn update_state_after_preparation(
+pub fn update_state_after_escrow_preparation(
     side: AuthoritySide,
     legs_prepared: u8,
     rfq: &mut Rfq,
@@ -66,11 +66,13 @@ pub fn update_state_after_preparation(
     *state_legs_prepared += legs_prepared;
 
     let state_legs_prepared = response.get_prepared_legs(side);
-    if state_legs_prepared > response.leg_preparations_initialized_by.len() as u8 {
+    if state_legs_prepared > response.escrow_leg_preparations_initialized_by.len() as u8 {
         let additional_entries =
-            state_legs_prepared - response.leg_preparations_initialized_by.len() as u8;
+            state_legs_prepared - response.escrow_leg_preparations_initialized_by.len() as u8;
         let items = iter::repeat(side).take(additional_entries as usize);
-        response.leg_preparations_initialized_by.extend(items);
+        response
+            .escrow_leg_preparations_initialized_by
+            .extend(items);
     }
 
     if response.is_prepared(AuthoritySide::Taker, rfq)

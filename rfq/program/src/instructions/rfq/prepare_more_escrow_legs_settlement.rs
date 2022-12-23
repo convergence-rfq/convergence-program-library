@@ -1,5 +1,5 @@
 use crate::{
-    common::update_state_after_preparation,
+    common::update_state_after_escrow_preparation,
     errors::ProtocolError,
     interfaces::instrument::prepare_to_settle,
     seeds::PROTOCOL_SEED,
@@ -8,7 +8,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct PrepareMoreLegsSettlementAccounts<'info> {
+pub struct PrepareMoreEscrowLegsSettlementAccounts<'info> {
     pub caller: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
@@ -19,16 +19,21 @@ pub struct PrepareMoreLegsSettlementAccounts<'info> {
 }
 
 fn validate(
-    ctx: &Context<PrepareMoreLegsSettlementAccounts>,
+    ctx: &Context<PrepareMoreEscrowLegsSettlementAccounts>,
     side: AuthoritySide,
     leg_amount_to_prepare: u8,
 ) -> Result<()> {
-    let PrepareMoreLegsSettlementAccounts {
+    let PrepareMoreEscrowLegsSettlementAccounts {
         caller,
         rfq,
         response,
         ..
     } = &ctx.accounts;
+
+    require!(
+        !rfq.is_settled_as_print_trade(),
+        ProtocolError::InvalidSettlingFlow
+    );
 
     let actual_side = response.get_authority_side(rfq, &caller.key());
     require!(
@@ -62,14 +67,14 @@ fn validate(
     Ok(())
 }
 
-pub fn prepare_more_legs_settlement_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, PrepareMoreLegsSettlementAccounts<'info>>,
+pub fn prepare_more_escrow_legs_settlement_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, PrepareMoreEscrowLegsSettlementAccounts<'info>>,
     side: AuthoritySide,
     leg_amount_to_prepare: u8,
 ) -> Result<()> {
     validate(&ctx, side, leg_amount_to_prepare)?;
 
-    let PrepareMoreLegsSettlementAccounts {
+    let PrepareMoreEscrowLegsSettlementAccounts {
         protocol,
         rfq,
         response,
@@ -90,7 +95,7 @@ pub fn prepare_more_legs_settlement_instruction<'info>(
         )?;
     }
 
-    update_state_after_preparation(side, leg_amount_to_prepare, rfq, response);
+    update_state_after_escrow_preparation(side, leg_amount_to_prepare, rfq, response);
 
     Ok(())
 }

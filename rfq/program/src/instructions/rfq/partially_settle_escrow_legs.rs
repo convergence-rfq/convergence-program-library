@@ -7,7 +7,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct PartiallySettleLegsAccounts<'info> {
+pub struct PartiallySettleEscrowLegsAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Box<Account<'info, Rfq>>,
@@ -15,14 +15,17 @@ pub struct PartiallySettleLegsAccounts<'info> {
     pub response: Account<'info, Response>,
 }
 
-fn validate(ctx: &Context<PartiallySettleLegsAccounts>, leg_amount_to_settle: u8) -> Result<()> {
-    let PartiallySettleLegsAccounts { rfq, response, .. } = &ctx.accounts;
+fn validate(
+    ctx: &Context<PartiallySettleEscrowLegsAccounts>,
+    leg_amount_to_settle: u8,
+) -> Result<()> {
+    let PartiallySettleEscrowLegsAccounts { rfq, response, .. } = &ctx.accounts;
 
     response
         .get_state(rfq)?
         .assert_state_in([ResponseState::ReadyForSettling])?;
 
-    let legs_left_to_settle = rfq.legs.len() as u8 - response.settled_legs;
+    let legs_left_to_settle = rfq.legs.len() as u8 - response.settled_escrow_legs;
     require!(
         leg_amount_to_settle > 0 && leg_amount_to_settle < legs_left_to_settle,
         ProtocolError::InvalidSpecifiedLegAmount
@@ -31,13 +34,13 @@ fn validate(ctx: &Context<PartiallySettleLegsAccounts>, leg_amount_to_settle: u8
     Ok(())
 }
 
-pub fn partially_settle_legs_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, PartiallySettleLegsAccounts<'info>>,
+pub fn partially_settle_escrow_legs_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, PartiallySettleEscrowLegsAccounts<'info>>,
     leg_amount_to_settle: u8,
 ) -> Result<()> {
     validate(&ctx, leg_amount_to_settle)?;
 
-    let PartiallySettleLegsAccounts {
+    let PartiallySettleEscrowLegsAccounts {
         protocol,
         rfq,
         response,
@@ -46,7 +49,9 @@ pub fn partially_settle_legs_instruction<'info>(
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    for leg_index in response.settled_legs..(response.settled_legs + leg_amount_to_settle) {
+    for leg_index in
+        response.settled_escrow_legs..(response.settled_escrow_legs + leg_amount_to_settle)
+    {
         settle(
             AssetIdentifier::Leg { leg_index },
             &protocol,
@@ -56,7 +61,7 @@ pub fn partially_settle_legs_instruction<'info>(
         )?;
     }
 
-    response.settled_legs += leg_amount_to_settle;
+    response.settled_escrow_legs += leg_amount_to_settle;
 
     Ok(())
 }
