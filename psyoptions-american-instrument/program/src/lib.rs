@@ -2,13 +2,14 @@ use anchor_lang::prelude::*;
 mod state;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{close_account, transfer, CloseAccount, Token, TokenAccount, Transfer};
-use psy_american::OptionMarket;
+// use psy_american::OptionMarket;
+use state::OptionMarket;
 mod instructions;
 use instructions::*;
 use state::{AuthoritySideDuplicate, OptionType};
 mod errors;
 use errors::PsyoptionsAmericanError;
-use rfq::states::AuthoritySide;
+use rfq::state::AuthoritySide;
 
 declare_id!("ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy");
 const ESCROW_SEED: &str = "escrow";
@@ -27,10 +28,7 @@ pub mod psyoptions_american_instrument {
         option_type: OptionType,
     ) -> Result<()> {
         let american_meta_account = &ctx.accounts.american_meta;
-        // require!(
-        //     american_meta_account.underlying_asset_mint == ctx.accounts.underlying_asset_mint.key(),
-        //     PsyoptionsAmericanError::PassedMintDoesNotMatch
-        // );
+
         require!(
             american_meta == ctx.accounts.american_meta.key(),
             PsyoptionsAmericanError::PassedAmericanMetaDoesNotMatch

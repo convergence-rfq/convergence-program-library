@@ -36,7 +36,7 @@ describe("Psyoptions European instrument integration tests", () => {
     // create a two way RFQ specifying 1 option call as a leg
     const rfq = await context.createRfq({
       legs: [
-        PsyoptionsEuropeanInstrument.create(context, options.callMint, options.metaKey, OptionType.CALL, {
+        PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, {
           amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
           side: Side.Bid,
         }),
@@ -87,23 +87,38 @@ describe("Psyoptions European instrument integration tests", () => {
   //   });
   //   // taker confirms to sell 2 options
   //   await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
+  it("Create two-way RFQ with one euro option leg, respond but maker defaults on settlement", async () => {
+    // create a two way RFQ specifying 1 option put as a leg
+    const rfq = await context.createRfq({
+      activeWindow: 2,
+      settlingWindow: 1,
+      legs: [
+        PsyoptionsEuropeanInstrument.create(context, options, OptionType.PUT, {
+          amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
+          side: Side.Bid,
+        }),
+      ],
+    });
+    // response with agreeing to buy 5 options for 450$
+    const response = await rfq.respond({
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+    });
+    // taker confirms to sell 2 options
+    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
 
-  //   await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
+    //   await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
 
-  //   let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.putMint], [taker]);
-  //   await response.prepareSettlement(AuthoritySide.Taker);
-  //   await sleep(3000);
+    //   let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.putMint], [taker]);
+    //   await response.prepareSettlement(AuthoritySide.Taker);
+    //   await sleep(3000);
 
-  //   await response.revertSettlementPreparation(AuthoritySide.Taker);
+    //   await response.revertSettlementPreparation(AuthoritySide.Taker);
 
-  //   // taker have returned his assets
-  //   await tokenMeasurer.expectChange([{ token: options.putMint, user: taker, delta: new BN(0) }]);
+    //   // taker have returned his assets
+    //   await tokenMeasurer.expectChange([{ token: options.putMint, user: taker, delta: new BN(0) }]);
 
-  //   await response.settleOnePartyDefault();
-  //   await response.cleanUp();
-  //   await rfq.cleanUp();
-  // });
+    //   await response.settleOnePartyDefault();
+    //   await response.cleanUp();
+    //   await rfq.cleanUp();
+  });
 });
-
-
-

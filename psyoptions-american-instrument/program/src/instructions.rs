@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use psy_american::OptionMarket;
-
+// use psy_american::OptionMarket;
 use super::errors;
+use super::state::OptionMarket;
 use errors::PsyoptionsAmericanError;
-use rfq::states::{AuthoritySide, ProtocolState, Response, Rfq};
+use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
 
 const ESCROW_SEED: &str = "escrow";
 #[derive(Accounts)]

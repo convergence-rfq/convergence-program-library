@@ -1,98 +1,12 @@
-use std::mem;
-
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::get_associated_token_address, token::TokenAccount};
+use anchor_spl::associated_token::get_associated_token_address;
 
 use crate::errors::ProtocolError;
 
-#[account]
-pub struct ProtocolState {
-    // Protocol initiator
-    pub authority: Pubkey,
-    pub bump: u8,
-
-    // Active protocol means all instructions are executable
-    pub active: bool,
-
-    pub settle_fees: FeeParameters,
-    pub default_fees: FeeParameters,
-
-    pub risk_engine: Pubkey,
-    pub collateral_mint: Pubkey,
-    pub instruments: Vec<Instrument>,
-}
-
-impl ProtocolState {
-    pub const INSTRUMENT_SIZE: usize = mem::size_of::<Pubkey>() + mem::size_of::<Instrument>();
-    pub const MAX_INSTRUMENTS: usize = 50;
-
-    pub fn get_instrument_parameters(&self, instrument_key: Pubkey) -> Result<&Instrument> {
-        self.instruments
-            .iter()
-            .find(|x| x.program_key == instrument_key)
-            .ok_or(error!(ProtocolError::NotAWhitelistedInstrument))
-    }
-}
-
-#[account]
-pub struct Rfq {
-    pub taker: Pubkey,
-
-    pub order_type: OrderType,
-    pub last_look_enabled: bool,
-    pub fixed_size: FixedSize,
-    pub quote_mint: Pubkey,
-    pub access_manager: Option<Pubkey>, // replase with nullable wrapper
-
-    pub creation_timestamp: i64,
-    pub active_window: u32,
-    pub settling_window: u32,
-
-    pub expected_leg_size: u16,
-    pub state: StoredRfqState,
-    pub non_response_taker_collateral_locked: u64,
-    pub total_taker_collateral_locked: u64,
-    pub total_responses: u32,
-    pub cleared_responses: u32,
-    pub confirmed_responses: u32,
-
-    pub legs: Vec<Leg>, // TODO add limit for this size
-}
-
-impl Rfq {
-    pub fn get_state(&self) -> Result<RfqState> {
-        let state = match self.state {
-            StoredRfqState::Constructed => RfqState::Constructed,
-            StoredRfqState::Active => {
-                let current_time = Clock::get()?.unix_timestamp;
-                if !self.active_window_ended(current_time) {
-                    RfqState::Active
-                } else if self.confirmed_responses == 0 {
-                    RfqState::Expired
-                } else if !self.settle_window_ended(current_time) {
-                    RfqState::Settling
-                } else {
-                    RfqState::SettlingEnded
-                }
-            }
-            StoredRfqState::Canceled => RfqState::Canceled,
-        };
-        Ok(state)
-    }
-
-    pub fn active_window_ended(&self, current_time: i64) -> bool {
-        current_time >= self.creation_timestamp + self.active_window as i64
-    }
-
-    pub fn settle_window_ended(&self, current_time: i64) -> bool {
-        current_time
-            >= self.creation_timestamp + self.active_window as i64 + self.settling_window as i64
-    }
-
-    pub fn is_fixed_size(&self) -> bool {
-        !matches!(self.fixed_size, FixedSize::None { padding: _ })
-    }
-}
+use super::{
+    rfq::{FixedSize, Rfq, Side},
+    AssetIdentifier,
+};
 
 #[account]
 pub struct Response {
@@ -165,12 +79,50 @@ impl Response {
         Ok(state)
     }
 
+    pub fn get_asset_amount_to_transfer(
+        &self,
+        rfq: &Rfq,
+        asset_identifier: AssetIdentifier,
+        side: AuthoritySide,
+    ) -> i64 {
+        match asset_identifier {
+            AssetIdentifier::Leg { leg_index } => {
+                self.get_leg_amount_to_transfer(rfq, leg_index, side)
+            }
+            AssetIdentifier::Quote => self.get_quote_amount_to_transfer(rfq, side),
+        }
+    }
+
     pub fn get_leg_amount_to_transfer(&self, rfq: &Rfq, leg_index: u8, side: AuthoritySide) -> i64 {
         let leg = &rfq.legs[leg_index as usize];
         let confirmation = self.confirmed.unwrap();
+        let leg_multiplier_bps = self.calculate_confirmed_legs_multiplier_bps(rfq);
+
+        let result = leg.instrument_amount as u128 * leg_multiplier_bps as u128
+            / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS);
+        let mut result = result as i64;
+
+        if let Side::Ask = leg.side {
+            result = -result;
+        }
+        if let AuthoritySide::Taker = side {
+            result = -result;
+        }
+        if let Side::Bid = confirmation.side {
+            result = -result;
+        }
+
+        result
+    }
+
+    pub fn calculate_confirmed_legs_multiplier_bps(&self, rfq: &Rfq) -> u64 {
         let quote = self.get_confirmed_quote().unwrap();
 
-        let leg_multiplier_bps = match quote {
+        self.calculate_legs_multiplier_bps_for_quote(rfq, quote)
+    }
+
+    pub fn calculate_legs_multiplier_bps_for_quote(&self, rfq: &Rfq, quote: Quote) -> u64 {
+        match quote {
             Quote::Standart {
                 price_quote: _,
                 legs_multiplier_bps,
@@ -194,23 +146,7 @@ impl Response {
                     leg_multiplier_bps as u64
                 }
             },
-        };
-
-        let result = leg.instrument_amount as u128 * leg_multiplier_bps as u128
-            / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS);
-        let mut result = result as i64;
-
-        if let Side::Ask = leg.side {
-            result = -result;
         }
-        if let Side::Bid = confirmation.side {
-            result = -result;
-        }
-        if let AuthoritySide::Taker = side {
-            result = -result;
-        }
-
-        result
     }
 
     pub fn get_quote_amount_to_transfer(&self, rfq: &Rfq, side: AuthoritySide) -> i64 {
@@ -258,6 +194,17 @@ impl Response {
         }
 
         result
+    }
+
+    pub fn get_assets_receiver(
+        &self,
+        rfq: &Rfq,
+        asset_identifier: AssetIdentifier,
+    ) -> AuthoritySide {
+        match asset_identifier {
+            AssetIdentifier::Leg { leg_index } => self.get_leg_assets_receiver(rfq, leg_index),
+            AssetIdentifier::Quote => self.get_quote_tokens_receiver(rfq),
+        }
     }
 
     pub fn get_leg_assets_receiver(&self, rfq: &Rfq, leg_index: u8) -> AuthoritySide {
@@ -341,139 +288,19 @@ impl Response {
     pub fn have_locked_collateral(&self) -> bool {
         self.taker_collateral_locked > 0 || self.maker_collateral_locked > 0
     }
-}
 
-#[account]
-pub struct CollateralInfo {
-    pub bump: u8,
-    pub user: Pubkey,
-    pub token_account_bump: u8,
-    pub locked_tokens_amount: u64,
-}
-
-impl CollateralInfo {
-    pub fn lock_collateral(&mut self, token_account: &TokenAccount, amount: u64) -> Result<()> {
-        require!(
-            amount <= token_account.amount - self.locked_tokens_amount,
-            ProtocolError::NotEnoughCollateral
-        );
-        self.locked_tokens_amount += amount;
-        Ok(())
-    }
-
-    pub fn unlock_collateral(&mut self, amount: u64) -> () {
-        self.locked_tokens_amount -= amount;
-    }
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub struct Instrument {
-    pub program_key: Pubkey,
-    pub validate_data_account_amount: u8,
-    pub prepare_to_settle_account_amount: u8,
-    pub settle_account_amount: u8,
-    pub revert_preparation_account_amount: u8,
-    pub clean_up_account_amount: u8,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub struct FeeParameters {
-    taker_bps: u64,
-    maker_bps: u64,
-}
-
-impl FeeParameters {
-    pub const BPS_DECIMALS: usize = 9;
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub enum FixedSize {
-    None { padding: u64 }, // for consistent serialization purposes
-    BaseAsset { legs_multiplier_bps: u64 },
-    QuoteAsset { quote_amount: u64 },
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub enum OrderType {
-    Buy,
-    Sell,
-    TwoWay,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub enum Quote {
-    Standart {
-        price_quote: PriceQuote,
-        legs_multiplier_bps: u64,
-    },
-    FixedSize {
-        price_quote: PriceQuote,
-    },
-}
-
-impl Quote {
-    const LEG_MULTIPLIER_DECIMALS: u32 = 9;
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub enum PriceQuote {
-    AbsolutePrice { amount_bps: u128 },
-}
-
-impl PriceQuote {
-    const ABSOLUTE_PRICE_DECIMALS: u32 = 9;
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub enum StoredRfqState {
-    Constructed,
-    Active,
-    Canceled,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum RfqState {
-    Constructed,
-    Active,
-    Canceled,
-    Expired,
-    Settling,
-    SettlingEnded,
-}
-
-impl RfqState {
-    pub fn assert_state_in<const N: usize>(&self, expected_states: [Self; N]) -> Result<()> {
-        if !expected_states.contains(self) {
-            msg!(
-                "Rfq state: {:?}, expected state: {:?}",
-                self,
-                expected_states
-            );
-            err!(ProtocolError::RfqIsNotInRequiredState)
-        } else {
-            Ok(())
+    pub fn get_preparation_initialized_by(
+        &self,
+        asset_identifier: AssetIdentifier,
+    ) -> Option<AuthoritySide> {
+        match asset_identifier {
+            AssetIdentifier::Leg { leg_index } => self
+                .leg_preparations_initialized_by
+                .get(leg_index as usize)
+                .cloned(),
+            AssetIdentifier::Quote => self.leg_preparations_initialized_by.get(0).cloned(),
         }
     }
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct Leg {
-    pub instrument: Pubkey,
-    pub instrument_data: Vec<u8>,
-    pub instrument_amount: u64,
-    pub side: Side,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub enum Side {
-    Bid,
-    Ask,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
-pub struct Confirmation {
-    pub side: Side,
-    pub override_leg_multiplier_bps: Option<u64>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
@@ -517,16 +344,16 @@ impl ResponseState {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
-pub enum AuthoritySide {
-    Taker,
-    Maker,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
 pub enum DefaultingParty {
     Taker,
     Maker,
     Both,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+pub enum AuthoritySide {
+    Taker,
+    Maker,
 }
 
 impl AuthoritySide {
@@ -559,4 +386,34 @@ impl AuthoritySide {
 
         Ok(())
     }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum Quote {
+    Standart {
+        price_quote: PriceQuote,
+        legs_multiplier_bps: u64,
+    },
+    FixedSize {
+        price_quote: PriceQuote,
+    },
+}
+
+impl Quote {
+    pub const LEG_MULTIPLIER_DECIMALS: u32 = 9;
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum PriceQuote {
+    AbsolutePrice { amount_bps: u128 },
+}
+
+impl PriceQuote {
+    const ABSOLUTE_PRICE_DECIMALS: u32 = 9;
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub struct Confirmation {
+    pub side: Side,
+    pub override_leg_multiplier_bps: Option<u64>,
 }

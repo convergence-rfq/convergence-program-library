@@ -4,7 +4,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer, Keypair } from "@
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AuthoritySide } from "../types";
+import { AuthoritySide, AssetIdentifier, InstrumentType } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import {
   PsyAmericanIdl,
@@ -58,11 +58,16 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     { amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
     const instrument = new PsyoptionsAmericanInstrumentClass(context, mint, OptionMarket, Optiontype);
-    return new InstrumentController(instrument, amount, side ?? DEFAULT_INSTRUMENT_SIDE);
+    return new InstrumentController(
+      instrument,
+      { amount, side: side ?? DEFAULT_INSTRUMENT_SIDE, baseAssetIndex: context.assetToken.baseAssetIndex },
+      0
+    );
   }
 
   static async addInstrument(context: Context) {
-    await context.addInstrument(getAmericanOptionsInstrumentProgram().programId, 1, 7, 3, 3, 4);
+    await context.addInstrument(getAmericanOptionsInstrumentProgram().programId, false, 1, 7, 3, 3, 4);
+    await context.riskEngine.setInstrumentType(getAmericanOptionsInstrumentProgram().programId, InstrumentType.Option);
   }
 
   serializeLegData(): Buffer {
@@ -70,18 +75,27 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     const OptionMarket = this.OptionMarket.toBytes();
     return Buffer.from(new Uint8Array([...mint, ...OptionMarket, this.OptionType == OptionType.CALL ? 0 : 1]));
   }
+  serializeInstrumentData(): Buffer {
+    let optionMarketKey = AmericanPsyoptions.getOptionMarketByKey(this.context, this.OptionMarket, this.context.maker);
+    const mint = this.mint.publicKey.toBytes();
+    const optionMarket = this.OptionMarket.toBytes();
 
+    return Buffer.from(new Uint8Array([this.OptionType == OptionType.CALL ? 0 : 1, ...mint, ...optionMarket]));
+  }
   getProgramId(): PublicKey {
     return getAmericanOptionsInstrumentProgram().programId;
   }
 
   async getValidationAccounts() {
-    return [{ pubkey: this.OptionMarket, isSigner: false, isWritable: false }];
+    return [
+      { pubkey: this.OptionMarket, isSigner: false, isWritable: false },
+      { pubkey: this.context.assetToken.mintInfoAddress, isSigner: false, isWritable: false },
+    ];
   }
 
   async getPrepareSettlementAccounts(
     side: { taker: {} } | { maker: {} },
-    legIndex: number,
+    assetIndentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
@@ -101,7 +115,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
       },
       { pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIndentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
@@ -111,10 +125,10 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     ];
   }
 
-  async getSettleAccounts(assetReceiver: PublicKey, legIndex: number, rfq: Rfq, response: Response) {
+  async getSettleAccounts(assetReceiver: PublicKey, assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
@@ -129,7 +143,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
 
   async getRevertSettlementPreparationAccounts(
     side: { taker: {} } | { maker: {} },
-    legIndex: number,
+    assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
@@ -137,7 +151,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
 
     return [
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
@@ -150,7 +164,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     ];
   }
 
-  async getCleanUpAccounts(legIndex: number, rfq: Rfq, response: Response) {
+  async getCleanUpAccounts(assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
         pubkey: response.firstToPrepare,
@@ -158,7 +172,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },

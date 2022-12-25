@@ -13,3 +13,10 @@ program = "../dependencies/pseudo_pyth.so"
 [[test.genesis]]
 address = "R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs"
 program = "../dependencies/psy_american.so"
+[[test.validator.account]]
+address = "8SXvChNYFhRq4EZuZvnhjrB3jJRQCv4k3P4W6hesH3Ee"
+filename = "../dependencies/btc_20000_oracle_switchboard.json"
+
+[[test.validator.account]]
+address = "GvDMxPzN1sCj7L26YDK2HnMRXEQmQ2aemov8YBtPS7vR"
+filename = "../dependencies/sol_30_oracle_switchboard.json"
