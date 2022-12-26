@@ -27,6 +27,7 @@ pub mod psyoptions_american_instrument {
         american_meta: Pubkey,
         option_type: OptionType,
     ) -> Result<()> {
+        msg!("validating..");
         let american_meta_account = &ctx.accounts.american_meta;
 
         require!(
