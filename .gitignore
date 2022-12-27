@@ -19,3 +19,5 @@ spot-instrument/js/node_modules
 
 psyoptions-european-instrument/js/.crates
 psyoptions-european-instrument/js/node_modules
+
+tests/**/*.js
