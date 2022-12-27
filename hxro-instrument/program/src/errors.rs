@@ -30,4 +30,6 @@ pub enum HxroError {
     InvalidBackupAddress,
     #[msg("Passed address is not of a party first to prepare for settlement")]
     NotFirstToPrepare,
+    #[msg("There are too many legs on the RFQ")]
+    TooManyLegs,
 }

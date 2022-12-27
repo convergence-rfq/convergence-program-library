@@ -1,25 +1,17 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program;
-use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::Id;
-use anchor_lang::InstructionData;
-use anchor_spl::associated_token::get_associated_token_address;
-use anchor_spl::token::{
-    close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
-};
 use std::str::FromStr;
 
-use dex_cpi as dex;
 use errors::HxroError;
-use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
-use risk_cpi as risk;
-use state::{AuthoritySideDuplicate, ParsedLegData};
+use rfq::state::{ProtocolState, Response, Rfq};
 
 mod errors;
 mod state;
 mod helpers;
 
 declare_id!("5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL");
+
+const MAX_PRODUCTS_PER_TRADE: usize = 6;
 
 #[derive(Debug, Clone)]
 pub struct Dex;
@@ -35,10 +27,13 @@ pub mod hxro_instrument {
     use super::*;
 
     pub fn validate_data(ctx: Context<ValidateData>) -> Result<()> {
+        require!(ctx.accounts.rfq.legs.len() <= 6, HxroError::TooManyLegs);
+
         for leg in ctx.accounts.rfq.legs.clone() {
             helpers::validate_instrument_data(&ctx, &leg.instrument_data)?;
         }
 
+        // TODO: custom validation for the quote asset instrument data
         helpers::validate_instrument_data(&ctx, &ctx.accounts.rfq.quote_asset.instrument_data)?;
 
         Ok(())

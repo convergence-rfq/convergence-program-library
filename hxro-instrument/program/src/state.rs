@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use rfq::state::AuthoritySide;
 
+use dex_cpi as dex;
+
 // Duplicate required because anchor doesn't generate IDL for imported structs
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
 pub enum AuthoritySideDuplicate {
@@ -27,4 +29,11 @@ pub struct ParsedLegData {
     pub fee_output_register: Pubkey,
     pub risk_output_register: Pubkey,
     pub risk_and_fee_signer: Pubkey,
+    pub product_index: u64,
+}
+
+#[derive(AnchorDeserialize)]
+pub struct ParsedQuoteData {
+    pub operator_counterparty_fee_proportion: dex::typedefs::Fractional,
+    pub operator_creator_fee_proportion: dex::typedefs::Fractional,
 }

@@ -17,6 +17,7 @@ pub fn validate_instrument_data(
         fee_output_register,
         risk_output_register,
         risk_and_fee_signer,
+        product_index,
     } = AnchorDeserialize::try_from_slice(instrument_data)?;
     require!(
         instrument_data.len() as usize == std::mem::size_of::<ParsedLegData>(),

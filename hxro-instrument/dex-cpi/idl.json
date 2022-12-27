@@ -3,6 +3,11 @@
   "name": "dex",
   "constants": [
     {
+      "name": "MAX_PRODUCTS_PER_TRADE",
+      "type": "u8",
+      "value": "6"
+    },
+    {
       "name": "NAME_LEN",
       "type": "u64",
       "value": "16"
