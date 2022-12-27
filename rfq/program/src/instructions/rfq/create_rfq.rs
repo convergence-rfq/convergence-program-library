@@ -74,7 +74,10 @@ pub fn create_rfq_instruction<'info>(
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
+    msg!("calling validate_quote");
     validate_quote(protocol, &mut remaining_accounts, &quote_asset)?;
+    msg!("calling validate_legs");
+
     validate_legs(protocol, &mut remaining_accounts, expected_leg_size, &legs)?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
