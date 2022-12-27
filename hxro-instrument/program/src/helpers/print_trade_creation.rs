@@ -1,11 +1,22 @@
 use anchor_lang::prelude::*;
 
 use dex_cpi as dex;
-use rfq::state::{Quote, response::PriceQuote::AbsolutePrice};
+use rfq::state::{Side};
+use crate::state::ParsedQuoteData;
 
-use super::super::state::{ParsedLegData, ParsedQuoteData};
+use super::super::state::ParsedLegData;
 use super::super::CreatePrintTrade;
 use super::super::MAX_PRODUCTS_PER_TRADE;
+
+
+const OPERATOR_CREATE_FEE_PROPORTION: dex::typedefs::Fractional = dex::typedefs::Fractional {
+    m: 0,
+    exp: 0,
+};
+const OPERATOR_COUNTERPARTY_FEE_PROPORTION: dex::typedefs::Fractional = dex::typedefs::Fractional {
+    m: 0,
+    exp: 0,
+};
 
 pub fn create_print_trade(ctx: &Context<CreatePrintTrade>) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::InitializePrintTrade {
@@ -23,16 +34,16 @@ pub fn create_print_trade(ctx: &Context<CreatePrintTrade>) -> Result<()> {
     let rfq = &ctx.accounts.rfq;
 
     // HXRO typed side
-    let side = match response.bid {
-        Some(_) => dex::typedefs::Side::Bid,
-        None => dex::typedefs::Side::Ask,
+    let side = match response.confirmed.unwrap().side {
+        Side::Bid => dex::typedefs::Side::Bid,
+        Side::Ask => dex::typedefs::Side::Ask,
     };
 
-    // params for the instrument data
     let ParsedQuoteData {
-        operator_creator_fee_proportion,
-        operator_counterparty_fee_proportion,
-    } = AnchorDeserialize::try_from_slice(&rfq.quote_asset.instrument_data)?;
+        authority_side,
+    } = AnchorDeserialize::try_from_slice(
+        &rfq.quote_asset.instrument_data
+    )?;
 
     // create vec of PrintTradeProductIndex
     let product_vec: Vec<dex::typedefs::PrintTradeProductIndex> = rfq
@@ -45,8 +56,8 @@ pub fn create_print_trade(ctx: &Context<CreatePrintTrade>) -> Result<()> {
             dex::typedefs::PrintTradeProductIndex {
                 product_index: leg_data.product_index,
                 size: dex::typedefs::Fractional {
-                    m: response.get_leg_amount_to_transfer(&rfq, i as u8, response.print_trade_prepared_by.unwrap()),
-                    exp: 10_u32.pow(leg.instrument_decimals as u32) as u64,
+                    m: response.get_leg_amount_to_transfer(&rfq, i as u8, authority_side),
+                    exp: leg.instrument_decimals as u64,
                 },
             }
         })
@@ -58,25 +69,7 @@ pub fn create_print_trade(ctx: &Context<CreatePrintTrade>) -> Result<()> {
         products[i] = product_vec[i];
     }
 
-    let abs_price =  match response.get_confirmed_quote().unwrap() {
-        Quote::Standart {
-            price_quote: AbsolutePrice {
-                amount_bps
-            },
-            legs_multiplier_bps
-        } => {
-            amount_bps * response.calculate_confirmed_legs_multiplier_bps(
-                &rfq
-            ) as u128
-        },
-        Quote::FixedSize {
-            price_quote: AbsolutePrice {
-                amount_bps
-            },
-        } => {
-            amount_bps
-        }
-    } as i64;
+    let abs_price = response.get_quote_amount_to_transfer(&rfq, authority_side);
     let price = dex::typedefs::Fractional {
         m: abs_price,
         exp: 1
@@ -87,8 +80,8 @@ pub fn create_print_trade(ctx: &Context<CreatePrintTrade>) -> Result<()> {
         products,
         price,
         side,
-        operator_creator_fee_proportion,
-        operator_counterparty_fee_proportion,
+        operator_creator_fee_proportion: OPERATOR_CREATE_FEE_PROPORTION,
+        operator_counterparty_fee_proportion: OPERATOR_COUNTERPARTY_FEE_PROPORTION,
         is_operator_signer: true,
     };
 
