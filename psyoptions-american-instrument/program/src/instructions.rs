@@ -4,8 +4,8 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use super::errors;
 use super::state::OptionMarket;
 use errors::PsyoptionsAmericanError;
+use psy_american::OptionMarket;
 use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
-
 const ESCROW_SEED: &str = "escrow";
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
