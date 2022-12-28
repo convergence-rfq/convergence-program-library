@@ -10,7 +10,10 @@ name = "psyoptions_american_instrument"
 
 [dependencies]
 
-anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
-anchor-spl = "0.25.0"
+anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }
+anchor-spl = "0.24.2"
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
+solana-program = "1.9.13"
 shank = "0.0.8"
+risk-engine = { path = "../../risk-engine/program", features = ["no-entrypoint"] }
+psy_american = {version = "0.2.6",features= ["cpi"]}
