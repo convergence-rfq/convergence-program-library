@@ -701,6 +701,7 @@ export class Response {
       })
       .signers([caller])
       .remainingAccounts(remainingAccounts)
+      .preInstructions([expandComputeUnits])
       .rpc();
   }
 
@@ -893,6 +894,7 @@ export class Response {
         response: this.account,
       })
       .remainingAccounts(remainingAccounts)
+      .preInstructions([expandComputeUnits])
       .rpc();
   }
 
@@ -919,6 +921,7 @@ export class Response {
         response: this.account,
       })
       .remainingAccounts(remainingAccounts)
+      .preInstructions([expandComputeUnits])
       .rpc();
   }
 

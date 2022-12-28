@@ -25,6 +25,7 @@ fn validate(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
         RfqState::Expired,
         RfqState::Settling,
         RfqState::SettlingEnded,
+        RfqState::Constructed,
     ])?;
 
     require!(
