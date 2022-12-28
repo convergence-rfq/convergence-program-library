@@ -152,6 +152,23 @@ export class Context {
       .rpc();
   }
 
+  async addPrintTradeProvider(
+      programId: PublicKey,
+      validateDataAccounts: number,
+  ) {
+    await this.program.methods
+        .addPrintTradeProvider(
+            validateDataAccounts,
+        )
+        .accounts({
+          authority: this.dao.publicKey,
+          protocol: this.protocolPda,
+          printTradeProviderProgram: programId,
+        })
+        .signers([this.dao])
+        .rpc();
+  }
+
   async addBaseAsset(baseAssetIndex: number, ticker: string, riskCategory: RiskCategory, oracle: PublicKey) {
     await this.program.methods // @ts-ignore Strange error with anchor IDL parsing
       .addBaseAsset({ value: baseAssetIndex }, ticker, riskCategoryToObject(riskCategory), {
@@ -273,7 +290,72 @@ export class Context {
       txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeConstructionInstruction()]);
     }
 
-    console.log("CREATE RFQ: ", await txConstructor.rpc());
+    return rfqObject;
+  }
+
+  async createRfqStepByStep({
+                              legs = [SpotInstrument.createForLeg(this)],
+                              quote = SpotInstrument.createForQuote(this, this.quoteToken),
+                              orderType = null,
+                              fixedSize = null,
+                              activeWindow = DEFAULT_ACTIVE_WINDOW,
+                              settlingWindow = DEFAULT_SETTLING_WINDOW,
+                              legsSize = null,
+                            } = {}) {
+    let legData = [];
+    orderType = orderType ?? DEFAULT_ORDER_TYPE;
+    fixedSize = fixedSize ?? FixedSize.None;
+    legsSize = legsSize ?? calculateLegsSize(legs);
+    const quoteAccounts = await quote.getValidationAccounts();
+    const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
+    const rfq = new Keypair();
+    const rfqObject = new Rfq(this, rfq.publicKey, quote, legs);
+
+    let createRfq = await this.program.methods
+        .createRfq(legsSize, legData, null, orderType, quote.toQuoteData(), fixedSize, activeWindow, settlingWindow)
+        .accounts({
+          taker: this.taker.publicKey,
+          protocol: this.protocolPda,
+          rfq: rfqObject.account,
+          systemProgram: SystemProgram.programId,
+        })
+        .remainingAccounts([...quoteAccounts, ...legAccounts])
+        .preInstructions([expandComputeUnits])
+        .signers([this.taker, rfq])
+        .rpc();
+
+    console.log("CREATE RFQ: ", createRfq);
+
+    legData = legs.map((x) => x.toLegData());
+    let addLegsToRfq = await this.program.methods
+        .addLegsToRfq(legData)
+        .accounts({
+          taker: this.taker.publicKey,
+          protocol: this.protocolPda,
+          rfq: rfqObject.account,
+        })
+        .remainingAccounts(await rfqObject.getRiskEngineAccounts())
+        .signers([this.taker])
+        .rpc()
+
+    console.log("ADD LEGS TO RFQ: ", addLegsToRfq);
+
+    let finalizeRfq = await this.program.methods
+        .finalizeRfqConstruction()
+        .accounts({
+          taker: this.taker.publicKey,
+          protocol: this.protocolPda,
+          rfq: rfqObject.account,
+          collateralInfo: await getCollateralInfoPda(this.taker.publicKey, this.program.programId),
+          collateralToken: await getCollateralTokenPda(this.taker.publicKey, this.program.programId),
+          riskEngine: this.riskEngine.programId,
+        })
+        .remainingAccounts(await rfqObject.getRiskEngineAccounts())
+        .signers([this.taker])
+        .rpc()
+        .catch((e) => {console.log("ERROR:", e)});
+
+    console.log("FINALIZE RFQ: ", finalizeRfq);
 
     return rfqObject;
   }
@@ -517,7 +599,8 @@ export class Rfq {
       .remainingAccounts(await this.getRiskEngineAccounts())
       .signers([this.context.maker, response])
       .preInstructions([expandComputeUnits])
-      .rpc();
+      .rpc()
+      .catch((e) => {console.log("ERROR: ", e)});
 
     return new Response(this.context, this, this.context.maker, response.publicKey);
   }
@@ -965,7 +1048,7 @@ export async function getContext() {
       await PsyoptionsEuropeanInstrument.addInstrument(context);
     },
     async () => {
-      await HxroInstrument.addInstrument(context);
+      await HxroInstrument.addPrintTradeProvider(context);
     },
     async () => {
       await context.initializeCollateral(context.taker);

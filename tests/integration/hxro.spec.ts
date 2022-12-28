@@ -1,15 +1,17 @@
-import {Program} from "@project-serum/anchor";
+import {BN, Program} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import { HxroInstrument as HxroInstrumentType } from '../../target/types/hxro_instrument';
 import { DexIdl, Dex } from '../../hxro-instrument/dex-cpi/types';
 import {AuthoritySide, Quote, Side} from "../utilities/types"
-import {Context, getContext, Mint} from "../utilities/wrappers";
+import {Context, getContext, Mint, Rfq} from "../utilities/wrappers";
 import { HxroInstrument } from "../utilities/instruments/hxroInstrument";
 import {toAbsolutePrice, toLegMultiplier, withTokenDecimals} from "../utilities/helpers";
 import * as spl_token from "@solana/spl-token";
 import {ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {DEFAULT_COLLATERAL_FUNDED} from "../utilities/constants";
 import {Transaction} from "@solana/web3.js";
+import {PsyoptionsEuropeanInstrument} from "../utilities/instruments/psyoptionsEuropeanInstrument";
+import {CONTRACT_DECIMALS_BN, OptionType} from "../dependencies/tokenized-euros/src";
 
 function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): string {
     return "trdr_grp1:test" + name
@@ -68,7 +70,7 @@ describe("RFQ HXRO instrument integration tests", () => {
         context = await getContext();
     });
 
-    it("Create two-way RFQ with one hxro leg", async () => {
+    it("Creates RFQ with one hxro leg", async () => {
         vaultMint = new spl_token.Token(
             context.provider.connection,
             new anchor.web3.PublicKey("HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"),
@@ -83,7 +85,6 @@ describe("RFQ HXRO instrument integration tests", () => {
             counterpartyPayer.publicKey
         );
 
-        const vaultMintWrapped = await Mint.wrap(context, vaultMint.publicKey);
         const maker = (await vaultMint.getOrCreateAssociatedAccountInfo(context.maker.publicKey)).address
 
         const transferTx = await vaultMint.transfer(
@@ -95,12 +96,13 @@ describe("RFQ HXRO instrument integration tests", () => {
         ).catch((e) => {console.log(e)});
         console.log("transferTx", transferTx);
 
-        const rfq = await context.createRfq({
+        const rfq: Rfq = await context.createRfqStepByStep({
+            activeWindow: 2,
+            settlingWindow: 1,
             legs: [
                 HxroInstrument.create(
                     context,
                     {
-                        mint: vaultMintWrapped,
                         amount: 10 * (10 ** 6),
                         side: Side.Bid,
                         dex: dex,
@@ -115,14 +117,19 @@ describe("RFQ HXRO instrument integration tests", () => {
                     })],
         });
 
-            // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
+        console.log("responding...")
+
         const response = await rfq.respond({
                 bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
                 ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
         });
 
+        console.log("responded!")
+
         response_key = response.account;
-            // taker confirms to buy 1 bitcoin
+
+        console.log("here1")
+
         await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
         await response.prepareSettlement(AuthoritySide.Taker);
         await response.prepareSettlement(AuthoritySide.Maker);
