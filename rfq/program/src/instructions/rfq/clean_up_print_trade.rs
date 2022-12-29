@@ -1,13 +1,13 @@
 use crate::{
     errors::ProtocolError,
+    interfaces::print_trade_provider::clean_up,
     seeds::PROTOCOL_SEED,
     state::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
-    interfaces::print_trade_provider::clean_up,
 };
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct CleanUpPrintTrade<'info> {
+pub struct CleanUpPrintTradeAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Box<Account<'info, Rfq>>,
@@ -15,8 +15,8 @@ pub struct CleanUpPrintTrade<'info> {
     pub response: Account<'info, Response>,
 }
 
-fn validate(ctx: &Context<CleanUpPrintTrade>) -> Result<()> {
-    let CleanUpPrintTrade { rfq, response, .. } = &ctx.accounts;
+fn validate(ctx: &Context<CleanUpPrintTradeAccounts>) -> Result<()> {
+    let CleanUpPrintTradeAccounts { rfq, response, .. } = &ctx.accounts;
 
     require!(
         rfq.is_settled_as_print_trade(),
@@ -36,11 +36,11 @@ fn validate(ctx: &Context<CleanUpPrintTrade>) -> Result<()> {
 }
 
 pub fn clean_up_print_trade_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, CleanUpPrintTrade<'info>>,
+    ctx: Context<'_, '_, '_, 'info, CleanUpPrintTradeAccounts<'info>>,
 ) -> Result<()> {
     validate(&ctx)?;
 
-    let CleanUpPrintTrade {
+    let CleanUpPrintTradeAccounts {
         protocol,
         rfq,
         response,

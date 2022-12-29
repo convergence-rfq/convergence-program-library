@@ -651,6 +651,24 @@ export class Response {
       .rpc();
   }
 
+  async preparePrintTradeSettlement(side) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    if (this.firstToPrepare.equals(PublicKey.default)) {
+      this.firstToPrepare = caller.publicKey;
+    }
+
+    await this.context.program.methods
+      .preparePrintTradeSettlement(side)
+      .accounts({
+        caller: caller.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+      })
+      .signers([caller])
+      .rpc();
+  }
+
   async prepareEscrowSettlement(side, legAmount = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
     if (this.firstToPrepare.equals(PublicKey.default)) {
@@ -749,6 +767,21 @@ export class Response {
         response: this.account,
       })
       .remainingAccounts(remainingAccounts)
+      .rpc();
+  }
+
+  async executePrintTradeSettlement(side) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+
+    await this.context.program.methods
+      .executePrintTradeSettlement(side)
+      .accounts({
+        caller: caller.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+      })
+      .signers([caller])
       .rpc();
   }
 
@@ -922,6 +955,17 @@ export class Response {
       })
       .remainingAccounts(remainingAccounts)
       .preInstructions([expandComputeUnits])
+      .rpc();
+  }
+
+  async cleanUpPrintTradeSettlement() {
+    await this.context.program.methods
+      .cleanUpPrintTrade()
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+      })
       .rpc();
   }
 

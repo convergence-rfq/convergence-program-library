@@ -24,6 +24,7 @@ use instructions::protocol::register_mint::*;
 use instructions::rfq::add_legs_to_rfq::*;
 use instructions::rfq::cancel_response::*;
 use instructions::rfq::cancel_rfq::*;
+use instructions::rfq::clean_up_print_trade::*;
 use instructions::rfq::clean_up_response::*;
 use instructions::rfq::clean_up_response_escrow_legs::*;
 use instructions::rfq::clean_up_rfq::*;
@@ -266,6 +267,12 @@ pub mod rfq {
         leg_amount_to_clear: u8,
     ) -> Result<()> {
         clean_up_response_escrow_legs_instruction(ctx, leg_amount_to_clear)
+    }
+
+    pub fn clean_up_print_trade<'info>(
+        ctx: Context<'_, '_, '_, 'info, CleanUpPrintTradeAccounts<'info>>,
+    ) -> Result<()> {
+        clean_up_print_trade_instruction(ctx)
     }
 
     pub fn clean_up_rfq<'info>(
