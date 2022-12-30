@@ -1,11 +1,9 @@
+use crate::errors;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-// use psy_american::OptionMarket;
-use super::errors;
-use super::state::OptionMarket;
 use errors::PsyoptionsAmericanError;
 use psy_american::OptionMarket;
-use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
+use rfq::state::{AssetIdentifier, AuthoritySide, ProtocolState, Response, Rfq};
 const ESCROW_SEED: &str = "escrow";
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
@@ -18,7 +16,7 @@ pub struct ValidateData<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(leg_index: u8, side: AuthoritySide)]
+#[instruction(asset_identifier: AssetIdentifier)]
 pub struct PrepareToSettle<'info> {
     /// protocol provided
     #[account(signer)]
@@ -35,7 +33,7 @@ pub struct PrepareToSettle<'info> {
     pub mint: Account<'info, Mint>,
 
     #[account(init_if_needed,payer = caller, token::mint = mint, token::authority = escrow,
-        seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+        seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -43,7 +41,7 @@ pub struct PrepareToSettle<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(leg_index: u8)]
+#[instruction(asset_identifier: AssetIdentifier)]
 pub struct Settle<'info> {
     /// protocol provided
     #[account(signer)]
@@ -52,7 +50,7 @@ pub struct Settle<'info> {
     pub response: Account<'info, Response>,
 
     /// user provided
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(),  &asset_identifier.to_seed_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = receiver_token_account.mint == escrow.mint  @PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub receiver_token_account: Account<'info, TokenAccount>,
@@ -61,7 +59,7 @@ pub struct Settle<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(leg_index: u8)]
+#[instruction(asset_identifier: AssetIdentifier)]
 pub struct RevertPreparation<'info> {
     /// protocol provided
     #[account(signer)]
@@ -70,7 +68,7 @@ pub struct RevertPreparation<'info> {
     pub response: Account<'info, Response>,
 
     /// user provided
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]],bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()],bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = tokens.mint == escrow.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub tokens: Account<'info, TokenAccount>,
@@ -79,7 +77,7 @@ pub struct RevertPreparation<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(leg_index: u8)]
+#[instruction(asset_identifier: AssetIdentifier)]
 pub struct CleanUp<'info> {
     /// protocol provided
     #[account(signer)]
@@ -91,7 +89,7 @@ pub struct CleanUp<'info> {
     /// CHECK: is an authority first to prepare for settlement
     #[account(mut)]
     pub first_to_prepare: UncheckedAccount<'info>,
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &[leg_index]], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = backup_receiver.mint == escrow.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub backup_receiver: Account<'info, TokenAccount>,

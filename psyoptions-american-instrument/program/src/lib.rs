@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+mod psyoptions_american;
 mod state;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{close_account, transfer, CloseAccount, Token, TokenAccount, Transfer};
@@ -54,7 +55,8 @@ pub mod psyoptions_american_instrument {
         msg!("escrow pubkey");
         msg!(ctx.accounts.escrow.key().to_string().as_str());
         let asset_data = rfq.get_asset_instrument_data(asset_identifier.into());
-        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(&asset_data)?;
+
+        let mint_address: Pubkey = AnchorDeserialize::try_from_slice(&asset_data[1..33]).unwrap();
 
         require!(
             mint_address == mint.key(),

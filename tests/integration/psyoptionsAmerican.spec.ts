@@ -66,78 +66,58 @@ describe("Psyoptions American instrument integration tests", async () => {
   //   // create a two way RFQ specifying 1 option call as a leg
   //   console.log("Creating RFQ..");
 
-  //   try {
-  //     const rfq = await context.createRfq({
-  //       legs: [
-  //         PsyoptionsAmericanInstrumentClass.create(
-  //           context,
-  //           options.callMint,
-  //           options.optionMarketKey,
-  //           OptionType.CALL,
-  //           {
-  //             amount: new BN(1),
-  //             side: Side.Bid,
-  //           }
-  //         ),
-  //       ],
-  //     });
-  //     console.log("rfq done creation");
-  //   } catch (e) {
-  //     console.log("err");
-  //     console.error(e);
-  //   }
+  //   const rfq = await context.createRfq({
+  //     legs: [
+  //       PsyoptionsAmericanInstrumentClass.create(context, options.callMint, options.optionMarketKey, OptionType.CALL, {
+  //         amount: new BN(1),
+  //         side: Side.Bid,
+  //       }),
+  //     ],
+  //   });
+  //   console.log("rfq done creation");
+  //   await sleep(3000);
+  //   // response with agreeing to sell 2 options for 50$ or buy 5 for 45$
 
-  // response with agreeing to sell 2 options for 50$ or buy 5 for 45$
-  // try {
   //   const response = await rfq.respond({
   //     bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(5)),
   //     ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
   //   });
-  // } catch (e) {
-  //   console.error(e);
-  // }
 
-  // console.log("response done...");
-  // console.log(context.protocolPda.toBase58());
-  // console.log();
+  //   console.log("response done...");
 
-  // // taker confirms to buy 1 option
-  // await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
-  // console.log(await response.getData());
-  // console.log("response confirmed...");
-  // // try {
-  // //   await response.prepareSettlement(AuthoritySide.Taker);
-  // // } catch (e) {
-  // //   console.error(e);
-  // // }
-  // console.log("preparing settlement for taker..");
+  //   // taker confirms to buy 1 option
+  //   await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
 
-  // try {
-  //   await response.prepareSettlement(AuthoritySide.Taker);
-  // } catch (e) {
-  //   console.error(e);
-  // }
-  // console.log("preparing settlement for Maker..");
-  // try {
-  //   await response.prepareSettlement(AuthoritySide.Maker);
-  // } catch (e) {
-  //   console.error(e);
-  // }
+  //   console.log("response confirmed...");
 
-  // console.log("settlement for maker and taker....");
+  //   console.log("preparing settlement for taker..");
 
-  // // taker should receive 1 option, maker should receive 50$ and lose 1 bitcoin as option collateral
-  // await response.settle(maker, [taker]);
-  // await tokenMeasurer.expectChange([
-  //   { token: options.callMint, user: taker, delta: new BN(1) },
-  //   { token: "quote", user: taker, delta: withTokenDecimals(-50) },
-  //   { token: "quote", user: maker, delta: withTokenDecimals(50) },
-  //   { token: "asset", user: maker, delta: withTokenDecimals(0) },
-  //   { token: options.callMint, user: maker, delta: new BN(-1) },
-  // ]);
+  //   try {
+  //     await response.prepareSettlement(AuthoritySide.Taker);
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  //   console.log("preparing settlement for Maker..");
+  //   try {
+  //     await response.prepareSettlement(AuthoritySide.Maker);
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
 
-  // await response.unlockResponseCollateral();
-  // await response.cleanUp();
+  //   console.log("settlement for maker and taker....");
+
+  //   // taker should receive 1 option, maker should receive 50$ and lose 1 bitcoin as option collateral
+  //   await response.settle(maker, [taker]);
+  //   await tokenMeasurer.expectChange([
+  //     { token: options.callMint, user: taker, delta: new BN(1) },
+  //     { token: "quote", user: taker, delta: withTokenDecimals(-50) },
+  //     { token: "quote", user: maker, delta: withTokenDecimals(50) },
+  //     { token: "asset", user: maker, delta: withTokenDecimals(0) },
+  //     { token: options.callMint, user: maker, delta: new BN(-1) },
+  //   ]);
+
+  //   await response.unlockResponseCollateral();
+  //   await response.cleanUp();
   // });
 
   it("Create a RFQ where taker wants to sell 2 options", async () => {
@@ -158,67 +138,64 @@ describe("Psyoptions American instrument integration tests", async () => {
     );
 
     // create a two way RFQ specifying 1 option call as a leg
+
+    const rfq = await context.createRfq({
+      legs: [
+        PsyoptionsAmericanInstrumentClass.create(context, options.callMint, options.optionMarketKey, OptionType.CALL, {
+          amount: new BN(1),
+          side: Side.Bid,
+        }),
+      ],
+    });
+
+    // response with agreeing to buy 2 options for 45$
+
+    const response = await rfq.respond({
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(2)),
+    });
+    console.log("response done ...");
+
+    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
+    console.log("Response confirmed..");
+
+    // taker confirms to sell 2 options
+
+    // console.log(await response.getData());
+
     try {
-      const rfq = await context.createRfq({
-        legs: [
-          PsyoptionsAmericanInstrumentClass.create(
-            context,
-            options.callMint,
-            options.optionMarketKey,
-            OptionType.CALL,
-            {
-              amount: new BN(1),
-              side: Side.Bid,
-            }
-          ),
-        ],
-      });
+      await response.prepareSettlement(AuthoritySide.Taker);
+      console.log("prepare settlement for taker..");
     } catch (e) {
       console.error(e);
     }
 
-    // response with agreeing to buy 2 options for 45$
+    try {
+      await response.prepareSettlement(AuthoritySide.Maker);
+    } catch (e) {
+      console.error(e);
+    }
 
-    // const response = await rfq.respond({
-    //   bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(2)),
-    // });
+    console.log("prepare settlement for maker..");
 
-    // console.log("response done ...");
-    // // taker confirms to sell 2 options
+    console.log("settlement for maker and taker....");
 
-    // // console.log(await response.getData());
+    // taker should redceive 90$, maker should receive 2 options
+    await response.settle(taker, [maker]);
 
-    // try {
-    //   await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
-    //   console.log("Response confirmed..");
-    // } catch (e) {
-    //   console.error(e);
-    // }
+    await tokenMeasurer.expectChange([
+      { token: options.callMint, user: taker, delta: new BN(-2) },
+      { token: "quote", user: taker, delta: withTokenDecimals(90) },
+      { token: "quote", user: maker, delta: withTokenDecimals(-90) },
+      { token: "asset", user: maker, delta: withTokenDecimals(0) },
+      { token: options.callMint, user: maker, delta: new BN(2) },
+    ]);
+    try {
+      await response.unlockResponseCollateral();
+    } catch (e) {
+      console.error(e);
+    }
 
-    // await response.prepareSettlement(AuthoritySide.Taker);
-    // console.log("prepare settlement for taker..");
-    // try {
-    //   await response.prepareSettlement(AuthoritySide.Maker);
-    // } catch (e) {
-    //   console.error(e);
-    // }
-
-    // console.log("prepare settlement for maker..");
-
-    // console.log("settlement for maker and taker....");
-
-    // // taker should redceive 90$, maker should receive 2 options
-    // await response.settle(taker, [maker]);
-
-    // await tokenMeasurer.expectChange([
-    //   { token: options.callMint, user: taker, delta: new BN(-2) },
-    //   { token: "quote", user: taker, delta: withTokenDecimals(90) },
-    //   { token: "quote", user: maker, delta: withTokenDecimals(-90) },
-    //   { token: "asset", user: maker, delta: withTokenDecimals(0) },
-    //   { token: options.callMint, user: maker, delta: new BN(2) },
-    // ]);
-
-    // await response.cleanUp();
+    await response.cleanUp();
   });
 
   // it("Create two-way RFQ with one psyoptions-american option leg, respond but maker defaults on settlement", async () => {

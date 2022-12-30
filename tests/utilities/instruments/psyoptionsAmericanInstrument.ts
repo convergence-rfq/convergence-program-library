@@ -58,6 +58,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     { amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
     const instrument = new PsyoptionsAmericanInstrumentClass(context, mint, OptionMarket, Optiontype);
+    context.assetToken.assertRegistered();
     return new InstrumentController(
       instrument,
       { amount, side: side ?? DEFAULT_INSTRUMENT_SIDE, baseAssetIndex: context.assetToken.baseAssetIndex },
@@ -66,15 +67,10 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
   }
 
   static async addInstrument(context: Context) {
-    await context.addInstrument(getAmericanOptionsInstrumentProgram().programId, false, 1, 7, 3, 3, 4);
+    await context.addInstrument(getAmericanOptionsInstrumentProgram().programId, false, 2, 7, 3, 3, 4);
     await context.riskEngine.setInstrumentType(getAmericanOptionsInstrumentProgram().programId, InstrumentType.Option);
   }
 
-  serializeLegData(): Buffer {
-    const mint = this.mint.publicKey.toBytes();
-    const OptionMarket = this.OptionMarket.toBytes();
-    return Buffer.from(new Uint8Array([...mint, ...OptionMarket, this.OptionType == OptionType.CALL ? 0 : 1]));
-  }
   serializeInstrumentData(): Buffer {
     let optionMarketKey = AmericanPsyoptions.getOptionMarketByKey(this.context, this.OptionMarket, this.context.maker);
     const mint = this.mint.publicKey.toBytes();
