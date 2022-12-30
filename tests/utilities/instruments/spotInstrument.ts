@@ -48,6 +48,10 @@ export class SpotInstrument implements Instrument {
     return Buffer.from(this.mint.publicKey.toBytes());
   }
 
+  serializeInstrumentDataForQuote(): Buffer {
+    return Buffer.from(this.mint.publicKey.toBytes());
+  }
+
   getProgramId(): PublicKey {
     return getSpotInstrumentProgram().programId;
   }

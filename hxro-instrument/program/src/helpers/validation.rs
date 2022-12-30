@@ -1,10 +1,11 @@
 use anchor_lang::prelude::*;
+use crate::state::ParsedQuoteData;
 
 use super::super::state::ParsedLegData;
 use super::super::errors::HxroError;
 use super::super::ValidateData;
 
-pub fn validate_instrument_data(
+pub fn validate_leg_data(
     ctx: &Context<ValidateData>,
     instrument_data: &Vec<u8>,
 ) -> Result<()> {
@@ -53,6 +54,16 @@ pub fn validate_instrument_data(
         risk_and_fee_signer == ctx.accounts.risk_and_fee_signer.key(),
         HxroError::InvalidRiskAndFeeSigner
     );
+
+    Ok(())
+}
+
+
+pub fn validate_quote_data(
+    _ctx: &Context<ValidateData>,
+    instrument_data: &Vec<u8>,
+) -> Result<()> {
+    let ParsedQuoteData { } = AnchorDeserialize::try_from_slice(instrument_data)?;
 
     Ok(())
 }

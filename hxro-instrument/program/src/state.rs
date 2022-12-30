@@ -27,10 +27,8 @@ pub struct ParsedLegData {
     pub fee_output_register: Pubkey,
     pub risk_output_register: Pubkey,
     pub risk_and_fee_signer: Pubkey,
-    pub product_index: u64,
+    pub product_index: u8,
 }
 
 #[derive(AnchorDeserialize)]
-pub struct ParsedQuoteData {
-    pub authority_side: AuthoritySide,
-}
+pub struct ParsedQuoteData { }

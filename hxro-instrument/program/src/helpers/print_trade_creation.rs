@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
 
 use dex_cpi as dex;
-use rfq::state::{Side};
-use crate::state::ParsedQuoteData;
+use rfq::state::{AuthoritySide, Rfq, Side};
 
-use super::super::state::ParsedLegData;
-use super::super::CreatePrintTrade;
-use super::super::MAX_PRODUCTS_PER_TRADE;
+use crate::state::{AuthoritySideDuplicate, ParsedQuoteData};
+use crate::state::ParsedLegData;
+use crate::CreatePrintTrade;
+use crate::MAX_PRODUCTS_PER_TRADE;
 
 
 const OPERATOR_CREATE_FEE_PROPORTION: dex::typedefs::Fractional = dex::typedefs::Fractional {
@@ -18,7 +18,7 @@ const OPERATOR_COUNTERPARTY_FEE_PROPORTION: dex::typedefs::Fractional = dex::typ
     exp: 0,
 };
 
-pub fn create_print_trade(ctx: &Context<CreatePrintTrade>) -> Result<()> {
+pub fn create_print_trade(ctx: &Context<CreatePrintTrade>, authority_side_duplicate: AuthoritySideDuplicate) -> Result<()> {
     let cpi_accounts = dex_cpi::cpi::accounts::InitializePrintTrade {
         user: ctx.accounts.creator_owner.to_account_info(),
         creator: ctx.accounts.creator.to_account_info(),
@@ -33,17 +33,16 @@ pub fn create_print_trade(ctx: &Context<CreatePrintTrade>) -> Result<()> {
     let response = &ctx.accounts.response;
     let rfq = &ctx.accounts.rfq;
 
+    let authority_side = match authority_side_duplicate {
+        AuthoritySideDuplicate::Taker => AuthoritySide::Taker,
+        AuthoritySideDuplicate::Maker => AuthoritySide::Maker,
+    };
+
     // HXRO typed side
     let side = match response.confirmed.unwrap().side {
         Side::Bid => dex::typedefs::Side::Bid,
         Side::Ask => dex::typedefs::Side::Ask,
     };
-
-    let ParsedQuoteData {
-        authority_side,
-    } = AnchorDeserialize::try_from_slice(
-        &rfq.quote_asset.instrument_data
-    )?;
 
     // create vec of PrintTradeProductIndex
     let product_vec: Vec<dex::typedefs::PrintTradeProductIndex> = rfq

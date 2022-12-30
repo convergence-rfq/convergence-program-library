@@ -3,13 +3,14 @@ use anchor_lang::Id;
 use std::str::FromStr;
 
 use errors::HxroError;
+use state::AuthoritySideDuplicate;
 use rfq::state::{ProtocolState, Response, Rfq};
 
 mod errors;
-mod state;
 mod helpers;
+mod state;
 
-declare_id!("5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL");
+declare_id!("fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE");
 
 const MAX_PRODUCTS_PER_TRADE: usize = 6;
 
@@ -25,22 +26,26 @@ impl Id for Dex {
 #[program]
 pub mod hxro_instrument {
     use super::*;
+    use rfq::state::AuthoritySide;
+    use crate::state::AuthoritySideDuplicate;
 
     pub fn validate_data(ctx: Context<ValidateData>) -> Result<()> {
         require!(ctx.accounts.rfq.legs.len() <= 6, HxroError::TooManyLegs);
 
         for leg in ctx.accounts.rfq.legs.clone() {
-            helpers::validate_instrument_data(&ctx, &leg.instrument_data)?;
+            helpers::validate_leg_data(&ctx, &leg.instrument_data)?;
         }
 
-        // TODO: custom validation for the quote asset instrument data
-        helpers::validate_instrument_data(&ctx, &ctx.accounts.rfq.quote_asset.instrument_data)?;
+        helpers::validate_quote_data(&ctx, &ctx.accounts.rfq.quote_asset.instrument_data)?;
 
         Ok(())
     }
 
-    pub fn create_print_trade(ctx: Context<CreatePrintTrade>) -> Result<()> {
-        helpers::create_print_trade(&ctx)
+    pub fn create_print_trade(
+        ctx: Context<CreatePrintTrade>,
+        authority_side: AuthoritySideDuplicate,
+    ) -> Result<()> {
+        helpers::create_print_trade(&ctx, authority_side)
     }
 
     pub fn settle_print_trade(ctx: Context<SettlePrintTrade>) -> Result<()> {
@@ -80,6 +85,8 @@ pub struct ValidateData<'info> {
 
 #[derive(Accounts)]
 pub struct CreatePrintTrade<'info> {
+    pub protocol: Account<'info, ProtocolState>,
+
     pub rfq: Account<'info, Rfq>,
 
     pub response: Account<'info, Response>,
@@ -90,8 +97,6 @@ pub struct CreatePrintTrade<'info> {
     #[account(mut)]
     pub creator_owner: Signer<'info>,
     /// CHECK:
-    #[account(mut)]
-    pub counterparty_owner: Signer<'info>,
     #[account(mut)]
     pub operator_owner: Signer<'info>,
     /// CHECK:

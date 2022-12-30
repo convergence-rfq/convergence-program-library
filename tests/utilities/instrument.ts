@@ -12,6 +12,7 @@ export interface InstrumentData {
 
 export interface Instrument {
   serializeInstrumentData(): Buffer;
+  serializeInstrumentDataForQuote(): Buffer;
   getProgramId(): PublicKey;
   getValidationAccounts(): Promise<AccountMeta[]>;
   getPrepareSettlementAccounts(
@@ -72,7 +73,7 @@ export class InstrumentController {
 
     return {
       instrumentProgram: this.instrument.getProgramId(),
-      instrumentData: this.instrument.serializeInstrumentData(),
+      instrumentData: this.instrument.serializeInstrumentDataForQuote(),
       instrumentDecimals: this.decimals,
     };
   }

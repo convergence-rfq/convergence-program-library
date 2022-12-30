@@ -294,8 +294,9 @@ export class Context {
   }
 
   async createRfqStepByStep({
-                              legs = [SpotInstrument.createForLeg(this)],
-                              quote = SpotInstrument.createForQuote(this, this.quoteToken),
+                              legs = [],
+                              quote = HxroInstrument.createForQuote(this, {}),
+                              printTradeProvider = null,
                               orderType = null,
                               fixedSize = null,
                               activeWindow = DEFAULT_ACTIVE_WINDOW,
@@ -312,7 +313,7 @@ export class Context {
     const rfqObject = new Rfq(this, rfq.publicKey, quote, legs);
 
     let createRfq = await this.program.methods
-        .createRfq(legsSize, legData, null, orderType, quote.toQuoteData(), fixedSize, activeWindow, settlingWindow)
+        .createRfq(legsSize, legData, printTradeProvider, orderType, quote.toQuoteData(), fixedSize, activeWindow, settlingWindow)
         .accounts({
           taker: this.taker.publicKey,
           protocol: this.protocolPda,
@@ -350,10 +351,9 @@ export class Context {
           collateralToken: await getCollateralTokenPda(this.taker.publicKey, this.program.programId),
           riskEngine: this.riskEngine.programId,
         })
-        .remainingAccounts(await rfqObject.getRiskEngineAccounts())
+        .remainingAccounts([...quoteAccounts, ...(await rfqObject.getRiskEngineAccounts())])
         .signers([this.taker])
-        .rpc()
-        .catch((e) => {console.log("ERROR:", e)});
+        .rpc();
 
     console.log("FINALIZE RFQ: ", finalizeRfq);
 
@@ -761,6 +761,30 @@ export class Response {
       .remainingAccounts([...quoteAccounts, ...legAccounts])
       .preInstructions([expandComputeUnits])
       .rpc();
+  }
+
+  async preparePrintTradeSettlement(side, operator) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+
+    if (this.firstToPrepare.equals(PublicKey.default)) {
+      this.firstToPrepare = caller.publicKey;
+    }
+
+    const quoteAccounts = await this.rfq.quote.getPrepareSettlementAccounts(side, "quote", this.rfq, this);
+
+    await this.context.program.methods
+      .preparePrintTradeSettlement(side)
+      .accounts({
+        caller: caller.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+      })
+      .signers([caller, operator])
+      .remainingAccounts([...quoteAccounts])
+      .preInstructions([expandComputeUnits])
+      .rpc()
+        .catch(e => {console.log("EERR:", e)});
   }
 
   async prepareMoreEscrowLegsSettlement(side, from: number, legAmount: number) {

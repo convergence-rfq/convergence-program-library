@@ -8,10 +8,10 @@ use crate::{
     utils::ToAccountMeta,
 };
 
-const VALIDATE_LEGS_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
-const CREATE_PRINT_TRADE_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
-const SETTLE_PRINT_TRADE_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
-const CLEAN_UP_SELECTOR: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+const VALIDATE_LEGS_SELECTOR: [u8; 8] = [181, 2, 45, 238, 64, 129, 254, 198];
+const CREATE_PRINT_TRADE_SELECTOR: [u8; 8] = [216, 138, 167, 31, 208, 94, 3, 31];
+const SETTLE_PRINT_TRADE_SELECTOR: [u8; 8] = [188, 110, 242, 145, 117, 203, 30, 239];
+const CLEAN_UP_SELECTOR: [u8; 8] = [8, 182, 195, 138, 85, 137, 221, 250];
 
 pub fn validate_print_trade_data<'a, 'info: 'a>(
     rfq: &Account<'info, Rfq>,

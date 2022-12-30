@@ -1052,25 +1052,6 @@ export type Dex = {
     ],
     "accounts": [
         {
-            "name": "ProductArray",
-            "type": {
-                "kind": "struct",
-                "fields": [
-                    {
-                        "name": "array",
-                        "type": {
-                            "array": [
-                                {
-                                    "defined": "Product"
-                                },
-                                256
-                            ]
-                        }
-                    }
-                ]
-            }
-        },
-        {
             "name": "PrintTrade",
             "type": {
                 "kind": "struct",
@@ -1132,20 +1113,6 @@ export type Dex = {
                     {
                         "name": "bump",
                         "type": "u8"
-                    }
-                ]
-            }
-        },
-        {
-            "name": "RiskOutputRegister",
-            "type": {
-                "kind": "struct",
-                "fields": [
-                    {
-                        "name": "riskEngineOutput",
-                        "type": {
-                            "defined": "HealthResult"
-                        }
                     }
                 ]
             }
@@ -2576,103 +2543,6 @@ export type Dex = {
                     },
                     {
                         "name": "InvalidBitsetIndex"
-                    }
-                ]
-            }
-        },
-        {
-            "name": "DomainOrProgramError",
-            "type": {
-                "kind": "enum",
-                "variants": [
-                    {
-                        "name": "DexErr",
-                        "fields": [
-                            {
-                                "defined": "DexError"
-                            }
-                        ]
-                    },
-                    {
-                        "name": "UtilErr",
-                        "fields": [
-                            {
-                                "defined": "UtilError"
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Other",
-                        "fields": [
-                            {
-                                "name": "code",
-                                "type": "u32"
-                            },
-                            {
-                                "name": "msg",
-                                "type": "string"
-                            }
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "name": "Product",
-            "type": {
-                "kind": "enum",
-                "variants": [
-                    {
-                        "name": "Outright",
-                        "fields": [
-                            {
-                                "name": "outright",
-                                "type": {
-                                    "defined": "Outright"
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Combo",
-                        "fields": [
-                            {
-                                "name": "combo",
-                                "type": {
-                                    "defined": "Combo"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "name": "HealthResult",
-            "type": {
-                "kind": "enum",
-                "variants": [
-                    {
-                        "name": "Health",
-                        "fields": [
-                            {
-                                "name": "health_info",
-                                "type": {
-                                    "defined": "HealthInfo"
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Liquidation",
-                        "fields": [
-                            {
-                                "name": "liquidation_info",
-                                "type": {
-                                    "defined": "LiquidationInfo"
-                                }
-                            }
-                        ]
                     }
                 ]
             }
@@ -3763,25 +3633,6 @@ export const DexIdl: Dex = {
     ],
     "accounts": [
         {
-            "name": "ProductArray",
-            "type": {
-                "kind": "struct",
-                "fields": [
-                    {
-                        "name": "array",
-                        "type": {
-                            "array": [
-                                {
-                                    "defined": "Product"
-                                },
-                                256
-                            ]
-                        }
-                    }
-                ]
-            }
-        },
-        {
             "name": "PrintTrade",
             "type": {
                 "kind": "struct",
@@ -3843,20 +3694,6 @@ export const DexIdl: Dex = {
                     {
                         "name": "bump",
                         "type": "u8"
-                    }
-                ]
-            }
-        },
-        {
-            "name": "RiskOutputRegister",
-            "type": {
-                "kind": "struct",
-                "fields": [
-                    {
-                        "name": "riskEngineOutput",
-                        "type": {
-                            "defined": "HealthResult"
-                        }
                     }
                 ]
             }
@@ -5287,103 +5124,6 @@ export const DexIdl: Dex = {
                     },
                     {
                         "name": "InvalidBitsetIndex"
-                    }
-                ]
-            }
-        },
-        {
-            "name": "DomainOrProgramError",
-            "type": {
-                "kind": "enum",
-                "variants": [
-                    {
-                        "name": "DexErr",
-                        "fields": [
-                            {
-                                "defined": "DexError"
-                            }
-                        ]
-                    },
-                    {
-                        "name": "UtilErr",
-                        "fields": [
-                            {
-                                "defined": "UtilError"
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Other",
-                        "fields": [
-                            {
-                                "name": "code",
-                                "type": "u32"
-                            },
-                            {
-                                "name": "msg",
-                                "type": "string"
-                            }
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "name": "Product",
-            "type": {
-                "kind": "enum",
-                "variants": [
-                    {
-                        "name": "Outright",
-                        "fields": [
-                            {
-                                "name": "outright",
-                                "type": {
-                                    "defined": "Outright"
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Combo",
-                        "fields": [
-                            {
-                                "name": "combo",
-                                "type": {
-                                    "defined": "Combo"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "name": "HealthResult",
-            "type": {
-                "kind": "enum",
-                "variants": [
-                    {
-                        "name": "Health",
-                        "fields": [
-                            {
-                                "name": "health_info",
-                                "type": {
-                                    "defined": "HealthInfo"
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Liquidation",
-                        "fields": [
-                            {
-                                "name": "liquidation_info",
-                                "type": {
-                                    "defined": "LiquidationInfo"
-                                }
-                            }
-                        ]
                     }
                 ]
             }

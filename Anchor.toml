@@ -3,7 +3,7 @@ rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
 risk_engine = "7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth"
 spot_instrument = "EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN"
 psyoptions_european_instrument = "3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm"
-hxro_instrument = "5Vhsk4PT6MDMrGSsQoQGEHfakkntEYydRYTs14T1PooL"
+hxro_instrument = "fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE"
 
 [programs.devnet]
 rfq = "2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp"
@@ -76,10 +76,13 @@ address = "GGMrh5gtGNjUcnK5Pk523PXNa4akN93ZrGvhJx7WGBnM"
 address = "HsYYpmsZmhUrJDqbFjAuo6HPV9mygyWNTJ6g75a9KRR1"
 [[test.validator.clone]]
 address = "2TfB33aLaneQb5TNVwyDz3jSZXS6jdW2ARw1Dgf84XCG"
-[[test.validator.clone]]
-address = "GvDMxPzN1sCj7L26YDK2HnMRXEQmQ2aemov8YBtPS7vR"
-[[test.validator.clone]]
+[[test.validator.account]]
 address = "8SXvChNYFhRq4EZuZvnhjrB3jJRQCv4k3P4W6hesH3Ee"
+filename = "tests/dependencies/btc_20000_oracle_switchboard.json"
+[[test.validator.account]]
+address = "GvDMxPzN1sCj7L26YDK2HnMRXEQmQ2aemov8YBtPS7vR"
+filename = "tests/dependencies/sol_30_oracle_switchboard.json"
+
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
