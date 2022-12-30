@@ -7,7 +7,7 @@ use psy_american::OptionMarket;
 use state::{AssetIdentifierDuplicate, ParsedLegData};
 mod instructions;
 use instructions::*;
-use state::AuthoritySideDuplicate;
+use state::{AuthoritySideDuplicate, OptionType, TOKEN_DECIMALS};
 mod errors;
 use errors::PsyoptionsAmericanError;
 use rfq::state::{AssetIdentifier, AuthoritySide};
@@ -26,13 +26,56 @@ pub mod psyoptions_american_instrument {
         instrument_decimals: u8,
     ) -> Result<()> {
         msg!("validating..");
-        // let american_meta_account = &ctx.accounts.american_meta;
+        let ValidateData { american_meta, .. } = &ctx.accounts;
 
-        // require!(
-        //     american_meta == ctx.accounts.american_meta.key(),
-        //     PsyoptionsAmericanError::PassedAmericanMetaDoesNotMatch
-        // );
-        msg!("validating psyoptons american..");
+        require_eq!(
+            instrument_data.len(),
+            ParsedLegData::SERIALIZED_SIZE,
+            PsyoptionsAmericanError::InvalidDataSize
+        );
+        let ParsedLegData {
+            option_common_data,
+            mint_address,
+            american_meta_address,
+        } = AnchorDeserialize::try_from_slice(&instrument_data)?;
+        require!(
+            american_meta_address == american_meta.key(),
+            PsyoptionsAmericanError::PassedAmericanMetaDoesNotMatch
+        );
+        let expected_mint = american_meta.option_mint;
+        require!(
+            mint_address == expected_mint,
+            PsyoptionsAmericanError::PassedMintDoesNotMatch
+        );
+        require!(
+            option_common_data.underlying_amount_per_contract
+                == american_meta.underlying_amount_per_contract,
+            PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
+        );
+        require!(
+            option_common_data.strike_price == american_meta.quote_amount_per_contract,
+            PsyoptionsAmericanError::PassedStrikePriceDoesNotMatch
+        );
+        require!(
+            option_common_data.expiration_timestamp == american_meta.expiration_unix_timestamp,
+            PsyoptionsAmericanError::PassedExpirationTimestampDoesNotMatch
+        );
+
+        require!(
+            instrument_decimals == TOKEN_DECIMALS,
+            PsyoptionsAmericanError::DecimalsAmountDoesNotMatch
+        );
+
+        // if let (Some(passed_base_asset_index), MintType::AssetWithRisk { base_asset_index }) =
+        //     (base_asset_index, expected_mint.mint_type)
+        // {
+        //     require!(
+        //         passed_base_asset_index == base_asset_index.into(),
+        //         PsyoptionsAmericanError::BaseAssetDoesNotMatch
+        //     );
+        // } else {
+        //     err!(PsyoptionsEuropeanError::StablecoinAsBaseAssetIsNotSupported)?
+        // }
 
         Ok(())
     }
@@ -56,7 +99,7 @@ pub mod psyoptions_american_instrument {
         msg!(ctx.accounts.escrow.key().to_string().as_str());
         let asset_data = rfq.get_asset_instrument_data(asset_identifier.into());
 
-        let mint_address: Pubkey = AnchorDeserialize::try_from_slice(&asset_data[1..33]).unwrap();
+        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(&asset_data)?;
 
         require!(
             mint_address == mint.key(),

@@ -43,25 +43,19 @@ export function getAmericanOptionsInstrumentProgram() {
 }
 
 export class PsyoptionsAmericanInstrumentClass implements Instrument {
-  constructor(
-    private context: Context,
-    private mint: Mint,
-    private OptionMarket: PublicKey,
-    private OptionType: OptionType
-  ) {}
+  constructor(private context: Context, private OptionMarket: AmericanPsyoptions, private OptionType: OptionType) {}
 
   static create(
     context: Context,
-    mint: Mint,
-    OptionMarket: PublicKey,
+    OptionMarket: AmericanPsyoptions,
     Optiontype: OptionType,
     { amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
-    const instrument = new PsyoptionsAmericanInstrumentClass(context, mint, OptionMarket, Optiontype);
+    const instrument = new PsyoptionsAmericanInstrumentClass(context, OptionMarket, Optiontype);
     context.assetToken.assertRegistered();
     return new InstrumentController(
       instrument,
-      { amount, side: side ?? DEFAULT_INSTRUMENT_SIDE, baseAssetIndex: context.assetToken.baseAssetIndex },
+      { amount, side: side ?? DEFAULT_INSTRUMENT_SIDE, baseAssetIndex: OptionMarket.underlyingMint.baseAssetIndex },
       0
     );
   }
@@ -72,11 +66,23 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
   }
 
   serializeInstrumentData(): Buffer {
-    let optionMarketKey = AmericanPsyoptions.getOptionMarketByKey(this.context, this.OptionMarket, this.context.maker);
-    const mint = this.mint.publicKey.toBytes();
-    const optionMarket = this.OptionMarket.toBytes();
+    let op = this.OptionMarket.OptionInfo;
+    const mint = this.OptionMarket.callMint.publicKey.toBytes();
+    const optionMarket = this.OptionMarket.optionMarketKey.toBytes();
 
-    return Buffer.from(new Uint8Array([this.OptionType == OptionType.CALL ? 0 : 1, ...mint, ...optionMarket]));
+    const underlyingamountPerContract = op.underlyingAmountPerContract.toBuffer("le", 8);
+    const expirationtime = op.expirationUnixTimestamp.toBuffer("le", 8);
+    const strikeprice = op.quoteAmountPerContract.toBuffer("le", 8);
+    return Buffer.from(
+      new Uint8Array([
+        this.OptionType == OptionType.CALL ? 0 : 1,
+        ...underlyingamountPerContract,
+        ...strikeprice,
+        ...expirationtime,
+        ...mint,
+        ...optionMarket,
+      ])
+    );
   }
   getProgramId(): PublicKey {
     return getAmericanOptionsInstrumentProgram().programId;
@@ -84,8 +90,8 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
 
   async getValidationAccounts() {
     return [
-      { pubkey: this.OptionMarket, isSigner: false, isWritable: false },
-      { pubkey: this.context.assetToken.mintInfoAddress, isSigner: false, isWritable: false },
+      { pubkey: this.OptionMarket.optionMarketKey, isSigner: false, isWritable: false },
+      { pubkey: this.OptionMarket.underlyingMint.mintInfoAddress, isSigner: false, isWritable: false },
     ];
   }
 
@@ -103,13 +109,13 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
         pubkey: await Token.getAssociatedTokenAddress(
           ASSOCIATED_TOKEN_PROGRAM_ID,
           TOKEN_PROGRAM_ID,
-          this.mint.publicKey,
+          this.OptionMarket.callMint.publicKey,
           caller.publicKey
         ),
         isSigner: false,
         isWritable: true,
       },
-      { pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
+      { pubkey: this.OptionMarket.callMint.publicKey, isSigner: false, isWritable: false },
       {
         pubkey: await getInstrumentEscrowPda(response.account, assetIndentifier, this.getProgramId()),
         isSigner: false,
@@ -129,7 +135,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(assetReceiver),
+        pubkey: await this.OptionMarket.callMint.getAssociatedAddress(assetReceiver),
         isSigner: false,
         isWritable: true,
       },
@@ -152,7 +158,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
+        pubkey: await this.OptionMarket.callMint.getAssociatedAddress(caller.publicKey),
         isSigner: false,
         isWritable: true,
       },
@@ -173,7 +179,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(this.context.dao.publicKey),
+        pubkey: await this.OptionMarket.callMint.getAssociatedAddress(this.context.dao.publicKey),
         isSigner: false,
         isWritable: true,
       },
@@ -192,7 +198,8 @@ export class AmericanPsyoptions {
     public underlyingMint: Mint,
     public quoteMint: Mint,
     public callMint: Mint,
-    public callWriterMint: Mint
+    public callWriterMint: Mint,
+    public OptionInfo: OptionMarketWithKey
   ) {}
   public static createProgram(programId = psyOptionsAmericanLocalNetProgramId, provider = AnchorProvider) {
     let program = createProgram(programId, provider);
@@ -243,7 +250,7 @@ export class AmericanPsyoptions {
       underlyingMint = context.assetToken,
       quoteMint = context.quoteToken,
       underlyingAmountPerContract = withTokenDecimals(1),
-      quoteAmountPerContract = withTokenDecimals(10),
+      quoteAmountPerContract = withTokenDecimals(100),
     } = {}
   ) {
     const program = this.createProgramWithProvider(user, context);
@@ -274,7 +281,8 @@ export class AmericanPsyoptions {
       underlyingMint,
       quoteMint,
       callMint,
-      callWriterMint
+      callWriterMint,
+      await getOptionByKey(program, psyOptMarket.optionMarketKey)
     );
   }
 

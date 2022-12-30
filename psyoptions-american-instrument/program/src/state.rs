@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use rfq::state::{AssetIdentifier, AuthoritySide};
 use risk_engine::state::OptionCommonData;
-
+pub const TOKEN_DECIMALS: u8 = 0;
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
 pub enum AuthoritySideDuplicate {
     Taker,

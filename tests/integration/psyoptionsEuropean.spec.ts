@@ -87,24 +87,24 @@ describe("Psyoptions European instrument integration tests", () => {
   //   });
   //   // taker confirms to sell 2 options
   //   await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
-  it("Create two-way RFQ with one euro option leg, respond but maker defaults on settlement", async () => {
-    // create a two way RFQ specifying 1 option put as a leg
-    const rfq = await context.createRfq({
-      activeWindow: 2,
-      settlingWindow: 1,
-      legs: [
-        PsyoptionsEuropeanInstrument.create(context, options, OptionType.PUT, {
-          amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
-          side: Side.Bid,
-        }),
-      ],
-    });
-    // response with agreeing to buy 5 options for 450$
-    const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
-    });
-    // taker confirms to sell 2 options
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
+  // it("Create two-way RFQ with one euro option leg, respond but maker defaults on settlement", async () => {
+  //   // create a two way RFQ specifying 1 option put as a leg
+  //   const rfq = await context.createRfq({
+  //     activeWindow: 2,
+  //     settlingWindow: 1,
+  //     legs: [
+  //       PsyoptionsEuropeanInstrument.create(context, options, OptionType.PUT, {
+  //         amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
+  //         side: Side.Bid,
+  //       }),
+  //     ],
+  //   });
+  //   // response with agreeing to buy 5 options for 450$
+  //   const response = await rfq.respond({
+  //     bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+  //   });
+  //   // taker confirms to sell 2 options
+  //   await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
 
     //   await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
 
@@ -120,5 +120,5 @@ describe("Psyoptions European instrument integration tests", () => {
     //   await response.settleOnePartyDefault();
     //   await response.cleanUp();
     //   await rfq.cleanUp();
-  });
+  // });
 });

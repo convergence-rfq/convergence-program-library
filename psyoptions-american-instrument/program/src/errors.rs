@@ -14,4 +14,14 @@ pub enum PsyoptionsAmericanError {
     NotFirstToPrepare,
     #[msg("Passed metadata account does not match")]
     PassedAmericanMetaDoesNotMatch,
+    #[msg("Passed underlying ammount does not match")]
+    PassedUnderlyingAmountPerContractDoesNotMatch,
+    #[msg("Passed strike price does not match")]
+    PassedStrikePriceDoesNotMatch,
+    #[msg("Passed expiration timestamp does not match")]
+    PassedExpirationTimestampDoesNotMatch,
+    #[msg("Stablecoin as base asset is not supported")]
+    StablecoinAsBaseAssetIsNotSupported,
+    #[msg("Passed decimals does not match")]
+    DecimalsAmountDoesNotMatch,
 }
