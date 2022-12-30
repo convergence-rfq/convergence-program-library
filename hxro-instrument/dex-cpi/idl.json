@@ -1285,7 +1285,7 @@
         "fields": [
           {
             "name": "productIndex",
-            "type": "u64"
+            "type": "u8"
           },
           {
             "name": "size",

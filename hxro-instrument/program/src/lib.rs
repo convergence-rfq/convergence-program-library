@@ -2,9 +2,11 @@ use anchor_lang::prelude::*;
 use anchor_lang::Id;
 use std::str::FromStr;
 
+use dex_cpi;
 use errors::HxroError;
-use state::AuthoritySideDuplicate;
 use rfq::state::{ProtocolState, Response, Rfq};
+use risk_cpi;
+use state::AuthoritySideDuplicate;
 
 mod errors;
 mod helpers;
@@ -13,6 +15,11 @@ mod state;
 declare_id!("fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE");
 
 const MAX_PRODUCTS_PER_TRADE: usize = 6;
+
+const OPERATOR_CREATE_FEE_PROPORTION: dex_cpi::typedefs::Fractional =
+    dex_cpi::typedefs::Fractional { m: 0, exp: 0 };
+const OPERATOR_COUNTERPARTY_FEE_PROPORTION: dex_cpi::typedefs::Fractional =
+    dex_cpi::typedefs::Fractional { m: 0, exp: 0 };
 
 #[derive(Debug, Clone)]
 pub struct Dex;
@@ -26,8 +33,6 @@ impl Id for Dex {
 #[program]
 pub mod hxro_instrument {
     use super::*;
-    use rfq::state::AuthoritySide;
-    use crate::state::AuthoritySideDuplicate;
 
     pub fn validate_data(ctx: Context<ValidateData>) -> Result<()> {
         require!(ctx.accounts.rfq.legs.len() <= 6, HxroError::TooManyLegs);
@@ -49,6 +54,8 @@ pub mod hxro_instrument {
     }
 
     pub fn settle_print_trade(ctx: Context<SettlePrintTrade>) -> Result<()> {
+        helpers::update_mark_price(&ctx)?;
+        helpers::sign_print_trade(&ctx)?;
         Ok(())
     }
 
@@ -121,7 +128,87 @@ pub struct CreatePrintTrade<'info> {
 }
 
 #[derive(Accounts)]
-pub struct SettlePrintTrade {}
+pub struct SettlePrintTrade<'info> {
+    pub protocol: Box<Account<'info, ProtocolState>>,
+
+    pub rfq: Box<Account<'info, Rfq>>,
+
+    pub response: Box<Account<'info, Response>>,
+
+    /// CHECK:
+    pub dex: Program<'info, Dex>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub creator_owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub counterparty_owner: Signer<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub creator: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub counterparty: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub operator: AccountInfo<'info>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub market_product_group: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub product: AccountInfo<'info>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub print_trade: Box<Account<'info, dex_cpi::state::PrintTrade>>,
+    /// CHECK:
+    pub system_program: Program<'info, System>,
+    pub system_clock: Sysvar<'info, Clock>,
+
+    /// CHECK:
+    pub fee_model_program: AccountInfo<'info>,
+    /// CHECK:
+    pub fee_model_configuration_acct: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub fee_output_register: AccountInfo<'info>,
+    /// CHECK:
+    #[account(executable)]
+    pub risk_engine_program: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_model_configuration_acct: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub risk_output_register: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_and_fee_signer: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub creator_trader_fee_state_acct: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub creator_trader_risk_state_acct: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub counterparty_trader_fee_state_acct: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub counterparty_trader_risk_state_acct: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub s_account: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub r_account: Box<Account<'info, risk_cpi::state::CorrelationMatrix>>,
+    /// CHECK:
+    #[account(mut)]
+    pub mark_prices: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub btcusd_pyth_oracle: AccountInfo<'info>,
+}
 
 #[derive(Accounts)]
 #[instruction(leg_index: u8)]
