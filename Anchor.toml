@@ -30,5 +30,3 @@ members = [
     "psyoptions-european-instrument/program"
 ]
 
-[scripts]
-psyoptions-american-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/integration/psyoptionsAmerican.spec.ts"
