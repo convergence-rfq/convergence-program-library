@@ -59,17 +59,15 @@ pub mod hxro_instrument {
         Ok(())
     }
 
-    pub fn clean_up(ctx: Context<CleanUp>) -> Result<()> {
+    pub fn clean_up(_ctx: Context<CleanUp>) -> Result<()> {
         Ok(())
     }
 }
 
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
-    /// protocol provided
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
-
     pub rfq: Account<'info, Rfq>,
 
     /// CHECK:
@@ -93,9 +91,7 @@ pub struct ValidateData<'info> {
 #[derive(Accounts)]
 pub struct CreatePrintTrade<'info> {
     pub protocol: Account<'info, ProtocolState>,
-
     pub rfq: Account<'info, Rfq>,
-
     pub response: Account<'info, Response>,
 
     /// CHECK:
@@ -130,14 +126,11 @@ pub struct CreatePrintTrade<'info> {
 #[derive(Accounts)]
 pub struct SettlePrintTrade<'info> {
     pub protocol: Box<Account<'info, ProtocolState>>,
-
     pub rfq: Box<Account<'info, Rfq>>,
-
     pub response: Box<Account<'info, Response>>,
 
     /// CHECK:
     pub dex: Program<'info, Dex>,
-
     /// CHECK:
     #[account(mut)]
     pub creator_owner: AccountInfo<'info>,
@@ -160,7 +153,6 @@ pub struct SettlePrintTrade<'info> {
     #[account(mut)]
     pub product: AccountInfo<'info>,
 
-    /// CHECK:
     #[account(mut)]
     pub print_trade: Box<Account<'info, dex_cpi::state::PrintTrade>>,
     /// CHECK:
@@ -212,4 +204,14 @@ pub struct SettlePrintTrade<'info> {
 
 #[derive(Accounts)]
 #[instruction(leg_index: u8)]
-pub struct CleanUp {}
+pub struct CleanUp<'info> {
+    pub protocol: Box<Account<'info, ProtocolState>>,
+    pub rfq: Box<Account<'info, Rfq>>,
+    pub response: Box<Account<'info, Response>>,
+
+    #[account(mut, close = receiver)]
+    pub print_trade: Box<Account<'info, dex_cpi::state::PrintTrade>>,
+    /// CHECK:
+    #[account(mut)]
+    pub receiver: AccountInfo<'info>
+}
