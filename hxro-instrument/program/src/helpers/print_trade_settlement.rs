@@ -50,7 +50,6 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
         ctx.accounts.counterparty.to_account_info().clone(),
         ctx.accounts.operator.to_account_info().clone(),
         ctx.accounts.market_product_group.to_account_info().clone(),
-        ctx.accounts.product.to_account_info().clone(),
         ctx.accounts.print_trade.to_account_info().clone(),
         ctx.accounts.system_program.to_account_info().clone(),
         ctx.accounts.fee_model_program.to_account_info().clone(),
@@ -87,6 +86,7 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
             .counterparty_trader_risk_state_acct
             .to_account_info()
             .clone(),
+        ctx.accounts.operator_owner.to_account_info(),
         ctx.accounts.s_account.to_account_info().clone(),
         ctx.accounts.r_account.to_account_info().clone(),
         ctx.accounts.mark_prices.to_account_info().clone(),
@@ -157,7 +157,6 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
                 AccountMeta::new(ctx.accounts.counterparty.key(), false),
                 AccountMeta::new(ctx.accounts.operator.key(), false),
                 AccountMeta::new(ctx.accounts.market_product_group.key(), false),
-                AccountMeta::new(ctx.accounts.product.key(), false),
                 AccountMeta::new(ctx.accounts.print_trade.key(), false),
                 AccountMeta::new_readonly(ctx.accounts.system_program.key(), false),
                 AccountMeta::new_readonly(ctx.accounts.fee_model_program.key(), false),

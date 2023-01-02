@@ -260,11 +260,6 @@
           "isSigner": false
         },
         {
-          "name": "product",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "printTrade",
           "isMut": true,
           "isSigner": false
@@ -310,6 +305,11 @@
           "isSigner": false
         },
         {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "creatorTraderFeeStateAcct",
           "isMut": true,
           "isSigner": false
@@ -327,6 +327,11 @@
         {
           "name": "counterpartyTraderRiskStateAcct",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "operatorOwner",
+          "isMut": false,
           "isSigner": false
         }
       ],
