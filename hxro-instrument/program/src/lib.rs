@@ -131,11 +131,11 @@ pub struct SettlePrintTrade<'info> {
 
     /// CHECK:
     pub dex: Program<'info, Dex>,
+    #[account(mut)]
+    pub user: Signer<'info>,
     /// CHECK:
     #[account(mut)]
-    pub creator_owner: AccountInfo<'info>,
-    #[account(mut)]
-    pub counterparty_owner: Signer<'info>,
+    pub operator_owner: Signer<'info>,
     /// CHECK:
     #[account(mut)]
     pub creator: AccountInfo<'info>,

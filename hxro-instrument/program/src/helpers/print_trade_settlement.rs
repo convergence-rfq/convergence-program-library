@@ -14,7 +14,7 @@ use crate::{
 
 pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
     let accounts_infos = &[
-        ctx.accounts.counterparty_owner.to_account_info(),
+        ctx.accounts.creator.to_account_info(),
         ctx.accounts.mark_prices.to_account_info(),
         ctx.accounts.market_product_group.to_account_info(),
         ctx.accounts.system_clock.to_account_info(),
@@ -27,7 +27,7 @@ pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
         &Instruction {
             program_id: ctx.accounts.risk_engine_program.key(),
             accounts: vec![
-                AccountMeta::new(ctx.accounts.counterparty_owner.key(), true),
+                AccountMeta::new(ctx.accounts.creator.key(), true),
                 AccountMeta::new(ctx.accounts.mark_prices.key(), false),
                 AccountMeta::new_readonly(ctx.accounts.market_product_group.key(), false),
                 AccountMeta::new_readonly(ctx.accounts.system_clock.key(), false),
@@ -45,7 +45,7 @@ pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
 #[inline(never)]
 pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
     let accounts_infos = &[
-        ctx.accounts.counterparty_owner.to_account_info().clone(),
+        ctx.accounts.user.to_account_info().clone(),
         ctx.accounts.creator.to_account_info().clone(),
         ctx.accounts.counterparty.to_account_info().clone(),
         ctx.accounts.operator.to_account_info().clone(),
@@ -152,7 +152,7 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
         &Instruction {
             program_id: ctx.accounts.dex.key(),
             accounts: vec![
-                AccountMeta::new(ctx.accounts.counterparty_owner.key(), true),
+                AccountMeta::new(ctx.accounts.user.key(), true),
                 AccountMeta::new(ctx.accounts.creator.key(), false),
                 AccountMeta::new(ctx.accounts.counterparty.key(), false),
                 AccountMeta::new(ctx.accounts.operator.key(), false),
@@ -171,6 +171,7 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
                 AccountMeta::new(ctx.accounts.creator_trader_fee_state_acct.key(), false),
                 AccountMeta::new(ctx.accounts.creator_trader_risk_state_acct.key(), false),
                 AccountMeta::new(ctx.accounts.counterparty_trader_fee_state_acct.key(), false),
+                AccountMeta::new(ctx.accounts.operator_owner.key(), true),
                 AccountMeta::new(
                     ctx.accounts.counterparty_trader_risk_state_acct.key(),
                     false,
