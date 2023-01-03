@@ -46,14 +46,13 @@ describe("RFQ HXRO instrument integration tests", () => {
     it("Creates RFQ with one hxro leg", async () => {
         const dexProgram = new anchor.Program(DexIdl as anchor.Idl, dex, anchor.getProvider()) as Program<Dex>;
 
-        let [creatorTrg, creatorTraderFeeStateAcct, creatorTraderRiskStateAcct] = await createTRG(context.maker);
-        let [counterPartyTrg, counterPartyTraderFeeStateAcct, counterPartyTraderRiskStateAcct] = await createTRG(context.taker);
+        let [creatorTrg, creatorTraderFeeStateAcct, creatorTraderRiskStateAcct] = await createTRG(context.taker);
+        let [counterPartyTrg, counterPartyTraderFeeStateAcct, counterPartyTraderRiskStateAcct] = await createTRG(context.maker);
         let [operatorPartyTrg, operatorPartyTraderFeeStateAcct, operatorPartyTraderRiskStateAcct] = await createTRG(operator);
 
         const [printTrade, ] = await anchor.web3.PublicKey.findProgramAddress(
             [
                 Buffer.from(anchor.utils.bytes.utf8.encode("print_trade")),
-                product.toBuffer(),
                 creatorTrg.toBuffer(),
                 counterPartyTrg.toBuffer(),
             ],
@@ -107,8 +106,6 @@ describe("RFQ HXRO instrument integration tests", () => {
         await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
 
         await response.preparePrintTradeSettlement(AuthoritySide.Taker, operator)
-            .catch(e => console.log("ERROR:", e));
-        await response.preparePrintTradeSettlement(AuthoritySide.Maker, operator)
             .catch(e => console.log("ERROR:", e));
     });
 

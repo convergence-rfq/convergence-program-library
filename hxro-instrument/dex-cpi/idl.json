@@ -1290,7 +1290,7 @@
         "fields": [
           {
             "name": "productIndex",
-            "type": "u8"
+            "type": "u64"
           },
           {
             "name": "size",

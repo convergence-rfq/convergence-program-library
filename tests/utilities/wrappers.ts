@@ -780,7 +780,7 @@ export class Response {
         rfq: this.rfq.account,
         response: this.account,
       })
-      .signers([caller, operator])
+      .signers([caller])
       .remainingAccounts([...quoteAccounts])
       .preInstructions([expandComputeUnits])
       .rpc()

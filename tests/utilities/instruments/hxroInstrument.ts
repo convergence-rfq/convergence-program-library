@@ -200,12 +200,12 @@ export class HxroInstrument implements Instrument {
         return [
             { pubkey: this.dex, isSigner: false, isWritable: false },
             { pubkey: user, isSigner: true, isWritable: false },
-            { pubkey: this.operatorOwner, isSigner: true, isWritable: false },
+            { pubkey: this.operatorOwner, isSigner: false, isWritable: false },
             { pubkey: this.creator, isSigner: false, isWritable: false },
             { pubkey: this.counterparty, isSigner: false, isWritable: false },
             { pubkey: this.operator, isSigner: false, isWritable: false },
-            { pubkey: this.marketProductGroup, isSigner: false, isWritable: false },
-            { pubkey: this.printTrade, isSigner: false, isWritable: false },
+            { pubkey: this.marketProductGroup, isSigner: false, isWritable: true },
+            { pubkey: this.printTrade, isSigner: false, isWritable: true },
             { pubkey: anchor.web3.SystemProgram.programId, isSigner: false, isWritable: false },
         ];
     }

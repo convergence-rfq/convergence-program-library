@@ -16,7 +16,7 @@ declare_id!("fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE");
 
 const MAX_PRODUCTS_PER_TRADE: usize = 6;
 
-const OPERATOR_CREATE_FEE_PROPORTION: dex_cpi::typedefs::Fractional =
+const OPERATOR_CREATOR_FEE_PROPORTION: dex_cpi::typedefs::Fractional =
     dex_cpi::typedefs::Fractional { m: 0, exp: 0 };
 const OPERATOR_COUNTERPARTY_FEE_PROPORTION: dex_cpi::typedefs::Fractional =
     dex_cpi::typedefs::Fractional { m: 0, exp: 0 };
@@ -100,16 +100,12 @@ pub struct CreatePrintTrade<'info> {
     #[account(mut)]
     pub creator_owner: Signer<'info>,
     /// CHECK:
-    #[account(mut)]
-    pub operator_owner: Signer<'info>,
+    pub operator_owner: AccountInfo<'info>,
     /// CHECK:
-    #[account(mut)]
     pub creator: AccountInfo<'info>,
     /// CHECK:
-    #[account(mut)]
     pub counterparty: AccountInfo<'info>,
     /// CHECK:
-    #[account(mut)]
     pub operator: AccountInfo<'info>,
 
     /// CHECK:

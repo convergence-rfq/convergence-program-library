@@ -6,7 +6,7 @@ use rfq::state::{AuthoritySide, Side};
 use crate::{
     state::{AuthoritySideDuplicate, ParsedLegData},
     CreatePrintTrade, MAX_PRODUCTS_PER_TRADE, OPERATOR_COUNTERPARTY_FEE_PROPORTION,
-    OPERATOR_CREATE_FEE_PROPORTION,
+    OPERATOR_CREATOR_FEE_PROPORTION,
 };
 
 pub fn create_print_trade(
@@ -48,7 +48,7 @@ pub fn create_print_trade(
                 AnchorDeserialize::try_from_slice(&leg.instrument_data).unwrap();
 
             dex_cpi::typedefs::PrintTradeProductIndex {
-                product_index: leg_data.product_index,
+                product_index: leg_data.product_index as u64,
                 size: dex_cpi::typedefs::Fractional {
                     m: response.get_leg_amount_to_transfer(&rfq, i as u8, authority_side),
                     exp: leg.instrument_decimals as u64,
@@ -74,9 +74,9 @@ pub fn create_print_trade(
         products,
         price,
         side,
-        operator_creator_fee_proportion: OPERATOR_CREATE_FEE_PROPORTION,
+        operator_creator_fee_proportion: OPERATOR_CREATOR_FEE_PROPORTION,
         operator_counterparty_fee_proportion: OPERATOR_COUNTERPARTY_FEE_PROPORTION,
-        is_operator_signer: true,
+        is_operator_signer: false,
     };
 
     dex_cpi::cpi::initialize_print_trade(
