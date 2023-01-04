@@ -14,8 +14,8 @@ pub enum Error {
     InvalidBaseAssetInfo,
     #[msg("Oracle account mismatch with rfq legs")]
     InvalidOracle,
-    #[msg("Group max loss can't be negative")]
-    RiskCanNotBeNegative,
+    #[msg("Sanity check failed: group risk out of bounds")]
+    RiskOutOfBounds,
     #[msg("Price for a base asset is missing")]
     MissingPriceForABaseAsset,
     #[msg("Require protocol authority")]

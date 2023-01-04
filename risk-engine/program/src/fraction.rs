@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use std::ops::Neg;
 
 const F64_CONVERSION_DECIMALS: u32 = 8;
+const MAX_DECIMALS: u8 = 10;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, Default)]
 pub struct Fraction {
@@ -11,7 +12,7 @@ pub struct Fraction {
 
 impl Fraction {
     pub const fn new(mantissa: i128, decimals: u8) -> Self {
-        Self { mantissa, decimals }
+        Self { mantissa, decimals }.apply_max_decimals()
     }
 
     pub fn abs(self) -> Self {
@@ -19,24 +20,32 @@ impl Fraction {
     }
 
     pub fn checked_mul(self, rhs: Self) -> Option<Self> {
-        Some(Self {
-            mantissa: self.mantissa.checked_mul(rhs.mantissa)?,
-            decimals: self.decimals.checked_add(rhs.decimals)?,
-        })
+        Some(
+            Self {
+                mantissa: self.mantissa.checked_mul(rhs.mantissa)?,
+                decimals: self.decimals.checked_add(rhs.decimals)?,
+            }
+            .apply_max_decimals(),
+        )
     }
 
     pub fn checked_add(self, rhs: Self) -> Option<Self> {
-        let max_decimals = u8::max(self.decimals, rhs.decimals);
-        let (lhs, rhs) = (
-            self.round_to_decimals(max_decimals)?,
-            rhs.round_to_decimals(max_decimals)?,
-        );
-
+        let (lhs, rhs) = self.unify_decimals(rhs)?;
         Some(Fraction::new(lhs.mantissa + rhs.mantissa, lhs.decimals))
     }
 
     pub fn checked_sub(self, rhs: Self) -> Option<Self> {
         self.checked_add(-rhs)
+    }
+
+    pub fn max(self, rhs: Self) -> Option<Self> {
+        let (lhs, rhs) = self.unify_decimals(rhs)?;
+        Some(Fraction::new(lhs.mantissa.max(rhs.mantissa), lhs.decimals))
+    }
+
+    pub fn min(self, rhs: Self) -> Option<Self> {
+        let (lhs, rhs) = self.unify_decimals(rhs)?;
+        Some(Fraction::new(lhs.mantissa.min(rhs.mantissa), lhs.decimals))
     }
 
     pub fn to_i128_with_decimals(self, decimals: u8) -> Option<i128> {
@@ -59,6 +68,30 @@ impl Fraction {
                     .checked_mul(10_i128.checked_pow(difference)?)?,
                 decimals,
             ))
+        }
+    }
+
+    pub fn is_zero(&self) -> bool {
+        self.mantissa == 0
+    }
+
+    fn unify_decimals(self, other: Self) -> Option<(Self, Self)> {
+        let max_decimals = u8::max(self.decimals, other.decimals);
+        Some((
+            self.round_to_decimals(max_decimals)?,
+            other.round_to_decimals(max_decimals)?,
+        ))
+    }
+
+    const fn apply_max_decimals(self) -> Self {
+        if self.decimals > MAX_DECIMALS {
+            let decimals_to_remove = self.decimals - MAX_DECIMALS;
+            Self {
+                mantissa: self.mantissa / 10_i128.pow(decimals_to_remove as u32),
+                decimals: MAX_DECIMALS,
+            }
+        } else {
+            self
         }
     }
 }

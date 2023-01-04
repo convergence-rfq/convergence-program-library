@@ -6,7 +6,9 @@ use crate::{
     black_scholes::calculate_option_value,
     errors::Error,
     fraction::Fraction,
-    state::{Config, InstrumentType, OptionCommonData, Scenario},
+    state::{
+        Config, FutureCommonData, InstrumentType, OptionCommonData, RiskCategoryInfo, Scenario,
+    },
     LegWithMetadata,
 };
 
@@ -20,74 +22,160 @@ pub struct RiskCalculator<'a> {
     pub current_timestamp: i64,
 }
 
+pub struct CalculationCase {
+    pub leg_multiplier: Fraction,
+    pub authority_side: AuthoritySide,
+    pub quote_side: Side,
+}
+
+pub struct PortfolioStatistics {
+    max_loss: u64,
+    max_profit: u64,
+}
+
 impl<'a> RiskCalculator<'a> {
-    pub fn calculate_risk(
+    pub fn calculate_risk_for_several_cases<const N: usize>(
         &self,
-        leg_multiplier: Fraction,
-        authority_side: AuthoritySide,
-        quote_side: Side,
+        cases: [CalculationCase; N],
+    ) -> Result<[u64; N]> {
+        let statistics = self.calculate_portfolio_statistics()?;
+
+        let mut result = [0; N];
+        for (i, case) in cases.into_iter().enumerate() {
+            result[i] = self.calculate_risk_inner(&statistics, case)?;
+        }
+
+        Ok(result)
+    }
+
+    pub fn calculate_risk(&self, case: CalculationCase) -> Result<u64> {
+        let statistics = self.calculate_portfolio_statistics()?;
+
+        self.calculate_risk_inner(&statistics, case)
+    }
+
+    fn calculate_risk_inner(
+        &self,
+        statistics: &PortfolioStatistics,
+        case: CalculationCase,
     ) -> Result<u64> {
         let mut portfolio_inverted = false;
 
-        if let Side::Bid = quote_side {
+        if let Side::Bid = case.quote_side {
             portfolio_inverted = !portfolio_inverted;
         }
 
-        if let AuthoritySide::Taker = authority_side {
+        if let AuthoritySide::Taker = case.authority_side {
             portfolio_inverted = !portfolio_inverted;
         }
 
-        self.calculate_concrete_portfolio_risk(leg_multiplier, portfolio_inverted)
+        let portfolio_risk = if portfolio_inverted {
+            statistics.max_profit
+        } else {
+            statistics.max_loss
+        };
+
+        self.multiply_by_leg_multiplier(portfolio_risk, case.leg_multiplier)
     }
 
-    pub fn calculate_concrete_portfolio_risk(
-        &self,
-        leg_multiplier: Fraction,
-        portfolio_inverted: bool,
-    ) -> Result<u64> {
-        let mut risk_sum = 0;
+    fn multiply_by_leg_multiplier(&self, unit_risk: u64, leg_multiplier: Fraction) -> Result<u64> {
+        let max_risk = Fraction::new(unit_risk.into(), self.config.collateral_mint_decimals);
+        let result = max_risk
+            .checked_mul(leg_multiplier)
+            .ok_or_else(|| error!(Error::MathOverflow))?;
+
+        result
+            .to_i128_with_decimals(self.config.collateral_mint_decimals)
+            .ok_or_else(|| error!(Error::MathOverflow))?
+            .try_into()
+            .map_err(|_| error!(Error::MathInvalidConversion))
+    }
+
+    fn calculate_portfolio_statistics(&self) -> Result<PortfolioStatistics> {
+        let mut all_profits: u64 = 0;
+        let mut all_losses: u64 = 0;
+        let mut total_leg_values: Fraction = 0.into();
+
         for base_asset in self.base_assets.iter() {
-            let legs: Vec<LegWithMetadata> = self
+            let legs: Vec<_> = self
                 .legs_with_meta
                 .iter()
                 .filter(|x| x.leg.base_asset_index == base_asset.index)
                 .cloned()
                 .collect();
-            let scenarios = (self.scenarios_selector)(&legs, base_asset.risk_category);
             let price = self.prices.get(&base_asset.index).unwrap();
+            let risk_category_info = self.config.get_risk_info(base_asset.risk_category);
 
-            let mut biggest_risk = i128::MAX;
+            let leg_values = legs
+                .iter()
+                .map(|leg| self.calculate_current_value(leg, *price, risk_category_info))
+                .collect::<Result<Vec<_>>>()?;
+            let scenarios = (self.scenarios_selector)(&legs, base_asset.risk_category);
+
+            let mut biggest_profit = i128::MIN;
+            let mut biggest_loss = i128::MAX;
             for scenario in scenarios.iter() {
                 let scenario_calculator = ScenarioRiskCalculator {
                     legs_with_meta: &legs,
-                    config: self.config,
-                    risk_category: base_asset.risk_category,
+                    unit_values: &leg_values,
+                    risk_category_info,
                     scenario,
                     price: *price,
-                    leg_multiplier,
-                    portfolio_inverted,
                     current_timestamp: self.current_timestamp,
                 };
 
-                let risk = scenario_calculator.calculate()?;
-                biggest_risk = i128::min(biggest_risk, risk);
+                let pnl = scenario_calculator
+                    .calculate()?
+                    .to_i128_with_decimals(self.config.collateral_mint_decimals)
+                    .ok_or_else(|| error!(Error::MathOverflow))?;
+                biggest_profit = biggest_profit.max(pnl);
+                biggest_loss = biggest_loss.min(pnl);
             }
 
-            require!(biggest_risk <= 0.into(), Error::RiskCanNotBeNegative);
-            risk_sum +=
-                u64::try_from(-biggest_risk).map_err(|_| error!(Error::MathInvalidConversion))?;
+            let group_values = leg_values
+                .into_iter()
+                .map(|value| value.abs())
+                .try_fold(Fraction::new(0, 0), |a, b| {
+                    a.checked_add(b).ok_or_else(|| error!(Error::MathOverflow))
+                })?;
+
+            require!(biggest_profit >= 0, Error::RiskOutOfBounds);
+            require!(biggest_loss <= 0, Error::RiskOutOfBounds);
+
+            all_profits +=
+                u64::try_from(biggest_profit).map_err(|_| error!(Error::MathInvalidConversion))?;
+            all_losses +=
+                u64::try_from(-biggest_loss).map_err(|_| error!(Error::MathInvalidConversion))?;
+            total_leg_values = total_leg_values
+                .checked_add(group_values)
+                .ok_or_else(|| error!(Error::MathOverflow))?;
         }
 
-        self.apply_overall_risk_factor(risk_sum)
+        let total_leg_values = total_leg_values
+            .to_i128_with_decimals(self.config.collateral_mint_decimals)
+            .ok_or_else(|| error!(Error::MathOverflow))?
+            .try_into()
+            .map_err(|_| error!(Error::MathInvalidConversion))?;
+        let price_shift = self.apply_safety_price_shift_factor(total_leg_values)?;
+
+        all_profits += price_shift;
+        all_losses += price_shift;
+        all_profits = self.apply_overall_risk_factor(all_profits)?;
+        all_losses = self.apply_overall_risk_factor(all_losses)?;
+
+        Ok(PortfolioStatistics {
+            max_loss: all_losses,
+            max_profit: all_profits,
+        })
     }
 
-    fn apply_overall_risk_factor(&self, risk_sum: u64) -> Result<u64> {
+    fn apply_overall_risk_factor(&self, value: u64) -> Result<u64> {
         let multiplier = self
             .config
             .overall_safety_factor
             .checked_add(1.into())
             .unwrap();
-        let result = Fraction::from(risk_sum as i128)
+        let result = Fraction::from(value as i128)
             .checked_mul(multiplier)
             .ok_or_else(|| error!(Error::MathOverflow))?
             .to_i128_with_decimals(0)
@@ -95,143 +183,163 @@ impl<'a> RiskCalculator<'a> {
 
         u64::try_from(result).map_err(|_| error!(Error::MathInvalidConversion))
     }
+
+    fn apply_safety_price_shift_factor(&self, value: u64) -> Result<u64> {
+        let multiplier = self.config.safety_price_shift_factor;
+        let result = Fraction::from(value as i128)
+            .checked_mul(multiplier)
+            .ok_or_else(|| error!(Error::MathOverflow))?
+            .to_i128_with_decimals(0)
+            .ok_or_else(|| error!(Error::MathOverflow))?;
+
+        u64::try_from(result).map_err(|_| error!(Error::MathInvalidConversion))
+    }
+
+    fn calculate_current_value(
+        &self,
+        leg_with_meta: &LegWithMetadata,
+        price: Fraction,
+        risk_category_info: RiskCategoryInfo,
+    ) -> Result<Fraction> {
+        calculate_asset_value(
+            leg_with_meta,
+            price,
+            risk_category_info.yearly_volatility,
+            risk_category_info.interest_rate,
+            self.current_timestamp,
+        )
+    }
 }
 
 struct ScenarioRiskCalculator<'a> {
     legs_with_meta: &'a Vec<LegWithMetadata<'a>>,
-    config: &'a Config,
-    risk_category: RiskCategory,
+    unit_values: &'a Vec<Fraction>,
+    risk_category_info: RiskCategoryInfo,
     scenario: &'a Scenario,
     price: Fraction,
-    leg_multiplier: Fraction,
-    portfolio_inverted: bool,
     current_timestamp: i64,
 }
 
 impl ScenarioRiskCalculator<'_> {
-    fn calculate(self) -> Result<i128> {
-        let mut total_pnl = 0;
+    fn calculate(self) -> Result<Fraction> {
+        let mut total_pnl: Fraction = 0.into();
 
-        for leg_with_meta in self.legs_with_meta.iter() {
-            let pnl = self.calculate_leg_pnl(leg_with_meta)?;
-            total_pnl += pnl;
+        for (leg_with_meta, unit_value) in self.legs_with_meta.iter().zip(self.unit_values.iter()) {
+            let pnl = self.calculate_leg_pnl(leg_with_meta, *unit_value)?;
+            total_pnl = total_pnl
+                .checked_add(pnl)
+                .ok_or_else(|| error!(Error::MathOverflow))?;
         }
 
         Ok(total_pnl)
     }
 
-    fn calculate_leg_pnl(&self, leg_with_meta: &LegWithMetadata) -> Result<i128> {
-        self.calculate_leg_unit_pnl(leg_with_meta)?
-            .checked_mul(Fraction::new(
-                leg_with_meta.leg.instrument_amount.into(),
-                leg_with_meta.leg.instrument_decimals,
-            ))
-            .ok_or_else(|| error!(Error::MathOverflow))?
-            .checked_mul(self.leg_multiplier)
-            .ok_or_else(|| error!(Error::MathOverflow))?
-            .to_i128_with_decimals(self.config.collateral_mint_decimals)
-            .ok_or_else(|| error!(Error::MathOverflow))
-    }
-
-    fn calculate_leg_unit_pnl(&self, leg_with_meta: &LegWithMetadata) -> Result<Fraction> {
-        let unit_value = self.calculate_current_unit_value(leg_with_meta)?;
-        let shocked_value = self.calculate_shocked_unit_value(leg_with_meta)?;
-        let mut unit_pnl = shocked_value
+    fn calculate_leg_pnl(
+        &self,
+        leg_with_meta: &LegWithMetadata,
+        unit_value: Fraction,
+    ) -> Result<Fraction> {
+        let shocked_value = self.calculate_shocked_value(leg_with_meta)?;
+        shocked_value
             .checked_sub(unit_value)
-            .ok_or_else(|| error!(Error::MathOverflow))?;
-
-        if self.portfolio_inverted {
-            unit_pnl = -unit_pnl;
-        }
-
-        if let Side::Bid = leg_with_meta.leg.side {
-            unit_pnl = -unit_pnl;
-        }
-
-        let safety_constituent = unit_value
-            .abs()
-            .checked_mul(self.config.safety_price_shift_factor)
-            .ok_or_else(|| error!(Error::MathOverflow))?;
-
-        unit_pnl
-            .checked_sub(safety_constituent)
             .ok_or_else(|| error!(Error::MathOverflow))
     }
 
-    fn calculate_current_unit_value(&self, leg_with_meta: &LegWithMetadata) -> Result<Fraction> {
-        match leg_with_meta.instrument_type {
-            InstrumentType::Spot | InstrumentType::TermFuture | InstrumentType::PerpFuture => {
-                Ok(self.price)
-            }
-            InstrumentType::Option => {
-                let option_data: OptionCommonData = AnchorDeserialize::try_from_slice(
-                    &leg_with_meta.leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
-                )?;
-                let risk_category_info = self.config.get_risk_info(self.risk_category);
-                let seconds_till_expiration =
-                    i64::max(0, option_data.expiration_timestamp - self.current_timestamp);
+    fn calculate_shocked_value(&self, leg_with_meta: &LegWithMetadata) -> Result<Fraction> {
+        let shocked_price = self
+            .price
+            .checked_mul(
+                self.scenario
+                    .base_asset_price_change
+                    .checked_add(1.into())
+                    .unwrap(),
+            )
+            .ok_or_else(|| error!(Error::MathOverflow))?;
+        let mut shocked_volatility = self.risk_category_info.yearly_volatility;
 
-                calculate_option_value(
-                    option_data.option_type,
-                    self.price,
-                    option_data.get_underlying_amount_per_contract(),
-                    option_data.get_strike_price(),
-                    risk_category_info.interest_rate,
-                    risk_category_info.yearly_volatility,
-                    seconds_till_expiration,
-                )
-                .ok_or_else(|| error!(Error::MathOverflow))
-            }
-        }
-    }
-
-    fn calculate_shocked_unit_value(&self, leg_with_meta: &LegWithMetadata) -> Result<Fraction> {
-        match leg_with_meta.instrument_type {
-            InstrumentType::Spot | InstrumentType::TermFuture | InstrumentType::PerpFuture => self
-                .price
+        if !self.scenario.volatility_change.is_zero() {
+            shocked_volatility = shocked_volatility
                 .checked_mul(
-                    self.scenario
-                        .base_asset_price_change
-                        .checked_add(1.into())
-                        .unwrap(),
+                    Fraction::from(1)
+                        .checked_add(self.scenario.volatility_change)
+                        .ok_or_else(|| error!(Error::MathOverflow))?,
                 )
-                .ok_or_else(|| error!(Error::MathOverflow)),
-            InstrumentType::Option => {
-                let option_data: OptionCommonData = AnchorDeserialize::try_from_slice(
-                    &leg_with_meta.leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
-                )?;
+                .ok_or_else(|| error!(Error::MathOverflow))?;
+        }
 
-                let risk_category_info = self.config.get_risk_info(self.risk_category);
-                let seconds_till_expiration =
-                    i64::max(0, option_data.expiration_timestamp - self.current_timestamp);
+        calculate_asset_value(
+            leg_with_meta,
+            shocked_price,
+            shocked_volatility,
+            self.risk_category_info.interest_rate,
+            self.current_timestamp,
+        )
+    }
+}
 
-                let shocked_price = self
-                    .price
-                    .checked_mul(
-                        Fraction::from(1)
-                            .checked_add(self.scenario.base_asset_price_change)
-                            .ok_or_else(|| error!(Error::MathOverflow))?,
-                    )
-                    .ok_or_else(|| error!(Error::MathOverflow))?;
-                let shocked_volatility = risk_category_info
-                    .yearly_volatility
-                    .checked_mul(
-                        Fraction::from(1)
-                            .checked_add(self.scenario.volatility_change)
-                            .ok_or_else(|| error!(Error::MathOverflow))?,
-                    )
-                    .ok_or_else(|| error!(Error::MathOverflow))?;
-                calculate_option_value(
-                    option_data.option_type,
-                    shocked_price,
-                    option_data.get_underlying_amount_per_contract(),
-                    option_data.get_strike_price(),
-                    risk_category_info.interest_rate,
-                    shocked_volatility,
-                    seconds_till_expiration,
-                )
+fn calculate_asset_value(
+    leg_with_meta: &LegWithMetadata,
+    price: Fraction,
+    yearly_volatility: Fraction,
+    interest_rate: Fraction,
+    current_timestamp: i64,
+) -> Result<Fraction> {
+    let unit_value = calculate_asset_unit_value(
+        leg_with_meta,
+        price,
+        yearly_volatility,
+        interest_rate,
+        current_timestamp,
+    )?;
+
+    let mut leg_size_multiplier = Fraction::new(
+        leg_with_meta.leg.instrument_amount.into(),
+        leg_with_meta.leg.instrument_decimals,
+    );
+    if let Side::Bid = leg_with_meta.leg.side {
+        leg_size_multiplier = -leg_size_multiplier;
+    }
+    unit_value
+        .checked_mul(leg_size_multiplier)
+        .ok_or_else(|| error!(Error::MathOverflow))
+}
+
+fn calculate_asset_unit_value(
+    leg_with_meta: &LegWithMetadata,
+    price: Fraction,
+    yearly_volatility: Fraction,
+    interest_rate: Fraction,
+    current_timestamp: i64,
+) -> Result<Fraction> {
+    match leg_with_meta.instrument_type {
+        InstrumentType::Spot => Ok(price),
+        InstrumentType::Option => {
+            let option_data: OptionCommonData = AnchorDeserialize::try_from_slice(
+                &leg_with_meta.leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
+            )?;
+
+            let seconds_till_expiration =
+                i64::max(0, option_data.expiration_timestamp - current_timestamp);
+
+            calculate_option_value(
+                option_data.option_type,
+                price,
+                option_data.get_underlying_amount_per_contract(),
+                option_data.get_strike_price(),
+                interest_rate,
+                yearly_volatility,
+                seconds_till_expiration,
+            )
+            .ok_or_else(|| error!(Error::MathOverflow))
+        }
+        InstrumentType::TermFuture | InstrumentType::PerpFuture => {
+            let future_data: FutureCommonData = AnchorDeserialize::try_from_slice(
+                &leg_with_meta.leg.instrument_data[..FutureCommonData::SERIALIZED_SIZE],
+            )?;
+
+            price
+                .checked_mul(future_data.get_underlying_amount_per_contract())
                 .ok_or_else(|| error!(Error::MathOverflow))
-            }
         }
     }
 }
@@ -313,7 +421,11 @@ mod tests {
         };
 
         let required_collateral = risk_calculator
-            .calculate_risk(Fraction::new(3, 0), AuthoritySide::Taker, Side::Ask)
+            .calculate_risk(CalculationCase {
+                leg_multiplier: Fraction::new(3, 0),
+                authority_side: AuthoritySide::Taker,
+                quote_side: Side::Ask,
+            })
             .unwrap();
         assert_eq!(
             required_collateral,
@@ -386,7 +498,11 @@ mod tests {
         };
 
         let required_collateral = risk_calculator
-            .calculate_risk(Fraction::new(3, 0), AuthoritySide::Taker, Side::Ask)
+            .calculate_risk(CalculationCase {
+                leg_multiplier: Fraction::new(3, 0),
+                authority_side: AuthoritySide::Taker,
+                quote_side: Side::Ask,
+            })
             .unwrap();
         assert_eq!(
             required_collateral,
@@ -480,7 +596,11 @@ mod tests {
         };
 
         let required_collateral = risk_calculator
-            .calculate_risk(Fraction::new(3, 0), AuthoritySide::Taker, Side::Ask)
+            .calculate_risk(CalculationCase {
+                leg_multiplier: Fraction::new(3, 0),
+                authority_side: AuthoritySide::Taker,
+                quote_side: Side::Ask,
+            })
             .unwrap();
         assert_eq!(
             required_collateral,
@@ -547,7 +667,11 @@ mod tests {
         };
 
         let required_collateral = risk_calculator
-            .calculate_risk(Fraction::new(3, 0), AuthoritySide::Taker, Side::Bid)
+            .calculate_risk(CalculationCase {
+                leg_multiplier: Fraction::new(3, 0),
+                authority_side: AuthoritySide::Taker,
+                quote_side: Side::Bid,
+            })
             .unwrap();
         assert_approx_eq!(
             f64,
