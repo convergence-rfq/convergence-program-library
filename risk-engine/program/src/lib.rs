@@ -20,7 +20,7 @@ pub mod risk_calculator;
 pub mod scenarios;
 pub mod state;
 
-declare_id!("EdYHwN6v6vyJ2nigae2UT54JbNQKyoJJqBXnH2WPYZqR");
+declare_id!("76TdqS9cEb8tYKUWKMzXBMwgCtXJiYMcrHxmzrYthjUm");
 
 pub const CONFIG_SEED: &str = "config";
 

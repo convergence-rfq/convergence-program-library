@@ -7,7 +7,6 @@ programs/target/rls
 programs/rfq/target/rls
 .coderrect
 .env
-Anchor.toml
 rfq/js/.crates
 rfq/js/node_modules
 

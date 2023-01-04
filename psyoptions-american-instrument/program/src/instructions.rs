@@ -3,7 +3,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use errors::PsyoptionsAmericanError;
 use psy_american::OptionMarket;
-use rfq::state::{AssetIdentifier, AuthoritySide, ProtocolState, Response, Rfq};
+use rfq::state::MintInfo;
+use rfq::state::{AssetIdentifier, ProtocolState, Response, Rfq};
 const ESCROW_SEED: &str = "escrow";
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
@@ -13,6 +14,8 @@ pub struct ValidateData<'info> {
 
     /// user provided
     pub american_meta: Account<'info, OptionMarket>,
+    #[account(constraint = american_meta.underlying_asset_mint == mint_info.mint_address @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
+    pub mint_info: Account<'info, MintInfo>,
 }
 
 #[derive(Accounts)]

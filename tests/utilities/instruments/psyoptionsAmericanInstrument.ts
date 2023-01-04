@@ -29,10 +29,7 @@ enum OptionType {
   PUT = 1,
 }
 
-let rpc = new anchor.web3.Connection("http://localhost:8899");
-let payer = anchor.AnchorProvider.env().wallet as anchor.Wallet;
-let AnchorProvider = new anchor.AnchorProvider(rpc, payer, anchor.AnchorProvider.defaultOptions());
-let psyOptionsAmericanLocalNetProgramId = new anchor.web3.PublicKey("R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs");
+const psyOptionsAmericanLocalNetProgramId = new anchor.web3.PublicKey("R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs");
 let psyoptionsAmericanInstrumentProgram = null;
 export function getAmericanOptionsInstrumentProgram() {
   if (psyoptionsAmericanInstrumentProgram === null) {
@@ -66,7 +63,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
   }
 
   serializeInstrumentData(): Buffer {
-    let op = this.OptionMarket.OptionInfo;
+    const op = this.OptionMarket.OptionInfo;
     const mint = this.OptionMarket.callMint.publicKey.toBytes();
     const optionMarket = this.OptionMarket.optionMarketKey.toBytes();
 
@@ -201,10 +198,6 @@ export class AmericanPsyoptions {
     public callWriterMint: Mint,
     public OptionInfo: OptionMarketWithKey
   ) {}
-  public static createProgram(programId = psyOptionsAmericanLocalNetProgramId, provider = AnchorProvider) {
-    let program = createProgram(programId, provider);
-    return program;
-  }
 
   public static createProgramWithProvider(user: anchor.web3.Keypair, context: Context) {
     const provider = new anchor.AnchorProvider(
@@ -263,9 +256,6 @@ export class AmericanPsyoptions {
       underlyingAmountPerContract,
       underlyingMint.publicKey
     );
-    let x = await context.provider.connection.confirmTransaction(psyOptMarket.tx);
-    let y = await context.provider.connection.getParsedTransaction(psyOptMarket.tx, { commitment: "confirmed" });
-    let z = await context.provider.connection.getAccountInfo(psyOptMarket.underlyingAssetPoolKey);
 
     const [callMint, callWriterMint] = await executeInParallel(
       () => Mint.wrap(context, psyOptMarket.optionMintKey),

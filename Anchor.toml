@@ -1,25 +1,25 @@
 anchor_version = "0.25.0"
 
 [programs.localnet]
-rfq = "65Qqf1tMrjbummSS4eGEqsYC3WXWHo3EutVgiGvKbtG8"
-risk_engine = "EdYHwN6v6vyJ2nigae2UT54JbNQKyoJJqBXnH2WPYZqR"
-spot_instrument = "7g67fxoLsANj3HkHmuMhKPZ7nF45CPYvrVSB7dvtmJUM"
-psyoptions_european_instrument = "4rdj5AwNUBqF8fV5tp54g3UXtJUGLZhwQCoPbvNFA4Nh"
+rfq = "6k3nypehfxd4tqCGRxNEZBMiT4xUPdQCkothLVz3JK6D"
+risk_engine = "76TdqS9cEb8tYKUWKMzXBMwgCtXJiYMcrHxmzrYthjUm"
+spot_instrument = "6pyiZyPDi7a6vMymw5NFTvtFBZJbDrNsgrcYK5jGEH4K"
+psyoptions_european_instrument = "7ZD9LcvMPfurRYz2AuZPWgtSXuSxPmvZNMBFK7fhyvQA"
 psyoptions_american_instrument = "ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy"
 
 [programs.devnet]
-rfq = "J2rDyo2NpZn4FQ5rGXmdwh3i2y1h11ynodYrrcUxfErq"
-risk_engine = "9sEUmfZPhH8qVEoFmfdbJhKcfWP5LCCZfb2Cu7zffs4b"
-spot_instrument = "826r9RA3AGHPas5E4DgbN9MpYa8gE2ZDUPUJW6GEZ3cT"
-psyoptions_european_instrument = "94sxcX64yqe1s7zY2Hx8tEN8tqisK86dASfizAKkxK7A"
-psyoptions_american_instrument = "2XYQhTq6k3anvDSdiQ6hyNyzLS3m4TbAgokVr8EGAPHf"
+rfq = "6k3nypehfxd4tqCGRxNEZBMiT4xUPdQCkothLVz3JK6D"
+risk_engine = "76TdqS9cEb8tYKUWKMzXBMwgCtXJiYMcrHxmzrYthjUm"
+spot_instrument = "6pyiZyPDi7a6vMymw5NFTvtFBZJbDrNsgrcYK5jGEH4K"
+psyoptions_european_instrument = "7ZD9LcvMPfurRYz2AuZPWgtSXuSxPmvZNMBFK7fhyvQA"
+psyoptions_american_instrument = "ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "localnet"
-wallet = "/home/anonymous/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [workspace]
 members = [

@@ -1,18 +1,18 @@
 use anchor_lang::prelude::*;
-mod psyoptions_american;
 mod state;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{close_account, transfer, CloseAccount, Token, TokenAccount, Transfer};
-use psy_american::OptionMarket;
 use state::{AssetIdentifierDuplicate, ParsedLegData};
 mod instructions;
 use instructions::*;
-use state::{AuthoritySideDuplicate, OptionType, TOKEN_DECIMALS};
+use state::{AuthoritySideDuplicate, TOKEN_DECIMALS};
 mod errors;
 use errors::PsyoptionsAmericanError;
+use rfq::state::MintType;
 use rfq::state::{AssetIdentifier, AuthoritySide};
 
 declare_id!("ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy");
+
 const ESCROW_SEED: &str = "escrow";
 #[program]
 pub mod psyoptions_american_instrument {
@@ -25,8 +25,11 @@ pub mod psyoptions_american_instrument {
         base_asset_index: Option<u16>,
         instrument_decimals: u8,
     ) -> Result<()> {
-        msg!("validating..");
-        let ValidateData { american_meta, .. } = &ctx.accounts;
+        let ValidateData {
+            american_meta,
+            mint_info,
+            ..
+        } = &ctx.accounts;
 
         require_eq!(
             instrument_data.len(),
@@ -66,16 +69,16 @@ pub mod psyoptions_american_instrument {
             PsyoptionsAmericanError::DecimalsAmountDoesNotMatch
         );
 
-        // if let (Some(passed_base_asset_index), MintType::AssetWithRisk { base_asset_index }) =
-        //     (base_asset_index, expected_mint.mint_type)
-        // {
-        //     require!(
-        //         passed_base_asset_index == base_asset_index.into(),
-        //         PsyoptionsAmericanError::BaseAssetDoesNotMatch
-        //     );
-        // } else {
-        //     err!(PsyoptionsEuropeanError::StablecoinAsBaseAssetIsNotSupported)?
-        // }
+        if let (Some(passed_base_asset_index), MintType::AssetWithRisk { base_asset_index }) =
+            (base_asset_index, mint_info.mint_type)
+        {
+            require!(
+                passed_base_asset_index == base_asset_index.into(),
+                PsyoptionsAmericanError::BaseAssetDoesNotMatch
+            );
+        } else {
+            err!(PsyoptionsAmericanError::StablecoinAsBaseAssetIsNotSupported)?
+        }
 
         Ok(())
     }
@@ -95,8 +98,7 @@ pub mod psyoptions_american_instrument {
             token_program,
             ..
         } = &ctx.accounts;
-        msg!("escrow pubkey");
-        msg!(ctx.accounts.escrow.key().to_string().as_str());
+
         let asset_data = rfq.get_asset_instrument_data(asset_identifier.into());
 
         let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(&asset_data)?;
@@ -113,19 +115,6 @@ pub mod psyoptions_american_instrument {
 
         let token_amount =
             response.get_asset_amount_to_transfer(rfq, asset_identifier.into(), side.into());
-        let bal = caller_token_account.amount;
-        let caller_pub = caller_token_account.owner.key();
-        msg!("token balance :{}", bal.to_string().as_str());
-        msg!("token accont owner  :{}", caller_pub.to_string().as_str());
-        msg!(
-            "token account address:{}",
-            caller_token_account.key().to_string().as_str()
-        );
-
-        msg!(
-            "token amount to transfer :{}",
-            token_amount.to_string().as_str()
-        );
 
         if token_amount > 0 {
             let transfer_accounts = Transfer {

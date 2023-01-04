@@ -24,4 +24,6 @@ pub enum PsyoptionsAmericanError {
     StablecoinAsBaseAssetIsNotSupported,
     #[msg("Passed decimals does not match")]
     DecimalsAmountDoesNotMatch,
+    #[msg("Base Asset doesnt match")]
+    BaseAssetDoesNotMatch,
 }
