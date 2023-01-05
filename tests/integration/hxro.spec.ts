@@ -131,8 +131,6 @@ describe("RFQ HXRO instrument integration tests", () => {
 
         await response.preparePrintTradeSettlement(AuthoritySide.Taker)
 
-        console.log("Prepared!")
-
         let executeAccounts = [
             { pubkey: program.programId, isSigner: false, isWritable:false },
             { pubkey: dex, isSigner: false, isWritable:false },
@@ -160,10 +158,6 @@ describe("RFQ HXRO instrument integration tests", () => {
             { pubkey: markPrices, isSigner: false, isWritable:true },
             { pubkey: BTCUSDPythOracle, isSigner: false, isWritable:false },
         ];
-
-        for (let acc of executeAccounts) {
-            console.log("ACC:", acc.pubkey.toString())
-        }
 
         await response.executePrintTrade(AuthoritySide.Maker, executeAccounts).catch((e) => console.log("ERROR:", e))
     });
