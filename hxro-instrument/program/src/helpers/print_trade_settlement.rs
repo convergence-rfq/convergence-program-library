@@ -13,14 +13,6 @@ use crate::{
 };
 
 pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
-    let accounts_infos = &[
-        ctx.accounts.user.to_account_info(),
-        ctx.accounts.mark_prices.to_account_info(),
-        ctx.accounts.market_product_group.to_account_info(),
-        ctx.accounts.system_clock.to_account_info(),
-        ctx.accounts.btcusd_pyth_oracle.to_account_info(),
-    ];
-
     let data = [50, 73, 243, 45, 10, 6, 220, 129].to_vec();
 
     solana_program::program::invoke(
@@ -35,7 +27,13 @@ pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
             ],
             data,
         },
-        accounts_infos,
+        &[
+            ctx.accounts.user.to_account_info(),
+            ctx.accounts.mark_prices.to_account_info(),
+            ctx.accounts.market_product_group.to_account_info(),
+            ctx.accounts.system_clock.to_account_info(),
+            ctx.accounts.btcusd_pyth_oracle.to_account_info(),
+        ],
     )
     .unwrap();
 
