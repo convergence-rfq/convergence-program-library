@@ -851,6 +851,7 @@ export class Response {
         response: this.account,
       })
       .remainingAccounts([...accounts])
+      .preInstructions([expandComputeUnits])
       .signers([caller])
       .rpc();
   }

@@ -89,22 +89,20 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
         ctx.accounts.protocol.to_account_info(),
         ctx.accounts.s_account.to_account_info().clone(),
         ctx.accounts.r_account.to_account_info().clone(),
-        ctx.accounts.mark_prices.to_account_info().clone(),
-        ctx.accounts.btcusd_pyth_oracle.to_account_info().clone(),
     ];
 
     let response = &ctx.accounts.response;
     let rfq = &ctx.accounts.rfq;
 
     let authority_side = match response.print_trade_prepared_by.unwrap() {
-        AuthoritySide::Taker => AuthoritySide::Maker,
-        AuthoritySide::Maker => AuthoritySide::Taker,
+        AuthoritySide::Taker => AuthoritySide::Taker,
+        AuthoritySide::Maker => AuthoritySide::Maker,
     };
 
     // HXRO typed side
     let side = match response.confirmed.unwrap().side {
-        Side::Bid => dex_cpi::typedefs::Side::Bid,
-        Side::Ask => dex_cpi::typedefs::Side::Ask,
+        Side::Bid => dex_cpi::typedefs::Side::Ask,
+        Side::Ask => dex_cpi::typedefs::Side::Bid,
     };
 
     // create vec of PrintTradeProductIndex
@@ -174,11 +172,9 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
                     ctx.accounts.counterparty_trader_risk_state_acct.key(),
                     false,
                 ),
-                AccountMeta::new(ctx.accounts.protocol.key(), true),
+                AccountMeta::new_readonly(ctx.accounts.protocol.key(), true),
                 AccountMeta::new(ctx.accounts.s_account.key(), false),
                 AccountMeta::new(ctx.accounts.r_account.key(), false),
-                AccountMeta::new(ctx.accounts.mark_prices.key(), false),
-                AccountMeta::new(ctx.accounts.btcusd_pyth_oracle.key(), false),
             ],
             data: dex_cpi::instruction::SignPrintTrade {
                 _params: cpi_params,
