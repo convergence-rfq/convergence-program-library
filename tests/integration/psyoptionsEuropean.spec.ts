@@ -1,10 +1,18 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
+import {
+  calculateLegsSize,
+  sleep,
+  toAbsolutePrice,
+  TokenChangeMeasurer,
+  toLegMultiplier,
+  withTokenDecimals,
+} from "../utilities/helpers";
 import { PsyoptionsEuropeanInstrument, EuroOptionsFacade } from "../utilities/instruments/psyoptionsEuropeanInstrument";
-import { AuthoritySide, Quote, Side } from "../utilities/types";
-import { Context, getContext } from "../utilities/wrappers";
+import { AuthoritySide, Quote, RiskCategory, Side } from "../utilities/types";
+import { Context, getContext, Mint } from "../utilities/wrappers";
 import { CONTRACT_DECIMALS_BN, OptionType } from "../dependencies/tokenized-euros/src";
+import { SWITCHBOARD_BTC_ORACLE } from "../utilities/constants";
 
 describe("Psyoptions European instrument integration tests", () => {
   let context: Context;
@@ -102,5 +110,60 @@ describe("Psyoptions European instrument integration tests", () => {
     await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
+  });
+
+  it("Successful settlement flow with a lot of different base asset options", async () => {
+    const legAmount = 4;
+    const baseAssetOffset = 6300;
+    const mints = await Promise.all(
+      [...Array(legAmount)].map(async (_, i) => {
+        const mint = await Mint.create(context);
+        await context.addBaseAsset(baseAssetOffset + i, "TEST", RiskCategory.High, SWITCHBOARD_BTC_ORACLE);
+        await mint.register(baseAssetOffset + i);
+        return mint;
+      })
+    );
+    const options = await Promise.all(
+      mints.map(
+        async (mint, i) =>
+          await EuroOptionsFacade.initalizeNewOptionMeta(context, {
+            underlyingMint: mint,
+            stableMint: context.quoteToken,
+            underlyingPerContract: withTokenDecimals(i + 1),
+          })
+      )
+    );
+    const legs = options.map((option) =>
+      PsyoptionsEuropeanInstrument.create(context, option, OptionType.CALL, {
+        amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
+        side: Side.Bid,
+      })
+    );
+    const rfq = await context.createRfq({
+      legs: [legs[0]],
+      legsSize: calculateLegsSize(legs),
+      finalize: false,
+    });
+    await rfq.addLegs([...legs.slice(1, 3)], false);
+    await rfq.addLegs([...legs.slice(3)]);
+
+    const response = await rfq.respond({
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
+    });
+    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
+
+    // mint options
+    await Promise.all(options.map(async (option) => option.mintOptions(context.maker, new BN(2), OptionType.CALL)));
+
+    await response.prepareSettlement(AuthoritySide.Taker);
+    await response.prepareSettlement(AuthoritySide.Maker);
+
+    await response.settle(
+      maker,
+      [...Array(legAmount)].map(() => taker)
+    );
+    await response.unlockResponseCollateral();
+    await response.cleanUp();
   });
 });

@@ -7,7 +7,7 @@ use base_asset_extractor::extract_base_assets;
 use errors::Error;
 use fraction::Fraction;
 use price_extractor::extract_prices;
-use risk_calculator::RiskCalculator;
+use risk_calculator::{CalculationCase, RiskCalculator};
 use scenarios::ScenarioSelector;
 use state::{Config, InstrumentInfo, InstrumentType, RiskCategoryInfo};
 
@@ -26,7 +26,6 @@ pub const CONFIG_SEED: &str = "config";
 
 #[program]
 pub mod risk_engine {
-
     use super::*;
 
     pub fn initialize_config(
@@ -187,17 +186,23 @@ pub mod risk_engine {
                     Quote::LEG_MULTIPLIER_DECIMALS as u8,
                 );
 
-                let calculate_collateral = |side| {
-                    risk_calculator.calculate_risk(leg_multiplier, AuthoritySide::Taker, side)
+                let side_to_case = |side| CalculationCase {
+                    leg_multiplier,
+                    authority_side: AuthoritySide::Taker,
+                    quote_side: side,
                 };
 
                 match rfq.order_type {
-                    OrderType::Buy => calculate_collateral(Side::Ask)?,
-                    OrderType::Sell => calculate_collateral(Side::Bid)?,
-                    OrderType::TwoWay => u64::max(
-                        calculate_collateral(Side::Bid)?,
-                        calculate_collateral(Side::Ask)?,
-                    ),
+                    OrderType::Buy => risk_calculator.calculate_risk(side_to_case(Side::Ask))?,
+                    OrderType::Sell => risk_calculator.calculate_risk(side_to_case(Side::Bid))?,
+                    OrderType::TwoWay => risk_calculator
+                        .calculate_risk_for_several_cases([
+                            side_to_case(Side::Bid),
+                            side_to_case(Side::Ask),
+                        ])?
+                        .into_iter()
+                        .max()
+                        .unwrap(),
                 }
             }
             FixedSize::QuoteAsset { quote_amount: _ } => {
@@ -226,27 +231,32 @@ pub mod risk_engine {
 
         let risk_calculator = construct_risk_calculator(rfq, &config, &mut ctx.remaining_accounts)?;
 
-        let get_collateral_for_quote = |quote, side| {
+        let get_case = |quote, side| {
             let legs_multiplier_bps = response.calculate_legs_multiplier_bps_for_quote(rfq, quote);
-            risk_calculator.calculate_risk(
-                Fraction::new(
-                    legs_multiplier_bps.into(),
-                    Quote::LEG_MULTIPLIER_DECIMALS as u8,
-                ),
-                AuthoritySide::Maker,
-                side,
-            )
+            let leg_multiplier = Fraction::new(
+                legs_multiplier_bps.into(),
+                Quote::LEG_MULTIPLIER_DECIMALS as u8,
+            );
+            CalculationCase {
+                leg_multiplier,
+                authority_side: AuthoritySide::Maker,
+                quote_side: side,
+            }
         };
 
-        let mut collateral = if let Some(quote) = response.bid {
-            get_collateral_for_quote(quote, Side::Bid)?
-        } else {
-            0
+        let collateral = match (response.bid, response.ask) {
+            (Some(bid_quote), Some(ask_quote)) => risk_calculator
+                .calculate_risk_for_several_cases([
+                    get_case(bid_quote, Side::Bid),
+                    get_case(ask_quote, Side::Ask),
+                ])?
+                .into_iter()
+                .max()
+                .unwrap(),
+            (Some(quote), None) => risk_calculator.calculate_risk(get_case(quote, Side::Bid))?,
+            (None, Some(quote)) => risk_calculator.calculate_risk(get_case(quote, Side::Ask))?,
+            _ => unreachable!(),
         };
-
-        if let Some(quote) = response.ask {
-            collateral = u64::max(collateral, get_collateral_for_quote(quote, Side::Ask)?);
-        }
 
         msg!(
             "Required collateral: {} with {} decimals",
@@ -270,23 +280,23 @@ pub mod risk_engine {
         let risk_calculator = construct_risk_calculator(rfq, &config, &mut ctx.remaining_accounts)?;
 
         let legs_multiplier_bps = response.calculate_confirmed_legs_multiplier_bps(rfq);
-        let legs_multiplier = Fraction::new(
+        let leg_multiplier = Fraction::new(
             legs_multiplier_bps.into(),
             Quote::LEG_MULTIPLIER_DECIMALS as u8,
         );
         let confirmed_side = response.confirmed.unwrap().side;
 
-        let taker_collateral = risk_calculator.calculate_risk(
-            legs_multiplier.clone(),
-            AuthoritySide::Taker,
-            confirmed_side,
-        )?;
-        let maker_collateral = risk_calculator.calculate_risk(
-            legs_multiplier,
-            AuthoritySide::Maker,
-            confirmed_side,
-        )?;
+        let side_to_case = |side| CalculationCase {
+            leg_multiplier,
+            authority_side: side,
+            quote_side: confirmed_side,
+        };
 
+        let [taker_collateral, maker_collateral] = risk_calculator
+            .calculate_risk_for_several_cases([
+                side_to_case(AuthoritySide::Taker),
+                side_to_case(AuthoritySide::Maker),
+            ])?;
         msg!(
             "Required collateral, taker: {}, maker: {}. With {} decimals",
             taker_collateral,

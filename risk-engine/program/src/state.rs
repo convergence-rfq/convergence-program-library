@@ -134,3 +134,20 @@ pub enum OptionType {
     Call,
     Put,
 }
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub struct FutureCommonData {
+    pub underlying_amount_per_contract: u64,
+}
+
+impl FutureCommonData {
+    pub const UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS: u8 = 9;
+    pub const SERIALIZED_SIZE: usize = 8;
+
+    pub fn get_underlying_amount_per_contract(&self) -> Fraction {
+        Fraction::new(
+            self.underlying_amount_per_contract.into(),
+            Self::UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS,
+        )
+    }
+}
