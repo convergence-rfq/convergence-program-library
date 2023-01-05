@@ -12,7 +12,6 @@ use crate::{
     OPERATOR_CREATOR_FEE_PROPORTION,
 };
 
-/*
 pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
     let accounts_infos = &[
         ctx.accounts.user.to_account_info(),
@@ -42,7 +41,6 @@ pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
 
     Ok(())
 }
- */
 
 #[inline(never)]
 pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
