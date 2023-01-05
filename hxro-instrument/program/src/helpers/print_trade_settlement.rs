@@ -44,55 +44,6 @@ pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
 
 #[inline(never)]
 pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
-    let accounts_infos = &[
-        ctx.accounts.user.to_account_info().clone(),
-        ctx.accounts.creator.to_account_info().clone(),
-        ctx.accounts.counterparty.to_account_info().clone(),
-        ctx.accounts.operator.to_account_info().clone(),
-        ctx.accounts.market_product_group.to_account_info().clone(),
-        ctx.accounts.print_trade.to_account_info().clone(),
-        ctx.accounts.system_program.to_account_info().clone(),
-        ctx.accounts.fee_model_program.to_account_info().clone(),
-        ctx.accounts
-            .fee_model_configuration_acct
-            .to_account_info()
-            .clone(),
-        ctx.accounts.fee_output_register.to_account_info().clone(),
-        ctx.accounts.risk_engine_program.to_account_info().clone(),
-        ctx.accounts
-            .risk_model_configuration_acct
-            .to_account_info()
-            .clone(),
-        ctx.accounts.risk_output_register.to_account_info().clone(),
-        ctx.accounts.risk_and_fee_signer.to_account_info().clone(),
-        ctx.accounts.system_clock.to_account_info().clone(),
-        ctx.accounts
-            .creator_trader_fee_state_acct
-            .to_account_info()
-            .clone(),
-        ctx.accounts
-            .creator_trader_risk_state_acct
-            .to_account_info()
-            .clone(),
-        ctx.accounts
-            .counterparty_trader_fee_state_acct
-            .to_account_info()
-            .clone(),
-        ctx.accounts
-            .counterparty_trader_risk_state_acct
-            .to_account_info()
-            .clone(),
-        ctx.accounts
-            .counterparty_trader_risk_state_acct
-            .to_account_info()
-            .clone(),
-        ctx.accounts.protocol.to_account_info(),
-        ctx.accounts.s_account.to_account_info().clone(),
-        ctx.accounts.r_account.to_account_info().clone(),
-        ctx.accounts.mark_prices.to_account_info().clone(),
-        ctx.accounts.btcusd_pyth_oracle.to_account_info().clone(),
-    ];
-
     let response = &ctx.accounts.response;
     let rfq = &ctx.accounts.rfq;
 
@@ -178,15 +129,52 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
                 AccountMeta::new_readonly(ctx.accounts.protocol.key(), true),
                 AccountMeta::new(ctx.accounts.s_account.key(), false),
                 AccountMeta::new(ctx.accounts.r_account.key(), false),
-                AccountMeta::new_readonly(ctx.accounts.mark_prices.key(), true),
-                AccountMeta::new_readonly(ctx.accounts.btcusd_pyth_oracle.key(), true),
+                AccountMeta::new_readonly(ctx.accounts.mark_prices.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.btcusd_pyth_oracle.key(), false),
             ],
             data: dex_cpi::instruction::SignPrintTrade {
                 _params: cpi_params,
             }
             .data(),
         },
-        accounts_infos,
+        &[
+            ctx.accounts.user.to_account_info(),
+            ctx.accounts.creator.to_account_info(),
+            ctx.accounts.counterparty.to_account_info(),
+            ctx.accounts.operator.to_account_info(),
+            ctx.accounts.market_product_group.to_account_info(),
+            ctx.accounts.print_trade.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.fee_model_program.to_account_info(),
+            ctx.accounts
+                .fee_model_configuration_acct
+                .to_account_info()
+                .clone(),
+            ctx.accounts.fee_output_register.to_account_info(),
+            ctx.accounts.risk_engine_program.to_account_info(),
+            ctx.accounts.risk_model_configuration_acct.to_account_info(),
+            ctx.accounts.risk_output_register.to_account_info(),
+            ctx.accounts.risk_and_fee_signer.to_account_info(),
+            ctx.accounts.system_clock.to_account_info(),
+            ctx.accounts.creator_trader_fee_state_acct.to_account_info(),
+            ctx.accounts
+                .creator_trader_risk_state_acct
+                .to_account_info(),
+            ctx.accounts
+                .counterparty_trader_fee_state_acct
+                .to_account_info(),
+            ctx.accounts
+                .counterparty_trader_risk_state_acct
+                .to_account_info(),
+            ctx.accounts
+                .counterparty_trader_risk_state_acct
+                .to_account_info(),
+            ctx.accounts.protocol.to_account_info(),
+            ctx.accounts.s_account.to_account_info(),
+            ctx.accounts.r_account.to_account_info(),
+            ctx.accounts.mark_prices.to_account_info(),
+            ctx.accounts.btcusd_pyth_oracle.to_account_info(),
+        ],
     )
     .unwrap();
 
