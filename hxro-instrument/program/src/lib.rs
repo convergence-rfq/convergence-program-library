@@ -185,8 +185,10 @@ pub struct SettlePrintTrade<'info> {
     #[account(mut)]
     pub r_account: Box<Account<'info, risk_cpi::state::CorrelationMatrix>>,
     /// CHECK:
+    #[account(mut)]
     pub mark_prices: AccountInfo<'info>,
     /// CHECK:
+    #[account(mut)]
     pub btcusd_pyth_oracle: AccountInfo<'info>,
 }
 

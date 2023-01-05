@@ -156,7 +156,7 @@ describe("RFQ HXRO instrument integration tests", () => {
             { pubkey: s_account, isSigner: false, isWritable:true },
             { pubkey: r_account, isSigner: false, isWritable:true },
             { pubkey: markPrices, isSigner: false, isWritable:true },
-            { pubkey: BTCUSDPythOracle, isSigner: false, isWritable:false },
+            { pubkey: BTCUSDPythOracle, isSigner: false, isWritable:true },
         ];
 
         await response.executePrintTrade(AuthoritySide.Maker, executeAccounts).catch((e) => console.log("ERROR:", e))
