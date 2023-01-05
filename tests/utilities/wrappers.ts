@@ -1,7 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import { BN } from "@project-serum/anchor";
-import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import {PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, AccountMeta} from "@solana/web3.js";
+import {TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token, AuthorityType} from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { RiskEngine as RiskEngineIdl } from "../../target/types/risk_engine";
 import {
@@ -763,7 +763,7 @@ export class Response {
       .rpc();
   }
 
-  async preparePrintTradeSettlement(side, operator) {
+  async preparePrintTradeSettlement(side) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     if (this.firstToPrepare.equals(PublicKey.default)) {
@@ -834,6 +834,24 @@ export class Response {
         response: this.account,
       })
       .remainingAccounts([...legAccounts, ...quoteAccounts])
+      .rpc();
+  }
+
+  async executePrintTrade(side, accounts: AccountMeta[]) {
+    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+
+    await this.context.program.methods
+      .executePrintTradeSettlement(
+          side
+      )
+      .accounts({
+        caller: caller.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+      })
+      .remainingAccounts([...accounts])
+      .signers([caller])
       .rpc();
   }
 

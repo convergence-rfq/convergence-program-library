@@ -14,7 +14,7 @@ use crate::{
 
 pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
     let accounts_infos = &[
-        ctx.accounts.creator.to_account_info(),
+        ctx.accounts.user.to_account_info(),
         ctx.accounts.mark_prices.to_account_info(),
         ctx.accounts.market_product_group.to_account_info(),
         ctx.accounts.system_clock.to_account_info(),
@@ -27,11 +27,11 @@ pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
         &Instruction {
             program_id: ctx.accounts.risk_engine_program.key(),
             accounts: vec![
-                AccountMeta::new(ctx.accounts.creator.key(), true),
+                AccountMeta::new(ctx.accounts.user.key(), true),
                 AccountMeta::new(ctx.accounts.mark_prices.key(), false),
                 AccountMeta::new_readonly(ctx.accounts.market_product_group.key(), false),
                 AccountMeta::new_readonly(ctx.accounts.system_clock.key(), false),
-                AccountMeta::new(ctx.accounts.btcusd_pyth_oracle.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.btcusd_pyth_oracle.key(), false),
             ],
             data,
         },
@@ -86,7 +86,7 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
             .counterparty_trader_risk_state_acct
             .to_account_info()
             .clone(),
-        ctx.accounts.operator_owner.to_account_info(),
+        ctx.accounts.protocol.to_account_info(),
         ctx.accounts.s_account.to_account_info().clone(),
         ctx.accounts.r_account.to_account_info().clone(),
         ctx.accounts.mark_prices.to_account_info().clone(),
@@ -170,11 +170,11 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
                 AccountMeta::new(ctx.accounts.creator_trader_fee_state_acct.key(), false),
                 AccountMeta::new(ctx.accounts.creator_trader_risk_state_acct.key(), false),
                 AccountMeta::new(ctx.accounts.counterparty_trader_fee_state_acct.key(), false),
-                AccountMeta::new(ctx.accounts.operator_owner.key(), true),
                 AccountMeta::new(
                     ctx.accounts.counterparty_trader_risk_state_acct.key(),
                     false,
                 ),
+                AccountMeta::new(ctx.accounts.protocol.key(), true),
                 AccountMeta::new(ctx.accounts.s_account.key(), false),
                 AccountMeta::new(ctx.accounts.r_account.key(), false),
                 AccountMeta::new(ctx.accounts.mark_prices.key(), false),

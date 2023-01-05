@@ -28,6 +28,7 @@ describe("RFQ HXRO instrument integration tests", () => {
     const feeOutputRegister = new anchor.web3.PublicKey("rPnaqXrvo3aBMChVLywnVz6nykSfXwvBYu1Yz1p6crv");
     const riskOutputRegister = new anchor.web3.PublicKey("DevB1VB5Tt3YAeYZ8XTB1fXiFtXBqcP7PbfWGB71YyCE");
     const riskAndFeeSigner = new anchor.web3.PublicKey("AQJYsJ9k47ahEEXhvnNBFca4yH3zcFUfVaKrLPLgftYg");
+    const BTCUSDPythOracle = new anchor.web3.PublicKey("HovQMDrbAgAYPCmHVSrezcSmkMtXSSUsLDFANExrZh2J");
 
     const program = anchor.workspace.HxroInstrument as Program<HxroInstrumentType>;
 
@@ -43,7 +44,7 @@ describe("RFQ HXRO instrument integration tests", () => {
         context = await getContext();
     });
 
-    it("Creates RFQ with one hxro leg", async () => {
+    it("HXRO flow works", async () => {
         const dexProgram = new anchor.Program(DexIdl as anchor.Idl, dex, anchor.getProvider()) as Program<Dex>;
 
         let [creatorTrg, creatorTraderFeeStateAcct, creatorTraderRiskStateAcct] = await createTRG(context.taker);
@@ -58,6 +59,29 @@ describe("RFQ HXRO instrument integration tests", () => {
             ],
             dexProgram.programId,
         )
+
+        const [markPrices, ] = await anchor.web3.PublicKey.findProgramAddress(
+            [
+                Buffer.from("mark_prices"),
+                marketProductGroup.toBuffer(),
+            ],
+            riskEngineProgram,
+        )
+
+        const [s_account, ] =
+            await anchor.web3.PublicKey.findProgramAddress(
+                [
+                    Buffer.from("s"),
+                    marketProductGroup.toBytes()
+                ],
+                riskEngineProgram);
+        const [r_account, ] =
+            await anchor.web3.PublicKey.findProgramAddress(
+                [
+                    Buffer.from("r"),
+                    marketProductGroup.toBytes()
+                ],
+                riskEngineProgram);
 
         const rfq: Rfq = await context.createRfqStepByStep({
             printTradeProvider: program.programId,
@@ -105,8 +129,43 @@ describe("RFQ HXRO instrument integration tests", () => {
 
         await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
 
-        await response.preparePrintTradeSettlement(AuthoritySide.Taker, operator)
-            .catch(e => console.log("ERROR:", e));
+        await response.preparePrintTradeSettlement(AuthoritySide.Taker)
+
+        console.log("Prepared!")
+
+        let executeAccounts = [
+            { pubkey: program.programId, isSigner: false, isWritable:false },
+            { pubkey: dex, isSigner: false, isWritable:false },
+            { pubkey: context.maker.publicKey, isSigner: true, isWritable: true },
+            { pubkey: creatorTrg, isSigner: false, isWritable:true },
+            { pubkey: counterPartyTrg, isSigner: false, isWritable:true },
+            { pubkey: operatorPartyTrg, isSigner: false, isWritable:true },
+            { pubkey: marketProductGroup, isSigner: false, isWritable:true },
+            { pubkey: printTrade, isSigner: false, isWritable:true },
+            { pubkey: anchor.web3.SystemProgram.programId, isSigner: false, isWritable:false },
+            { pubkey: anchor.web3.SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable:false },
+            { pubkey: feeModelProgram, isSigner: false, isWritable:false },
+            { pubkey: feeModelConfigurationAcct, isSigner: false, isWritable:false },
+            { pubkey: feeOutputRegister, isSigner: false, isWritable:true },
+            { pubkey: riskEngineProgram, isSigner: false, isWritable:false },
+            { pubkey: riskModelConfigurationAcct, isSigner: false, isWritable:false },
+            { pubkey: riskOutputRegister, isSigner: false, isWritable:true },
+            { pubkey: riskAndFeeSigner, isSigner: false, isWritable:false },
+            { pubkey: creatorTraderFeeStateAcct, isSigner: false, isWritable:true },
+            { pubkey: creatorTraderRiskStateAcct, isSigner: false, isWritable:true },
+            { pubkey: counterPartyTraderFeeStateAcct, isSigner: false, isWritable:true },
+            { pubkey: counterPartyTraderRiskStateAcct, isSigner: false, isWritable:true },
+            { pubkey: s_account, isSigner: false, isWritable:true },
+            { pubkey: r_account, isSigner: false, isWritable:true },
+            { pubkey: markPrices, isSigner: false, isWritable:true },
+            { pubkey: BTCUSDPythOracle, isSigner: false, isWritable:false },
+        ];
+
+        for (let acc of executeAccounts) {
+            console.log("ACC:", acc.pubkey.toString())
+        }
+
+        await response.executePrintTrade(AuthoritySide.Maker, executeAccounts).catch((e) => console.log("ERROR:", e))
     });
 
     let createTRG = async (keypair: anchor.web3.Keypair) => {

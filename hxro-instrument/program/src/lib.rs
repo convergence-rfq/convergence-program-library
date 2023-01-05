@@ -131,9 +131,6 @@ pub struct SettlePrintTrade<'info> {
     pub user: Signer<'info>,
     /// CHECK:
     #[account(mut)]
-    pub operator_owner: Signer<'info>,
-    /// CHECK:
-    #[account(mut)]
     pub creator: AccountInfo<'info>,
     /// CHECK:
     #[account(mut)]
@@ -145,9 +142,6 @@ pub struct SettlePrintTrade<'info> {
     /// CHECK:
     #[account(mut)]
     pub market_product_group: AccountInfo<'info>,
-    /// CHECK:
-    #[account(mut)]
-    pub product: AccountInfo<'info>,
 
     #[account(mut)]
     pub print_trade: Box<Account<'info, dex_cpi::state::PrintTrade>>,
@@ -191,10 +185,8 @@ pub struct SettlePrintTrade<'info> {
     #[account(mut)]
     pub r_account: Box<Account<'info, risk_cpi::state::CorrelationMatrix>>,
     /// CHECK:
-    #[account(mut)]
     pub mark_prices: AccountInfo<'info>,
     /// CHECK:
-    #[account(mut)]
     pub btcusd_pyth_oracle: AccountInfo<'info>,
 }
 
