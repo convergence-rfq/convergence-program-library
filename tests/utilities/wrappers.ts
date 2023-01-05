@@ -281,8 +281,6 @@ export class Context {
 
     let tx = await txConstructor.rpc();
 
-    console.log("createRfq Signature", tx);
-
     return rfqObject;
   }
 }
@@ -422,9 +420,6 @@ export class Mint {
       async () => await token.createAssociatedTokenAccount(context.taker.publicKey),
       async () => await token.createAssociatedTokenAccount(context.maker.publicKey),
       async () => await token.createAssociatedTokenAccount(context.dao.publicKey)
-      // async () => await mint.createAssociatedAccountWithTokens(context.taker.publicKey),
-      // async () => await mint.createAssociatedAccountWithTokens(context.maker.publicKey),
-      // async () => await mint.createAssociatedAccountWithTokens(context.dao.publicKey)
     );
 
     return mint;

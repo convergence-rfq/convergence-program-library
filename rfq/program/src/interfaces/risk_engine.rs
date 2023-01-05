@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{
+use solana_program::{
     instruction::Instruction,
     program::{get_return_data, invoke},
 };

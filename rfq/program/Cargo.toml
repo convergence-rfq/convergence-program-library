@@ -20,7 +20,7 @@ default = []
 anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
 anchor-spl = "0.25.0"
 num-traits = "0.2.14"
+solana-program = "1.9.13"
 spl-token = { version = "3.3.0", features = ["no-entrypoint"] }
-# psy_american = { version = "0.2.6", features = ["cpi"] }
 solana-security-txt = "1.0.1"
 shank = "0.0.8"

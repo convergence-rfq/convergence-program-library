@@ -1,5 +1,5 @@
 [scripts]
-test = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/*.ts"
+test = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/unit/**.ts"
 
 [[test.genesis]]
 address = "FASQhaZQT53W9eT9wWnPoBFw8xzZDey9TbMmJj6jCQTs"
@@ -8,12 +8,6 @@ program = "../dependencies/euro_primitive.so"
 [[test.genesis]]
 address = "FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"
 program = "../dependencies/pseudo_pyth.so"
-
-
-[[test.genesis]]
-address = "R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs"
-program = "../dependencies/psy_american.so"
-
 
 [[test.validator.account]]
 address = "8SXvChNYFhRq4EZuZvnhjrB3jJRQCv4k3P4W6hesH3Ee"

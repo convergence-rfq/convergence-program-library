@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::{instruction::Instruction, program::invoke_signed};
 
 use crate::{
     errors::ProtocolError,
@@ -177,6 +177,7 @@ fn call_instrument<'a, 'info: 'a>(
     let program = remaining_accounts
         .next()
         .ok_or(ProtocolError::NotEnoughAccounts)?;
+
     require!(
         &program.key() == instrument_key,
         ProtocolError::PassedProgramIdDiffersFromAnInstrument
@@ -207,6 +208,7 @@ fn call_instrument<'a, 'info: 'a>(
     };
     let bump_seed = [protocol.bump];
     let protocol_seed = &[&[PROTOCOL_SEED.as_bytes(), &bump_seed][..]];
+    msg!("calling invoke signed");
     invoke_signed(&instruction, &accounts, protocol_seed)?;
 
     Ok(())
