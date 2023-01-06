@@ -75,6 +75,8 @@ address = "GGMrh5gtGNjUcnK5Pk523PXNa4akN93ZrGvhJx7WGBnM"
 [[test.validator.clone]]
 address = "HsYYpmsZmhUrJDqbFjAuo6HPV9mygyWNTJ6g75a9KRR1"
 [[test.validator.clone]]
+address = "6QFnukEmE8kgaYD6Cn2kTbuQp9vUHw6MDnaZbRFBy7BL"
+[[test.validator.clone]]
 address = "2TfB33aLaneQb5TNVwyDz3jSZXS6jdW2ARw1Dgf84XCG"
 [[test.validator.account]]
 address = "8SXvChNYFhRq4EZuZvnhjrB3jJRQCv4k3P4W6hesH3Ee"
