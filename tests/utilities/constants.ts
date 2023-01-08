@@ -18,7 +18,7 @@ export const DEFAULT_SOL_FOR_SIGNERS = 100_000_000_000;
 export const DEFAULT_TOKEN_AMOUNT = new BN(10_000_000).mul(new BN(10).pow(new BN(9)));
 export const DEFAULT_COLLATERAL_FUNDED = new BN(1_000_000).mul(new BN(10).pow(new BN(9)));
 
-export const DEFAULT_FEES = { takerBps: new BN(0), makerBps: new BN(0) };
+export const DEFAULT_FEES = { takerBps: new BN(1), makerBps: new BN(0) };
 export const DEFAULT_ORDER_TYPE = OrderType.TwoWay;
 export const DEFAULT_INSTRUMENT_AMOUNT = new BN(1_000_000_000);
 export const DEFAULT_INSTRUMENT_SIDE = Side.Bid;

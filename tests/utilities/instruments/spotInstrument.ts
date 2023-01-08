@@ -67,7 +67,7 @@ export class SpotInstrument implements Instrument {
     return [
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
       {
-        pubkey: await await Token.getAssociatedTokenAddress(
+        pubkey: await Token.getAssociatedTokenAddress(
           ASSOCIATED_TOKEN_PROGRAM_ID,
           TOKEN_PROGRAM_ID,
           this.mint.publicKey,

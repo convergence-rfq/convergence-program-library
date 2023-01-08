@@ -7,6 +7,7 @@ programs/target/rls
 programs/rfq/target/rls
 .coderrect
 .env
+tests/**/*.js
 
 rfq/js/.crates
 rfq/js/node_modules
@@ -20,4 +21,5 @@ spot-instrument/js/node_modules
 psyoptions-european-instrument/js/.crates
 psyoptions-european-instrument/js/node_modules
 
-tests/**/*.js
+psyoptions-american-instrument/js/.crates
+psyoptions-american-instrument/js/node_modules

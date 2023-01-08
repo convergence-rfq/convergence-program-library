@@ -1,14 +1,18 @@
+anchor_version = "0.25.0"
+
 [programs.localnet]
 rfq = "6k3nypehfxd4tqCGRxNEZBMiT4xUPdQCkothLVz3JK6D"
 risk_engine = "76TdqS9cEb8tYKUWKMzXBMwgCtXJiYMcrHxmzrYthjUm"
 spot_instrument = "6pyiZyPDi7a6vMymw5NFTvtFBZJbDrNsgrcYK5jGEH4K"
 psyoptions_european_instrument = "7ZD9LcvMPfurRYz2AuZPWgtSXuSxPmvZNMBFK7fhyvQA"
+psyoptions_american_instrument = "ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy"
 
 [programs.devnet]
 rfq = "6k3nypehfxd4tqCGRxNEZBMiT4xUPdQCkothLVz3JK6D"
 risk_engine = "76TdqS9cEb8tYKUWKMzXBMwgCtXJiYMcrHxmzrYthjUm"
 spot_instrument = "6pyiZyPDi7a6vMymw5NFTvtFBZJbDrNsgrcYK5jGEH4K"
 psyoptions_european_instrument = "7ZD9LcvMPfurRYz2AuZPWgtSXuSxPmvZNMBFK7fhyvQA"
+psyoptions_american_instrument = "ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -22,5 +26,7 @@ members = [
     "rfq/program",
     "risk-engine/program",
     "spot-instrument/program",
-    "psyoptions-european-instrument/program",
+    "psyoptions-american-instrument/program",
+    "psyoptions-european-instrument/program"
 ]
+

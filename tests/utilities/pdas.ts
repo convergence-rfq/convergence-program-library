@@ -57,6 +57,14 @@ export async function getInstrumentEscrowPda(
   return pda;
 }
 
+export async function getPsyoptionsAmericanEscrowPda(response: PublicKey, legIndex: number, programId: PublicKey) {
+  const [pda] = await PublicKey.findProgramAddress(
+    [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
+    programId
+  );
+  return pda;
+}
+
 export async function getRiskEngineConfig(programId: PublicKey) {
   const [pda] = await PublicKey.findProgramAddress([Buffer.from(RISK_ENGINE_CONFIG_SEED)], programId);
   return pda;
