@@ -23,7 +23,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     dao = context.dao.publicKey;
   });
 
-  it("Create RFQ to buy 1 option", async () => {
+  it("Create buy RFQ for 1 option", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker);
     await options.mintPsyOPtions(context.maker, new anchor.BN(1), OptionType.CALL, context);
 
@@ -67,7 +67,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await response.cleanUp();
   });
 
-  it("Create RFQ where taker wants to sell 2 options", async () => {
+  it("Create sell RFQ where taker wants 2 options", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOPtions(context.taker, new anchor.BN(2), OptionType.CALL, context);
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
@@ -121,7 +121,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await response.cleanUp();
   });
 
-  it("Create two-way RFQ with one psyoptions-american option leg, respond but maker defaults on settlement", async () => {
+  it("Create two-way RFQ with one Psyoptions American option leg, respond but maker defaults on settlement", async () => {
     // Create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOPtions(context.taker, new anchor.BN(2), OptionType.CALL, context);
@@ -159,7 +159,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await rfq.cleanUp();
   });
 
-  it("Create two-way RFQ with one psyoptions-american option leg, respond but taker defaults on settlement", async () => {
+  it("Create two-way RFQ with one Psyoptions American option leg, respond but taker defaults on settlement", async () => {
     // create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOPtions(context.taker, new anchor.BN(2), OptionType.CALL, context);
