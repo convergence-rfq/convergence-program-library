@@ -25,7 +25,7 @@ jobs:
       - name: Install latest Anchor
         run: avm install 0.25.0
       - name: Use latest Anchor
-        run: avm use latest
+        run: avm use 0.25.0
       - name: Install Solana
         uses: ./.github/actions/install-solana
         with:
