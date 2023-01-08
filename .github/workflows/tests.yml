@@ -41,3 +41,4 @@ jobs:
         run: anchor build
       - name: Run tests
         run: anchor test
+        continue-on-error: false
