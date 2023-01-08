@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/rfq",
-  "version": "2.0.8",
+  "version": "2.0.13",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
@@ -8,10 +8,10 @@
   },
   "repository": "https://github.com/convergence-rfq/convergence-program-library.git",
   "author": "Convergence RFQ Maintainers <contact@tradersguild.so>",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./generated/index.js",
   "files": [
-    "dist"
+    "generated",
+    "idl"
   ],
   "scripts": {
     "prepublish": "tsc"

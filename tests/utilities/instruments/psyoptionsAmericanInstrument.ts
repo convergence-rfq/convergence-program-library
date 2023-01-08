@@ -1,77 +1,89 @@
-import { Program, web3, BN, workspace } from "@project-serum/anchor";
+import { Program, BN, workspace } from "@project-serum/anchor";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
+import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer, Keypair } from "@solana/web3.js";
+import { instructions, createProgram, getOptionByKey, OptionMarketWithKey } from "@mithraic-labs/psy-american";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AuthoritySide } from "../types";
+import { AuthoritySide, AssetIdentifier, InstrumentType } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
-import { PsyoptionsAmericanInstrument as PsyoptionsAmericanInstrumentIdl } from "../../../target/types/psyoptions_american_instrument";
 import { executeInParallel, withTokenDecimals } from "../helpers";
-import {
-  CONTRACT_DECIMALS_BN,
-  EuroMeta,
-  EuroPrimitive,
-  IDL as EuroOptionsIdl,
-  OptionType,
-  programId as euroOptionsProgramId,
-} from "../../dependencies/tokenized-euros/src";
-import { IDL as PseudoPythIdl } from "../../dependencies/pseudo_pyth_idl";
-import {
-  createEuroMetaInstruction,
-  initializeAllAccountsInstructions,
-  mintOptions,
-} from "../../dependencies/tokenized-euros/src/instructions";
+import * as anchor from "@project-serum/anchor";
+import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 
+import { PsyoptionsAmericanInstrument } from "../../../target/types/psyoptions_american_instrument";
+
+enum OptionType {
+  CALL = 0,
+  PUT = 1,
+}
+
+const psyOptionsAmericanLocalNetProgramId = new anchor.web3.PublicKey("R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs");
 let psyoptionsAmericanInstrumentProgram = null;
-export function getEuroOptionsInstrumentProgram(): Program<PsyoptionsAmericanInstrumentIdl> {
+export function getAmericanOptionsInstrumentProgram() {
   if (psyoptionsAmericanInstrumentProgram === null) {
     psyoptionsAmericanInstrumentProgram =
-      workspace.PsyoptionsAmericanInstrument as Program<PsyoptionsAmericanInstrumentIdl>;
+      workspace.PsyoptionsAmericanInstrument as Program<PsyoptionsAmericanInstrument>;
   }
   return psyoptionsAmericanInstrumentProgram;
 }
 
-export class PsyoptionsAmericanInstrument implements Instrument {
-  constructor(
-    private context: Context,
-    private mint: Mint,
-    private euroMeta: PublicKey,
-    private optionType: OptionType
-  ) {}
+export class PsyoptionsAmericanInstrumentClass implements Instrument {
+  constructor(private context: Context, private OptionMarket: AmericanPsyoptions, private OptionType: OptionType) {}
 
   static create(
     context: Context,
-    mint: Mint,
-    euroMeta: PublicKey,
-    optionType: OptionType,
+    OptionMarket: AmericanPsyoptions,
+    Optiontype: OptionType,
     { amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
   ): InstrumentController {
-    const instrument = new PsyoptionsAmericanInstrument(context, mint, euroMeta, optionType);
-    return new InstrumentController(instrument, amount, side ?? DEFAULT_INSTRUMENT_SIDE);
+    const instrument = new PsyoptionsAmericanInstrumentClass(context, OptionMarket, Optiontype);
+    context.assetToken.assertRegistered();
+    return new InstrumentController(
+      instrument,
+      { amount, side: side ?? DEFAULT_INSTRUMENT_SIDE, baseAssetIndex: OptionMarket.underlyingMint.baseAssetIndex },
+      0
+    );
   }
 
   static async addInstrument(context: Context) {
-    await context.addInstrument(getEuroOptionsInstrumentProgram().programId, 1, 7, 3, 3, 4);
+    await context.addInstrument(getAmericanOptionsInstrumentProgram().programId, false, 2, 7, 3, 3, 4);
+    await context.riskEngine.setInstrumentType(getAmericanOptionsInstrumentProgram().programId, InstrumentType.Option);
   }
 
-  serializeLegData(): Buffer {
-    const mint = this.mint.publicKey.toBytes();
-    const meta = this.euroMeta.toBytes();
-    return Buffer.from(new Uint8Array([...mint, ...meta, this.optionType == OptionType.CALL ? 0 : 1]));
-  }
+  serializeInstrumentData(): Buffer {
+    const op = this.OptionMarket.OptionInfo;
+    const mint = this.OptionMarket.callMint.publicKey.toBytes();
+    const optionMarket = this.OptionMarket.optionMarketKey.toBytes();
 
+    const underlyingamountPerContract = op.underlyingAmountPerContract.toBuffer("le", 8);
+    const expirationtime = op.expirationUnixTimestamp.toBuffer("le", 8);
+    const strikeprice = op.quoteAmountPerContract.toBuffer("le", 8);
+    return Buffer.from(
+      new Uint8Array([
+        this.OptionType == OptionType.CALL ? 0 : 1,
+        ...underlyingamountPerContract,
+        ...strikeprice,
+        ...expirationtime,
+        ...mint,
+        ...optionMarket,
+      ])
+    );
+  }
   getProgramId(): PublicKey {
-    return getEuroOptionsInstrumentProgram().programId;
+    return getAmericanOptionsInstrumentProgram().programId;
   }
 
   async getValidationAccounts() {
-    return [{ pubkey: this.euroMeta, isSigner: false, isWritable: false }];
+    return [
+      { pubkey: this.OptionMarket.optionMarketKey, isSigner: false, isWritable: false },
+      { pubkey: this.OptionMarket.underlyingMint.mintInfoAddress, isSigner: false, isWritable: false },
+    ];
   }
 
   async getPrepareSettlementAccounts(
     side: { taker: {} } | { maker: {} },
-    legIndex: number,
+    assetIndentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
@@ -83,15 +95,15 @@ export class PsyoptionsAmericanInstrument implements Instrument {
         pubkey: await Token.getAssociatedTokenAddress(
           ASSOCIATED_TOKEN_PROGRAM_ID,
           TOKEN_PROGRAM_ID,
-          this.mint.publicKey,
+          this.OptionMarket.callMint.publicKey,
           caller.publicKey
         ),
         isSigner: false,
         isWritable: true,
       },
-      { pubkey: this.mint.publicKey, isSigner: false, isWritable: false },
+      { pubkey: this.OptionMarket.callMint.publicKey, isSigner: false, isWritable: false },
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIndentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
@@ -101,15 +113,15 @@ export class PsyoptionsAmericanInstrument implements Instrument {
     ];
   }
 
-  async getSettleAccounts(assetReceiver: PublicKey, legIndex: number, rfq: Rfq, response: Response) {
+  async getSettleAccounts(assetReceiver: PublicKey, assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(assetReceiver),
+        pubkey: await this.OptionMarket.callMint.getAssociatedAddress(assetReceiver),
         isSigner: false,
         isWritable: true,
       },
@@ -119,7 +131,7 @@ export class PsyoptionsAmericanInstrument implements Instrument {
 
   async getRevertSettlementPreparationAccounts(
     side: { taker: {} } | { maker: {} },
-    legIndex: number,
+    assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
@@ -127,12 +139,12 @@ export class PsyoptionsAmericanInstrument implements Instrument {
 
     return [
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
+        pubkey: await this.OptionMarket.callMint.getAssociatedAddress(caller.publicKey),
         isSigner: false,
         isWritable: true,
       },
@@ -140,7 +152,7 @@ export class PsyoptionsAmericanInstrument implements Instrument {
     ];
   }
 
-  async getCleanUpAccounts(legIndex: number, rfq: Rfq, response: Response) {
+  async getCleanUpAccounts(assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
         pubkey: response.firstToPrepare,
@@ -148,12 +160,12 @@ export class PsyoptionsAmericanInstrument implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await getInstrumentEscrowPda(response.account, legIndex, this.getProgramId()),
+        pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(this.context.dao.publicKey),
+        pubkey: await this.OptionMarket.callMint.getAssociatedAddress(this.context.dao.publicKey),
         isSigner: false,
         isWritable: true,
       },
@@ -162,128 +174,111 @@ export class PsyoptionsAmericanInstrument implements Instrument {
   }
 }
 
-export class EuroOptionsFacade {
+export class AmericanPsyoptions {
   private constructor(
-    private program: Program<EuroPrimitive>,
-    public meta: EuroMeta,
-    public metaKey: PublicKey,
+    public context: Context,
+    private program = AmericanPsyoptions.createProgramWithProvider(context.maker, context),
+    public optionMint: PublicKey,
+    public writerMint: PublicKey,
+    public optionMarketKey: PublicKey,
     public underlyingMint: Mint,
-    public stableMint: Mint,
+    public quoteMint: Mint,
     public callMint: Mint,
     public callWriterMint: Mint,
-    public putMint: Mint,
-    public putWriterMint: Mint
+    public OptionInfo: OptionMarketWithKey
   ) {}
 
-  async mintOptions(mintBy: Signer, amount: BN, optionType: OptionType) {
-    const { instruction } = await mintOptions(
-      this.program,
-      this.metaKey,
-      this.meta,
-      optionType == OptionType.CALL
-        ? await this.underlyingMint.getAssociatedAddress(mintBy.publicKey)
-        : await this.stableMint.getAssociatedAddress(mintBy.publicKey),
-      optionType == OptionType.CALL
-        ? await this.callMint.getAssociatedAddress(mintBy.publicKey)
-        : await this.putMint.getAssociatedAddress(mintBy.publicKey),
-      optionType == OptionType.CALL
-        ? await this.callWriterMint.getAssociatedAddress(mintBy.publicKey)
-        : await this.putWriterMint.getAssociatedAddress(mintBy.publicKey),
-      amount.mul(CONTRACT_DECIMALS_BN),
-      optionType
+  public static createProgramWithProvider(user: anchor.web3.Keypair, context: Context) {
+    const provider = new anchor.AnchorProvider(
+      context.provider.connection,
+      new NodeWallet(user),
+      anchor.AnchorProvider.defaultOptions()
     );
-    // change signer
-    instruction.keys[0] = { pubkey: mintBy.publicKey, isSigner: true, isWritable: false };
-    const transaction = new web3.Transaction().add(instruction);
-    await this.program.provider.sendAndConfirm(transaction, [mintBy]);
+    let program = createProgram(psyOptionsAmericanLocalNetProgramId, provider);
+    return program;
   }
 
-  public static async initalizeNewOptionMeta(
+  public static async initializeMarket(
+    program,
+    expirationTimestamp: number,
+    quoteMintPubkey: PublicKey,
+    quoteAmountPerContract: number,
+    underlyingAmountPerContract: number,
+    underlyingMintPubkey: PublicKey
+  ) {
+    let ix0 = await instructions.initializeMarket(program, {
+      expirationUnixTimestamp: expirationTimestamp,
+      quoteMint: quoteMintPubkey,
+      quoteAmountPerContract: quoteAmountPerContract,
+      underlyingAmountPerContract: underlyingAmountPerContract,
+      underlyingMint: underlyingMintPubkey,
+    });
+
+    return ix0;
+  }
+
+  public static async getOptionMarketByKey(context: Context, optionMarketPubkey: PublicKey, user: Keypair) {
+    let program = this.createProgramWithProvider(user, context);
+    let optionMarkeyWithkey = await getOptionByKey(program, optionMarketPubkey);
+    return optionMarkeyWithkey;
+  }
+
+  public static async initalizeNewPsyoptionsAmerican(
     context: Context,
+    user: Keypair,
     {
       underlyingMint = context.assetToken,
-      stableMint = context.quoteToken,
-      underlyingPerContract = withTokenDecimals(1),
-      strikePrice = withTokenDecimals(20000),
+      quoteMint = context.quoteToken,
+      underlyingAmountPerContract = withTokenDecimals(1),
+      quoteAmountPerContract = withTokenDecimals(100),
     } = {}
   ) {
-    const program = new Program(EuroOptionsIdl, euroOptionsProgramId, context.provider);
-    const pseudoPythProgram = new Program(
-      PseudoPythIdl,
-      new PublicKey("FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"),
-      context.provider
-    );
-
-    const oracle = await EuroOptionsFacade.createPriceFeed({
-      oracleProgram: pseudoPythProgram,
-      initPrice: 50_000,
-      confidence: null,
-    });
-
-    const expiration = new BN(Date.now() / 1000 + 3600); // 1 hour in the future
-    const { instructions: preparationIxs } = await initializeAllAccountsInstructions(
+    const program = this.createProgramWithProvider(user, context);
+    const expiration = new BN(Date.now() / 1000 + 360000); // 1 hour in the future
+    const psyOptMarket = await this.initializeMarket(
       program,
-      underlyingMint.publicKey,
-      stableMint.publicKey,
-      oracle,
       expiration,
-      8
-    );
-    const {
-      instruction: ix,
-      euroMeta,
-      euroMetaKey,
-    } = await createEuroMetaInstruction(
-      program,
-      underlyingMint.publicKey,
-      8,
-      stableMint.publicKey,
-      8,
-      expiration,
-      underlyingPerContract,
-      strikePrice,
-      8,
-      oracle
-    );
-    const transaction = new web3.Transaction().add(...preparationIxs, ix);
-    await context.provider.sendAndConfirm(transaction);
-
-    const [callMint, callWriterMint, putMint, putWriterMint] = await executeInParallel(
-      () => Mint.wrap(context, euroMeta.callOptionMint),
-      () => Mint.wrap(context, euroMeta.callWriterMint),
-      () => Mint.wrap(context, euroMeta.putOptionMint),
-      () => Mint.wrap(context, euroMeta.putWriterMint)
+      quoteMint.publicKey,
+      quoteAmountPerContract,
+      underlyingAmountPerContract,
+      underlyingMint.publicKey
     );
 
-    return new EuroOptionsFacade(
+    const [callMint, callWriterMint] = await executeInParallel(
+      () => Mint.wrap(context, psyOptMarket.optionMintKey),
+      () => Mint.wrap(context, psyOptMarket.writerMintKey)
+    );
+
+    return new AmericanPsyoptions(
+      context,
       program,
-      euroMeta,
-      euroMetaKey,
+      psyOptMarket.optionMintKey,
+      psyOptMarket.writerMintKey,
+      psyOptMarket.optionMarketKey,
       underlyingMint,
-      stableMint,
+      quoteMint,
       callMint,
       callWriterMint,
-      putMint,
-      putWriterMint
+      await getOptionByKey(program, psyOptMarket.optionMarketKey)
     );
   }
 
-  private static createPriceFeed = async ({ oracleProgram, initPrice, confidence, expo = -4 }) => {
-    const conf = confidence || new BN((initPrice / 10) * 10 ** -expo);
-    const collateralTokenFeed = new web3.Account();
-    await oracleProgram.rpc.initialize(new BN(initPrice * 10 ** -expo), expo, conf, {
-      accounts: { price: collateralTokenFeed.publicKey },
-      signers: [collateralTokenFeed],
-      instructions: [
-        web3.SystemProgram.createAccount({
-          fromPubkey: oracleProgram.provider.publicKey,
-          newAccountPubkey: collateralTokenFeed.publicKey,
-          space: 3312,
-          lamports: await oracleProgram.provider.connection.getMinimumBalanceForRentExemption(3312),
-          programId: oracleProgram.programId,
-        }),
-      ],
-    });
-    return collateralTokenFeed.publicKey;
-  };
+  public async mintPsyOPtions(mintBy: Signer, amount: anchor.BN, optiontype: OptionType, context: Context) {
+    let optionMarketWithKey = await getOptionByKey(this.program, this.optionMarketKey);
+    let ix = await instructions.mintOptionV2Instruction(
+      this.program,
+      await this.callMint.getAssociatedAddress(mintBy.publicKey),
+      await this.callWriterMint.getAssociatedAddress(mintBy.publicKey),
+      await this.underlyingMint.getAssociatedAddress(mintBy.publicKey),
+      amount,
+      optionMarketWithKey
+    );
+
+    let tx = new anchor.web3.Transaction();
+    ix.signers.push(mintBy);
+    tx.add(ix.ix);
+
+    let signature = await this.context.provider.sendAndConfirm(tx, ix.signers);
+    return signature;
+  }
 }

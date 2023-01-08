@@ -1,0 +1,43 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ["16.x", "18.x"]
+        solana: ["1.10.34"]
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Install Rust
+        run: curl --proto '=https' -y --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      - name: Install AVM
+        run: cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+      - name: Install latest Anchor
+        run: avm install latest
+      - name: Use latest Anchor
+        run: avm use latest
+      - name: Install Solana
+        uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ matrix.solana }}
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build
+        run: anchor build
+      - name: Run tests
+        run: anchor test

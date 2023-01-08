@@ -1,15 +1,11 @@
+
 use anchor_lang::prelude::*;
 
 // TODO: Import euro options crate instead of this file when it would be available
 
 declare_id!("FASQhaZQT53W9eT9wWnPoBFw8xzZDey9TbMmJj6jCQTs");
 
-#[derive(Debug, AnchorSerialize, AnchorDeserialize, PartialEq)]
-#[repr(u8)]
-pub enum OptionType {
-    CALL = 0,
-    PUT = 1,
-}
+pub const TOKEN_DECIMALS: u8 = 4;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct EuroMeta {

@@ -1,8 +1,11 @@
 use crate::{
-    constants::PROTOCOL_SEED,
     errors::ProtocolError,
     interfaces::instrument::revert_preparation,
-    states::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
+    seeds::PROTOCOL_SEED,
+    state::{
+        AssetIdentifier, AuthoritySide, ProtocolState, Response, ResponseState, Rfq,
+        StoredResponseState,
+    },
 };
 use anchor_lang::prelude::*;
 
@@ -59,10 +62,9 @@ pub fn partly_revert_settlement_preparation_instruction<'info>(
     let mut remaining_accounts = ctx.remaining_accounts.iter();
     let prepared_legs = response.get_prepared_legs(side);
     let starting_index = prepared_legs - leg_amount_to_revert;
-    for (index, leg) in rfq.legs.iter().enumerate().skip(starting_index as usize) {
+    for leg_index in starting_index..prepared_legs {
         revert_preparation(
-            leg,
-            index as u8,
+            AssetIdentifier::Leg { leg_index },
             side,
             protocol,
             rfq,

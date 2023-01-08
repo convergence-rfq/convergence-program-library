@@ -1,10 +1,10 @@
 use std::mem;
 
 use crate::{
-    constants::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_response,
-    states::{
+    seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
+    state::{
         CollateralInfo, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
         StoredResponseState,
     },
@@ -83,8 +83,8 @@ fn validate(
     Ok(())
 }
 
-pub fn respond_to_rfq_instruction(
-    ctx: Context<RespondToRfqAccounts>,
+pub fn respond_to_rfq_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, RespondToRfqAccounts<'info>>,
     bid: Option<Quote>,
     ask: Option<Quote>,
 ) -> Result<()> {
@@ -119,9 +119,10 @@ pub fn respond_to_rfq_instruction(
     response.exit(ctx.program_id)?;
 
     let required_collateral = calculate_required_collateral_for_response(
-        &rfq.to_account_info(),
-        &response.to_account_info(),
+        rfq.to_account_info(),
+        response.to_account_info(),
         risk_engine,
+        ctx.remaining_accounts,
     )?;
     collateral_info.lock_collateral(collateral_token, required_collateral)?;
     response.maker_collateral_locked = required_collateral;
