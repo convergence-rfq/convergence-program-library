@@ -1,5 +1,5 @@
 [scripts]
-test = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/*.ts"
+test = "yarn run ts-mocha -t 1000000 -p ./tsconfig.json tests/integration/**.spec.ts"
 
 [[test.genesis]]
 address = "FASQhaZQT53W9eT9wWnPoBFw8xzZDey9TbMmJj6jCQTs"

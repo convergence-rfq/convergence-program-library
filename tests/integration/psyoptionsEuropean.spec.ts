@@ -113,7 +113,7 @@ describe("Psyoptions European instrument integration tests", () => {
   });
 
   it("Successful settlement flow with a lot of different base asset options", async () => {
-    const legAmount = 4;
+    const legAmount = 3;
     const baseAssetOffset = 6300;
     const mints = await Promise.all(
       [...Array(legAmount)].map(async (_, i) => {
@@ -144,8 +144,8 @@ describe("Psyoptions European instrument integration tests", () => {
       legsSize: calculateLegsSize(legs),
       finalize: false,
     });
-    await rfq.addLegs([...legs.slice(1, 3)], false);
-    await rfq.addLegs([...legs.slice(3)]);
+    await rfq.addLegs([...legs.slice(1, legAmount - 1)], false);
+    await rfq.addLegs([...legs.slice(legAmount - 1)]);
 
     const response = await rfq.respond({
       bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),

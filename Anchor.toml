@@ -14,7 +14,7 @@ psyoptions_european_instrument = "7ZD9LcvMPfurRYz2AuZPWgtSXuSxPmvZNMBFK7fhyvQA"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
