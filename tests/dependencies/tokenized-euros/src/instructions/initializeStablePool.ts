@@ -3,10 +3,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { EuroPrimitive } from "../euro_primitive";
 import { pdas } from "../";
 
-export const initializeStablePool = async (
-  program: Program<EuroPrimitive>,
-  stableMint: web3.PublicKey
-) => {
+export const initializeStablePool = async (program: Program<EuroPrimitive>, stableMint: web3.PublicKey) => {
   const [poolAuthority] = await pdas.derivePoolAuthority(program);
   const [stablePool] = await pdas.deriveStablePoolKey(program, stableMint);
   const instruction = program.instruction.initializeStablePool({

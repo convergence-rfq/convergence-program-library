@@ -18,22 +18,17 @@ export const initExpirationData = async (
     oracleAddress,
     priceDecimals
   );
-  const instruction = program.instruction.initExpirationData(
-    expiration,
-    priceDecimals,
-    oracleProviderId,
-    {
-      accounts: {
-        payer: program.provider.publicKey,
-        expirationData,
-        underlyingMint,
-        oracle: oracleAddress,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: web3.SYSVAR_RENT_PUBKEY,
-        systemProgram: web3.SystemProgram.programId,
-      },
-    }
-  );
+  const instruction = program.instruction.initExpirationData(expiration, priceDecimals, oracleProviderId, {
+    accounts: {
+      payer: program.provider.publicKey,
+      expirationData,
+      underlyingMint,
+      oracle: oracleAddress,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: web3.SYSVAR_RENT_PUBKEY,
+      systemProgram: web3.SystemProgram.programId,
+    },
+  });
 
   return { instruction };
 };

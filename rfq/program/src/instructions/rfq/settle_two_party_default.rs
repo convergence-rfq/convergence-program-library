@@ -68,7 +68,7 @@ pub fn settle_both_party_default_collateral_instruction(
         token_program,
         ..
     } = ctx.accounts;
-    
+
     if response.state != StoredResponseState::Defaulted {
         response.default_by_time(rfq);
         response.exit(ctx.program_id)?;

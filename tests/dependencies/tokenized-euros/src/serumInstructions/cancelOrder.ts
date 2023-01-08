@@ -1,12 +1,7 @@
 import { BN, Program } from "@project-serum/anchor";
 import { Order } from "@project-serum/serum/lib/market";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import {
-  EuroPrimitive,
-  findOpenOrdersAccountsForOwner,
-  marketLoader,
-  pdas,
-} from "../";
+import { EuroPrimitive, findOpenOrdersAccountsForOwner, marketLoader, pdas } from "../";
 import { EuroMeta } from "../types";
 
 /**
@@ -28,20 +23,13 @@ export const cancelOrderInstructionV2 = async (
   priceCurrencyKey: PublicKey,
   order: Order
 ): Promise<TransactionInstruction> => {
-  const { serumMarketKey, marketAuthorityBump } =
-    await pdas.getMarketAndAuthorityInfo(
-      program,
-      optionMintKey,
-      dexProgramId,
-      priceCurrencyKey
-    );
-  const marketProxy = await marketLoader(
+  const { serumMarketKey, marketAuthorityBump } = await pdas.getMarketAndAuthorityInfo(
     program,
+    optionMintKey,
     dexProgramId,
-    serumMarketKey,
-    euroMetaKey,
-    marketAuthorityBump
+    priceCurrencyKey
   );
+  const marketProxy = await marketLoader(program, dexProgramId, serumMarketKey, euroMetaKey, marketAuthorityBump);
   return marketProxy.instruction.cancelOrder(
     // @ts-ignore: TODO: Fix after Anchor exposes the publicKey
     program.provider.publicKey,
@@ -68,20 +56,13 @@ export const cancelOrderByClientId = async (
   priceCurrencyKey: PublicKey,
   order: Order
 ): Promise<TransactionInstruction> => {
-  const { serumMarketKey, marketAuthorityBump } =
-    await pdas.getMarketAndAuthorityInfo(
-      program,
-      optionMintKey,
-      dexProgramId,
-      priceCurrencyKey
-    );
-  const marketProxy = await marketLoader(
+  const { serumMarketKey, marketAuthorityBump } = await pdas.getMarketAndAuthorityInfo(
     program,
+    optionMintKey,
     dexProgramId,
-    serumMarketKey,
-    euroMetaKey,
-    marketAuthorityBump
+    priceCurrencyKey
   );
+  const marketProxy = await marketLoader(program, dexProgramId, serumMarketKey, euroMetaKey, marketAuthorityBump);
   return marketProxy.instruction.cancelOrderByClientId(
     // @ts-ignore: TODO: Fix after Anchor exposes the publicKey
     program.provider.publicKey,
@@ -115,26 +96,15 @@ export const cancelAllOpenOrders = async (
 ): Promise<TransactionInstruction[]> => {
   const instructions: TransactionInstruction[] = [];
 
-  const { serumMarketKey, marketAuthorityBump } =
-    await pdas.getMarketAndAuthorityInfo(
-      program,
-      optionMintKey,
-      dexProgramId,
-      priceCurrencyKey
-    );
-  const marketProxy = await marketLoader(
+  const { serumMarketKey, marketAuthorityBump } = await pdas.getMarketAndAuthorityInfo(
     program,
+    optionMintKey,
     dexProgramId,
-    serumMarketKey,
-    euroMetaKey,
-    marketAuthorityBump
+    priceCurrencyKey
   );
+  const marketProxy = await marketLoader(program, dexProgramId, serumMarketKey, euroMetaKey, marketAuthorityBump);
   // get the provider's open orders for the market
-  const openOrdersAccounts = await findOpenOrdersAccountsForOwner(
-    program,
-    dexProgramId,
-    serumMarketKey
-  );
+  const openOrdersAccounts = await findOpenOrdersAccountsForOwner(program, dexProgramId, serumMarketKey);
 
   // create array of instructions to cancel the orders.
   await Promise.all(

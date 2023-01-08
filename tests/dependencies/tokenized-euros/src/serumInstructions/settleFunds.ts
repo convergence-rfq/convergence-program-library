@@ -1,10 +1,6 @@
 import { Program } from "@project-serum/anchor";
 import { Market } from "@project-serum/serum";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import { pdas, EuroPrimitive, marketLoader, getFeeOwnerForCluster } from "..";
 
@@ -32,20 +28,13 @@ export const settleFundsInstruction = async (
   serumReferralKey: PublicKey,
   openOrdersKey: PublicKey
 ) => {
-  const { serumMarketKey, marketAuthorityBump } =
-    await pdas.getMarketAndAuthorityInfo(
-      program,
-      optionMintKey,
-      dexProgramId,
-      priceCurrencyKey
-    );
-  const marketProxy = await marketLoader(
+  const { serumMarketKey, marketAuthorityBump } = await pdas.getMarketAndAuthorityInfo(
     program,
+    optionMintKey,
     dexProgramId,
-    serumMarketKey,
-    euroMetaKey,
-    marketAuthorityBump
+    priceCurrencyKey
   );
+  const marketProxy = await marketLoader(program, dexProgramId, serumMarketKey, euroMetaKey, marketAuthorityBump);
   return marketProxy.instruction.settleFunds(
     openOrdersKey,
     // @ts-ignore: TODO: Fix after Anchor exposes the publicKey

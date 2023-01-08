@@ -27,34 +27,21 @@ export const settleExpiredOptionsInstruction = async (
   optionType: OptionType
 ) => {
   const [poolAuthority] = await pdas.derivePoolAuthority(program);
-  const instruction = program.instruction.settleExpiredOptions(
-    amount,
-    optionType,
-    {
-      accounts: {
-        payer: program.provider.publicKey,
-        poolAuthority,
-        euroMeta: euroMetaKey,
-        expirationData: euroMeta.expirationData,
-        optionMint:
-          optionType === OptionType.CALL
-            ? euroMeta.callOptionMint
-            : euroMeta.putOptionMint,
-        collateralMint:
-          optionType === OptionType.CALL
-            ? euroMeta.underlyingMint
-            : euroMeta.stableMint,
-        collateralPool:
-          optionType === OptionType.CALL
-            ? euroMeta.underlyingPool
-            : euroMeta.stablePool,
-        optionSource,
-        collateralDestination,
+  const instruction = program.instruction.settleExpiredOptions(amount, optionType, {
+    accounts: {
+      payer: program.provider.publicKey,
+      poolAuthority,
+      euroMeta: euroMetaKey,
+      expirationData: euroMeta.expirationData,
+      optionMint: optionType === OptionType.CALL ? euroMeta.callOptionMint : euroMeta.putOptionMint,
+      collateralMint: optionType === OptionType.CALL ? euroMeta.underlyingMint : euroMeta.stableMint,
+      collateralPool: optionType === OptionType.CALL ? euroMeta.underlyingPool : euroMeta.stablePool,
+      optionSource,
+      collateralDestination,
 
-        tokenProgram: TOKEN_PROGRAM_ID,
-      },
-    }
-  );
+      tokenProgram: TOKEN_PROGRAM_ID,
+    },
+  });
 
   return { instruction };
 };

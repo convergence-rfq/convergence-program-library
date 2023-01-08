@@ -31,18 +31,9 @@ export const mintOptions = (
     accounts: {
       payer: program.provider.publicKey,
       euroMeta: euroMetaKey,
-      collateralPool:
-        optionType === OptionType.CALL
-          ? euroMeta.underlyingPool
-          : euroMeta.stablePool,
-      optionMint:
-        optionType === OptionType.CALL
-          ? euroMeta.callOptionMint
-          : euroMeta.putOptionMint,
-      writerMint:
-        optionType === OptionType.CALL
-          ? euroMeta.callWriterMint
-          : euroMeta.putWriterMint,
+      collateralPool: optionType === OptionType.CALL ? euroMeta.underlyingPool : euroMeta.stablePool,
+      optionMint: optionType === OptionType.CALL ? euroMeta.callOptionMint : euroMeta.putOptionMint,
+      writerMint: optionType === OptionType.CALL ? euroMeta.callWriterMint : euroMeta.putWriterMint,
       minterCollateral: minterCollateralKey,
       optionDestination,
       writerDestination,

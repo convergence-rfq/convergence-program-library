@@ -1,4 +1,3 @@
-
 use anchor_lang::prelude::*;
 
 // TODO: Import euro options crate instead of this file when it would be available

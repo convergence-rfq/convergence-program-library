@@ -1,12 +1,5 @@
 import { BN, Program, web3 } from "@project-serum/anchor";
-import {
-  Logger,
-  MarketProxyBuilder,
-  Middleware,
-  OpenOrders,
-  OpenOrdersPda,
-  ReferralFees,
-} from "@project-serum/serum";
+import { Logger, MarketProxyBuilder, Middleware, OpenOrders, OpenOrdersPda, ReferralFees } from "@project-serum/serum";
 import { EuroPrimitive } from "./euro_primitive";
 
 const textEncoder = new TextEncoder();
@@ -74,17 +67,10 @@ export class Validation implements Middleware {
   }
   prune(ix: web3.TransactionInstruction) {
     // prepend a discriminator and the marketAuthorityBump
-    const bumpBuffer = new BN(this.marketAuthorityBump).toArrayLike(
-      Buffer,
-      "le",
-      1
-    );
+    const bumpBuffer = new BN(this.marketAuthorityBump).toArrayLike(Buffer, "le", 1);
     ix.data = Buffer.concat([Buffer.from([6]), bumpBuffer, ix.data]);
     // prepend the euroMeta key
-    ix.keys = [
-      { pubkey: this.euroMetaKey, isWritable: false, isSigner: false },
-      ...ix.keys,
-    ];
+    ix.keys = [{ pubkey: this.euroMetaKey, isWritable: false, isSigner: false }, ...ix.keys];
   }
   consumeEvents(ix: web3.TransactionInstruction) {
     ix.data = Buffer.concat([Buffer.from([7]), ix.data]);
@@ -108,16 +94,15 @@ export const findOpenOrdersAccountsForOwner = async (
   dexProgramId: web3.PublicKey,
   serumMarketAddress: web3.PublicKey
 ) => {
-  const [openOrdersAddressKey, openOrdersBump] =
-    await web3.PublicKey.findProgramAddress(
-      [
-        textEncoder.encode("open-orders"),
-        dexProgramId.toBuffer(),
-        serumMarketAddress.toBuffer(),
-        program.provider.publicKey.toBuffer(),
-      ],
-      program.programId
-    );
+  const [openOrdersAddressKey, openOrdersBump] = await web3.PublicKey.findProgramAddress(
+    [
+      textEncoder.encode("open-orders"),
+      dexProgramId.toBuffer(),
+      serumMarketAddress.toBuffer(),
+      program.provider.publicKey.toBuffer(),
+    ],
+    program.programId
+  );
   const filters = [
     {
       memcmp: {
@@ -135,14 +120,9 @@ export const findOpenOrdersAccountsForOwner = async (
       dataSize: OpenOrders.getLayout(dexProgramId).span,
     },
   ];
-  const accounts = await program.provider.connection.getProgramAccounts(
-    dexProgramId,
-    {
-      filters,
-    }
-  );
+  const accounts = await program.provider.connection.getProgramAccounts(dexProgramId, {
+    filters,
+  });
 
-  return accounts.map(({ pubkey, account }) =>
-    OpenOrders.fromAccountInfo(pubkey, account, dexProgramId)
-  );
+  return accounts.map(({ pubkey, account }) => OpenOrders.fromAccountInfo(pubkey, account, dexProgramId));
 };

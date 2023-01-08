@@ -76,7 +76,6 @@ pub fn prepare_settlement_instruction<'info>(
         ..
     } = ctx.accounts;
 
-
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
     prepare_to_settle(
