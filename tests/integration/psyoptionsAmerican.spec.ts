@@ -127,7 +127,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await options.mintPsyOPtions(context.taker, new anchor.BN(2), OptionType.CALL, context);
 
     const rfq = await context.createRfq({
-      activeWindow: 4,
+      activeWindow: 2,
       settlingWindow: 1,
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
@@ -164,7 +164,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOPtions(context.taker, new anchor.BN(2), OptionType.CALL, context);
     const rfq = await context.createRfq({
-      activeWindow: 4,
+      activeWindow: 2,
       settlingWindow: 1,
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
