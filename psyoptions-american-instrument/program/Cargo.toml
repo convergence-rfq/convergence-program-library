@@ -9,10 +9,9 @@ crate-type = ["cdylib", "lib"]
 name = "psyoptions_american_instrument"
 
 [dependencies]
-
-anchor-lang = { version = "0.25,0", features = ["init-if-needed"] }
+anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
 anchor-spl = "0.25.0"
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
 shank = "0.0.8"
 risk-engine = { path = "../../risk-engine/program", features = ["no-entrypoint"] }
-psy_american = {version = "0.2.7",features= ["cpi"]}
+psy_american = { version = "0.2.7", features = ["cpi"] }
