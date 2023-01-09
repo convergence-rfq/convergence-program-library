@@ -325,8 +325,6 @@ export class Context {
         .signers([this.taker, rfq])
         .rpc();
 
-    console.log("CREATE RFQ: ", createRfq);
-
     legData = legs.map((x) => x.toLegData());
     let addLegsToRfq = await this.program.methods
         .addLegsToRfq(legData)
@@ -338,8 +336,6 @@ export class Context {
         .remainingAccounts(await rfqObject.getRiskEngineAccounts())
         .signers([this.taker])
         .rpc()
-
-    console.log("ADD LEGS TO RFQ: ", addLegsToRfq);
 
     let finalizeRfq = await this.program.methods
         .finalizeRfqConstruction()
@@ -354,8 +350,6 @@ export class Context {
         .remainingAccounts([...quoteAccounts, ...(await rfqObject.getRiskEngineAccounts())])
         .signers([this.taker])
         .rpc();
-
-    console.log("FINALIZE RFQ: ", finalizeRfq);
 
     return rfqObject;
   }
@@ -1117,5 +1111,46 @@ export async function getContext() {
     }
   );
 
-  return context;
+    return context;
+}
+
+
+export async function getUpdatedContext() {
+    if (context !== null) {
+        context.taker = await context.createPayer()
+        context.maker = await context.createPayer()
+
+        // create ATAs
+        await executeInParallel(
+            async () => await context.assetToken.createAssociatedAccountWithTokens(context.taker.publicKey),
+            async () => await context.assetToken.createAssociatedAccountWithTokens(context.maker.publicKey),
+        );
+        await executeInParallel(
+            async () => await context.additionalAssetToken.createAssociatedAccountWithTokens(context.taker.publicKey),
+            async () => await context.additionalAssetToken.createAssociatedAccountWithTokens(context.maker.publicKey),
+        );
+        await executeInParallel(
+            async () => await context.quoteToken.createAssociatedAccountWithTokens(context.taker.publicKey),
+            async () => await context.quoteToken.createAssociatedAccountWithTokens(context.maker.publicKey),
+        );
+        await executeInParallel(
+            async () => await context.collateralToken.createAssociatedAccountWithTokens(context.taker.publicKey),
+            async () => await context.collateralToken.createAssociatedAccountWithTokens(context.maker.publicKey),
+        );
+
+        await executeInParallel(
+            async () => {
+                await context.initializeCollateral(context.taker);
+                await context.fundCollateral(context.taker, DEFAULT_COLLATERAL_FUNDED);
+            },
+            async () => {
+                await context.initializeCollateral(context.maker);
+                await context.fundCollateral(context.maker, DEFAULT_COLLATERAL_FUNDED);
+            },
+        )
+
+        return context;
+    }
+
+    return await getContext();
 }
