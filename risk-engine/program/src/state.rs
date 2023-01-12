@@ -3,15 +3,15 @@ use std::{collections::HashMap, mem};
 use anchor_lang::prelude::*;
 use rfq::state::RiskCategory;
 
-use crate::fraction::Fraction;
+use crate::utils::convert_fixed_point_to_f64;
 
 #[account(zero_copy)]
 pub struct Config {
     pub collateral_for_variable_size_rfq_creation: u64,
     pub collateral_for_fixed_quote_amount_rfq_creation: u64,
     pub collateral_mint_decimals: u8,
-    pub safety_price_shift_factor: Fraction,
-    pub overall_safety_factor: Fraction,
+    pub safety_price_shift_factor: f64,
+    pub overall_safety_factor: f64,
     pub risk_categories_info: [RiskCategoryInfo; 5],
     pub instrument_types: [InstrumentInfo; 50], // Embed ProtocolState::MAX_INSTRUMENTS to work around anchor idl generation issue
 }
@@ -56,8 +56,8 @@ const SETTLEMENT_WINDOW_BREAKPOINS: [u32; SETTLEMENT_WINDOW_PEDIODS - 1] = [
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default)]
 pub struct RiskCategoryInfo {
-    pub interest_rate: Fraction,
-    pub yearly_volatility: Fraction,
+    pub interest_rate: f64,
+    pub yearly_volatility: f64,
     pub scenario_per_settlement_period: [Scenario; SETTLEMENT_WINDOW_PEDIODS],
 }
 
@@ -77,12 +77,12 @@ impl RiskCategoryInfo {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default)]
 pub struct Scenario {
-    pub base_asset_price_change: Fraction,
-    pub volatility_change: Fraction,
+    pub base_asset_price_change: f64,
+    pub volatility_change: f64,
 }
 
 impl Scenario {
-    pub fn new(base_asset_price_change: Fraction, volatility_change: Fraction) -> Self {
+    pub fn new(base_asset_price_change: f64, volatility_change: f64) -> Self {
         Self {
             base_asset_price_change,
             volatility_change,
@@ -117,12 +117,12 @@ impl OptionCommonData {
     pub const UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS: u8 = 9;
     pub const SERIALIZED_SIZE: usize = 1 + 8 + 8 + 8;
 
-    pub fn get_strike_price(&self) -> Fraction {
-        Fraction::new(self.strike_price.into(), Self::STRIKE_PRICE_DECIMALS)
+    pub fn get_strike_price(&self) -> f64 {
+        convert_fixed_point_to_f64(self.strike_price.into(), Self::STRIKE_PRICE_DECIMALS)
     }
 
-    pub fn get_underlying_amount_per_contract(&self) -> Fraction {
-        Fraction::new(
+    pub fn get_underlying_amount_per_contract(&self) -> f64 {
+        convert_fixed_point_to_f64(
             self.underlying_amount_per_contract.into(),
             Self::UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS,
         )
@@ -144,8 +144,8 @@ impl FutureCommonData {
     pub const UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS: u8 = 9;
     pub const SERIALIZED_SIZE: usize = 8;
 
-    pub fn get_underlying_amount_per_contract(&self) -> Fraction {
-        Fraction::new(
+    pub fn get_underlying_amount_per_contract(&self) -> f64 {
+        convert_fixed_point_to_f64(
             self.underlying_amount_per_contract.into(),
             Self::UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS,
         )

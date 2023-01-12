@@ -43,8 +43,8 @@ impl ScenarioSelector<'_> {
             ]
         } else {
             vec![
-                Scenario::new(base_scenario.base_asset_price_change, 0.into()),
-                Scenario::new(-base_scenario.base_asset_price_change, 0.into()),
+                Scenario::new(base_scenario.base_asset_price_change, 0.0),
+                Scenario::new(-base_scenario.base_asset_price_change, 0.0),
             ]
         }
     }
