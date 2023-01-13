@@ -29,34 +29,21 @@ export const settleExpiredWritersInstruction = async (
   optionType: OptionType
 ) => {
   const [poolAuthority] = await pdas.derivePoolAuthority(program);
-  const instruction = program.instruction.settleExpiredWriters(
-    amount,
-    optionType,
-    {
-      accounts: {
-        payer: program.provider.publicKey,
-        poolAuthority,
-        euroMeta: euroMetaKey,
-        expirationData: euroMeta.expirationData,
-        writerMint:
-          optionType === OptionType.CALL
-            ? euroMeta.callWriterMint
-            : euroMeta.putWriterMint,
-        collateralMint:
-          optionType === OptionType.CALL
-            ? euroMeta.underlyingMint
-            : euroMeta.stableMint,
-        collateralPool:
-          optionType === OptionType.CALL
-            ? euroMeta.underlyingPool
-            : euroMeta.stablePool,
-        writerSource,
-        collateralDestination,
+  const instruction = program.instruction.settleExpiredWriters(amount, optionType, {
+    accounts: {
+      payer: program.provider.publicKey,
+      poolAuthority,
+      euroMeta: euroMetaKey,
+      expirationData: euroMeta.expirationData,
+      writerMint: optionType === OptionType.CALL ? euroMeta.callWriterMint : euroMeta.putWriterMint,
+      collateralMint: optionType === OptionType.CALL ? euroMeta.underlyingMint : euroMeta.stableMint,
+      collateralPool: optionType === OptionType.CALL ? euroMeta.underlyingPool : euroMeta.stablePool,
+      writerSource,
+      collateralDestination,
 
-        tokenProgram: TOKEN_PROGRAM_ID,
-      },
-    }
-  );
+      tokenProgram: TOKEN_PROGRAM_ID,
+    },
+  });
 
   return { instruction };
 };

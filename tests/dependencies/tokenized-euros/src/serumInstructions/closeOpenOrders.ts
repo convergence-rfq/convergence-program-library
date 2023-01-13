@@ -23,20 +23,13 @@ export const closeOpenOrdersInstruction = async (
   priceCurrencyKey: PublicKey,
   solWallet?: PublicKey
 ) => {
-  const { serumMarketKey, marketAuthorityBump } =
-    await pdas.getMarketAndAuthorityInfo(
-      program,
-      optionMintKey,
-      dexProgramId,
-      priceCurrencyKey
-    );
-  const marketProxy = await marketLoader(
+  const { serumMarketKey, marketAuthorityBump } = await pdas.getMarketAndAuthorityInfo(
     program,
+    optionMintKey,
     dexProgramId,
-    serumMarketKey,
-    euroMetaKey,
-    marketAuthorityBump
+    priceCurrencyKey
   );
+  const marketProxy = await marketLoader(program, dexProgramId, serumMarketKey, euroMetaKey, marketAuthorityBump);
   return marketProxy.instruction.closeOpenOrders(
     openOrdersKey,
     // @ts-ignore: TODO: Fix after Anchor exposes the publicKey

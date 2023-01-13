@@ -23,21 +23,10 @@ export const initializeUnderlyingPoolIx = (
   });
 };
 
-export const initializeUnderlyingPool = async (
-  program: Program<EuroPrimitive>,
-  underlyingMint: web3.PublicKey
-) => {
+export const initializeUnderlyingPool = async (program: Program<EuroPrimitive>, underlyingMint: web3.PublicKey) => {
   const [poolAuthority] = await pdas.derivePoolAuthority(program);
-  const [underlyingPool] = await pdas.deriveUnderlyingPoolKey(
-    program,
-    underlyingMint
-  );
-  const instruction = initializeUnderlyingPoolIx(
-    program,
-    underlyingMint,
-    poolAuthority,
-    underlyingPool
-  );
+  const [underlyingPool] = await pdas.deriveUnderlyingPoolKey(program, underlyingMint);
+  const instruction = initializeUnderlyingPoolIx(program, underlyingMint, poolAuthority, underlyingPool);
 
   return { instruction };
 };

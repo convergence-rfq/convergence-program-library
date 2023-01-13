@@ -6,9 +6,9 @@ const sdkDir = path.join(__dirname, "generated");
 const binaryInstallDir = path.join(__dirname, ".crates");
 
 module.exports = {
-  idlGenerator: "shank",
+  idlGenerator: "anchor",
   programName: "spot_instrument",
-  programId: "CvMZtmG8TaUcqZRxYBx1XpNzgWEewAMsiZbPTNxcz2iL",
+  programId: "6pyiZyPDi7a6vMymw5NFTvtFBZJbDrNsgrcYK5jGEH4K",
   idlDir,
   sdkDir,
   binaryInstallDir,

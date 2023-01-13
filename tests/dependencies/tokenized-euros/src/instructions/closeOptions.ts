@@ -34,18 +34,9 @@ export const closeOptionsInstruction = async (
       payer: program.provider.publicKey,
       euroMeta: euroMetaKey,
       poolAuthority,
-      optionMint:
-        optionType === OptionType.CALL
-          ? euroMeta.callOptionMint
-          : euroMeta.putOptionMint,
-      writerMint:
-        optionType === OptionType.CALL
-          ? euroMeta.callWriterMint
-          : euroMeta.putWriterMint,
-      collateralPool:
-        optionType === OptionType.CALL
-          ? euroMeta.underlyingPool
-          : euroMeta.stablePool,
+      optionMint: optionType === OptionType.CALL ? euroMeta.callOptionMint : euroMeta.putOptionMint,
+      writerMint: optionType === OptionType.CALL ? euroMeta.callWriterMint : euroMeta.putWriterMint,
+      collateralPool: optionType === OptionType.CALL ? euroMeta.underlyingPool : euroMeta.stablePool,
       optionSource,
       writerSource,
       collateralDestination,

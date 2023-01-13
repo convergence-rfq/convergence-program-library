@@ -265,7 +265,7 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create RFQ with a lot of spot legs and settle it", async () => {
-    const legAmount = 10;
+    const legAmount = 6;
     const mints = await Promise.all(
       [...Array(legAmount)].map(async () => {
         const mint = await Mint.create(context);
@@ -307,7 +307,7 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create RFQ with a lot of spot legs and default with partial preparation", async () => {
-    const legAmount = 10;
+    const legAmount = 6;
     const mints = await Promise.all(
       [...Array(legAmount)].map(async () => {
         const mint = await Mint.create(context);

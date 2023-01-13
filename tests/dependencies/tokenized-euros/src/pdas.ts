@@ -13,10 +13,7 @@ const OPEN_ORDERS_INIT_SEED = textEncoder.encode("open-orders-init");
  * @returns
  */
 export const derivePoolAuthority = (program: Program<EuroPrimitive>) =>
-  anchor.web3.PublicKey.findProgramAddress(
-    [textEncoder.encode("poolAuthority")],
-    program.programId
-  );
+  anchor.web3.PublicKey.findProgramAddress([textEncoder.encode("poolAuthority")], program.programId);
 /**
  * Derive the EuroMeta account address from it's unique params.
  *
@@ -78,10 +75,7 @@ export const deriveExpirationData = (
  * @param program
  * @returns
  */
-export const deriveUnderlyingPoolKey = (
-  program: Program<EuroPrimitive>,
-  underlyingMint: anchor.web3.PublicKey
-) =>
+export const deriveUnderlyingPoolKey = (program: Program<EuroPrimitive>, underlyingMint: anchor.web3.PublicKey) =>
   anchor.web3.PublicKey.findProgramAddress(
     [underlyingMint.toBuffer(), textEncoder.encode("underlyingPool")],
     program.programId
@@ -93,46 +87,31 @@ export const deriveUnderlyingPoolKey = (
  * @param stableMint
  * @returns
  */
-export const deriveStablePoolKey = (
-  program: Program<EuroPrimitive>,
-  stableMint: anchor.web3.PublicKey
-) =>
+export const deriveStablePoolKey = (program: Program<EuroPrimitive>, stableMint: anchor.web3.PublicKey) =>
   anchor.web3.PublicKey.findProgramAddress(
     [stableMint.toBuffer(), textEncoder.encode("stablePool")],
     program.programId
   );
 
-export const deriveCallOptionMint = (
-  program: Program<EuroPrimitive>,
-  euroMetaKey: anchor.web3.PublicKey
-) =>
+export const deriveCallOptionMint = (program: Program<EuroPrimitive>, euroMetaKey: anchor.web3.PublicKey) =>
   anchor.web3.PublicKey.findProgramAddress(
     [euroMetaKey.toBuffer(), textEncoder.encode("callOptionMint")],
     program.programId
   );
 
-export const deriveCallWriterMint = (
-  program: Program<EuroPrimitive>,
-  euroMetaKey: anchor.web3.PublicKey
-) =>
+export const deriveCallWriterMint = (program: Program<EuroPrimitive>, euroMetaKey: anchor.web3.PublicKey) =>
   anchor.web3.PublicKey.findProgramAddress(
     [euroMetaKey.toBuffer(), textEncoder.encode("callWriterMint")],
     program.programId
   );
 
-export const derivePutOptionMint = (
-  program: Program<EuroPrimitive>,
-  euroMetaKey: anchor.web3.PublicKey
-) =>
+export const derivePutOptionMint = (program: Program<EuroPrimitive>, euroMetaKey: anchor.web3.PublicKey) =>
   anchor.web3.PublicKey.findProgramAddress(
     [euroMetaKey.toBuffer(), textEncoder.encode("putOptionMint")],
     program.programId
   );
 
-export const derivePutWriterMint = (
-  program: Program<EuroPrimitive>,
-  euroMetaKey: anchor.web3.PublicKey
-) =>
+export const derivePutWriterMint = (program: Program<EuroPrimitive>, euroMetaKey: anchor.web3.PublicKey) =>
   anchor.web3.PublicKey.findProgramAddress(
     [euroMetaKey.toBuffer(), textEncoder.encode("putWriterMint")],
     program.programId
@@ -154,11 +133,7 @@ export const deriveSerumMarketAddress = async (
   priceCurrencyKey: web3.PublicKey
 ) => {
   return web3.PublicKey.findProgramAddress(
-    [
-      optionMintKey.toBuffer(),
-      priceCurrencyKey.toBuffer(),
-      textEncoder.encode("serumMarket"),
-    ],
+    [optionMintKey.toBuffer(), priceCurrencyKey.toBuffer(), textEncoder.encode("serumMarket")],
     program.programId
   );
 };
@@ -179,11 +154,7 @@ export const deriveRequestQueue = (
   priceCurrencyKey: web3.PublicKey
 ) =>
   web3.PublicKey.findProgramAddress(
-    [
-      optionMintKey.toBuffer(),
-      priceCurrencyKey.toBuffer(),
-      textEncoder.encode("requestQueue"),
-    ],
+    [optionMintKey.toBuffer(), priceCurrencyKey.toBuffer(), textEncoder.encode("requestQueue")],
     program.programId
   );
 
@@ -193,11 +164,7 @@ export const deriveCoinVault = (
   priceCurrencyKey: web3.PublicKey
 ) =>
   web3.PublicKey.findProgramAddress(
-    [
-      optionMintKey.toBuffer(),
-      priceCurrencyKey.toBuffer(),
-      textEncoder.encode("coinVault"),
-    ],
+    [optionMintKey.toBuffer(), priceCurrencyKey.toBuffer(), textEncoder.encode("coinVault")],
     program.programId
   );
 
@@ -207,11 +174,7 @@ export const derivePCVault = (
   priceCurrencyKey: web3.PublicKey
 ) =>
   web3.PublicKey.findProgramAddress(
-    [
-      optionMarketKey.toBuffer(),
-      priceCurrencyKey.toBuffer(),
-      textEncoder.encode("pcVault"),
-    ],
+    [optionMarketKey.toBuffer(), priceCurrencyKey.toBuffer(), textEncoder.encode("pcVault")],
     program.programId
   );
 
@@ -248,17 +211,9 @@ export const getMarketAndAuthorityInfo = async (
   marketAuthority: web3.PublicKey;
   marketAuthorityBump: number;
 }> => {
-  const [serumMarketKey, _serumMarketBump] = await deriveSerumMarketAddress(
-    program,
-    optionMintKey,
-    priceCurrencyKey
-  );
+  const [serumMarketKey, _serumMarketBump] = await deriveSerumMarketAddress(program, optionMintKey, priceCurrencyKey);
 
-  const [marketAuthority, marketAuthorityBump] = await deriveMarketAuthority(
-    program,
-    dexProgramId,
-    serumMarketKey
-  );
+  const [marketAuthority, marketAuthorityBump] = await deriveMarketAuthority(program, dexProgramId, serumMarketKey);
 
   return { serumMarketKey, marketAuthority, marketAuthorityBump };
 };

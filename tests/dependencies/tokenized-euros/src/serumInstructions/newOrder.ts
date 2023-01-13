@@ -31,13 +31,12 @@ export const newOrderInstruction = async (
 ): Promise<{ openOrdersKey: PublicKey; tx: Transaction }> => {
   const transaction = new Transaction();
   let _openOrdersKey = orderArguments.openOrdersAddressKey;
-  const { serumMarketKey, marketAuthorityBump } =
-    await pdas.getMarketAndAuthorityInfo(
-      program,
-      optionMintKey,
-      dexProgramId,
-      priceCurrencyKey
-    );
+  const { serumMarketKey, marketAuthorityBump } = await pdas.getMarketAndAuthorityInfo(
+    program,
+    optionMintKey,
+    dexProgramId,
+    priceCurrencyKey
+  );
   const marketProxy = await marketLoader(
     program,
     dexProgramId,
@@ -50,15 +49,8 @@ export const newOrderInstruction = async (
   // create OpenOrders account
   if (!_openOrdersKey) {
     // Check that the OpenOrders account does not exist
-    [_openOrdersKey] = await pdas.deriveOpenOrdersAddress(
-      program,
-      dexProgramId,
-      marketProxy
-    );
-    const accountInfo = await program.provider.connection.getAccountInfo(
-      _openOrdersKey,
-      "recent"
-    );
+    [_openOrdersKey] = await pdas.deriveOpenOrdersAddress(program, dexProgramId, marketProxy);
+    const accountInfo = await program.provider.connection.getAccountInfo(_openOrdersKey, "recent");
     orderArguments.openOrdersAddressKey = _openOrdersKey;
     if (!accountInfo) {
       const { ix } = await initOpenOrdersInstruction(

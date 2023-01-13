@@ -12,20 +12,20 @@ jobs:
     strategy:
       matrix:
         node: ["16.x", "18.x"]
-        solana: ["1.10.34"]
+        solana: ["1.14.11"]
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Install Rust
-        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        run: curl --proto '=https' -y --tlsv1.2 -sSf https://sh.rustup.rs | sh
       - name: Install AVM
         run: cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
       - name: Install latest Anchor
-        run: avm install latest
+        run: avm install 0.25.0
       - name: Use latest Anchor
-        run: avm use latest
+        run: avm use 0.25.0
       - name: Install Solana
         uses: ./.github/actions/install-solana
         with:
@@ -35,9 +35,19 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: "yarn"
+      - name: Check Cargo fmt
+        continue-on-error: false
+        shell: bash
+        run: cargo fmt --check
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+      - name: Lint TypeScript
+        continue-on-error: false
+        shell: bash
+        run: yarn lint:check
       - name: Build
         run: anchor build
       - name: Run tests
+        continue-on-error: false
+        shell: bash
         run: anchor test

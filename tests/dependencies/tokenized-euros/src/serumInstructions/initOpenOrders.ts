@@ -1,9 +1,5 @@
 import { Program } from "@project-serum/anchor";
-import {
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import { PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
 import { EuroPrimitive, marketLoader, MarketLoaderOpts, pdas } from "..";
 
 /**
@@ -29,13 +25,12 @@ export const initOpenOrdersInstruction = async (
     enableLogger: false,
   }
 ): Promise<{ ix: TransactionInstruction }> => {
-  const { serumMarketKey, marketAuthority, marketAuthorityBump } =
-    await pdas.getMarketAndAuthorityInfo(
-      program,
-      optionMintKey,
-      dexProgramId,
-      priceCurrencyKey
-    );
+  const { serumMarketKey, marketAuthority, marketAuthorityBump } = await pdas.getMarketAndAuthorityInfo(
+    program,
+    optionMintKey,
+    dexProgramId,
+    priceCurrencyKey
+  );
   const marketProxy = await marketLoader(
     program,
     dexProgramId,

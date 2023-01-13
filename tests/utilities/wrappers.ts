@@ -50,6 +50,10 @@ import { InstrumentController } from "./instrument";
 import { calculateLegsSize, executeInParallel, expandComputeUnits } from "./helpers";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
 
+import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
+import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmericanInstrument";
+import { EuroMeta } from "../dependencies/tokenized-euros/src/types";
+
 export class Context {
   public program: anchor.Program<RfqIdl>;
   public riskEngine: RiskEngine;
@@ -191,6 +195,8 @@ export class Context {
       .rpc();
   }
 
+  // Calculate standard deviation
+
   async initializeCollateral(user: Keypair) {
     await this.program.methods
       .initializeCollateral()
@@ -273,7 +279,7 @@ export class Context {
       txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeConstructionInstruction()]);
     }
 
-    await txConstructor.rpc();
+    let tx = await txConstructor.rpc();
 
     return rfqObject;
   }
@@ -654,6 +660,7 @@ export class Response {
 
   async prepareSettlement(side, legAmount = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+
     if (this.firstToPrepare.equals(PublicKey.default)) {
       this.firstToPrepare = caller.publicKey;
     }
@@ -966,6 +973,9 @@ export async function getContext() {
     },
     async () => {
       await PsyoptionsEuropeanInstrument.addInstrument(context);
+    },
+    async () => {
+      await PsyoptionsAmericanInstrumentClass.addInstrument(context);
     },
     async () => {
       await context.initializeCollateral(context.taker);

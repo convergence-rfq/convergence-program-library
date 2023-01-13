@@ -75,6 +75,7 @@ pub fn create_rfq_instruction<'info>(
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
     validate_quote(protocol, &mut remaining_accounts, &quote_asset)?;
+
     validate_legs(protocol, &mut remaining_accounts, expected_leg_size, &legs)?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
