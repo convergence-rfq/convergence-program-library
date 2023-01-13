@@ -5,20 +5,20 @@ use rfq::state::{
 
 use base_asset_extractor::extract_base_assets;
 use errors::Error;
-use fraction::Fraction;
 use price_extractor::extract_prices;
 use risk_calculator::{CalculationCase, RiskCalculator};
 use scenarios::ScenarioSelector;
 use state::{Config, InstrumentInfo, InstrumentType, RiskCategoryInfo};
+use utils::{convert_fixed_point_to_f64, get_leg_amount_f64};
 
 pub mod base_asset_extractor;
 pub mod black_scholes;
 pub mod errors;
-pub mod fraction;
 pub mod price_extractor;
 pub mod risk_calculator;
 pub mod scenarios;
 pub mod state;
+pub mod utils;
 
 declare_id!("7VfhLs4yNYbpWzH1n1g8myKX4KGJnujoLMUnAqsr3wth");
 
@@ -33,8 +33,8 @@ pub mod risk_engine {
         collateral_for_variable_size_rfq_creation: u64,
         collateral_for_fixed_quote_amount_rfq_creation: u64,
         collateral_mint_decimals: u8,
-        safety_price_shift_factor: Fraction,
-        overall_safety_factor: Fraction,
+        safety_price_shift_factor: f64,
+        overall_safety_factor: f64,
     ) -> Result<()> {
         let mut config = ctx.accounts.config.load_init()?;
 
@@ -75,8 +75,8 @@ pub mod risk_engine {
         collateral_for_variable_size_rfq_creation: Option<u64>,
         collateral_for_fixed_quote_amount_rfq_creation: Option<u64>,
         collateral_mint_decimals: Option<u8>,
-        safety_price_shift_factor: Option<Fraction>,
-        overall_safety_factor: Option<Fraction>,
+        safety_price_shift_factor: Option<f64>,
+        overall_safety_factor: Option<f64>,
     ) -> Result<()> {
         let mut config = ctx.accounts.config.load_mut()?;
 
@@ -181,7 +181,7 @@ pub mod risk_engine {
                     &config,
                     &mut ctx.remaining_accounts,
                 )?;
-                let leg_multiplier = Fraction::new(
+                let leg_multiplier = convert_fixed_point_to_f64(
                     legs_multiplier_bps.into(),
                     Quote::LEG_MULTIPLIER_DECIMALS as u8,
                 );
@@ -233,7 +233,7 @@ pub mod risk_engine {
 
         let get_case = |quote, side| {
             let legs_multiplier_bps = response.calculate_legs_multiplier_bps_for_quote(rfq, quote);
-            let leg_multiplier = Fraction::new(
+            let leg_multiplier = convert_fixed_point_to_f64(
                 legs_multiplier_bps.into(),
                 Quote::LEG_MULTIPLIER_DECIMALS as u8,
             );
@@ -280,7 +280,7 @@ pub mod risk_engine {
         let risk_calculator = construct_risk_calculator(rfq, &config, &mut ctx.remaining_accounts)?;
 
         let legs_multiplier_bps = response.calculate_confirmed_legs_multiplier_bps(rfq);
-        let leg_multiplier = Fraction::new(
+        let leg_multiplier = convert_fixed_point_to_f64(
             legs_multiplier_bps.into(),
             Quote::LEG_MULTIPLIER_DECIMALS as u8,
         );
@@ -311,6 +311,7 @@ pub mod risk_engine {
 #[derive(Clone)]
 pub struct LegWithMetadata<'a> {
     leg: &'a Leg,
+    leg_amount_fraction: f64,
     instrument_type: InstrumentType,
 }
 
@@ -335,8 +336,10 @@ fn construct_risk_calculator<'a>(
                 .get(&leg.instrument_program)
                 .ok_or_else(|| error!(Error::MissingInstrument))?
                 .clone();
+
             Ok(LegWithMetadata {
                 leg: &leg,
+                leg_amount_fraction: get_leg_amount_f64(leg),
                 instrument_type,
             })
         })

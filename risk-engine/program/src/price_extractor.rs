@@ -5,7 +5,6 @@ use rfq::state::{BaseAssetIndex, BaseAssetInfo, PriceOracle};
 use switchboard_v2::{AggregatorAccountData, SwitchboardDecimal};
 
 use crate::errors::Error;
-use crate::fraction::Fraction;
 
 pub const SWITCHBOARD_FEED_STALENESS_SECONDS: i64 = 300; // TODO decide on the actual value
 pub const SWITCHBOARD_MAX_CONFIDENCE_INTERVAL: f64 = 0.1; // TODO decide on the actual value
@@ -13,7 +12,7 @@ pub const SWITCHBOARD_MAX_CONFIDENCE_INTERVAL: f64 = 0.1; // TODO decide on the 
 pub fn extract_prices(
     base_assets: &Vec<BaseAssetInfo>,
     accounts: &mut &[AccountInfo],
-) -> Result<HashMap<BaseAssetIndex, Fraction>> {
+) -> Result<HashMap<BaseAssetIndex, f64>> {
     let mut result = HashMap::default();
 
     while result.len() < base_assets.len() {
@@ -48,13 +47,13 @@ fn does_oracle_match(base_asset: &BaseAssetInfo, address: Pubkey) -> bool {
     }
 }
 
-fn extract_price(oracle: PriceOracle, account: &AccountInfo) -> Result<Fraction> {
+fn extract_price(oracle: PriceOracle, account: &AccountInfo) -> Result<f64> {
     match oracle {
         PriceOracle::Switchboard { address: _ } => extract_switchboard_price(account),
     }
 }
 
-fn extract_switchboard_price(account: &AccountInfo) -> Result<Fraction> {
+fn extract_switchboard_price(account: &AccountInfo) -> Result<f64> {
     let loader = AccountLoader::<AggregatorAccountData>::try_from(account)?;
     let feed = loader.load()?;
 
@@ -69,6 +68,6 @@ fn extract_switchboard_price(account: &AccountInfo) -> Result<Fraction> {
     ))
     .map_err(|_| error!(Error::FailedToExtractPrice))?;
 
-    let price = feed.get_result()?;
-    Ok(Fraction::new(price.mantissa, price.scale as u8))
+    let price = feed.get_result()?.try_into()?;
+    Ok(price)
 }
