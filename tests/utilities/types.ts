@@ -39,7 +39,7 @@ export type Scenario = {
 
 export type RiskCategoryInfo = {
   interestRate: number;
-  yearlyVolatility: number;
+  annualized30DayVolatility: number;
   scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario];
 };
 
@@ -112,12 +112,12 @@ export function toScenario(baseAssetPriceChange: number, volatilityChange: numbe
 
 export function toRiskCategoryInfo(
   interestRate: number,
-  yearlyVolatility: number,
+  annualized30DayVolatility: number,
   scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario]
 ): RiskCategoryInfo {
   return {
     interestRate,
-    yearlyVolatility,
+    annualized30DayVolatility,
     scenarioPerSettlementPeriod: scenarioPerSettlementPeriod,
   };
 }

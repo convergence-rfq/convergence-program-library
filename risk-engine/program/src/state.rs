@@ -57,7 +57,7 @@ const SETTLEMENT_WINDOW_BREAKPOINS: [u32; SETTLEMENT_WINDOW_PEDIODS - 1] = [
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default)]
 pub struct RiskCategoryInfo {
     pub interest_rate: f64,
-    pub yearly_volatility: f64,
+    pub annualized_30_day_volatility: f64,
     pub scenario_per_settlement_period: [Scenario; SETTLEMENT_WINDOW_PEDIODS],
 }
 

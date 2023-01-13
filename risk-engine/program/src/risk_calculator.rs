@@ -184,7 +184,7 @@ impl<'a> RiskCalculator<'a> {
         calculate_asset_value(
             leg_with_meta,
             price,
-            risk_category_info.yearly_volatility,
+            risk_category_info.annualized_30_day_volatility,
             risk_category_info.interest_rate,
             self.current_timestamp,
         )
@@ -219,7 +219,7 @@ impl ScenarioRiskCalculator<'_> {
 
     fn calculate_shocked_value(&self, leg_with_meta: &LegWithMetadata) -> Result<f64> {
         let shocked_price = self.price * (self.scenario.base_asset_price_change + 1.0);
-        let mut shocked_volatility = self.risk_category_info.yearly_volatility;
+        let mut shocked_volatility = self.risk_category_info.annualized_30_day_volatility;
 
         if self.scenario.volatility_change != 0.0 {
             shocked_volatility *= self.scenario.volatility_change + 1.0;
@@ -238,14 +238,14 @@ impl ScenarioRiskCalculator<'_> {
 fn calculate_asset_value(
     leg_with_meta: &LegWithMetadata,
     price: f64,
-    yearly_volatility: f64,
+    annualized_30_day_volatility: f64,
     interest_rate: f64,
     current_timestamp: i64,
 ) -> Result<f64> {
     let unit_value = calculate_asset_unit_value(
         leg_with_meta,
         price,
-        yearly_volatility,
+        annualized_30_day_volatility,
         interest_rate,
         current_timestamp,
     )?;
@@ -256,7 +256,7 @@ fn calculate_asset_value(
 fn calculate_asset_unit_value(
     leg_with_meta: &LegWithMetadata,
     price: f64,
-    yearly_volatility: f64,
+    annualized_30_day_volatility: f64,
     interest_rate: f64,
     current_timestamp: i64,
 ) -> Result<f64> {
@@ -276,7 +276,7 @@ fn calculate_asset_unit_value(
                 option_data.get_underlying_amount_per_contract(),
                 option_data.get_strike_price(),
                 interest_rate,
-                yearly_volatility,
+                annualized_30_day_volatility,
                 seconds_till_expiration,
             ))
         }
@@ -312,7 +312,7 @@ mod tests {
             overall_safety_factor: 0.1,
             risk_categories_info: [RiskCategoryInfo {
                 interest_rate: 0.05,
-                yearly_volatility: 0.5,
+                annualized_30_day_volatility: 0.5,
                 scenario_per_settlement_period: Default::default(),
             }; 5],
             instrument_types: [Default::default(); ProtocolState::MAX_INSTRUMENTS],
