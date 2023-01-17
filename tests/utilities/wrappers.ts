@@ -49,10 +49,7 @@ import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
 import { calculateLegsSize, executeInParallel, expandComputeUnits } from "./helpers";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
-
-import { SpotInstrument as SpotInstrumentIdl } from "../../target/types/spot_instrument";
 import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmericanInstrument";
-import { EuroMeta } from "../dependencies/tokenized-euros/src/types";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;

@@ -6,7 +6,6 @@ import chaiBn from "chai-bn";
 import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
 import { InstrumentController } from "./instrument";
-import { Fraction } from "./types";
 
 chai.use(chaiBn(BN));
 
