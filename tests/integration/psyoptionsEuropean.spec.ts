@@ -113,7 +113,7 @@ describe("Psyoptions European instrument integration tests", () => {
   });
 
   it("Successful settlement flow with a lot of different base asset options", async () => {
-    const legAmount = 3;
+    const legAmount = 6;
     const baseAssetOffset = 6300;
     const mints = await Promise.all(
       [...Array(legAmount)].map(async (_, i) => {
@@ -144,8 +144,9 @@ describe("Psyoptions European instrument integration tests", () => {
       legsSize: calculateLegsSize(legs),
       finalize: false,
     });
-    await rfq.addLegs([...legs.slice(1, legAmount - 1)], false);
-    await rfq.addLegs([...legs.slice(legAmount - 1)]);
+    await rfq.addLegs([...legs.slice(1, 3)], false);
+    await rfq.addLegs([...legs.slice(3, 5)], false);
+    await rfq.addLegs([...legs.slice(5)]);
 
     const response = await rfq.respond({
       bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
@@ -156,8 +157,10 @@ describe("Psyoptions European instrument integration tests", () => {
     // mint options
     await Promise.all(options.map(async (option) => option.mintOptions(context.maker, new BN(2), OptionType.CALL)));
 
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+    await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
 
     await response.settle(
       maker,

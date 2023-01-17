@@ -10,7 +10,7 @@ import {
   withTokenDecimals,
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
-import { AuthoritySide, FixedSize, OrderType, Quote, RiskCategory, Side } from "../utilities/types";
+import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 
 describe("RFQ Spot instrument integration tests", () => {

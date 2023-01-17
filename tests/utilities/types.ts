@@ -33,19 +33,14 @@ export function riskCategoryToObject(value: RiskCategory) {
   };
 }
 
-export type Fraction = {
-  mantissa: BN;
-  decimals: number;
-};
-
 export type Scenario = {
-  baseAssetPriceChange: Fraction;
-  volatilityChange: Fraction;
+  baseAssetPriceChange: number;
+  volatilityChange: number;
 };
 
 export type RiskCategoryInfo = {
-  interestRate: Fraction;
-  yearlyVolatility: Fraction;
+  interestRate: number;
+  annualized30DayVolatility: number;
   scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario];
 };
 
@@ -112,26 +107,18 @@ export const FixedSize = {
   },
 };
 
-export function toFrational(mantissa: BN | number, decimals: number = 0): Fraction {
-  if (typeof mantissa === "number") {
-    mantissa = new BN(mantissa);
-  }
-
-  return { mantissa: mantissa as BN, decimals };
-}
-
-export function toScenario(baseAssetPriceChange: Fraction, volatilityChange: Fraction): Scenario {
+export function toScenario(baseAssetPriceChange: number, volatilityChange: number): Scenario {
   return { baseAssetPriceChange, volatilityChange };
 }
 
 export function toRiskCategoryInfo(
-  interestRate: Fraction,
-  yearlyVolatility: Fraction,
+  interestRate: number,
+  annualized30DayVolatility: number,
   scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario]
 ): RiskCategoryInfo {
   return {
     interestRate,
-    yearlyVolatility,
+    annualized30DayVolatility,
     scenarioPerSettlementPeriod: scenarioPerSettlementPeriod,
   };
 }
