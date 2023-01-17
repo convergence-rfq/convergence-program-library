@@ -35,8 +35,8 @@ describe("RFQ Spot instrument integration tests", () => {
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
     });
     // taker confirms to buy 1 bitcoin
     await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
@@ -70,11 +70,11 @@ describe("RFQ Spot instrument integration tests", () => {
     });
     // respond with quote for half of legs
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(70_000)), toLegMultiplier(0.5)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(70_000)), toLegMultiplier(0.5)),
     });
     // respond with quote for twice of legs once more with higher price
     const secondResponse = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(71_000)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(71_000)), toLegMultiplier(2)),
     });
 
     // taker confirms first response, but only half of it
