@@ -52,8 +52,8 @@ describe("Psyoptions European instrument integration tests", () => {
     });
     // response with agreeing to sell 2 options for 500$ or buy 5 for 450$
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
     });
     // taker confirms to buy 1 option
     await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
@@ -91,7 +91,7 @@ describe("Psyoptions European instrument integration tests", () => {
     });
     // response with agreeing to buy 5 options for 450$
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
     });
     // taker confirms to sell 2 options
     await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
@@ -149,8 +149,8 @@ describe("Psyoptions European instrument integration tests", () => {
     await rfq.addLegs([...legs.slice(5)]);
 
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
     });
     await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
 

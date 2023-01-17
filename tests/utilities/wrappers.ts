@@ -501,7 +501,7 @@ export class Rfq {
 
   async respond({ bid = null, ask = null } = {}) {
     if (bid === null && ask === null) {
-      bid = Quote.getStandart(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
+      bid = Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
     }
     const response = new Keypair();
 
