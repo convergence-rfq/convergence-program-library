@@ -15,13 +15,10 @@ import {
   IDL as EuroOptionsIdl,
   OptionType,
   programId as euroOptionsProgramId,
-} from "../../dependencies/tokenized-euros/src";
+  instructions,
+} from "@mithraic-labs/tokenized-euros";
 import { IDL as PseudoPythIdl } from "../../dependencies/pseudo_pyth_idl";
-import {
-  createEuroMetaInstruction,
-  initializeAllAccountsInstructions,
-  mintOptions,
-} from "../../dependencies/tokenized-euros/src/instructions";
+const { createEuroMetaInstruction, initializeAllAccountsInstructions, mintOptions } = instructions;
 
 let psyoptionsEuropeanInstrumentProgram = null;
 export function getEuroOptionsInstrumentProgram(): Program<PsyoptionsEuropeanInstrumentIdl> {

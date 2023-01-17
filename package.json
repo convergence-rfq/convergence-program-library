@@ -1,6 +1,7 @@
 {
   "license": "MIT",
   "dependencies": {
+    "@mithraic-labs/tokenized-euros": "^0.2.2",
     "@project-serum/anchor": "0.25.0",
     "@project-serum/serum": "^0.13.61",
     "@solana/spl-token": "^0.1.8"

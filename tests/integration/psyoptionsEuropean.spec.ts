@@ -11,7 +11,7 @@ import {
 import { PsyoptionsEuropeanInstrument, EuroOptionsFacade } from "../utilities/instruments/psyoptionsEuropeanInstrument";
 import { AuthoritySide, Quote, RiskCategory, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
-import { CONTRACT_DECIMALS_BN, OptionType } from "../dependencies/tokenized-euros/src";
+import { CONTRACT_DECIMALS_BN, OptionType } from "@mithraic-labs/tokenized-euros";
 import { SWITCHBOARD_BTC_ORACLE } from "../utilities/constants";
 
 describe("Psyoptions European instrument integration tests", () => {

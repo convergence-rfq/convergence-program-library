@@ -8,7 +8,7 @@ import {
   PsyoptionsAmericanInstrumentClass,
   AmericanPsyoptions,
 } from "../utilities/instruments/psyoptionsAmericanInstrument";
-import { OptionType } from "../dependencies/tokenized-euros/src/types";
+import { OptionType } from "@mithraic-labs/tokenized-euros";
 
 describe("Psyoptions American instrument integration tests", async () => {
   let context: Context;
