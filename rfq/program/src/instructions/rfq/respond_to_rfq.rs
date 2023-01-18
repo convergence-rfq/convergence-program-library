@@ -5,7 +5,7 @@ use crate::{
     interfaces::risk_engine::calculate_required_collateral_for_response,
     seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     state::{
-        CollateralInfo, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
+        CollateralInfo, FixedSize, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
         StoredResponseState,
     },
 };
@@ -78,6 +78,22 @@ fn validate(
             rfq.is_fixed_size() == is_quote_fixed_size,
             ProtocolError::InvalidQuoteType
         );
+    }
+
+    // check that in case the rfq is fixed in quote asset amount, prices provided are positive
+    if let FixedSize::QuoteAsset { quote_amount: _ } = rfq.fixed_size {
+        if let Some(quote) = bid {
+            require!(
+                quote.get_price_bps() >= 0,
+                ProtocolError::PriceCannotBeNegative
+            );
+        }
+        if let Some(quote) = ask {
+            require!(
+                quote.get_price_bps() >= 0,
+                ProtocolError::PriceCannotBeNegative
+            );
+        }
     }
 
     Ok(())
