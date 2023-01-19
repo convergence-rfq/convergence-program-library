@@ -1,6 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { OptionType } from "../dependencies/tokenized-euros/src";
+import { OptionType } from "@mithraic-labs/tokenized-euros";
 import {
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
   DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
@@ -85,7 +85,7 @@ describe("Required collateral calculation and lock", () => {
 
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [maker]);
     // respond with leg multiplier of 2
-    await rfq.respond({ bid: Quote.getStandart(toAbsolutePrice(new BN(20)), toLegMultiplier(2)) });
+    await rfq.respond({ bid: Quote.getStandard(toAbsolutePrice(new BN(20)), toLegMultiplier(2)) });
     await measurer.expectChange([{ token: "unlockedCollateral", user: maker, delta: withTokenDecimals(-92.4) }]);
   });
 
@@ -109,7 +109,7 @@ describe("Required collateral calculation and lock", () => {
     });
 
     // respond with leg multiplier of 2
-    const response = await rfq.respond({ bid: Quote.getStandart(toAbsolutePrice(new BN(20)), toLegMultiplier(2)) });
+    const response = await rfq.respond({ bid: Quote.getStandard(toAbsolutePrice(new BN(20)), toLegMultiplier(2)) });
 
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     // confirm multiplier leg multiplier of 1
@@ -139,7 +139,7 @@ describe("Required collateral calculation and lock", () => {
       legs: [PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, { amount: 10000, side: Side.Bid })], // 1 contract with 4 decimals
       fixedSize: FixedSize.None,
     });
-    const response = await rfq.respond({ bid: Quote.getStandart(withTokenDecimals(200), toLegMultiplier(3)) });
+    const response = await rfq.respond({ bid: Quote.getStandard(withTokenDecimals(200), toLegMultiplier(3)) });
 
     await response.confirm();
     await measurer.expectChange([

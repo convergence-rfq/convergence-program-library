@@ -60,9 +60,9 @@ export function instrumentTypeToObject(value: InstrumentType) {
 }
 
 export const Quote = {
-  getStandart: (priceBps: BN, legsMultiplierBps: BN) => {
+  getStandard: (priceBps: BN, legsMultiplierBps: BN) => {
     return {
-      standart: {
+      standard: {
         priceQuote: {
           absolutePrice: {
             amountBps: priceBps,

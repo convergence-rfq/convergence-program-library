@@ -122,7 +122,7 @@ impl Response {
 
     pub fn calculate_legs_multiplier_bps_for_quote(&self, rfq: &Rfq, quote: Quote) -> u64 {
         match quote {
-            Quote::Standart {
+            Quote::Standard {
                 price_quote: _,
                 legs_multiplier_bps,
             } => legs_multiplier_bps,
@@ -163,7 +163,7 @@ impl Response {
 
         let quote = self.get_confirmed_quote().unwrap();
         let legs_multiplier_bps = match quote {
-            Quote::Standart {
+            Quote::Standard {
                 price_quote: _,
                 legs_multiplier_bps,
             } => legs_multiplier_bps,
@@ -261,7 +261,7 @@ impl Response {
                 if let Some(override_leg_multiplier_bps) = confirmation.override_leg_multiplier_bps
                 {
                     match &mut quote {
-                        Quote::Standart {
+                        Quote::Standard {
                             price_quote: _,
                             legs_multiplier_bps,
                         } => *legs_multiplier_bps = override_leg_multiplier_bps,
@@ -412,7 +412,7 @@ impl AuthoritySide {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum Quote {
-    Standart {
+    Standard {
         price_quote: PriceQuote,
         legs_multiplier_bps: u64,
     },
@@ -427,7 +427,7 @@ impl Quote {
 
     pub fn get_price_bps(&self) -> i128 {
         match self {
-            Quote::Standart {
+            Quote::Standard {
                 price_quote: PriceQuote::AbsolutePrice { amount_bps },
                 legs_multiplier_bps: _,
             } => *amount_bps,
