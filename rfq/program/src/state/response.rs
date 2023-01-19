@@ -145,7 +145,11 @@ impl Response {
                         * 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS)
                         * 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS)
                         / price_bps;
-                    leg_multiplier_bps as u64
+
+                    leg_multiplier_bps
+                        .try_into()
+                        .map_err(|_| error!(ProtocolError::AssetAmountOverflow))
+                        .unwrap()
                 }
             },
         }

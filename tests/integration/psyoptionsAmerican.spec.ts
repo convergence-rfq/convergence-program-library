@@ -25,7 +25,7 @@ describe("Psyoptions American instrument integration tests", async () => {
 
   it("Create buy RFQ for 1 option", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker);
-    await options.mintPsyOPtions(context.maker, new anchor.BN(1), OptionType.CALL, context);
+    await options.mintPsyOptions(context.maker, new anchor.BN(1), OptionType.CALL, context);
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
@@ -69,7 +69,7 @@ describe("Psyoptions American instrument integration tests", async () => {
 
   it("Create sell RFQ where taker wants 2 options", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
-    await options.mintPsyOPtions(context.taker, new anchor.BN(2), OptionType.CALL, context);
+    await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL, context);
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
       ["asset", "quote", options.callMint],
@@ -124,7 +124,7 @@ describe("Psyoptions American instrument integration tests", async () => {
   it("Create two-way RFQ with one Psyoptions American option leg, respond but maker defaults on settlement", async () => {
     // Create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
-    await options.mintPsyOPtions(context.taker, new anchor.BN(2), OptionType.CALL, context);
+    await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL, context);
 
     const rfq = await context.createRfq({
       activeWindow: 2,
@@ -162,7 +162,7 @@ describe("Psyoptions American instrument integration tests", async () => {
   it("Create two-way RFQ with one Psyoptions American option leg, respond but taker defaults on settlement", async () => {
     // create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
-    await options.mintPsyOPtions(context.taker, new anchor.BN(2), OptionType.CALL, context);
+    await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL, context);
     const rfq = await context.createRfq({
       activeWindow: 2,
       settlingWindow: 1,
@@ -193,5 +193,83 @@ describe("Psyoptions American instrument integration tests", async () => {
     await tokenMeasurer.expectChange([{ token: "quote", user: maker, delta: new BN(0) }]);
     await response.cleanUp();
     await rfq.cleanUp();
+  });
+
+  it("With fractional leg multiplier, rounds option amount to a bigger amount for a maker at settlement", async () => {
+    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
+    await options.mintPsyOptions(context.taker, new anchor.BN(1), OptionType.CALL, context);
+
+    const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote", options.callMint], [taker, maker]);
+
+    const rfq = await context.createRfq({
+      legs: [
+        PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
+          amount: new BN(1),
+          side: Side.Bid,
+        }),
+      ],
+    });
+
+    // Response with agreeing to sell 2 options for 50$ or buy 5 for 40$
+    const response = await rfq.respond({
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(40)), toLegMultiplier(5)),
+      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
+    });
+
+    // Taker confirms to sell 0.4 option
+    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(0.4) });
+    await response.prepareSettlement(AuthoritySide.Taker);
+    await response.prepareSettlement(AuthoritySide.Maker);
+
+    // maker should receive 1 option(0.4 rounded up), taker should receive 40 * 0.4 = 16$
+    await response.settle(taker, [maker]);
+    await tokenMeasurer.expectChange([
+      { token: options.callMint, user: taker, delta: new BN(-1) },
+      { token: options.callMint, user: maker, delta: new BN(1) },
+      { token: "quote", user: taker, delta: withTokenDecimals(16) },
+      { token: "quote", user: maker, delta: withTokenDecimals(-16) },
+    ]);
+
+    await response.unlockResponseCollateral();
+    await response.cleanUp();
+  });
+
+  it("With fractional leg multiplier, rounds option amount to a lower amount for a taker at settlement", async () => {
+    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker);
+    await options.mintPsyOptions(context.maker, new anchor.BN(2), OptionType.CALL, context);
+
+    const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote", options.callMint], [taker, maker]);
+
+    const rfq = await context.createRfq({
+      legs: [
+        PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
+          amount: new BN(1),
+          side: Side.Bid,
+        }),
+      ],
+    });
+
+    // Response with agreeing to sell 2 options for 50$ or buy 5 for 40$
+    const response = await rfq.respond({
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(40)), toLegMultiplier(5)),
+      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
+    });
+
+    // Taker confirms to buy 1.4 option
+    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1.4) });
+    await response.prepareSettlement(AuthoritySide.Taker);
+    await response.prepareSettlement(AuthoritySide.Maker);
+
+    // taker should receive 1 option(1.4 rounded down), maker should receive 50 * 1.4 = 70$
+    await response.settle(maker, [taker]);
+    await tokenMeasurer.expectChange([
+      { token: options.callMint, user: taker, delta: new BN(1) },
+      { token: options.callMint, user: maker, delta: new BN(-1) },
+      { token: "quote", user: taker, delta: withTokenDecimals(-70) },
+      { token: "quote", user: maker, delta: withTokenDecimals(70) },
+    ]);
+
+    await response.unlockResponseCollateral();
+    await response.cleanUp();
   });
 });

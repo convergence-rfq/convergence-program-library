@@ -263,7 +263,7 @@ export class AmericanPsyoptions {
     );
   }
 
-  public async mintPsyOPtions(mintBy: Signer, amount: anchor.BN, optiontype: OptionType, context: Context) {
+  public async mintPsyOptions(mintBy: Signer, amount: anchor.BN, optiontype: OptionType, context: Context) {
     let optionMarketWithKey = await getOptionByKey(this.program, this.optionMarketKey);
     let ix = await instructions.mintOptionV2Instruction(
       this.program,
