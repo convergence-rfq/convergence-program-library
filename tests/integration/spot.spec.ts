@@ -55,6 +55,35 @@ describe("RFQ Spot instrument integration tests", () => {
     await response.cleanUp();
   });
 
+  it("Successfully can settle rfq with negative prices", async () => {
+    let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
+
+    // create a two way RFQ specifying 1 bitcoin ask as a leg
+    const rfq = await context.createRfq({
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: Side.Ask })],
+    });
+    // response with agreeing to sell 5 bitcoins for 22k$ or buy 2 for 20000$
+    const response = await rfq.respond({
+      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(-22_000)), toLegMultiplier(5)),
+      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(-20_000)), toLegMultiplier(2)),
+    });
+    // taker confirms to sell 1.5 bitcoin
+    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1.5) });
+    await response.prepareSettlement(AuthoritySide.Taker);
+    await response.prepareSettlement(AuthoritySide.Maker);
+    // taker should receive 30k$, maker should receive 1.5 bitcoin
+    await response.settle(taker, [maker]);
+    await tokenMeasurer.expectChange([
+      { token: "asset", user: taker, delta: withTokenDecimals(-1.5) },
+      { token: "asset", user: maker, delta: withTokenDecimals(1.5) },
+      { token: "quote", user: taker, delta: withTokenDecimals(30_000) },
+      { token: "quote", user: maker, delta: withTokenDecimals(-30_000) },
+    ]);
+
+    await response.unlockResponseCollateral();
+    await response.cleanUp();
+  });
+
   it("Create sell RFQ with two spot legs, respond and settle multiple responses", async () => {
     // create a sell RFQ specifying 5 bitcoin bid and 1000 sol ask
     const rfq = await context.createRfq({

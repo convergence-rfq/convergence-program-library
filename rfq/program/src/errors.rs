@@ -92,4 +92,8 @@ pub enum ProtocolError {
     MaxInstruments,
     #[msg("Current instrument cannot be used as a quote asset")]
     InvalidQuoteInstrument,
+    #[msg("Amount of asset to transfer overflows")]
+    AssetAmountOverflow,
+    #[msg("Price cannot be negative for fixed quote asset amount RFQ")]
+    PriceCannotBeNegative,
 }

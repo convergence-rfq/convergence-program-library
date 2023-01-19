@@ -102,7 +102,7 @@ pub struct Leg {
 pub enum FixedSize {
     None { padding: u64 }, // for consistent serialization purposes
     BaseAsset { legs_multiplier_bps: u64 },
-    QuoteAsset { quote_amount: u64 },
+    QuoteAsset { quote_amount: u64 }, // only a positive quote amount allowed. If a negative one is required, the leg structure can be inversed in the RFQ
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
