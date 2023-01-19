@@ -212,8 +212,8 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     // Response with agreeing to sell 2 options for 50$ or buy 5 for 40$
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(40)), toLegMultiplier(5)),
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(40)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
     });
 
     // Taker confirms to sell 0.4 option
@@ -251,8 +251,8 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     // Response with agreeing to sell 2 options for 50$ or buy 5 for 40$
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(40)), toLegMultiplier(5)),
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(40)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
     });
 
     // Taker confirms to buy 1.4 option

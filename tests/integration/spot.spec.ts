@@ -64,8 +64,8 @@ describe("RFQ Spot instrument integration tests", () => {
     });
     // response with agreeing to sell 5 bitcoins for 22k$ or buy 2 for 20000$
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(-22_000)), toLegMultiplier(5)),
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(-20_000)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(-22_000)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(-20_000)), toLegMultiplier(2)),
     });
     // taker confirms to sell 1.5 bitcoin
     await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1.5) });
