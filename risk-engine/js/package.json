@@ -18,15 +18,15 @@
     "prepublish": "tsc"
   },
   "dependencies": {
-    "@metaplex-foundation/beet": "^0.6.1",
-    "@metaplex-foundation/beet-solana": "^0.3.1",
+    "@convergence-rfq/beet-solana": "^0.4.4",
+    "@convergence-rfq/beet": "^0.7.5",
     "@metaplex-foundation/cusper": "^0.0.2",
     "@solana/spl-token": "^0.3.5",
     "@solana/web3.js": "^1.56.2",
     "bn.js": "^5.2.0"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.19.3",
+    "@convergence-rfq/solita": "^0.15.5",
     "typescript": "^4.8.4"
   }
 }
