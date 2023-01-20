@@ -11,7 +11,7 @@ anchor test
 **Solita**
 
 ```bash
-cd rfq/js
+# From within the js directory
 yarn
 yarn solita
 yarn prepublish
