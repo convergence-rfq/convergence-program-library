@@ -14,7 +14,7 @@ anchor test
 cd rfq/js
 yarn
 yarn solita
-yarn tsc
+yarn prepublish
 # Update version number in package.json
 npm publish
 ```
