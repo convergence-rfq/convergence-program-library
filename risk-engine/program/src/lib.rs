@@ -20,7 +20,7 @@ pub mod scenarios;
 pub mod state;
 pub mod utils;
 
-declare_id!("76TdqS9cEb8tYKUWKMzXBMwgCtXJiYMcrHxmzrYthjUm");
+declare_id!("AVauPJngjyumG2c2dRaGjdDPbrYwZLmV5iSTHAea4GXn");
 
 pub const CONFIG_SEED: &str = "config";
 

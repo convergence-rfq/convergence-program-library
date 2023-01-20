@@ -5,8 +5,7 @@
 **Programs**
 
 ```bash
-anchor build
-anchor test --skip-build
+anchor test
 ```
 
 **Solita**
