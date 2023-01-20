@@ -5,17 +5,16 @@
 **Programs**
 
 ```bash
-anchor build
-anchor test --skip-build
+anchor test
 ```
 
 **Solita**
 
 ```bash
-cd rfq/js
+# From within the js directory
 yarn
 yarn solita
-yarn tsc
+yarn prepublish
 # Update version number in package.json
 npm publish
 ```

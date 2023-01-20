@@ -1,18 +1,18 @@
 anchor_version = "0.25.0"
 
 [programs.localnet]
-rfq = "6k3nypehfxd4tqCGRxNEZBMiT4xUPdQCkothLVz3JK6D"
-risk_engine = "76TdqS9cEb8tYKUWKMzXBMwgCtXJiYMcrHxmzrYthjUm"
-spot_instrument = "6pyiZyPDi7a6vMymw5NFTvtFBZJbDrNsgrcYK5jGEH4K"
-psyoptions_european_instrument = "7ZD9LcvMPfurRYz2AuZPWgtSXuSxPmvZNMBFK7fhyvQA"
-psyoptions_american_instrument = "ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy"
+rfq = "EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk"
+risk_engine = "AVauPJngjyumG2c2dRaGjdDPbrYwZLmV5iSTHAea4GXn"
+spot_instrument = "FTzYU9cFnziCQvJ6ZUve7asaYqRexk7pBcn8zQ9MqoMQ"
+psyoptions_european_instrument = "BeJcAotUcFEWXVnh6qaBBLKaZaoaM8HSFY1L3sb1Aps3"
+psyoptions_american_instrument = "Cdaz7EGr2AVDkCpjMVEXDzap6oRrrrZUEaKAVLmJAX7R"
 
 [programs.devnet]
-rfq = "6k3nypehfxd4tqCGRxNEZBMiT4xUPdQCkothLVz3JK6D"
-risk_engine = "76TdqS9cEb8tYKUWKMzXBMwgCtXJiYMcrHxmzrYthjUm"
-spot_instrument = "6pyiZyPDi7a6vMymw5NFTvtFBZJbDrNsgrcYK5jGEH4K"
-psyoptions_european_instrument = "7ZD9LcvMPfurRYz2AuZPWgtSXuSxPmvZNMBFK7fhyvQA"
-psyoptions_american_instrument = "ATtEpDQ6smvJnMSJvhLc21DBCTBKutih7KBf9Qd5b8xy"
+rfq = "EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk"
+risk_engine = "AVauPJngjyumG2c2dRaGjdDPbrYwZLmV5iSTHAea4GXn"
+spot_instrument = "FTzYU9cFnziCQvJ6ZUve7asaYqRexk7pBcn8zQ9MqoMQ"
+psyoptions_european_instrument = "BeJcAotUcFEWXVnh6qaBBLKaZaoaM8HSFY1L3sb1Aps3"
+psyoptions_american_instrument = "Cdaz7EGr2AVDkCpjMVEXDzap6oRrrrZUEaKAVLmJAX7R"
 
 [registry]
 url = "https://anchor.projectserum.com"
