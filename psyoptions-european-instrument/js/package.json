@@ -12,7 +12,8 @@
   "types": "./generated/index.d.ts",
   "files": [
     "/generated",
-    "/idl"
+    "/idl",
+    "/src"
   ],
   "scripts": {
     "prepublish": "tsc"

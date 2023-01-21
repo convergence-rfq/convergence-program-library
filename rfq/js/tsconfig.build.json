@@ -4,6 +4,5 @@
     "outDir": ".",
     "baseUrl": "."
   },
-  "include": ["./idl", "./generated"],
   "exclude": ["node_modules"]
 }
