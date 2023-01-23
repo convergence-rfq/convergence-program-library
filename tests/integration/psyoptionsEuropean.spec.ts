@@ -1,6 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
+  calculateLegsHash,
   calculateLegsSize,
   sleep,
   toAbsolutePrice,
@@ -142,6 +143,7 @@ describe("Psyoptions European instrument integration tests", () => {
     const rfq = await context.createRfq({
       legs: [legs[0]],
       legsSize: calculateLegsSize(legs),
+      legsHash: calculateLegsHash(legs, context.program),
       finalize: false,
     });
     await rfq.addLegs([...legs.slice(1, 3)], false);

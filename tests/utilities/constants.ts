@@ -5,6 +5,8 @@ import { OrderType, Side, toRiskCategoryInfo, toScenario } from "./types";
 export const PROTOCOL_SEED = "protocol";
 export const COLLATERAL_SEED = "collateral_info";
 export const COLLATERAL_TOKEN_SEED = "collateral_token";
+export const RFQ_SEED = "rfq";
+export const RESPONSE_SEED = "response";
 export const QUOTE_ESCROW_SEED = "quote_escrow";
 export const BASE_ASSET_INFO_SEED = "base_asset";
 export const MINT_INFO_SEED = "mint_info";

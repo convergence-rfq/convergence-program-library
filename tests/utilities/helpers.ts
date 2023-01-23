@@ -1,4 +1,5 @@
-import { BN } from "@project-serum/anchor";
+import { BN, Program } from "@project-serum/anchor";
+import { sha256 } from "@noble/hashes/sha256";
 import { BigNumber } from "bignumber.js";
 import { PublicKey, ComputeBudgetProgram } from "@solana/web3.js";
 import chai, { expect } from "chai";
@@ -6,6 +7,7 @@ import chaiBn from "chai-bn";
 import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
 import { InstrumentController } from "./instrument";
+import { Rfq as RfqIdl } from "../../target/types/rfq";
 
 chai.use(chaiBn(BN));
 
@@ -51,6 +53,16 @@ export function executeInParallel(...fns: (() => Promise<any>)[]) {
 
 export function calculateLegsSize(legs: InstrumentController[]) {
   return legs.map((leg) => EMPTY_LEG_SIZE + leg.getInstrumendDataSize()).reduce((x, y) => x + y, 4);
+}
+
+export function calculateLegsHash(legs: InstrumentController[], program: Program<RfqIdl>) {
+  let x = program.idl.types[12];
+  let y = x.type;
+  const serializedLegsData = legs.map((leg) => program.coder.types.encode("Leg", leg.toLegData()));
+  const lengthBuffer = Buffer.alloc(4);
+  lengthBuffer.writeInt32LE(legs.length);
+  const fullLegDataBuffer = Buffer.concat([lengthBuffer, ...serializedLegsData]);
+  return sha256(fullLegDataBuffer);
 }
 
 type MeasuredToken =
@@ -156,3 +168,12 @@ export function toLittleEndian(value: number, bytes: number) {
 export const expandComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
   units: 1400000,
 });
+
+export function serializeOptionQuote(quote: any | null, program: Program<RfqIdl>): Buffer {
+  if (quote === null) {
+    return Buffer.from([0]);
+  }
+
+  const serializedQuote = program.coder.types.encode("Quote", quote);
+  return Buffer.concat([Buffer.from([1]), serializedQuote]);
+}

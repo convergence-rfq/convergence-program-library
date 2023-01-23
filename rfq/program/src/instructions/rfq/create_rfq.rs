@@ -3,20 +3,41 @@ use std::mem;
 use crate::{
     errors::ProtocolError,
     interfaces::instrument::{validate_leg_instrument_data, validate_quote_instrument_data},
-    seeds::PROTOCOL_SEED,
+    seeds::{PROTOCOL_SEED, RFQ_SEED},
     state::{rfq::QuoteAsset, FixedSize, Leg, OrderType, ProtocolState, Rfq, StoredRfqState},
 };
 use anchor_lang::prelude::*;
+use solana_program::hash::hash;
 
 #[derive(Accounts)]
-#[instruction(expected_leg_size: u16)]
+#[instruction(
+    expected_legs_size: u16,
+    expected_legs_hash: [u8; 32],
+    _legs: Vec<Leg>,
+    order_type: OrderType,
+    quote_asset: QuoteAsset,
+    fixed_size: FixedSize,
+    active_window: u32,
+    settling_window: u32,
+    pda_distinguisher: u16
+)]
 pub struct CreateRfqAccounts<'info> {
     #[account(mut)]
     pub taker: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
-    #[account(init, payer = taker, space = 8 + mem::size_of::<Rfq>() + expected_leg_size as usize)]
+    #[account(init, payer = taker, space = 8 + mem::size_of::<Rfq>() + expected_legs_size as usize, seeds = [
+        RFQ_SEED.as_bytes(),
+        taker.key().as_ref(),
+        &expected_legs_hash,
+        &[order_type as u8],
+        &hash(&quote_asset.try_to_vec().unwrap()).to_bytes(),
+        &fixed_size.try_to_vec().unwrap(),
+        &active_window.to_le_bytes(),
+        &settling_window.to_le_bytes(),
+        &pda_distinguisher.to_le_bytes(),
+    ], bump)]
     pub rfq: Box<Account<'info, Rfq>>,
 
     pub system_program: Program<'info, System>,
@@ -64,33 +85,34 @@ fn validate_legs<'a, 'info: 'a>(
 
 pub fn create_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
-    expected_leg_size: u16,
+    expected_legs_size: u16,
+    expected_legs_hash: [u8; 32],
     legs: Vec<Leg>,
     order_type: OrderType,
     quote_asset: QuoteAsset,
     fixed_size: FixedSize,
     active_window: u32,
     settling_window: u32,
+    _pda_distinguisher: u16,
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
     validate_quote(protocol, &mut remaining_accounts, &quote_asset)?;
 
-    validate_legs(protocol, &mut remaining_accounts, expected_leg_size, &legs)?;
+    validate_legs(protocol, &mut remaining_accounts, expected_legs_size, &legs)?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
 
     rfq.set_inner(Rfq {
         taker: taker.key(),
         order_type,
-        last_look_enabled: false, // TODO add logic later
         fixed_size,
         quote_asset,
-        access_manager: None, // TODO add logic later
         creation_timestamp: 0,
         active_window,
         settling_window,
-        expected_leg_size,
+        expected_legs_size,
+        expected_legs_hash,
         state: StoredRfqState::Constructed,
         non_response_taker_collateral_locked: 0,
         total_taker_collateral_locked: 0,

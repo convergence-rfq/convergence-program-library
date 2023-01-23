@@ -38,8 +38,15 @@ fn validate(ctx: &Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
 
     let serialized_legs = rfq.legs.try_to_vec()?;
     require!(
-        serialized_legs.len() == rfq.expected_leg_size as usize,
-        ProtocolError::LegSizeDoesNotMatchExpectedSize
+        serialized_legs.len() == rfq.expected_legs_size as usize,
+        ProtocolError::LegsSizeDoesNotMatchExpectedSize
+    );
+
+    let legs_serialized = rfq.legs.try_to_vec().unwrap();
+    let legs_hash = solana_program::hash::hash(&legs_serialized);
+    require!(
+        legs_hash.to_bytes() == rfq.expected_legs_hash,
+        ProtocolError::LegsHashDoesNotMatchExpectedHash
     );
 
     Ok(())
