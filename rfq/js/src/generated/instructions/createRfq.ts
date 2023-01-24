@@ -5,12 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { Leg, legBeet } from '../types/Leg'
-import { OrderType, orderTypeBeet } from '../types/OrderType'
-import { QuoteAsset, quoteAssetBeet } from '../types/QuoteAsset'
-import { FixedSize, fixedSizeBeet } from '../types/FixedSize'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
+import { Leg, legBeet } from "../types/Leg";
+import { OrderType, orderTypeBeet } from "../types/OrderType";
+import { QuoteAsset, quoteAssetBeet } from "../types/QuoteAsset";
+import { FixedSize, fixedSizeBeet } from "../types/FixedSize";
 
 /**
  * @category Instructions
@@ -18,14 +18,14 @@ import { FixedSize, fixedSizeBeet } from '../types/FixedSize'
  * @category generated
  */
 export type CreateRfqInstructionArgs = {
-  expectedLegSize: number
-  legs: Leg[]
-  orderType: OrderType
-  quoteAsset: QuoteAsset
-  fixedSize: FixedSize
-  activeWindow: number
-  settlingWindow: number
-}
+  expectedLegSize: number;
+  legs: Leg[];
+  orderType: OrderType;
+  quoteAsset: QuoteAsset;
+  fixedSize: FixedSize;
+  activeWindow: number;
+  settlingWindow: number;
+};
 /**
  * @category Instructions
  * @category CreateRfq
@@ -33,21 +33,21 @@ export type CreateRfqInstructionArgs = {
  */
 export const createRfqStruct = new beet.FixableBeetArgsStruct<
   CreateRfqInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['expectedLegSize', beet.u16],
-    ['legs', beet.array(legBeet)],
-    ['orderType', orderTypeBeet],
-    ['quoteAsset', quoteAssetBeet],
-    ['fixedSize', fixedSizeBeet],
-    ['activeWindow', beet.u32],
-    ['settlingWindow', beet.u32],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["expectedLegSize", beet.u16],
+    ["legs", beet.array(legBeet)],
+    ["orderType", orderTypeBeet],
+    ["quoteAsset", quoteAssetBeet],
+    ["fixedSize", fixedSizeBeet],
+    ["activeWindow", beet.u32],
+    ["settlingWindow", beet.u32],
   ],
-  'CreateRfqInstructionArgs'
-)
+  "CreateRfqInstructionArgs"
+);
 /**
  * Accounts required by the _createRfq_ instruction
  *
@@ -59,16 +59,14 @@ export const createRfqStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type CreateRfqInstructionAccounts = {
-  taker: web3.PublicKey
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  taker: web3.PublicKey;
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const createRfqInstructionDiscriminator = [
-  127, 84, 185, 131, 235, 154, 189, 2,
-]
+export const createRfqInstructionDiscriminator = [127, 84, 185, 131, 235, 154, 189, 2];
 
 /**
  * Creates a _CreateRfq_ instruction.
@@ -83,12 +81,12 @@ export const createRfqInstructionDiscriminator = [
 export function createCreateRfqInstruction(
   accounts: CreateRfqInstructionAccounts,
   args: CreateRfqInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = createRfqStruct.serialize({
     instructionDiscriminator: createRfqInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.taker,
@@ -110,11 +108,11 @@ export function createCreateRfqInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -122,6 +120,6 @@ export function createCreateRfqInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

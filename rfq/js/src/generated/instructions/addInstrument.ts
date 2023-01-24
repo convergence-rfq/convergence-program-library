@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,13 +14,13 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type AddInstrumentInstructionArgs = {
-  canBeUsedAsQuote: boolean
-  validateDataAccountAmount: number
-  prepareToSettleAccountAmount: number
-  settleAccountAmount: number
-  revertPreparationAccountAmount: number
-  cleanUpAccountAmount: number
-}
+  canBeUsedAsQuote: boolean;
+  validateDataAccountAmount: number;
+  prepareToSettleAccountAmount: number;
+  settleAccountAmount: number;
+  revertPreparationAccountAmount: number;
+  cleanUpAccountAmount: number;
+};
 /**
  * @category Instructions
  * @category AddInstrument
@@ -28,20 +28,20 @@ export type AddInstrumentInstructionArgs = {
  */
 export const addInstrumentStruct = new beet.BeetArgsStruct<
   AddInstrumentInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['canBeUsedAsQuote', beet.bool],
-    ['validateDataAccountAmount', beet.u8],
-    ['prepareToSettleAccountAmount', beet.u8],
-    ['settleAccountAmount', beet.u8],
-    ['revertPreparationAccountAmount', beet.u8],
-    ['cleanUpAccountAmount', beet.u8],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["canBeUsedAsQuote", beet.bool],
+    ["validateDataAccountAmount", beet.u8],
+    ["prepareToSettleAccountAmount", beet.u8],
+    ["settleAccountAmount", beet.u8],
+    ["revertPreparationAccountAmount", beet.u8],
+    ["cleanUpAccountAmount", beet.u8],
   ],
-  'AddInstrumentInstructionArgs'
-)
+  "AddInstrumentInstructionArgs"
+);
 /**
  * Accounts required by the _addInstrument_ instruction
  *
@@ -53,15 +53,13 @@ export const addInstrumentStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type AddInstrumentInstructionAccounts = {
-  authority: web3.PublicKey
-  protocol: web3.PublicKey
-  instrumentProgram: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  authority: web3.PublicKey;
+  protocol: web3.PublicKey;
+  instrumentProgram: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const addInstrumentInstructionDiscriminator = [
-  105, 20, 159, 148, 221, 16, 80, 136,
-]
+export const addInstrumentInstructionDiscriminator = [105, 20, 159, 148, 221, 16, 80, 136];
 
 /**
  * Creates a _AddInstrument_ instruction.
@@ -76,12 +74,12 @@ export const addInstrumentInstructionDiscriminator = [
 export function createAddInstrumentInstruction(
   accounts: AddInstrumentInstructionAccounts,
   args: AddInstrumentInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = addInstrumentStruct.serialize({
     instructionDiscriminator: addInstrumentInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.authority,
@@ -98,11 +96,11 @@ export function createAddInstrumentInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -110,6 +108,6 @@ export function createAddInstrumentInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

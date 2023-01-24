@@ -5,7 +5,7 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from "@metaplex-foundation/beet";
 /**
  * @category enums
  * @category generated
@@ -23,6 +23,4 @@ export enum RfqState {
  * @category userTypes
  * @category generated
  */
-export const rfqStateBeet = beet.fixedScalarEnum(
-  RfqState
-) as beet.FixedSizeBeet<RfqState, RfqState>
+export const rfqStateBeet = beet.fixedScalarEnum(RfqState) as beet.FixedSizeBeet<RfqState, RfqState>;

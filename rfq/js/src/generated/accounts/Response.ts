@@ -5,17 +5,14 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import {
-  StoredResponseState,
-  storedResponseStateBeet,
-} from '../types/StoredResponseState'
-import { Confirmation, confirmationBeet } from '../types/Confirmation'
-import { DefaultingParty, defaultingPartyBeet } from '../types/DefaultingParty'
-import { AuthoritySide, authoritySideBeet } from '../types/AuthoritySide'
-import { Quote, quoteBeet } from '../types/Quote'
+import * as web3 from "@solana/web3.js";
+import * as beet from "@metaplex-foundation/beet";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import { StoredResponseState, storedResponseStateBeet } from "../types/StoredResponseState";
+import { Confirmation, confirmationBeet } from "../types/Confirmation";
+import { DefaultingParty, defaultingPartyBeet } from "../types/DefaultingParty";
+import { AuthoritySide, authoritySideBeet } from "../types/AuthoritySide";
+import { Quote, quoteBeet } from "../types/Quote";
 
 /**
  * Arguments used to create {@link Response}
@@ -23,23 +20,23 @@ import { Quote, quoteBeet } from '../types/Quote'
  * @category generated
  */
 export type ResponseArgs = {
-  maker: web3.PublicKey
-  rfq: web3.PublicKey
-  creationTimestamp: beet.bignum
-  makerCollateralLocked: beet.bignum
-  takerCollateralLocked: beet.bignum
-  state: StoredResponseState
-  takerPreparedLegs: number
-  makerPreparedLegs: number
-  settledLegs: number
-  confirmed: beet.COption<Confirmation>
-  defaultingParty: beet.COption<DefaultingParty>
-  legPreparationsInitializedBy: AuthoritySide[]
-  bid: beet.COption<Quote>
-  ask: beet.COption<Quote>
-}
+  maker: web3.PublicKey;
+  rfq: web3.PublicKey;
+  creationTimestamp: beet.bignum;
+  makerCollateralLocked: beet.bignum;
+  takerCollateralLocked: beet.bignum;
+  state: StoredResponseState;
+  takerPreparedLegs: number;
+  makerPreparedLegs: number;
+  settledLegs: number;
+  confirmed: beet.COption<Confirmation>;
+  defaultingParty: beet.COption<DefaultingParty>;
+  legPreparationsInitializedBy: AuthoritySide[];
+  bid: beet.COption<Quote>;
+  ask: beet.COption<Quote>;
+};
 
-export const responseDiscriminator = [198, 155, 246, 149, 75, 240, 81, 122]
+export const responseDiscriminator = [198, 155, 246, 149, 75, 240, 81, 122];
 /**
  * Holds the data for the {@link Response} Account and provides de/serialization
  * functionality for that data
@@ -84,18 +81,15 @@ export class Response implements ResponseArgs {
       args.legPreparationsInitializedBy,
       args.bid,
       args.ask
-    )
+    );
   }
 
   /**
    * Deserializes the {@link Response} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(
-    accountInfo: web3.AccountInfo<Buffer>,
-    offset = 0
-  ): [Response, number] {
-    return Response.deserialize(accountInfo.data, offset)
+  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [Response, number] {
+    return Response.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -109,14 +103,11 @@ export class Response implements ResponseArgs {
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig
   ): Promise<Response> {
-    const accountInfo = await connection.getAccountInfo(
-      address,
-      commitmentOrConfig
-    )
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
-      throw new Error(`Unable to find Response account at ${address}`)
+      throw new Error(`Unable to find Response account at ${address}`);
     }
-    return Response.fromAccountInfo(accountInfo, 0)[0]
+    return Response.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -125,12 +116,8 @@ export class Response implements ResponseArgs {
    *
    * @param programId - the program that owns the accounts we are filtering
    */
-  static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey(
-      'EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk'
-    )
-  ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, responseBeet)
+  static gpaBuilder(programId: web3.PublicKey = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")) {
+    return beetSolana.GpaBuilder.fromStruct(programId, responseBeet);
   }
 
   /**
@@ -138,7 +125,7 @@ export class Response implements ResponseArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [Response, number] {
-    return responseBeet.deserialize(buf, offset)
+    return responseBeet.deserialize(buf, offset);
   }
 
   /**
@@ -149,7 +136,7 @@ export class Response implements ResponseArgs {
     return responseBeet.serialize({
       accountDiscriminator: responseDiscriminator,
       ...this,
-    })
+    });
   }
 
   /**
@@ -160,11 +147,11 @@ export class Response implements ResponseArgs {
    * depends on them
    */
   static byteSize(args: ResponseArgs) {
-    const instance = Response.fromArgs(args)
+    const instance = Response.fromArgs(args);
     return responseBeet.toFixedFromValue({
       accountDiscriminator: responseDiscriminator,
       ...instance,
-    }).byteSize
+    }).byteSize;
   }
 
   /**
@@ -180,10 +167,7 @@ export class Response implements ResponseArgs {
     connection: web3.Connection,
     commitment?: web3.Commitment
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      Response.byteSize(args),
-      commitment
-    )
+    return connection.getMinimumBalanceForRentExemption(Response.byteSize(args), commitment);
   }
 
   /**
@@ -195,39 +179,39 @@ export class Response implements ResponseArgs {
       maker: this.maker.toBase58(),
       rfq: this.rfq.toBase58(),
       creationTimestamp: (() => {
-        const x = <{ toNumber: () => number }>this.creationTimestamp
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.creationTimestamp;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
       makerCollateralLocked: (() => {
-        const x = <{ toNumber: () => number }>this.makerCollateralLocked
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.makerCollateralLocked;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
       takerCollateralLocked: (() => {
-        const x = <{ toNumber: () => number }>this.takerCollateralLocked
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.takerCollateralLocked;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
-      state: 'StoredResponseState.' + StoredResponseState[this.state],
+      state: "StoredResponseState." + StoredResponseState[this.state],
       takerPreparedLegs: this.takerPreparedLegs,
       makerPreparedLegs: this.makerPreparedLegs,
       settledLegs: this.settledLegs,
@@ -236,7 +220,7 @@ export class Response implements ResponseArgs {
       legPreparationsInitializedBy: this.legPreparationsInitializedBy,
       bid: this.bid,
       ask: this.ask,
-    }
+    };
   }
 }
 
@@ -247,26 +231,26 @@ export class Response implements ResponseArgs {
 export const responseBeet = new beet.FixableBeetStruct<
   Response,
   ResponseArgs & {
-    accountDiscriminator: number[] /* size: 8 */
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['maker', beetSolana.publicKey],
-    ['rfq', beetSolana.publicKey],
-    ['creationTimestamp', beet.i64],
-    ['makerCollateralLocked', beet.u64],
-    ['takerCollateralLocked', beet.u64],
-    ['state', storedResponseStateBeet],
-    ['takerPreparedLegs', beet.u8],
-    ['makerPreparedLegs', beet.u8],
-    ['settledLegs', beet.u8],
-    ['confirmed', beet.coption(confirmationBeet)],
-    ['defaultingParty', beet.coption(defaultingPartyBeet)],
-    ['legPreparationsInitializedBy', beet.array(authoritySideBeet)],
-    ['bid', beet.coption(quoteBeet)],
-    ['ask', beet.coption(quoteBeet)],
+    ["accountDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["maker", beetSolana.publicKey],
+    ["rfq", beetSolana.publicKey],
+    ["creationTimestamp", beet.i64],
+    ["makerCollateralLocked", beet.u64],
+    ["takerCollateralLocked", beet.u64],
+    ["state", storedResponseStateBeet],
+    ["takerPreparedLegs", beet.u8],
+    ["makerPreparedLegs", beet.u8],
+    ["settledLegs", beet.u8],
+    ["confirmed", beet.coption(confirmationBeet)],
+    ["defaultingParty", beet.coption(defaultingPartyBeet)],
+    ["legPreparationsInitializedBy", beet.array(authoritySideBeet)],
+    ["bid", beet.coption(quoteBeet)],
+    ["ask", beet.coption(quoteBeet)],
   ],
   Response.fromArgs,
-  'Response'
-)
+  "Response"
+);

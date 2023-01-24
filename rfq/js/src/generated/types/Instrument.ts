@@ -5,18 +5,18 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
+import * as web3 from "@solana/web3.js";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import * as beet from "@metaplex-foundation/beet";
 export type Instrument = {
-  programKey: web3.PublicKey
-  canBeUsedAsQuote: boolean
-  validateDataAccountAmount: number
-  prepareToSettleAccountAmount: number
-  settleAccountAmount: number
-  revertPreparationAccountAmount: number
-  cleanUpAccountAmount: number
-}
+  programKey: web3.PublicKey;
+  canBeUsedAsQuote: boolean;
+  validateDataAccountAmount: number;
+  prepareToSettleAccountAmount: number;
+  settleAccountAmount: number;
+  revertPreparationAccountAmount: number;
+  cleanUpAccountAmount: number;
+};
 
 /**
  * @category userTypes
@@ -24,13 +24,13 @@ export type Instrument = {
  */
 export const instrumentBeet = new beet.BeetArgsStruct<Instrument>(
   [
-    ['programKey', beetSolana.publicKey],
-    ['canBeUsedAsQuote', beet.bool],
-    ['validateDataAccountAmount', beet.u8],
-    ['prepareToSettleAccountAmount', beet.u8],
-    ['settleAccountAmount', beet.u8],
-    ['revertPreparationAccountAmount', beet.u8],
-    ['cleanUpAccountAmount', beet.u8],
+    ["programKey", beetSolana.publicKey],
+    ["canBeUsedAsQuote", beet.bool],
+    ["validateDataAccountAmount", beet.u8],
+    ["prepareToSettleAccountAmount", beet.u8],
+    ["settleAccountAmount", beet.u8],
+    ["revertPreparationAccountAmount", beet.u8],
+    ["cleanUpAccountAmount", beet.u8],
   ],
-  'Instrument'
-)
+  "Instrument"
+);

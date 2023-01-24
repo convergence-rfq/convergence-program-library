@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { FeeParameters, feeParametersBeet } from '../types/FeeParameters'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
+import { FeeParameters, feeParametersBeet } from "../types/FeeParameters";
 
 /**
  * @category Instructions
@@ -15,9 +15,9 @@ import { FeeParameters, feeParametersBeet } from '../types/FeeParameters'
  * @category generated
  */
 export type InitializeProtocolInstructionArgs = {
-  settleFees: FeeParameters
-  defaultFees: FeeParameters
-}
+  settleFees: FeeParameters;
+  defaultFees: FeeParameters;
+};
 /**
  * @category Instructions
  * @category InitializeProtocol
@@ -25,16 +25,16 @@ export type InitializeProtocolInstructionArgs = {
  */
 export const initializeProtocolStruct = new beet.BeetArgsStruct<
   InitializeProtocolInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['settleFees', feeParametersBeet],
-    ['defaultFees', feeParametersBeet],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["settleFees", feeParametersBeet],
+    ["defaultFees", feeParametersBeet],
   ],
-  'InitializeProtocolInstructionArgs'
-)
+  "InitializeProtocolInstructionArgs"
+);
 /**
  * Accounts required by the _initializeProtocol_ instruction
  *
@@ -47,17 +47,15 @@ export const initializeProtocolStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type InitializeProtocolInstructionAccounts = {
-  signer: web3.PublicKey
-  protocol: web3.PublicKey
-  riskEngine: web3.PublicKey
-  collateralMint: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  signer: web3.PublicKey;
+  protocol: web3.PublicKey;
+  riskEngine: web3.PublicKey;
+  collateralMint: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const initializeProtocolInstructionDiscriminator = [
-  188, 233, 252, 106, 134, 146, 202, 91,
-]
+export const initializeProtocolInstructionDiscriminator = [188, 233, 252, 106, 134, 146, 202, 91];
 
 /**
  * Creates a _InitializeProtocol_ instruction.
@@ -72,12 +70,12 @@ export const initializeProtocolInstructionDiscriminator = [
 export function createInitializeProtocolInstruction(
   accounts: InitializeProtocolInstructionAccounts,
   args: InitializeProtocolInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = initializeProtocolStruct.serialize({
     instructionDiscriminator: initializeProtocolInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.signer,
@@ -104,11 +102,11 @@ export function createInitializeProtocolInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -116,6 +114,6 @@ export function createInitializeProtocolInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

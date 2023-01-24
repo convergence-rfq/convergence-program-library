@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { Quote, quoteBeet } from '../types/Quote'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
+import { Quote, quoteBeet } from "../types/Quote";
 
 /**
  * @category Instructions
@@ -15,9 +15,9 @@ import { Quote, quoteBeet } from '../types/Quote'
  * @category generated
  */
 export type RespondToRfqInstructionArgs = {
-  bid: beet.COption<Quote>
-  ask: beet.COption<Quote>
-}
+  bid: beet.COption<Quote>;
+  ask: beet.COption<Quote>;
+};
 /**
  * @category Instructions
  * @category RespondToRfq
@@ -25,16 +25,16 @@ export type RespondToRfqInstructionArgs = {
  */
 export const respondToRfqStruct = new beet.FixableBeetArgsStruct<
   RespondToRfqInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['bid', beet.coption(quoteBeet)],
-    ['ask', beet.coption(quoteBeet)],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["bid", beet.coption(quoteBeet)],
+    ["ask", beet.coption(quoteBeet)],
   ],
-  'RespondToRfqInstructionArgs'
-)
+  "RespondToRfqInstructionArgs"
+);
 /**
  * Accounts required by the _respondToRfq_ instruction
  *
@@ -50,20 +50,18 @@ export const respondToRfqStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type RespondToRfqInstructionAccounts = {
-  maker: web3.PublicKey
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  collateralInfo: web3.PublicKey
-  collateralToken: web3.PublicKey
-  riskEngine: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  maker: web3.PublicKey;
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  collateralInfo: web3.PublicKey;
+  collateralToken: web3.PublicKey;
+  riskEngine: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const respondToRfqInstructionDiscriminator = [
-  6, 226, 238, 129, 112, 7, 193, 164,
-]
+export const respondToRfqInstructionDiscriminator = [6, 226, 238, 129, 112, 7, 193, 164];
 
 /**
  * Creates a _RespondToRfq_ instruction.
@@ -78,12 +76,12 @@ export const respondToRfqInstructionDiscriminator = [
 export function createRespondToRfqInstruction(
   accounts: RespondToRfqInstructionAccounts,
   args: RespondToRfqInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = respondToRfqStruct.serialize({
     instructionDiscriminator: respondToRfqInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.maker,
@@ -125,11 +123,11 @@ export function createRespondToRfqInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -137,6 +135,6 @@ export function createRespondToRfqInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

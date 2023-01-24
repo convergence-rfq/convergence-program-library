@@ -5,12 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import { Side, sideBeet } from './Side'
+import * as beet from "@metaplex-foundation/beet";
+import { Side, sideBeet } from "./Side";
 export type Confirmation = {
-  side: Side
-  overrideLegMultiplierBps: beet.COption<beet.bignum>
-}
+  side: Side;
+  overrideLegMultiplierBps: beet.COption<beet.bignum>;
+};
 
 /**
  * @category userTypes
@@ -18,8 +18,8 @@ export type Confirmation = {
  */
 export const confirmationBeet = new beet.FixableBeetArgsStruct<Confirmation>(
   [
-    ['side', sideBeet],
-    ['overrideLegMultiplierBps', beet.coption(beet.u64)],
+    ["side", sideBeet],
+    ["overrideLegMultiplierBps", beet.coption(beet.u64)],
   ],
-  'Confirmation'
-)
+  "Confirmation"
+);

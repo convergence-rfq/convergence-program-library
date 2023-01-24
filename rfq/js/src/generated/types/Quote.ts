@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import { PriceQuote, priceQuoteBeet } from './PriceQuote'
+import * as beet from "@metaplex-foundation/beet";
+import { PriceQuote, priceQuoteBeet } from "./PriceQuote";
 /**
  * This type is used to derive the {@link Quote} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link Quote} type instead.
@@ -17,9 +17,9 @@ import { PriceQuote, priceQuoteBeet } from './PriceQuote'
  * @private
  */
 export type QuoteRecord = {
-  Standard: { priceQuote: PriceQuote; legsMultiplierBps: beet.bignum }
-  FixedSize: { priceQuote: PriceQuote }
-}
+  Standard: { priceQuote: PriceQuote; legsMultiplierBps: beet.bignum };
+  FixedSize: { priceQuote: PriceQuote };
+};
 
 /**
  * Union type respresenting the Quote data enum defined in Rust.
@@ -32,14 +32,10 @@ export type QuoteRecord = {
  * @category enums
  * @category generated
  */
-export type Quote = beet.DataEnumKeyAsKind<QuoteRecord>
+export type Quote = beet.DataEnumKeyAsKind<QuoteRecord>;
 
-export const isQuoteStandard = (
-  x: Quote
-): x is Quote & { __kind: 'Standard' } => x.__kind === 'Standard'
-export const isQuoteFixedSize = (
-  x: Quote
-): x is Quote & { __kind: 'FixedSize' } => x.__kind === 'FixedSize'
+export const isQuoteStandard = (x: Quote): x is Quote & { __kind: "Standard" } => x.__kind === "Standard";
+export const isQuoteFixedSize = (x: Quote): x is Quote & { __kind: "FixedSize" } => x.__kind === "FixedSize";
 
 /**
  * @category userTypes
@@ -47,21 +43,21 @@ export const isQuoteFixedSize = (
  */
 export const quoteBeet = beet.dataEnum<QuoteRecord>([
   [
-    'Standard',
-    new beet.FixableBeetArgsStruct<QuoteRecord['Standard']>(
+    "Standard",
+    new beet.FixableBeetArgsStruct<QuoteRecord["Standard"]>(
       [
-        ['priceQuote', priceQuoteBeet],
-        ['legsMultiplierBps', beet.u64],
+        ["priceQuote", priceQuoteBeet],
+        ["legsMultiplierBps", beet.u64],
       ],
       'QuoteRecord["Standard"]'
     ),
   ],
 
   [
-    'FixedSize',
-    new beet.FixableBeetArgsStruct<QuoteRecord['FixedSize']>(
-      [['priceQuote', priceQuoteBeet]],
+    "FixedSize",
+    new beet.FixableBeetArgsStruct<QuoteRecord["FixedSize"]>(
+      [["priceQuote", priceQuoteBeet]],
       'QuoteRecord["FixedSize"]'
     ),
   ],
-]) as beet.FixableBeet<Quote>
+]) as beet.FixableBeet<Quote>;

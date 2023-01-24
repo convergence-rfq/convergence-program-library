@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { Side, sideBeet } from '../types/Side'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
+import { Side, sideBeet } from "../types/Side";
 
 /**
  * @category Instructions
@@ -15,9 +15,9 @@ import { Side, sideBeet } from '../types/Side'
  * @category generated
  */
 export type ConfirmResponseInstructionArgs = {
-  side: Side
-  overrideLegMultiplierBps: beet.COption<beet.bignum>
-}
+  side: Side;
+  overrideLegMultiplierBps: beet.COption<beet.bignum>;
+};
 /**
  * @category Instructions
  * @category ConfirmResponse
@@ -25,16 +25,16 @@ export type ConfirmResponseInstructionArgs = {
  */
 export const confirmResponseStruct = new beet.FixableBeetArgsStruct<
   ConfirmResponseInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['side', sideBeet],
-    ['overrideLegMultiplierBps', beet.coption(beet.u64)],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["side", sideBeet],
+    ["overrideLegMultiplierBps", beet.coption(beet.u64)],
   ],
-  'ConfirmResponseInstructionArgs'
-)
+  "ConfirmResponseInstructionArgs"
+);
 /**
  * Accounts required by the _confirmResponse_ instruction
  *
@@ -51,20 +51,18 @@ export const confirmResponseStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type ConfirmResponseInstructionAccounts = {
-  taker: web3.PublicKey
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  collateralInfo: web3.PublicKey
-  makerCollateralInfo: web3.PublicKey
-  collateralToken: web3.PublicKey
-  riskEngine: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  taker: web3.PublicKey;
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  collateralInfo: web3.PublicKey;
+  makerCollateralInfo: web3.PublicKey;
+  collateralToken: web3.PublicKey;
+  riskEngine: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const confirmResponseInstructionDiscriminator = [
-  24, 85, 232, 207, 17, 227, 4, 132,
-]
+export const confirmResponseInstructionDiscriminator = [24, 85, 232, 207, 17, 227, 4, 132];
 
 /**
  * Creates a _ConfirmResponse_ instruction.
@@ -79,12 +77,12 @@ export const confirmResponseInstructionDiscriminator = [
 export function createConfirmResponseInstruction(
   accounts: ConfirmResponseInstructionAccounts,
   args: ConfirmResponseInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = confirmResponseStruct.serialize({
     instructionDiscriminator: confirmResponseInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.taker,
@@ -126,11 +124,11 @@ export function createConfirmResponseInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -138,6 +136,6 @@ export function createConfirmResponseInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

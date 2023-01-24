@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as splToken from "@solana/spl-token";
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -15,11 +15,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const settleOnePartyDefaultStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'SettleOnePartyDefaultInstructionArgs'
-)
+  instructionDiscriminator: number[] /* size: 8 */;
+}>([["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)]], "SettleOnePartyDefaultInstructionArgs");
 /**
  * Accounts required by the _settleOnePartyDefault_ instruction
  *
@@ -35,20 +32,18 @@ export const settleOnePartyDefaultStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type SettleOnePartyDefaultInstructionAccounts = {
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  takerCollateralInfo: web3.PublicKey
-  makerCollateralInfo: web3.PublicKey
-  takerCollateralTokens: web3.PublicKey
-  makerCollateralTokens: web3.PublicKey
-  tokenProgram?: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  takerCollateralInfo: web3.PublicKey;
+  makerCollateralInfo: web3.PublicKey;
+  takerCollateralTokens: web3.PublicKey;
+  makerCollateralTokens: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const settleOnePartyDefaultInstructionDiscriminator = [
-  133, 121, 215, 90, 134, 49, 138, 180,
-]
+export const settleOnePartyDefaultInstructionDiscriminator = [133, 121, 215, 90, 134, 49, 138, 180];
 
 /**
  * Creates a _SettleOnePartyDefault_ instruction.
@@ -60,11 +55,11 @@ export const settleOnePartyDefaultInstructionDiscriminator = [
  */
 export function createSettleOnePartyDefaultInstruction(
   accounts: SettleOnePartyDefaultInstructionAccounts,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = settleOnePartyDefaultStruct.serialize({
     instructionDiscriminator: settleOnePartyDefaultInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.protocol,
@@ -106,11 +101,11 @@ export function createSettleOnePartyDefaultInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -118,6 +113,6 @@ export function createSettleOnePartyDefaultInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

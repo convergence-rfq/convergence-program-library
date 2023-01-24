@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,11 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const finalizeRfqConstructionStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'FinalizeRfqConstructionInstructionArgs'
-)
+  instructionDiscriminator: number[] /* size: 8 */;
+}>([["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)]], "FinalizeRfqConstructionInstructionArgs");
 /**
  * Accounts required by the _finalizeRfqConstruction_ instruction
  *
@@ -33,18 +30,16 @@ export const finalizeRfqConstructionStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type FinalizeRfqConstructionInstructionAccounts = {
-  taker: web3.PublicKey
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  collateralInfo: web3.PublicKey
-  collateralToken: web3.PublicKey
-  riskEngine: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  taker: web3.PublicKey;
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  collateralInfo: web3.PublicKey;
+  collateralToken: web3.PublicKey;
+  riskEngine: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const finalizeRfqConstructionInstructionDiscriminator = [
-  149, 197, 127, 87, 216, 120, 126, 178,
-]
+export const finalizeRfqConstructionInstructionDiscriminator = [149, 197, 127, 87, 216, 120, 126, 178];
 
 /**
  * Creates a _FinalizeRfqConstruction_ instruction.
@@ -56,11 +51,11 @@ export const finalizeRfqConstructionInstructionDiscriminator = [
  */
 export function createFinalizeRfqConstructionInstruction(
   accounts: FinalizeRfqConstructionInstructionAccounts,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = finalizeRfqConstructionStruct.serialize({
     instructionDiscriminator: finalizeRfqConstructionInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.taker,
@@ -92,11 +87,11 @@ export function createFinalizeRfqConstructionInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -104,6 +99,6 @@ export function createFinalizeRfqConstructionInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

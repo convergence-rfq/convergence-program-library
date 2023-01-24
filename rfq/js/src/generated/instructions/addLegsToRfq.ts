@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { Leg, legBeet } from '../types/Leg'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
+import { Leg, legBeet } from "../types/Leg";
 
 /**
  * @category Instructions
@@ -15,8 +15,8 @@ import { Leg, legBeet } from '../types/Leg'
  * @category generated
  */
 export type AddLegsToRfqInstructionArgs = {
-  legs: Leg[]
-}
+  legs: Leg[];
+};
 /**
  * @category Instructions
  * @category AddLegsToRfq
@@ -24,15 +24,15 @@ export type AddLegsToRfqInstructionArgs = {
  */
 export const addLegsToRfqStruct = new beet.FixableBeetArgsStruct<
   AddLegsToRfqInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['legs', beet.array(legBeet)],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["legs", beet.array(legBeet)],
   ],
-  'AddLegsToRfqInstructionArgs'
-)
+  "AddLegsToRfqInstructionArgs"
+);
 /**
  * Accounts required by the _addLegsToRfq_ instruction
  *
@@ -44,15 +44,13 @@ export const addLegsToRfqStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type AddLegsToRfqInstructionAccounts = {
-  taker: web3.PublicKey
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  taker: web3.PublicKey;
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const addLegsToRfqInstructionDiscriminator = [
-  27, 58, 42, 176, 2, 23, 104, 41,
-]
+export const addLegsToRfqInstructionDiscriminator = [27, 58, 42, 176, 2, 23, 104, 41];
 
 /**
  * Creates a _AddLegsToRfq_ instruction.
@@ -67,12 +65,12 @@ export const addLegsToRfqInstructionDiscriminator = [
 export function createAddLegsToRfqInstruction(
   accounts: AddLegsToRfqInstructionAccounts,
   args: AddLegsToRfqInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = addLegsToRfqStruct.serialize({
     instructionDiscriminator: addLegsToRfqInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.taker,
@@ -89,11 +87,11 @@ export function createAddLegsToRfqInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -101,6 +99,6 @@ export function createAddLegsToRfqInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

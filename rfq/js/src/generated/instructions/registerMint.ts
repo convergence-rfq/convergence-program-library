@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,11 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const registerMintStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'RegisterMintInstructionArgs'
-)
+  instructionDiscriminator: number[] /* size: 8 */;
+}>([["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)]], "RegisterMintInstructionArgs");
 /**
  * Accounts required by the _registerMint_ instruction
  *
@@ -32,18 +29,16 @@ export const registerMintStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type RegisterMintInstructionAccounts = {
-  authority: web3.PublicKey
-  protocol: web3.PublicKey
-  mintInfo: web3.PublicKey
-  baseAsset: web3.PublicKey
-  mint: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  authority: web3.PublicKey;
+  protocol: web3.PublicKey;
+  mintInfo: web3.PublicKey;
+  baseAsset: web3.PublicKey;
+  mint: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const registerMintInstructionDiscriminator = [
-  242, 43, 74, 162, 217, 214, 191, 171,
-]
+export const registerMintInstructionDiscriminator = [242, 43, 74, 162, 217, 214, 191, 171];
 
 /**
  * Creates a _RegisterMint_ instruction.
@@ -55,11 +50,11 @@ export const registerMintInstructionDiscriminator = [
  */
 export function createRegisterMintInstruction(
   accounts: RegisterMintInstructionAccounts,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = registerMintStruct.serialize({
     instructionDiscriminator: registerMintInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.authority,
@@ -91,11 +86,11 @@ export function createRegisterMintInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -103,6 +98,6 @@ export function createRegisterMintInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

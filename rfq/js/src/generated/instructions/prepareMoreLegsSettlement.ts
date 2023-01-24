@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { AuthoritySide, authoritySideBeet } from '../types/AuthoritySide'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
+import { AuthoritySide, authoritySideBeet } from "../types/AuthoritySide";
 
 /**
  * @category Instructions
@@ -15,9 +15,9 @@ import { AuthoritySide, authoritySideBeet } from '../types/AuthoritySide'
  * @category generated
  */
 export type PrepareMoreLegsSettlementInstructionArgs = {
-  side: AuthoritySide
-  legAmountToPrepare: number
-}
+  side: AuthoritySide;
+  legAmountToPrepare: number;
+};
 /**
  * @category Instructions
  * @category PrepareMoreLegsSettlement
@@ -25,16 +25,16 @@ export type PrepareMoreLegsSettlementInstructionArgs = {
  */
 export const prepareMoreLegsSettlementStruct = new beet.BeetArgsStruct<
   PrepareMoreLegsSettlementInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['side', authoritySideBeet],
-    ['legAmountToPrepare', beet.u8],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["side", authoritySideBeet],
+    ["legAmountToPrepare", beet.u8],
   ],
-  'PrepareMoreLegsSettlementInstructionArgs'
-)
+  "PrepareMoreLegsSettlementInstructionArgs"
+);
 /**
  * Accounts required by the _prepareMoreLegsSettlement_ instruction
  *
@@ -47,16 +47,14 @@ export const prepareMoreLegsSettlementStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type PrepareMoreLegsSettlementInstructionAccounts = {
-  caller: web3.PublicKey
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  caller: web3.PublicKey;
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const prepareMoreLegsSettlementInstructionDiscriminator = [
-  180, 151, 90, 187, 14, 33, 23, 245,
-]
+export const prepareMoreLegsSettlementInstructionDiscriminator = [180, 151, 90, 187, 14, 33, 23, 245];
 
 /**
  * Creates a _PrepareMoreLegsSettlement_ instruction.
@@ -71,12 +69,12 @@ export const prepareMoreLegsSettlementInstructionDiscriminator = [
 export function createPrepareMoreLegsSettlementInstruction(
   accounts: PrepareMoreLegsSettlementInstructionAccounts,
   args: PrepareMoreLegsSettlementInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = prepareMoreLegsSettlementStruct.serialize({
     instructionDiscriminator: prepareMoreLegsSettlementInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.caller,
@@ -98,11 +96,11 @@ export function createPrepareMoreLegsSettlementInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -110,6 +108,6 @@ export function createPrepareMoreLegsSettlementInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

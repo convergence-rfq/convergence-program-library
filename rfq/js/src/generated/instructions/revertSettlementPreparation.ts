@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { AuthoritySide, authoritySideBeet } from '../types/AuthoritySide'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
+import { AuthoritySide, authoritySideBeet } from "../types/AuthoritySide";
 
 /**
  * @category Instructions
@@ -15,8 +15,8 @@ import { AuthoritySide, authoritySideBeet } from '../types/AuthoritySide'
  * @category generated
  */
 export type RevertSettlementPreparationInstructionArgs = {
-  side: AuthoritySide
-}
+  side: AuthoritySide;
+};
 /**
  * @category Instructions
  * @category RevertSettlementPreparation
@@ -24,15 +24,15 @@ export type RevertSettlementPreparationInstructionArgs = {
  */
 export const revertSettlementPreparationStruct = new beet.BeetArgsStruct<
   RevertSettlementPreparationInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['side', authoritySideBeet],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["side", authoritySideBeet],
   ],
-  'RevertSettlementPreparationInstructionArgs'
-)
+  "RevertSettlementPreparationInstructionArgs"
+);
 /**
  * Accounts required by the _revertSettlementPreparation_ instruction
  *
@@ -44,15 +44,13 @@ export const revertSettlementPreparationStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type RevertSettlementPreparationInstructionAccounts = {
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const revertSettlementPreparationInstructionDiscriminator = [
-  67, 59, 235, 93, 219, 91, 81, 109,
-]
+export const revertSettlementPreparationInstructionDiscriminator = [67, 59, 235, 93, 219, 91, 81, 109];
 
 /**
  * Creates a _RevertSettlementPreparation_ instruction.
@@ -67,13 +65,12 @@ export const revertSettlementPreparationInstructionDiscriminator = [
 export function createRevertSettlementPreparationInstruction(
   accounts: RevertSettlementPreparationInstructionAccounts,
   args: RevertSettlementPreparationInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = revertSettlementPreparationStruct.serialize({
-    instructionDiscriminator:
-      revertSettlementPreparationInstructionDiscriminator,
+    instructionDiscriminator: revertSettlementPreparationInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.protocol,
@@ -90,11 +87,11 @@ export function createRevertSettlementPreparationInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -102,6 +99,6 @@ export function createRevertSettlementPreparationInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

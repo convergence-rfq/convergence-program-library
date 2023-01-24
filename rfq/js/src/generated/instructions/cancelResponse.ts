@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,11 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const cancelResponseStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'CancelResponseInstructionArgs'
-)
+  instructionDiscriminator: number[] /* size: 8 */;
+}>([["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)]], "CancelResponseInstructionArgs");
 /**
  * Accounts required by the _cancelResponse_ instruction
  *
@@ -31,16 +28,14 @@ export const cancelResponseStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type CancelResponseInstructionAccounts = {
-  maker: web3.PublicKey
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  maker: web3.PublicKey;
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const cancelResponseInstructionDiscriminator = [
-  24, 134, 17, 237, 161, 162, 94, 141,
-]
+export const cancelResponseInstructionDiscriminator = [24, 134, 17, 237, 161, 162, 94, 141];
 
 /**
  * Creates a _CancelResponse_ instruction.
@@ -52,11 +47,11 @@ export const cancelResponseInstructionDiscriminator = [
  */
 export function createCancelResponseInstruction(
   accounts: CancelResponseInstructionAccounts,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = cancelResponseStruct.serialize({
     instructionDiscriminator: cancelResponseInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.maker,
@@ -78,11 +73,11 @@ export function createCancelResponseInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -90,6 +85,6 @@ export function createCancelResponseInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

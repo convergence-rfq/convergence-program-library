@@ -5,7 +5,7 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from "@metaplex-foundation/beet";
 /**
  * @category enums
  * @category generated
@@ -20,6 +20,7 @@ export enum DefaultingParty {
  * @category userTypes
  * @category generated
  */
-export const defaultingPartyBeet = beet.fixedScalarEnum(
+export const defaultingPartyBeet = beet.fixedScalarEnum(DefaultingParty) as beet.FixedSizeBeet<
+  DefaultingParty,
   DefaultingParty
-) as beet.FixedSizeBeet<DefaultingParty, DefaultingParty>
+>;

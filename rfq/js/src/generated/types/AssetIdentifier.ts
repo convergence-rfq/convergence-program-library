@@ -5,7 +5,7 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from "@metaplex-foundation/beet";
 /**
  * This type is used to derive the {@link AssetIdentifier} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link AssetIdentifier} type instead.
@@ -16,9 +16,9 @@ import * as beet from '@metaplex-foundation/beet'
  * @private
  */
 export type AssetIdentifierRecord = {
-  Leg: { legIndex: number }
-  Quote: void /* scalar variant */
-}
+  Leg: { legIndex: number };
+  Quote: void /* scalar variant */;
+};
 
 /**
  * Union type respresenting the AssetIdentifier data enum defined in Rust.
@@ -31,14 +31,12 @@ export type AssetIdentifierRecord = {
  * @category enums
  * @category generated
  */
-export type AssetIdentifier = beet.DataEnumKeyAsKind<AssetIdentifierRecord>
+export type AssetIdentifier = beet.DataEnumKeyAsKind<AssetIdentifierRecord>;
 
-export const isAssetIdentifierLeg = (
-  x: AssetIdentifier
-): x is AssetIdentifier & { __kind: 'Leg' } => x.__kind === 'Leg'
-export const isAssetIdentifierQuote = (
-  x: AssetIdentifier
-): x is AssetIdentifier & { __kind: 'Quote' } => x.__kind === 'Quote'
+export const isAssetIdentifierLeg = (x: AssetIdentifier): x is AssetIdentifier & { __kind: "Leg" } =>
+  x.__kind === "Leg";
+export const isAssetIdentifierQuote = (x: AssetIdentifier): x is AssetIdentifier & { __kind: "Quote" } =>
+  x.__kind === "Quote";
 
 /**
  * @category userTypes
@@ -46,11 +44,8 @@ export const isAssetIdentifierQuote = (
  */
 export const assetIdentifierBeet = beet.dataEnum<AssetIdentifierRecord>([
   [
-    'Leg',
-    new beet.BeetArgsStruct<AssetIdentifierRecord['Leg']>(
-      [['legIndex', beet.u8]],
-      'AssetIdentifierRecord["Leg"]'
-    ),
+    "Leg",
+    new beet.BeetArgsStruct<AssetIdentifierRecord["Leg"]>([["legIndex", beet.u8]], 'AssetIdentifierRecord["Leg"]'),
   ],
-  ['Quote', beet.unit],
-]) as beet.FixableBeet<AssetIdentifier>
+  ["Quote", beet.unit],
+]) as beet.FixableBeet<AssetIdentifier>;

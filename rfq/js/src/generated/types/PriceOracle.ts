@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
+import * as web3 from "@solana/web3.js";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import * as beet from "@metaplex-foundation/beet";
 /**
  * This type is used to derive the {@link PriceOracle} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link PriceOracle} type instead.
@@ -18,8 +18,8 @@ import * as beet from '@metaplex-foundation/beet'
  * @private
  */
 export type PriceOracleRecord = {
-  Switchboard: { address: web3.PublicKey }
-}
+  Switchboard: { address: web3.PublicKey };
+};
 
 /**
  * Union type respresenting the PriceOracle data enum defined in Rust.
@@ -32,11 +32,10 @@ export type PriceOracleRecord = {
  * @category enums
  * @category generated
  */
-export type PriceOracle = beet.DataEnumKeyAsKind<PriceOracleRecord>
+export type PriceOracle = beet.DataEnumKeyAsKind<PriceOracleRecord>;
 
-export const isPriceOracleSwitchboard = (
-  x: PriceOracle
-): x is PriceOracle & { __kind: 'Switchboard' } => x.__kind === 'Switchboard'
+export const isPriceOracleSwitchboard = (x: PriceOracle): x is PriceOracle & { __kind: "Switchboard" } =>
+  x.__kind === "Switchboard";
 
 /**
  * @category userTypes
@@ -44,10 +43,10 @@ export const isPriceOracleSwitchboard = (
  */
 export const priceOracleBeet = beet.dataEnum<PriceOracleRecord>([
   [
-    'Switchboard',
-    new beet.BeetArgsStruct<PriceOracleRecord['Switchboard']>(
-      [['address', beetSolana.publicKey]],
+    "Switchboard",
+    new beet.BeetArgsStruct<PriceOracleRecord["Switchboard"]>(
+      [["address", beetSolana.publicKey]],
       'PriceOracleRecord["Switchboard"]'
     ),
   ],
-]) as beet.FixableBeet<PriceOracle>
+]) as beet.FixableBeet<PriceOracle>;

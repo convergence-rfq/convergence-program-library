@@ -5,12 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import { BaseAssetIndex, baseAssetIndexBeet } from '../types/BaseAssetIndex'
-import { RiskCategory, riskCategoryBeet } from '../types/RiskCategory'
-import { PriceOracle, priceOracleBeet } from '../types/PriceOracle'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import { BaseAssetIndex, baseAssetIndexBeet } from "../types/BaseAssetIndex";
+import { RiskCategory, riskCategoryBeet } from "../types/RiskCategory";
+import { PriceOracle, priceOracleBeet } from "../types/PriceOracle";
 
 /**
  * Arguments used to create {@link BaseAssetInfo}
@@ -18,14 +18,14 @@ import { PriceOracle, priceOracleBeet } from '../types/PriceOracle'
  * @category generated
  */
 export type BaseAssetInfoArgs = {
-  bump: number
-  index: BaseAssetIndex
-  riskCategory: RiskCategory
-  priceOracle: PriceOracle
-  ticker: string
-}
+  bump: number;
+  index: BaseAssetIndex;
+  riskCategory: RiskCategory;
+  priceOracle: PriceOracle;
+  ticker: string;
+};
 
-export const baseAssetInfoDiscriminator = [3, 254, 100, 55, 115, 255, 7, 23]
+export const baseAssetInfoDiscriminator = [3, 254, 100, 55, 115, 255, 7, 23];
 /**
  * Holds the data for the {@link BaseAssetInfo} Account and provides de/serialization
  * functionality for that data
@@ -46,24 +46,15 @@ export class BaseAssetInfo implements BaseAssetInfoArgs {
    * Creates a {@link BaseAssetInfo} instance from the provided args.
    */
   static fromArgs(args: BaseAssetInfoArgs) {
-    return new BaseAssetInfo(
-      args.bump,
-      args.index,
-      args.riskCategory,
-      args.priceOracle,
-      args.ticker
-    )
+    return new BaseAssetInfo(args.bump, args.index, args.riskCategory, args.priceOracle, args.ticker);
   }
 
   /**
    * Deserializes the {@link BaseAssetInfo} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(
-    accountInfo: web3.AccountInfo<Buffer>,
-    offset = 0
-  ): [BaseAssetInfo, number] {
-    return BaseAssetInfo.deserialize(accountInfo.data, offset)
+  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [BaseAssetInfo, number] {
+    return BaseAssetInfo.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -77,14 +68,11 @@ export class BaseAssetInfo implements BaseAssetInfoArgs {
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig
   ): Promise<BaseAssetInfo> {
-    const accountInfo = await connection.getAccountInfo(
-      address,
-      commitmentOrConfig
-    )
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
-      throw new Error(`Unable to find BaseAssetInfo account at ${address}`)
+      throw new Error(`Unable to find BaseAssetInfo account at ${address}`);
     }
-    return BaseAssetInfo.fromAccountInfo(accountInfo, 0)[0]
+    return BaseAssetInfo.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -93,12 +81,8 @@ export class BaseAssetInfo implements BaseAssetInfoArgs {
    *
    * @param programId - the program that owns the accounts we are filtering
    */
-  static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey(
-      'EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk'
-    )
-  ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, baseAssetInfoBeet)
+  static gpaBuilder(programId: web3.PublicKey = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")) {
+    return beetSolana.GpaBuilder.fromStruct(programId, baseAssetInfoBeet);
   }
 
   /**
@@ -106,7 +90,7 @@ export class BaseAssetInfo implements BaseAssetInfoArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [BaseAssetInfo, number] {
-    return baseAssetInfoBeet.deserialize(buf, offset)
+    return baseAssetInfoBeet.deserialize(buf, offset);
   }
 
   /**
@@ -117,7 +101,7 @@ export class BaseAssetInfo implements BaseAssetInfoArgs {
     return baseAssetInfoBeet.serialize({
       accountDiscriminator: baseAssetInfoDiscriminator,
       ...this,
-    })
+    });
   }
 
   /**
@@ -128,11 +112,11 @@ export class BaseAssetInfo implements BaseAssetInfoArgs {
    * depends on them
    */
   static byteSize(args: BaseAssetInfoArgs) {
-    const instance = BaseAssetInfo.fromArgs(args)
+    const instance = BaseAssetInfo.fromArgs(args);
     return baseAssetInfoBeet.toFixedFromValue({
       accountDiscriminator: baseAssetInfoDiscriminator,
       ...instance,
-    }).byteSize
+    }).byteSize;
   }
 
   /**
@@ -148,10 +132,7 @@ export class BaseAssetInfo implements BaseAssetInfoArgs {
     connection: web3.Connection,
     commitment?: web3.Commitment
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      BaseAssetInfo.byteSize(args),
-      commitment
-    )
+    return connection.getMinimumBalanceForRentExemption(BaseAssetInfo.byteSize(args), commitment);
   }
 
   /**
@@ -162,10 +143,10 @@ export class BaseAssetInfo implements BaseAssetInfoArgs {
     return {
       bump: this.bump,
       index: this.index,
-      riskCategory: 'RiskCategory.' + RiskCategory[this.riskCategory],
+      riskCategory: "RiskCategory." + RiskCategory[this.riskCategory],
       priceOracle: this.priceOracle.__kind,
       ticker: this.ticker,
-    }
+    };
   }
 }
 
@@ -176,17 +157,17 @@ export class BaseAssetInfo implements BaseAssetInfoArgs {
 export const baseAssetInfoBeet = new beet.FixableBeetStruct<
   BaseAssetInfo,
   BaseAssetInfoArgs & {
-    accountDiscriminator: number[] /* size: 8 */
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['bump', beet.u8],
-    ['index', baseAssetIndexBeet],
-    ['riskCategory', riskCategoryBeet],
-    ['priceOracle', priceOracleBeet],
-    ['ticker', beet.utf8String],
+    ["accountDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["bump", beet.u8],
+    ["index", baseAssetIndexBeet],
+    ["riskCategory", riskCategoryBeet],
+    ["priceOracle", priceOracleBeet],
+    ["ticker", beet.utf8String],
   ],
   BaseAssetInfo.fromArgs,
-  'BaseAssetInfo'
-)
+  "BaseAssetInfo"
+);

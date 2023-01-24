@@ -5,14 +5,14 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
+import * as web3 from "@solana/web3.js";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import * as beet from "@metaplex-foundation/beet";
 export type QuoteAsset = {
-  instrumentProgram: web3.PublicKey
-  instrumentData: Uint8Array
-  instrumentDecimals: number
-}
+  instrumentProgram: web3.PublicKey;
+  instrumentData: Uint8Array;
+  instrumentDecimals: number;
+};
 
 /**
  * @category userTypes
@@ -20,9 +20,9 @@ export type QuoteAsset = {
  */
 export const quoteAssetBeet = new beet.FixableBeetArgsStruct<QuoteAsset>(
   [
-    ['instrumentProgram', beetSolana.publicKey],
-    ['instrumentData', beet.bytes],
-    ['instrumentDecimals', beet.u8],
+    ["instrumentProgram", beetSolana.publicKey],
+    ["instrumentData", beet.bytes],
+    ["instrumentDecimals", beet.u8],
   ],
-  'QuoteAsset'
-)
+  "QuoteAsset"
+);

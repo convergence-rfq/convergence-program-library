@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { AuthoritySide, authoritySideBeet } from '../types/AuthoritySide'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
+import { AuthoritySide, authoritySideBeet } from "../types/AuthoritySide";
 
 /**
  * @category Instructions
@@ -15,9 +15,9 @@ import { AuthoritySide, authoritySideBeet } from '../types/AuthoritySide'
  * @category generated
  */
 export type PrepareSettlementInstructionArgs = {
-  side: AuthoritySide
-  legAmountToPrepare: number
-}
+  side: AuthoritySide;
+  legAmountToPrepare: number;
+};
 /**
  * @category Instructions
  * @category PrepareSettlement
@@ -25,16 +25,16 @@ export type PrepareSettlementInstructionArgs = {
  */
 export const prepareSettlementStruct = new beet.BeetArgsStruct<
   PrepareSettlementInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['side', authoritySideBeet],
-    ['legAmountToPrepare', beet.u8],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["side", authoritySideBeet],
+    ["legAmountToPrepare", beet.u8],
   ],
-  'PrepareSettlementInstructionArgs'
-)
+  "PrepareSettlementInstructionArgs"
+);
 /**
  * Accounts required by the _prepareSettlement_ instruction
  *
@@ -47,16 +47,14 @@ export const prepareSettlementStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type PrepareSettlementInstructionAccounts = {
-  caller: web3.PublicKey
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  caller: web3.PublicKey;
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const prepareSettlementInstructionDiscriminator = [
-  171, 178, 160, 24, 97, 190, 39, 143,
-]
+export const prepareSettlementInstructionDiscriminator = [171, 178, 160, 24, 97, 190, 39, 143];
 
 /**
  * Creates a _PrepareSettlement_ instruction.
@@ -71,12 +69,12 @@ export const prepareSettlementInstructionDiscriminator = [
 export function createPrepareSettlementInstruction(
   accounts: PrepareSettlementInstructionAccounts,
   args: PrepareSettlementInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = prepareSettlementStruct.serialize({
     instructionDiscriminator: prepareSettlementInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.caller,
@@ -98,11 +96,11 @@ export function createPrepareSettlementInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -110,6 +108,6 @@ export function createPrepareSettlementInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

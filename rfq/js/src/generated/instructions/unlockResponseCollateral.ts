@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,11 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const unlockResponseCollateralStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'UnlockResponseCollateralInstructionArgs'
-)
+  instructionDiscriminator: number[] /* size: 8 */;
+}>([["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)]], "UnlockResponseCollateralInstructionArgs");
 /**
  * Accounts required by the _unlockResponseCollateral_ instruction
  *
@@ -32,17 +29,15 @@ export const unlockResponseCollateralStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type UnlockResponseCollateralInstructionAccounts = {
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  takerCollateralInfo: web3.PublicKey
-  makerCollateralInfo: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  takerCollateralInfo: web3.PublicKey;
+  makerCollateralInfo: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const unlockResponseCollateralInstructionDiscriminator = [
-  20, 42, 137, 216, 80, 82, 27, 254,
-]
+export const unlockResponseCollateralInstructionDiscriminator = [20, 42, 137, 216, 80, 82, 27, 254];
 
 /**
  * Creates a _UnlockResponseCollateral_ instruction.
@@ -54,11 +49,11 @@ export const unlockResponseCollateralInstructionDiscriminator = [
  */
 export function createUnlockResponseCollateralInstruction(
   accounts: UnlockResponseCollateralInstructionAccounts,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = unlockResponseCollateralStruct.serialize({
     instructionDiscriminator: unlockResponseCollateralInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.protocol,
@@ -85,11 +80,11 @@ export function createUnlockResponseCollateralInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -97,6 +92,6 @@ export function createUnlockResponseCollateralInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

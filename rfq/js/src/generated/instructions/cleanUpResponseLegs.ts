@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,8 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type CleanUpResponseLegsInstructionArgs = {
-  legAmountToClear: number
-}
+  legAmountToClear: number;
+};
 /**
  * @category Instructions
  * @category CleanUpResponseLegs
@@ -23,15 +23,15 @@ export type CleanUpResponseLegsInstructionArgs = {
  */
 export const cleanUpResponseLegsStruct = new beet.BeetArgsStruct<
   CleanUpResponseLegsInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['legAmountToClear', beet.u8],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["legAmountToClear", beet.u8],
   ],
-  'CleanUpResponseLegsInstructionArgs'
-)
+  "CleanUpResponseLegsInstructionArgs"
+);
 /**
  * Accounts required by the _cleanUpResponseLegs_ instruction
  *
@@ -43,15 +43,13 @@ export const cleanUpResponseLegsStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type CleanUpResponseLegsInstructionAccounts = {
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const cleanUpResponseLegsInstructionDiscriminator = [
-  21, 23, 250, 1, 46, 50, 55, 102,
-]
+export const cleanUpResponseLegsInstructionDiscriminator = [21, 23, 250, 1, 46, 50, 55, 102];
 
 /**
  * Creates a _CleanUpResponseLegs_ instruction.
@@ -66,12 +64,12 @@ export const cleanUpResponseLegsInstructionDiscriminator = [
 export function createCleanUpResponseLegsInstruction(
   accounts: CleanUpResponseLegsInstructionAccounts,
   args: CleanUpResponseLegsInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = cleanUpResponseLegsStruct.serialize({
     instructionDiscriminator: cleanUpResponseLegsInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.protocol,
@@ -88,11 +86,11 @@ export function createCleanUpResponseLegsInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -100,6 +98,6 @@ export function createCleanUpResponseLegsInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

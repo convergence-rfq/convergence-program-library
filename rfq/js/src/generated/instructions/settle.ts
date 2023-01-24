@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,11 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const settleStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'SettleInstructionArgs'
-)
+  instructionDiscriminator: number[] /* size: 8 */;
+}>([["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)]], "SettleInstructionArgs");
 /**
  * Accounts required by the _settle_ instruction
  *
@@ -30,15 +27,13 @@ export const settleStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type SettleInstructionAccounts = {
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const settleInstructionDiscriminator = [
-  175, 42, 185, 87, 144, 131, 102, 212,
-]
+export const settleInstructionDiscriminator = [175, 42, 185, 87, 144, 131, 102, 212];
 
 /**
  * Creates a _Settle_ instruction.
@@ -50,11 +45,11 @@ export const settleInstructionDiscriminator = [
  */
 export function createSettleInstruction(
   accounts: SettleInstructionAccounts,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = settleStruct.serialize({
     instructionDiscriminator: settleInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.protocol,
@@ -71,11 +66,11 @@ export function createSettleInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -83,6 +78,6 @@ export function createSettleInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

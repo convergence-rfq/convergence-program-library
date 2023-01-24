@@ -5,16 +5,13 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from "@metaplex-foundation/beet";
 export type BaseAssetIndex = {
-  value: number
-}
+  value: number;
+};
 
 /**
  * @category userTypes
  * @category generated
  */
-export const baseAssetIndexBeet = new beet.BeetArgsStruct<BaseAssetIndex>(
-  [['value', beet.u16]],
-  'BaseAssetIndex'
-)
+export const baseAssetIndexBeet = new beet.BeetArgsStruct<BaseAssetIndex>([["value", beet.u16]], "BaseAssetIndex");

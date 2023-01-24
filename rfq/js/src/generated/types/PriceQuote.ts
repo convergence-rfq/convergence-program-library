@@ -5,7 +5,7 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from "@metaplex-foundation/beet";
 /**
  * This type is used to derive the {@link PriceQuote} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link PriceQuote} type instead.
@@ -16,8 +16,8 @@ import * as beet from '@metaplex-foundation/beet'
  * @private
  */
 export type PriceQuoteRecord = {
-  AbsolutePrice: { amountBps: beet.bignum }
-}
+  AbsolutePrice: { amountBps: beet.bignum };
+};
 
 /**
  * Union type respresenting the PriceQuote data enum defined in Rust.
@@ -30,11 +30,10 @@ export type PriceQuoteRecord = {
  * @category enums
  * @category generated
  */
-export type PriceQuote = beet.DataEnumKeyAsKind<PriceQuoteRecord>
+export type PriceQuote = beet.DataEnumKeyAsKind<PriceQuoteRecord>;
 
-export const isPriceQuoteAbsolutePrice = (
-  x: PriceQuote
-): x is PriceQuote & { __kind: 'AbsolutePrice' } => x.__kind === 'AbsolutePrice'
+export const isPriceQuoteAbsolutePrice = (x: PriceQuote): x is PriceQuote & { __kind: "AbsolutePrice" } =>
+  x.__kind === "AbsolutePrice";
 
 /**
  * @category userTypes
@@ -42,10 +41,10 @@ export const isPriceQuoteAbsolutePrice = (
  */
 export const priceQuoteBeet = beet.dataEnum<PriceQuoteRecord>([
   [
-    'AbsolutePrice',
-    new beet.BeetArgsStruct<PriceQuoteRecord['AbsolutePrice']>(
-      [['amountBps', beet.i128]],
+    "AbsolutePrice",
+    new beet.BeetArgsStruct<PriceQuoteRecord["AbsolutePrice"]>(
+      [["amountBps", beet.i128]],
       'PriceQuoteRecord["AbsolutePrice"]'
     ),
   ],
-]) as beet.FixableBeet<PriceQuote>
+]) as beet.FixableBeet<PriceQuote>;

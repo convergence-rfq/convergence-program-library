@@ -5,11 +5,11 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
-import { FeeParameters, feeParametersBeet } from '../types/FeeParameters'
-import { Instrument, instrumentBeet } from '../types/Instrument'
+import * as web3 from "@solana/web3.js";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import * as beet from "@metaplex-foundation/beet";
+import { FeeParameters, feeParametersBeet } from "../types/FeeParameters";
+import { Instrument, instrumentBeet } from "../types/Instrument";
 
 /**
  * Arguments used to create {@link ProtocolState}
@@ -17,17 +17,17 @@ import { Instrument, instrumentBeet } from '../types/Instrument'
  * @category generated
  */
 export type ProtocolStateArgs = {
-  authority: web3.PublicKey
-  bump: number
-  active: boolean
-  settleFees: FeeParameters
-  defaultFees: FeeParameters
-  riskEngine: web3.PublicKey
-  collateralMint: web3.PublicKey
-  instruments: Instrument[]
-}
+  authority: web3.PublicKey;
+  bump: number;
+  active: boolean;
+  settleFees: FeeParameters;
+  defaultFees: FeeParameters;
+  riskEngine: web3.PublicKey;
+  collateralMint: web3.PublicKey;
+  instruments: Instrument[];
+};
 
-export const protocolStateDiscriminator = [33, 51, 173, 134, 35, 140, 195, 248]
+export const protocolStateDiscriminator = [33, 51, 173, 134, 35, 140, 195, 248];
 /**
  * Holds the data for the {@link ProtocolState} Account and provides de/serialization
  * functionality for that data
@@ -60,18 +60,15 @@ export class ProtocolState implements ProtocolStateArgs {
       args.riskEngine,
       args.collateralMint,
       args.instruments
-    )
+    );
   }
 
   /**
    * Deserializes the {@link ProtocolState} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(
-    accountInfo: web3.AccountInfo<Buffer>,
-    offset = 0
-  ): [ProtocolState, number] {
-    return ProtocolState.deserialize(accountInfo.data, offset)
+  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [ProtocolState, number] {
+    return ProtocolState.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -85,14 +82,11 @@ export class ProtocolState implements ProtocolStateArgs {
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig
   ): Promise<ProtocolState> {
-    const accountInfo = await connection.getAccountInfo(
-      address,
-      commitmentOrConfig
-    )
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
-      throw new Error(`Unable to find ProtocolState account at ${address}`)
+      throw new Error(`Unable to find ProtocolState account at ${address}`);
     }
-    return ProtocolState.fromAccountInfo(accountInfo, 0)[0]
+    return ProtocolState.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -101,12 +95,8 @@ export class ProtocolState implements ProtocolStateArgs {
    *
    * @param programId - the program that owns the accounts we are filtering
    */
-  static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey(
-      'EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk'
-    )
-  ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, protocolStateBeet)
+  static gpaBuilder(programId: web3.PublicKey = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")) {
+    return beetSolana.GpaBuilder.fromStruct(programId, protocolStateBeet);
   }
 
   /**
@@ -114,7 +104,7 @@ export class ProtocolState implements ProtocolStateArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [ProtocolState, number] {
-    return protocolStateBeet.deserialize(buf, offset)
+    return protocolStateBeet.deserialize(buf, offset);
   }
 
   /**
@@ -125,7 +115,7 @@ export class ProtocolState implements ProtocolStateArgs {
     return protocolStateBeet.serialize({
       accountDiscriminator: protocolStateDiscriminator,
       ...this,
-    })
+    });
   }
 
   /**
@@ -136,11 +126,11 @@ export class ProtocolState implements ProtocolStateArgs {
    * depends on them
    */
   static byteSize(args: ProtocolStateArgs) {
-    const instance = ProtocolState.fromArgs(args)
+    const instance = ProtocolState.fromArgs(args);
     return protocolStateBeet.toFixedFromValue({
       accountDiscriminator: protocolStateDiscriminator,
       ...instance,
-    }).byteSize
+    }).byteSize;
   }
 
   /**
@@ -156,10 +146,7 @@ export class ProtocolState implements ProtocolStateArgs {
     connection: web3.Connection,
     commitment?: web3.Commitment
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      ProtocolState.byteSize(args),
-      commitment
-    )
+    return connection.getMinimumBalanceForRentExemption(ProtocolState.byteSize(args), commitment);
   }
 
   /**
@@ -176,7 +163,7 @@ export class ProtocolState implements ProtocolStateArgs {
       riskEngine: this.riskEngine.toBase58(),
       collateralMint: this.collateralMint.toBase58(),
       instruments: this.instruments,
-    }
+    };
   }
 }
 
@@ -187,20 +174,20 @@ export class ProtocolState implements ProtocolStateArgs {
 export const protocolStateBeet = new beet.FixableBeetStruct<
   ProtocolState,
   ProtocolStateArgs & {
-    accountDiscriminator: number[] /* size: 8 */
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['authority', beetSolana.publicKey],
-    ['bump', beet.u8],
-    ['active', beet.bool],
-    ['settleFees', feeParametersBeet],
-    ['defaultFees', feeParametersBeet],
-    ['riskEngine', beetSolana.publicKey],
-    ['collateralMint', beetSolana.publicKey],
-    ['instruments', beet.array(instrumentBeet)],
+    ["accountDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["authority", beetSolana.publicKey],
+    ["bump", beet.u8],
+    ["active", beet.bool],
+    ["settleFees", feeParametersBeet],
+    ["defaultFees", feeParametersBeet],
+    ["riskEngine", beetSolana.publicKey],
+    ["collateralMint", beetSolana.publicKey],
+    ["instruments", beet.array(instrumentBeet)],
   ],
   ProtocolState.fromArgs,
-  'ProtocolState'
-)
+  "ProtocolState"
+);

@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,8 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type PartiallySettleLegsInstructionArgs = {
-  legAmountToSettle: number
-}
+  legAmountToSettle: number;
+};
 /**
  * @category Instructions
  * @category PartiallySettleLegs
@@ -23,15 +23,15 @@ export type PartiallySettleLegsInstructionArgs = {
  */
 export const partiallySettleLegsStruct = new beet.BeetArgsStruct<
   PartiallySettleLegsInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['legAmountToSettle', beet.u8],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["legAmountToSettle", beet.u8],
   ],
-  'PartiallySettleLegsInstructionArgs'
-)
+  "PartiallySettleLegsInstructionArgs"
+);
 /**
  * Accounts required by the _partiallySettleLegs_ instruction
  *
@@ -43,15 +43,13 @@ export const partiallySettleLegsStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type PartiallySettleLegsInstructionAccounts = {
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  response: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  response: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const partiallySettleLegsInstructionDiscriminator = [
-  6, 137, 52, 133, 242, 249, 56, 108,
-]
+export const partiallySettleLegsInstructionDiscriminator = [6, 137, 52, 133, 242, 249, 56, 108];
 
 /**
  * Creates a _PartiallySettleLegs_ instruction.
@@ -66,12 +64,12 @@ export const partiallySettleLegsInstructionDiscriminator = [
 export function createPartiallySettleLegsInstruction(
   accounts: PartiallySettleLegsInstructionAccounts,
   args: PartiallySettleLegsInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = partiallySettleLegsStruct.serialize({
     instructionDiscriminator: partiallySettleLegsInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.protocol,
@@ -88,11 +86,11 @@ export function createPartiallySettleLegsInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -100,6 +98,6 @@ export function createPartiallySettleLegsInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

@@ -5,11 +5,11 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from "@metaplex-foundation/beet";
 export type FeeParameters = {
-  takerBps: beet.bignum
-  makerBps: beet.bignum
-}
+  takerBps: beet.bignum;
+  makerBps: beet.bignum;
+};
 
 /**
  * @category userTypes
@@ -17,8 +17,8 @@ export type FeeParameters = {
  */
 export const feeParametersBeet = new beet.BeetArgsStruct<FeeParameters>(
   [
-    ['takerBps', beet.u64],
-    ['makerBps', beet.u64],
+    ["takerBps", beet.u64],
+    ["makerBps", beet.u64],
   ],
-  'FeeParameters'
-)
+  "FeeParameters"
+);

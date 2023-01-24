@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as splToken from "@solana/spl-token";
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -15,8 +15,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type FundCollateralInstructionArgs = {
-  amount: beet.bignum
-}
+  amount: beet.bignum;
+};
 /**
  * @category Instructions
  * @category FundCollateral
@@ -24,15 +24,15 @@ export type FundCollateralInstructionArgs = {
  */
 export const fundCollateralStruct = new beet.BeetArgsStruct<
   FundCollateralInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['amount', beet.u64],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["amount", beet.u64],
   ],
-  'FundCollateralInstructionArgs'
-)
+  "FundCollateralInstructionArgs"
+);
 /**
  * Accounts required by the _fundCollateral_ instruction
  *
@@ -46,18 +46,16 @@ export const fundCollateralStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type FundCollateralInstructionAccounts = {
-  user: web3.PublicKey
-  userTokens: web3.PublicKey
-  protocol: web3.PublicKey
-  collateralInfo: web3.PublicKey
-  collateralToken: web3.PublicKey
-  tokenProgram?: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  user: web3.PublicKey;
+  userTokens: web3.PublicKey;
+  protocol: web3.PublicKey;
+  collateralInfo: web3.PublicKey;
+  collateralToken: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const fundCollateralInstructionDiscriminator = [
-  55, 123, 168, 146, 36, 55, 209, 213,
-]
+export const fundCollateralInstructionDiscriminator = [55, 123, 168, 146, 36, 55, 209, 213];
 
 /**
  * Creates a _FundCollateral_ instruction.
@@ -72,12 +70,12 @@ export const fundCollateralInstructionDiscriminator = [
 export function createFundCollateralInstruction(
   accounts: FundCollateralInstructionAccounts,
   args: FundCollateralInstructionArgs,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = fundCollateralStruct.serialize({
     instructionDiscriminator: fundCollateralInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.user,
@@ -109,11 +107,11 @@ export function createFundCollateralInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -121,6 +119,6 @@ export function createFundCollateralInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

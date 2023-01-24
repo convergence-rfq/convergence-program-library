@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import { MintType, mintTypeBeet } from '../types/MintType'
+import * as web3 from "@solana/web3.js";
+import * as beet from "@metaplex-foundation/beet";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import { MintType, mintTypeBeet } from "../types/MintType";
 
 /**
  * Arguments used to create {@link MintInfo}
@@ -16,13 +16,13 @@ import { MintType, mintTypeBeet } from '../types/MintType'
  * @category generated
  */
 export type MintInfoArgs = {
-  bump: number
-  mintAddress: web3.PublicKey
-  decimals: number
-  mintType: MintType
-}
+  bump: number;
+  mintAddress: web3.PublicKey;
+  decimals: number;
+  mintType: MintType;
+};
 
-export const mintInfoDiscriminator = [199, 115, 213, 221, 219, 29, 135, 174]
+export const mintInfoDiscriminator = [199, 115, 213, 221, 219, 29, 135, 174];
 /**
  * Holds the data for the {@link MintInfo} Account and provides de/serialization
  * functionality for that data
@@ -42,23 +42,15 @@ export class MintInfo implements MintInfoArgs {
    * Creates a {@link MintInfo} instance from the provided args.
    */
   static fromArgs(args: MintInfoArgs) {
-    return new MintInfo(
-      args.bump,
-      args.mintAddress,
-      args.decimals,
-      args.mintType
-    )
+    return new MintInfo(args.bump, args.mintAddress, args.decimals, args.mintType);
   }
 
   /**
    * Deserializes the {@link MintInfo} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(
-    accountInfo: web3.AccountInfo<Buffer>,
-    offset = 0
-  ): [MintInfo, number] {
-    return MintInfo.deserialize(accountInfo.data, offset)
+  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [MintInfo, number] {
+    return MintInfo.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -72,14 +64,11 @@ export class MintInfo implements MintInfoArgs {
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig
   ): Promise<MintInfo> {
-    const accountInfo = await connection.getAccountInfo(
-      address,
-      commitmentOrConfig
-    )
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
-      throw new Error(`Unable to find MintInfo account at ${address}`)
+      throw new Error(`Unable to find MintInfo account at ${address}`);
     }
-    return MintInfo.fromAccountInfo(accountInfo, 0)[0]
+    return MintInfo.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -88,12 +77,8 @@ export class MintInfo implements MintInfoArgs {
    *
    * @param programId - the program that owns the accounts we are filtering
    */
-  static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey(
-      'EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk'
-    )
-  ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, mintInfoBeet)
+  static gpaBuilder(programId: web3.PublicKey = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")) {
+    return beetSolana.GpaBuilder.fromStruct(programId, mintInfoBeet);
   }
 
   /**
@@ -101,7 +86,7 @@ export class MintInfo implements MintInfoArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [MintInfo, number] {
-    return mintInfoBeet.deserialize(buf, offset)
+    return mintInfoBeet.deserialize(buf, offset);
   }
 
   /**
@@ -112,7 +97,7 @@ export class MintInfo implements MintInfoArgs {
     return mintInfoBeet.serialize({
       accountDiscriminator: mintInfoDiscriminator,
       ...this,
-    })
+    });
   }
 
   /**
@@ -123,11 +108,11 @@ export class MintInfo implements MintInfoArgs {
    * depends on them
    */
   static byteSize(args: MintInfoArgs) {
-    const instance = MintInfo.fromArgs(args)
+    const instance = MintInfo.fromArgs(args);
     return mintInfoBeet.toFixedFromValue({
       accountDiscriminator: mintInfoDiscriminator,
       ...instance,
-    }).byteSize
+    }).byteSize;
   }
 
   /**
@@ -143,10 +128,7 @@ export class MintInfo implements MintInfoArgs {
     connection: web3.Connection,
     commitment?: web3.Commitment
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      MintInfo.byteSize(args),
-      commitment
-    )
+    return connection.getMinimumBalanceForRentExemption(MintInfo.byteSize(args), commitment);
   }
 
   /**
@@ -159,7 +141,7 @@ export class MintInfo implements MintInfoArgs {
       mintAddress: this.mintAddress.toBase58(),
       decimals: this.decimals,
       mintType: this.mintType.__kind,
-    }
+    };
   }
 }
 
@@ -170,16 +152,16 @@ export class MintInfo implements MintInfoArgs {
 export const mintInfoBeet = new beet.FixableBeetStruct<
   MintInfo,
   MintInfoArgs & {
-    accountDiscriminator: number[] /* size: 8 */
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['bump', beet.u8],
-    ['mintAddress', beetSolana.publicKey],
-    ['decimals', beet.u8],
-    ['mintType', mintTypeBeet],
+    ["accountDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["bump", beet.u8],
+    ["mintAddress", beetSolana.publicKey],
+    ["decimals", beet.u8],
+    ["mintType", mintTypeBeet],
   ],
   MintInfo.fromArgs,
-  'MintInfo'
-)
+  "MintInfo"
+);

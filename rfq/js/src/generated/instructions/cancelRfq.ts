@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,11 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const cancelRfqStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'CancelRfqInstructionArgs'
-)
+  instructionDiscriminator: number[] /* size: 8 */;
+}>([["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)]], "CancelRfqInstructionArgs");
 /**
  * Accounts required by the _cancelRfq_ instruction
  *
@@ -30,15 +27,13 @@ export const cancelRfqStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type CancelRfqInstructionAccounts = {
-  taker: web3.PublicKey
-  protocol: web3.PublicKey
-  rfq: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  taker: web3.PublicKey;
+  protocol: web3.PublicKey;
+  rfq: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const cancelRfqInstructionDiscriminator = [
-  65, 47, 228, 229, 50, 93, 212, 236,
-]
+export const cancelRfqInstructionDiscriminator = [65, 47, 228, 229, 50, 93, 212, 236];
 
 /**
  * Creates a _CancelRfq_ instruction.
@@ -50,11 +45,11 @@ export const cancelRfqInstructionDiscriminator = [
  */
 export function createCancelRfqInstruction(
   accounts: CancelRfqInstructionAccounts,
-  programId = new web3.PublicKey('EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk')
+  programId = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")
 ) {
   const [data] = cancelRfqStruct.serialize({
     instructionDiscriminator: cancelRfqInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.taker,
@@ -71,11 +66,11 @@ export function createCancelRfqInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -83,6 +78,6 @@ export function createCancelRfqInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

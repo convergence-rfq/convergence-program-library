@@ -5,14 +5,14 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import { OrderType, orderTypeBeet } from '../types/OrderType'
-import { FixedSize, fixedSizeBeet } from '../types/FixedSize'
-import { QuoteAsset, quoteAssetBeet } from '../types/QuoteAsset'
-import { StoredRfqState, storedRfqStateBeet } from '../types/StoredRfqState'
-import { Leg, legBeet } from '../types/Leg'
+import * as web3 from "@solana/web3.js";
+import * as beet from "@metaplex-foundation/beet";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import { OrderType, orderTypeBeet } from "../types/OrderType";
+import { FixedSize, fixedSizeBeet } from "../types/FixedSize";
+import { QuoteAsset, quoteAssetBeet } from "../types/QuoteAsset";
+import { StoredRfqState, storedRfqStateBeet } from "../types/StoredRfqState";
+import { Leg, legBeet } from "../types/Leg";
 
 /**
  * Arguments used to create {@link Rfq}
@@ -20,26 +20,26 @@ import { Leg, legBeet } from '../types/Leg'
  * @category generated
  */
 export type RfqArgs = {
-  taker: web3.PublicKey
-  orderType: OrderType
-  lastLookEnabled: boolean
-  fixedSize: FixedSize
-  quoteAsset: QuoteAsset
-  accessManager: beet.COption<web3.PublicKey>
-  creationTimestamp: beet.bignum
-  activeWindow: number
-  settlingWindow: number
-  expectedLegSize: number
-  state: StoredRfqState
-  nonResponseTakerCollateralLocked: beet.bignum
-  totalTakerCollateralLocked: beet.bignum
-  totalResponses: number
-  clearedResponses: number
-  confirmedResponses: number
-  legs: Leg[]
-}
+  taker: web3.PublicKey;
+  orderType: OrderType;
+  lastLookEnabled: boolean;
+  fixedSize: FixedSize;
+  quoteAsset: QuoteAsset;
+  accessManager: beet.COption<web3.PublicKey>;
+  creationTimestamp: beet.bignum;
+  activeWindow: number;
+  settlingWindow: number;
+  expectedLegSize: number;
+  state: StoredRfqState;
+  nonResponseTakerCollateralLocked: beet.bignum;
+  totalTakerCollateralLocked: beet.bignum;
+  totalResponses: number;
+  clearedResponses: number;
+  confirmedResponses: number;
+  legs: Leg[];
+};
 
-export const rfqDiscriminator = [106, 19, 109, 78, 169, 13, 234, 58]
+export const rfqDiscriminator = [106, 19, 109, 78, 169, 13, 234, 58];
 /**
  * Holds the data for the {@link Rfq} Account and provides de/serialization
  * functionality for that data
@@ -90,18 +90,15 @@ export class Rfq implements RfqArgs {
       args.clearedResponses,
       args.confirmedResponses,
       args.legs
-    )
+    );
   }
 
   /**
    * Deserializes the {@link Rfq} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(
-    accountInfo: web3.AccountInfo<Buffer>,
-    offset = 0
-  ): [Rfq, number] {
-    return Rfq.deserialize(accountInfo.data, offset)
+  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [Rfq, number] {
+    return Rfq.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -115,14 +112,11 @@ export class Rfq implements RfqArgs {
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig
   ): Promise<Rfq> {
-    const accountInfo = await connection.getAccountInfo(
-      address,
-      commitmentOrConfig
-    )
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
-      throw new Error(`Unable to find Rfq account at ${address}`)
+      throw new Error(`Unable to find Rfq account at ${address}`);
     }
-    return Rfq.fromAccountInfo(accountInfo, 0)[0]
+    return Rfq.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -131,12 +125,8 @@ export class Rfq implements RfqArgs {
    *
    * @param programId - the program that owns the accounts we are filtering
    */
-  static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey(
-      'EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk'
-    )
-  ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, rfqBeet)
+  static gpaBuilder(programId: web3.PublicKey = new web3.PublicKey("EYZVRgDAWHahx3bJXFms7CoPA6ncwJFkGFPiTa15X8Fk")) {
+    return beetSolana.GpaBuilder.fromStruct(programId, rfqBeet);
   }
 
   /**
@@ -144,7 +134,7 @@ export class Rfq implements RfqArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [Rfq, number] {
-    return rfqBeet.deserialize(buf, offset)
+    return rfqBeet.deserialize(buf, offset);
   }
 
   /**
@@ -155,7 +145,7 @@ export class Rfq implements RfqArgs {
     return rfqBeet.serialize({
       accountDiscriminator: rfqDiscriminator,
       ...this,
-    })
+    });
   }
 
   /**
@@ -166,11 +156,11 @@ export class Rfq implements RfqArgs {
    * depends on them
    */
   static byteSize(args: RfqArgs) {
-    const instance = Rfq.fromArgs(args)
+    const instance = Rfq.fromArgs(args);
     return rfqBeet.toFixedFromValue({
       accountDiscriminator: rfqDiscriminator,
       ...instance,
-    }).byteSize
+    }).byteSize;
   }
 
   /**
@@ -186,10 +176,7 @@ export class Rfq implements RfqArgs {
     connection: web3.Connection,
     commitment?: web3.Commitment
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      Rfq.byteSize(args),
-      commitment
-    )
+    return connection.getMinimumBalanceForRentExemption(Rfq.byteSize(args), commitment);
   }
 
   /**
@@ -199,55 +186,53 @@ export class Rfq implements RfqArgs {
   pretty() {
     return {
       taker: this.taker.toBase58(),
-      orderType: 'OrderType.' + OrderType[this.orderType],
+      orderType: "OrderType." + OrderType[this.orderType],
       lastLookEnabled: this.lastLookEnabled,
       fixedSize: this.fixedSize.__kind,
       quoteAsset: this.quoteAsset,
       accessManager: this.accessManager,
       creationTimestamp: (() => {
-        const x = <{ toNumber: () => number }>this.creationTimestamp
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.creationTimestamp;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
       activeWindow: this.activeWindow,
       settlingWindow: this.settlingWindow,
       expectedLegSize: this.expectedLegSize,
-      state: 'StoredRfqState.' + StoredRfqState[this.state],
+      state: "StoredRfqState." + StoredRfqState[this.state],
       nonResponseTakerCollateralLocked: (() => {
-        const x = <{ toNumber: () => number }>(
-          this.nonResponseTakerCollateralLocked
-        )
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.nonResponseTakerCollateralLocked;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
       totalTakerCollateralLocked: (() => {
-        const x = <{ toNumber: () => number }>this.totalTakerCollateralLocked
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.totalTakerCollateralLocked;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
       totalResponses: this.totalResponses,
       clearedResponses: this.clearedResponses,
       confirmedResponses: this.confirmedResponses,
       legs: this.legs,
-    }
+    };
   }
 }
 
@@ -258,29 +243,29 @@ export class Rfq implements RfqArgs {
 export const rfqBeet = new beet.FixableBeetStruct<
   Rfq,
   RfqArgs & {
-    accountDiscriminator: number[] /* size: 8 */
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['taker', beetSolana.publicKey],
-    ['orderType', orderTypeBeet],
-    ['lastLookEnabled', beet.bool],
-    ['fixedSize', fixedSizeBeet],
-    ['quoteAsset', quoteAssetBeet],
-    ['accessManager', beet.coption(beetSolana.publicKey)],
-    ['creationTimestamp', beet.i64],
-    ['activeWindow', beet.u32],
-    ['settlingWindow', beet.u32],
-    ['expectedLegSize', beet.u16],
-    ['state', storedRfqStateBeet],
-    ['nonResponseTakerCollateralLocked', beet.u64],
-    ['totalTakerCollateralLocked', beet.u64],
-    ['totalResponses', beet.u32],
-    ['clearedResponses', beet.u32],
-    ['confirmedResponses', beet.u32],
-    ['legs', beet.array(legBeet)],
+    ["accountDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["taker", beetSolana.publicKey],
+    ["orderType", orderTypeBeet],
+    ["lastLookEnabled", beet.bool],
+    ["fixedSize", fixedSizeBeet],
+    ["quoteAsset", quoteAssetBeet],
+    ["accessManager", beet.coption(beetSolana.publicKey)],
+    ["creationTimestamp", beet.i64],
+    ["activeWindow", beet.u32],
+    ["settlingWindow", beet.u32],
+    ["expectedLegSize", beet.u16],
+    ["state", storedRfqStateBeet],
+    ["nonResponseTakerCollateralLocked", beet.u64],
+    ["totalTakerCollateralLocked", beet.u64],
+    ["totalResponses", beet.u32],
+    ["clearedResponses", beet.u32],
+    ["confirmedResponses", beet.u32],
+    ["legs", beet.array(legBeet)],
   ],
   Rfq.fromArgs,
-  'Rfq'
-)
+  "Rfq"
+);
