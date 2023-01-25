@@ -9,6 +9,8 @@ use crate::{
 use anchor_lang::prelude::*;
 use solana_program::hash::hash;
 
+const RECENT_TIMESTAMP_VALIDITY: u64 = 90; // slightly higher then the recent blockhash validity
+
 #[derive(Accounts)]
 #[instruction(
     expected_legs_size: u16,
@@ -19,7 +21,7 @@ use solana_program::hash::hash;
     fixed_size: FixedSize,
     active_window: u32,
     settling_window: u32,
-    pda_distinguisher: u16
+    recent_timestamp: u64,
 )]
 pub struct CreateRfqAccounts<'info> {
     #[account(mut)]
@@ -36,7 +38,7 @@ pub struct CreateRfqAccounts<'info> {
         &fixed_size.try_to_vec().unwrap(),
         &active_window.to_le_bytes(),
         &settling_window.to_le_bytes(),
-        &pda_distinguisher.to_le_bytes(),
+        &recent_timestamp.to_le_bytes(),
     ], bump)]
     pub rfq: Box<Account<'info, Rfq>>,
 
@@ -83,6 +85,18 @@ fn validate_legs<'a, 'info: 'a>(
     Ok(())
 }
 
+fn validate_recent_timestamp(recent_timestamp: u64) -> Result<()> {
+    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+
+    require!(
+        recent_timestamp <= current_timestamp
+            && (current_timestamp - recent_timestamp) < RECENT_TIMESTAMP_VALIDITY,
+        ProtocolError::InvalidRecentBlockhash
+    );
+
+    Ok(())
+}
+
 pub fn create_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
     expected_legs_size: u16,
@@ -93,13 +107,13 @@ pub fn create_rfq_instruction<'info>(
     fixed_size: FixedSize,
     active_window: u32,
     settling_window: u32,
-    _pda_distinguisher: u16,
+    recent_timestamp: u64,
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
     validate_quote(protocol, &mut remaining_accounts, &quote_asset)?;
-
     validate_legs(protocol, &mut remaining_accounts, expected_legs_size, &legs)?;
+    validate_recent_timestamp(recent_timestamp)?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
 

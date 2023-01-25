@@ -269,7 +269,7 @@ export class Context {
     const legData = legs.map((x) => x.toLegData());
     const quoteAccounts = await quote.getValidationAccounts();
     const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
-    const pdaDistinguisher = this.getNextRfqNonce();
+    const currentTimestamp = new BN(Math.floor(Date.now() / 1000) - 1); // -1 second because for some reason local validator is late for 1 second
     const rfq = await getRfqPda(
       this.taker.publicKey,
       legsHash,
@@ -278,7 +278,7 @@ export class Context {
       fixedSize,
       activeWindow,
       settlingWindow,
-      pdaDistinguisher,
+      currentTimestamp,
       this.program
     );
     const rfqObject = new Rfq(this, rfq, quote, legs);
@@ -293,7 +293,7 @@ export class Context {
         fixedSize,
         activeWindow,
         settlingWindow,
-        pdaDistinguisher
+        new BN(currentTimestamp)
       )
       .accounts({
         taker: this.taker.publicKey,
@@ -312,17 +312,6 @@ export class Context {
     await txConstructor.rpc();
 
     return rfqObject;
-  }
-
-  // nonces are only used in tests to avoid address conflicts when creating same rfqs and responses
-  getNextRfqNonce() {
-    this.rfqNonce++;
-    return this.rfqNonce;
-  }
-
-  getNextResponseNonce() {
-    this.responseNonce++;
-    return this.responseNonce;
   }
 }
 
@@ -548,18 +537,17 @@ export class Rfq {
       bid = Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
     }
 
-    const pdaDistinguisher = this.context.getNextResponseNonce();
     const response = await getResponsePda(
       this.account,
       this.context.maker.publicKey,
       this.context.program.programId,
       serializeOptionQuote(bid, this.context.program),
       serializeOptionQuote(ask, this.context.program),
-      pdaDistinguisher
+      0
     );
 
     await this.context.program.methods
-      .respondToRfq(bid, ask, pdaDistinguisher)
+      .respondToRfq(bid, ask, 0)
       .accounts({
         maker: this.context.maker.publicKey,
         protocol: this.context.protocolPda,

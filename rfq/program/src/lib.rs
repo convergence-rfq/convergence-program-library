@@ -126,7 +126,7 @@ pub mod rfq {
         fixed_size: FixedSize,
         active_window: u32,
         settling_window: u32,
-        pda_distinguisher: u16, // allows creation of the same rfqs multiple times specifying a different distinguisher
+        recent_timestamp: u64, // used to allow the same rfq creation using different recent timestamps
     ) -> Result<()> {
         create_rfq_instruction(
             ctx,
@@ -138,7 +138,7 @@ pub mod rfq {
             fixed_size,
             active_window,
             settling_window,
-            pda_distinguisher,
+            recent_timestamp,
         )
     }
 

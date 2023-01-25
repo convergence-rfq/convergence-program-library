@@ -1,4 +1,4 @@
-import { Program } from "@project-serum/anchor";
+import { Program, BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import {
@@ -30,7 +30,7 @@ export async function getRfqPda(
   fixedSize,
   activeWindow: number,
   settlingWindow: number,
-  pdaDistinguisher: number,
+  currentTimestamp: BN,
   program: Program<RfqIdl>
 ) {
   const orderTypeBuffer = program.coder.types.encode("OrderType", orderType);
@@ -47,7 +47,7 @@ export async function getRfqPda(
       fixedSizeSerialized,
       toLittleEndian(activeWindow, 4),
       toLittleEndian(settlingWindow, 4),
-      toLittleEndian(pdaDistinguisher, 2),
+      currentTimestamp.toBuffer("le", 8),
     ],
     program.programId
   );
