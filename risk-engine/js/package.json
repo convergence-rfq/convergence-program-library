@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/risk-engine",
-  "version": "2.0.12",
+  "version": "2.0.17",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
@@ -18,15 +18,15 @@
     "prepublish": "tsc"
   },
   "dependencies": {
-    "@convergence-rfq/beet-solana": "^0.4.4",
-    "@convergence-rfq/beet": "^0.7.5",
+    "@convergence-rfq/beet-solana": "=0.4.7",
+    "@convergence-rfq/beet": "=0.7.8",
     "@metaplex-foundation/cusper": "^0.0.2",
     "@solana/spl-token": "^0.3.5",
     "@solana/web3.js": "^1.56.2",
     "bn.js": "^5.2.0"
   },
   "devDependencies": {
-    "@convergence-rfq/solita": "^0.15.5",
+    "@convergence-rfq/solita": "=0.15.8",
     "typescript": "^4.8.4"
   }
 }

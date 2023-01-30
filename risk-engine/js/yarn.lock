@@ -9,41 +9,32 @@
   dependencies:
     regenerator-runtime "^0.13.11"
 
-"@convergence-rfq/beet-solana@^0.4.4":
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet-solana/-/beet-solana-0.4.4.tgz#977421cf80711c7f33adf7b7a0ac764f3b58a0a6"
-  integrity sha512-YRRNQCWRTl/pt0Pr+G2/FFbN+M8NEnaaJde0AS+r/7fh6IzHYBFexUeV1hX5mlXR5nV0zf0rrmbhWvi1/5Lpkg==
+"@convergence-rfq/beet-solana@=0.4.7":
+  version "0.4.7"
+  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet-solana/-/beet-solana-0.4.7.tgz#f632ac0ef670201afe80884070aaa02e79d556c2"
+  integrity sha512-a1Z1hekvyU1T25w9NXZit/HEPujcmaSv8Qa/DBYQie4oRoUxr1nND5MMAUOGExV7dDLwLqER34GOv+kjFGBRiA==
   dependencies:
-    "@convergence-rfq/beet" "=0.7.2"
+    "@convergence-rfq/beet" "=0.7.8"
     "@solana/web3.js" "^1.56.2"
     bs58 "^5.0.0"
     debug "^4.3.4"
 
-"@convergence-rfq/beet@=0.7.2":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet/-/beet-0.7.2.tgz#20fe858df54209404c83da628e7d5421eb3d2cbe"
-  integrity sha512-Xff5HBXeMdoTIPstRi01/FnaQ8RMDyftC5lwzS7Mp66rv7i8oJcOodKb6v+2Eo+C2QMtwN+EGdH+2rEGwaLP+A==
+"@convergence-rfq/beet@=0.7.8":
+  version "0.7.8"
+  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet/-/beet-0.7.8.tgz#80c21a7a9a931770c02c2034844388de2f433122"
+  integrity sha512-+nyeTlqzpr9PsLhzJ5aC594KFIYmQ6ucHcy/fsWp//KNhgRlA98ADl+E+zNoMnwS8owHTGYdW3P3adWpv8iOJA==
   dependencies:
     ansicolors "^0.3.2"
     bn.js "^5.2.0"
     debug "^4.3.3"
 
-"@convergence-rfq/beet@^0.7.5":
-  version "0.7.5"
-  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet/-/beet-0.7.5.tgz#0bf43a34e0e1d5be0c9a8d64f5281b380652ee4e"
-  integrity sha512-hHtmCQcQ6jUoM8UJX6gjR2gwvoFoXiOJ4yLhr/hYAkUzV9wwb5gyShKuhUL/ozciBftIU4NWW6U0YrscnqUKJA==
+"@convergence-rfq/solita@=0.15.8":
+  version "0.15.8"
+  resolved "https://registry.yarnpkg.com/@convergence-rfq/solita/-/solita-0.15.8.tgz#ce56de5d27a8da85c6b71fbba7400419c5d39687"
+  integrity sha512-tjx/lksT0atB34XjxPB78brcPTPtkG+g5FaVlE7cIjiz01PTQU2wVkk/XG3tDQrhGJVaddummOZXPPNNon020A==
   dependencies:
-    ansicolors "^0.3.2"
-    bn.js "^5.2.0"
-    debug "^4.3.3"
-
-"@convergence-rfq/solita@^0.15.5":
-  version "0.15.5"
-  resolved "https://registry.yarnpkg.com/@convergence-rfq/solita/-/solita-0.15.5.tgz#f5d64ccabf99b82b10d2358eb49e3986f121f88d"
-  integrity sha512-T9AOS8kPuRNlVSYHPRqprSxw2hf5ZRzspiQ3xMPEdWqZ5givKrJpOw6TsPXKx4gVyCAQatd14usiaJZgCZKUSA==
-  dependencies:
-    "@convergence-rfq/beet" "^0.7.5"
-    "@convergence-rfq/beet-solana" "^0.4.4"
+    "@convergence-rfq/beet" "=0.7.8"
+    "@convergence-rfq/beet-solana" "=0.4.7"
     "@metaplex-foundation/rustbin" "^0.3.0"
     "@solana/web3.js" "^1.56.2"
     camelcase "^6.2.1"
