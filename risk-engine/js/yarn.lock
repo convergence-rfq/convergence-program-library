@@ -9,32 +9,32 @@
   dependencies:
     regenerator-runtime "^0.13.11"
 
-"@convergence-rfq/beet-solana@=0.4.7":
-  version "0.4.7"
-  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet-solana/-/beet-solana-0.4.7.tgz#f632ac0ef670201afe80884070aaa02e79d556c2"
-  integrity sha512-a1Z1hekvyU1T25w9NXZit/HEPujcmaSv8Qa/DBYQie4oRoUxr1nND5MMAUOGExV7dDLwLqER34GOv+kjFGBRiA==
+"@convergence-rfq/beet-solana@^0.4.11":
+  version "0.4.11"
+  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet-solana/-/beet-solana-0.4.11.tgz#92bb9bb012b2978575cd1e245cfbe4ff32265056"
+  integrity sha512-gBuuJQ/wh8Nfsc10RQxJVEWf07fAuJlvb5EZYhArlIrO3ZY8AqvJpUJzh6tuLnEX9rvONEVKWJfjJSes8GsFUg==
   dependencies:
-    "@convergence-rfq/beet" "=0.7.8"
+    "@convergence-rfq/beet" "^0.7.10"
     "@solana/web3.js" "^1.56.2"
     bs58 "^5.0.0"
     debug "^4.3.4"
 
-"@convergence-rfq/beet@=0.7.8":
-  version "0.7.8"
-  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet/-/beet-0.7.8.tgz#80c21a7a9a931770c02c2034844388de2f433122"
-  integrity sha512-+nyeTlqzpr9PsLhzJ5aC594KFIYmQ6ucHcy/fsWp//KNhgRlA98ADl+E+zNoMnwS8owHTGYdW3P3adWpv8iOJA==
+"@convergence-rfq/beet@^0.7.10":
+  version "0.7.10"
+  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet/-/beet-0.7.10.tgz#dabce4c8645333cb530ff8f09732c2e8013343a3"
+  integrity sha512-mwCQjD5v+FSZiQwyhgdpoqJ9W0jpqxS8FPgwok3gXgTJQnAAwzzVRoyvNc7GhkIjtsr7H8uJAftiTAEr5DeXyg==
   dependencies:
     ansicolors "^0.3.2"
     bn.js "^5.2.0"
     debug "^4.3.3"
 
-"@convergence-rfq/solita@=0.15.8":
-  version "0.15.8"
-  resolved "https://registry.yarnpkg.com/@convergence-rfq/solita/-/solita-0.15.8.tgz#ce56de5d27a8da85c6b71fbba7400419c5d39687"
-  integrity sha512-tjx/lksT0atB34XjxPB78brcPTPtkG+g5FaVlE7cIjiz01PTQU2wVkk/XG3tDQrhGJVaddummOZXPPNNon020A==
+"@convergence-rfq/solita@^0.15.10":
+  version "0.15.10"
+  resolved "https://registry.yarnpkg.com/@convergence-rfq/solita/-/solita-0.15.10.tgz#6a00ffcf9b656b7b0596cf7a6330c8875baca92f"
+  integrity sha512-Owy51H0uXDONeX6IEuCblKvO9Jsw6RLr7aoJwMvewGv2t4qJfjZ30NAyqYuo/r+lpbadqZXpS26zUBGVb4XaDw==
   dependencies:
-    "@convergence-rfq/beet" "=0.7.8"
-    "@convergence-rfq/beet-solana" "=0.4.7"
+    "@convergence-rfq/beet" "^0.7.10"
+    "@convergence-rfq/beet-solana" "^0.4.11"
     "@metaplex-foundation/rustbin" "^0.3.0"
     "@solana/web3.js" "^1.56.2"
     camelcase "^6.2.1"
