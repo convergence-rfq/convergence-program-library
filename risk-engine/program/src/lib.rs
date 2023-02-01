@@ -42,7 +42,7 @@ pub mod risk_engine {
             collateral_for_variable_size_rfq_creation;
         config.collateral_for_fixed_quote_amount_rfq_creation =
             collateral_for_fixed_quote_amount_rfq_creation;
-        config.collateral_mint_decimals = collateral_mint_decimals;
+        config.collateral_mint_decimals = collateral_mint_decimals as u64;
         config.safety_price_shift_factor = safety_price_shift_factor;
         config.overall_safety_factor = overall_safety_factor;
 
@@ -89,7 +89,7 @@ pub mod risk_engine {
         }
 
         if let Some(value) = collateral_mint_decimals {
-            config.collateral_mint_decimals = value;
+            config.collateral_mint_decimals = value as u64;
         }
 
         if let Some(value) = safety_price_shift_factor {
@@ -126,6 +126,7 @@ pub mod risk_engine {
             let instrument_info = InstrumentInfo {
                 program: instrument_program,
                 r#type: instrument_type,
+                padding: [0; 7],
             };
 
             if let Some(index_in_list) = index_in_list {

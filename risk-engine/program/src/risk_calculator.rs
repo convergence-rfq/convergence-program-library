@@ -612,7 +612,7 @@ mod tests {
             .unwrap();
         assert_approx_eq!(
             f64,
-            convert_fixed_point_to_f64(required_collateral, config.collateral_mint_decimals),
+            convert_fixed_point_to_f64(required_collateral, config.collateral_mint_decimals as u8),
             471.9,
             epsilon = 0.1
         );

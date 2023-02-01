@@ -9,7 +9,7 @@ use crate::utils::convert_fixed_point_to_f64;
 pub struct Config {
     pub collateral_for_variable_size_rfq_creation: u64,
     pub collateral_for_fixed_quote_amount_rfq_creation: u64,
-    pub collateral_mint_decimals: u8,
+    pub collateral_mint_decimals: u64, // is used as u8, but represented as u64 to avoid memory padding
     pub safety_price_shift_factor: f64,
     pub overall_safety_factor: f64,
     pub risk_categories_info: [RiskCategoryInfo; 5],
@@ -33,10 +33,12 @@ impl Config {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default)]
+#[zero_copy]
+#[derive(AnchorSerialize, AnchorDeserialize, Default)]
 pub struct InstrumentInfo {
     pub program: Pubkey,
     pub r#type: InstrumentType,
+    pub padding: [u8; 7], // pad to 8 bytes of Config layout
 }
 
 impl InstrumentInfo {
@@ -54,7 +56,8 @@ const SETTLEMENT_WINDOW_BREAKPOINS: [u32; SETTLEMENT_WINDOW_PEDIODS - 1] = [
     48 * 60 * 60,
 ];
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default)]
+#[zero_copy]
+#[derive(AnchorSerialize, AnchorDeserialize, Default)]
 pub struct RiskCategoryInfo {
     pub interest_rate: f64,
     pub annualized_30_day_volatility: f64,

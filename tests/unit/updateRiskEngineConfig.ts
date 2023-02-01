@@ -16,7 +16,7 @@ describe("Update Risk Engine config", () => {
     riskEngine = context.riskEngine;
   });
 
-  it.skip("Successfully partially update risk engine config", async () => {
+  it("Successfully partially update risk engine config", async () => {
     await riskEngine.updateConfig({
       collateralForVariableSizeRfq: new BN(100_000_000),
       collateralMintDecimals: 3,
@@ -24,7 +24,7 @@ describe("Update Risk Engine config", () => {
 
     const config = await riskEngine.getConfig();
     expect(config.collateralForVariableSizeRfqCreation).to.be.bignumber.equal(new BN(100_000_000));
-    expect(config.collateralMintDecimals).to.be.equal(3);
+    expect(config.collateralMintDecimals).to.be.bignumber.equal(new BN(3));
     expect(config.collateralForFixedQuoteAmountRfqCreation).to.be.bignumber.equal(
       DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ
     );
