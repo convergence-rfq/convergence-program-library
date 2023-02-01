@@ -38,6 +38,7 @@ impl Config {
 pub struct InstrumentInfo {
     pub program: Pubkey,
     pub r#type: InstrumentType,
+    pub padding: [u8; 7], // pad to 8 bytes of Config layout
 }
 
 impl InstrumentInfo {

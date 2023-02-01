@@ -126,6 +126,7 @@ pub mod risk_engine {
             let instrument_info = InstrumentInfo {
                 program: instrument_program,
                 r#type: instrument_type,
+                padding: [0; 7],
             };
 
             if let Some(index_in_list) = index_in_list {
