@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/rfq",
-  "version": "2.0.17",
+  "version": "2.0.19",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
@@ -15,7 +15,12 @@
     "/idl"
   ],
   "scripts": {
-    "prepublish": "tsc"
+    "build": "rimraf dist && yarn solita && tsc -p tsconfig.json --declaration",
+    "check:publish-ready": "yarn build",
+    "preversion": "yarn check:publish-ready",
+    "postversion": "git add package.json && git commit -m \"chore: update $npm_package_name to v$npm_package_version\" && git tag $npm_package_name@$npm_package_version",
+    "prepublishOnly": "yarn check:publish-ready",
+    "postpublish": "git push origin && git push origin --tags"
   },
   "dependencies": {
     "@metaplex-foundation/beet": "^0.6.1",
@@ -27,6 +32,7 @@
   },
   "devDependencies": {
     "@metaplex-foundation/solita": "^0.18.0",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",
+    "rimraf": "^3.0.2"
   }
 }
