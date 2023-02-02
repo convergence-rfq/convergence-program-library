@@ -22,7 +22,11 @@
     "typescript": "^4.3.5"
   },
   "workspaces": [
-    "rfq/js"
+    "rfq/js",
+    "risk-engine/js",
+    "spot-instrument/js",
+    "psyoptions-european-instrument/js",
+    "psyoptions-american-instrument/js"
   ],
   "scripts": {
     "lint:check": "prettier --config .prettierrc '**/*.ts' --check",

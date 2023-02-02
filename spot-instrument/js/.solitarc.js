@@ -8,7 +8,7 @@ const binaryInstallDir = path.join(__dirname, ".crates");
 module.exports = {
   idlGenerator: "anchor",
   programName: "spot_instrument",
-  programId: "FTzYU9cFnziCQvJ6ZUve7asaYqRexk7pBcn8zQ9MqoMQ",
+  programId: "ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS",
   idlDir,
   sdkDir,
   binaryInstallDir,

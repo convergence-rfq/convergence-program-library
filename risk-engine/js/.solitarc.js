@@ -8,7 +8,7 @@ const binaryInstallDir = path.join(__dirname, ".crates");
 module.exports = {
   idlGenerator: "anchor",
   programName: "risk_engine",
-  programId: "AVauPJngjyumG2c2dRaGjdDPbrYwZLmV5iSTHAea4GXn",
+  programId: "AY9P4T28wvG7zHGvMNmdUAzAdwQFrfyzQRdi8nhH5fpv",
   idlDir,
   sdkDir,
   binaryInstallDir,

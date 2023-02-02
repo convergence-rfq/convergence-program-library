@@ -11,7 +11,7 @@ use errors::PsyoptionsAmericanError;
 use rfq::state::MintType;
 use rfq::state::{AssetIdentifier, AuthoritySide};
 
-declare_id!("Cdaz7EGr2AVDkCpjMVEXDzap6oRrrrZUEaKAVLmJAX7R");
+declare_id!("DgP7BXvyTUzDDWVThy6usX7HZvBF5b6QwHovCz271hAv");
 
 const ESCROW_SEED: &str = "escrow";
 #[program]
