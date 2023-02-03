@@ -5,17 +5,11 @@ import {
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
   DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
 } from "../utilities/constants";
-import {
-  expectError,
-  toAbsolutePrice,
-  TokenChangeMeasurer,
-  toLegMultiplier,
-  withTokenDecimals,
-} from "../utilities/helpers";
+import { toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
 import { EuroOptionsFacade, PsyoptionsEuropeanInstrument } from "../utilities/instruments/psyoptionsEuropeanInstrument";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { FixedSize, OrderType, Quote, Side } from "../utilities/types";
-import { Context, getContext, Rfq } from "../utilities/wrappers";
+import { Context, getContext } from "../utilities/wrappers";
 
 describe("Required collateral calculation and lock", () => {
   let context: Context;

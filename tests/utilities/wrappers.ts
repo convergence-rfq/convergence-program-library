@@ -1,5 +1,4 @@
-import * as anchor from "@project-serum/anchor";
-import { BN } from "@project-serum/anchor";
+import { BN, Program, Provider, workspace, AnchorProvider, setProvider } from "@project-serum/anchor";
 import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
@@ -10,7 +9,8 @@ import {
   getCollateralTokenPda,
   getMintInfoPda,
   getProtocolPda,
-  getQuoteEscrowPda,
+  getResponsePda,
+  getRfqPda,
   getRiskEngineConfig,
 } from "./pdas";
 import {
@@ -47,14 +47,20 @@ import {
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
-import { calculateLegsSize, executeInParallel, expandComputeUnits } from "./helpers";
+import {
+  calculateLegsHash,
+  calculateLegsSize,
+  executeInParallel,
+  expandComputeUnits,
+  serializeOptionQuote,
+} from "./helpers";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
 import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmericanInstrument";
 
 export class Context {
-  public program: anchor.Program<RfqIdl>;
+  public program: Program<RfqIdl>;
   public riskEngine: RiskEngine;
-  public provider: anchor.Provider;
+  public provider: Provider;
   public dao: Keypair;
   public taker: Keypair;
   public maker: Keypair;
@@ -64,13 +70,17 @@ export class Context {
   public collateralToken: CollateralMint;
   public protocolPda: PublicKey;
   public baseAssets: { [baseAssetIndex: number]: { oracleAddress: PublicKey } };
+  private rfqNonce: number;
+  private responseNonce: number;
 
   constructor() {
-    this.provider = anchor.AnchorProvider.env();
-    anchor.setProvider(this.provider);
-    this.program = anchor.workspace.Rfq as anchor.Program<RfqIdl>;
+    this.provider = AnchorProvider.env();
+    setProvider(this.provider);
+    this.program = workspace.Rfq as Program<RfqIdl>;
     this.riskEngine = new RiskEngine(this);
     this.baseAssets = {};
+    this.rfqNonce = 0;
+    this.responseNonce = 0;
   }
 
   async initialize() {
@@ -249,46 +259,69 @@ export class Context {
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
     legsSize = null,
+    legsHash = null,
     finalize = true,
   } = {}) {
     orderType = orderType ?? DEFAULT_ORDER_TYPE;
     fixedSize = fixedSize ?? FixedSize.None;
     legsSize = legsSize ?? calculateLegsSize(legs);
+    legsHash = legsHash ?? calculateLegsHash(legs, this.program);
     const legData = legs.map((x) => x.toLegData());
     const quoteAccounts = await quote.getValidationAccounts();
     const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
-    const rfq = new Keypair();
-    const rfqObject = new Rfq(this, rfq.publicKey, quote, legs);
+    const currentTimestamp = new BN(Math.floor(Date.now() / 1000) - 1); // -1 second because for some reason local validator is late for 1 second
+    const rfq = await getRfqPda(
+      this.taker.publicKey,
+      legsHash,
+      orderType,
+      quote.toQuoteData(),
+      fixedSize,
+      activeWindow,
+      settlingWindow,
+      currentTimestamp,
+      this.program
+    );
+    const rfqObject = new Rfq(this, rfq, quote, legs);
 
     let txConstructor = await this.program.methods
-      .createRfq(legsSize, legData, orderType, quote.toQuoteData(), fixedSize, activeWindow, settlingWindow)
+      .createRfq(
+        legsSize,
+        legsHash,
+        legData,
+        orderType,
+        quote.toQuoteData(),
+        fixedSize,
+        activeWindow,
+        settlingWindow,
+        new BN(currentTimestamp)
+      )
       .accounts({
         taker: this.taker.publicKey,
         protocol: this.protocolPda,
-        rfq: rfq.publicKey,
+        rfq,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts([...quoteAccounts, ...legAccounts])
       .preInstructions([expandComputeUnits])
-      .signers([this.taker, rfq]);
+      .signers([this.taker]);
 
     if (finalize) {
       txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeConstructionInstruction()]);
     }
 
-    let tx = await txConstructor.rpc();
+    await txConstructor.rpc();
 
     return rfqObject;
   }
 }
 
 export class RiskEngine {
-  public program: anchor.Program<RiskEngineIdl>;
+  public program: Program<RiskEngineIdl>;
   public programId: PublicKey;
   public configAddress?: PublicKey;
 
   constructor(private context: Context) {
-    this.program = anchor.workspace.RiskEngine as anchor.Program<RiskEngineIdl>;
+    this.program = workspace.RiskEngine as Program<RiskEngineIdl>;
     this.programId = this.program.programId;
   }
 
@@ -503,26 +536,34 @@ export class Rfq {
     if (bid === null && ask === null) {
       bid = Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
     }
-    const response = new Keypair();
+
+    const response = await getResponsePda(
+      this.account,
+      this.context.maker.publicKey,
+      this.context.program.programId,
+      serializeOptionQuote(bid, this.context.program),
+      serializeOptionQuote(ask, this.context.program),
+      0
+    );
 
     await this.context.program.methods
-      .respondToRfq(bid, ask)
+      .respondToRfq(bid, ask, 0)
       .accounts({
         maker: this.context.maker.publicKey,
         protocol: this.context.protocolPda,
         rfq: this.account,
-        response: response.publicKey,
+        response,
         collateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
         collateralToken: await getCollateralTokenPda(this.context.maker.publicKey, this.context.program.programId),
         riskEngine: this.context.riskEngine.programId,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts(await this.getRiskEngineAccounts())
-      .signers([this.context.maker, response])
+      .signers([this.context.maker])
       .preInstructions([expandComputeUnits])
       .rpc();
 
-    return new Response(this.context, this, this.context.maker, response.publicKey);
+    return new Response(this.context, this, this.context.maker, response);
   }
 
   async unlockCollateral() {
