@@ -16,10 +16,14 @@ pub enum ProtocolError {
     NotACollateralTokenAccount,
     #[msg("Passed account is not a risk engine in the protocol")]
     NotARiskEngine,
+    #[msg("Invalid recent blockhash")]
+    InvalidRecentBlockhash,
     #[msg("An Rfq without legs is not supported")]
     EmptyLegsNotSupported,
-    #[msg("Leg size does not match specified expected leg size")]
-    LegSizeDoesNotMatchExpectedSize,
+    #[msg("Legs size does not match specified expected leg size")]
+    LegsSizeDoesNotMatchExpectedSize,
+    #[msg("Legs hash does not match specified expected leg hash")]
+    LegsHashDoesNotMatchExpectedHash,
     #[msg("Not enough tokens")]
     NotEnoughTokens,
     #[msg("Not enough collateral")]

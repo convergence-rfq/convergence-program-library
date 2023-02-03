@@ -118,23 +118,27 @@ pub mod rfq {
 
     pub fn create_rfq<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
-        expected_leg_size: u16,
+        expected_legs_size: u16,
+        expected_legs_hash: [u8; 32],
         legs: Vec<Leg>,
         order_type: OrderType,
         quote_asset: QuoteAsset,
         fixed_size: FixedSize,
         active_window: u32,
         settling_window: u32,
+        recent_timestamp: u64, // used to allow the same rfq creation using different recent timestamps
     ) -> Result<()> {
         create_rfq_instruction(
             ctx,
-            expected_leg_size,
+            expected_legs_size,
+            expected_legs_hash,
             legs,
             order_type,
             quote_asset,
             fixed_size,
             active_window,
             settling_window,
+            recent_timestamp,
         )
     }
 
@@ -155,8 +159,9 @@ pub mod rfq {
         ctx: Context<'_, '_, '_, 'info, RespondToRfqAccounts<'info>>,
         bid: Option<Quote>,
         ask: Option<Quote>,
+        pda_distinguisher: u16, // allows creation of the same response multiple times specifying a different distinguisher
     ) -> Result<()> {
-        respond_to_rfq_instruction(ctx, bid, ask)
+        respond_to_rfq_instruction(ctx, bid, ask, pda_distinguisher)
     }
 
     pub fn confirm_response<'info>(

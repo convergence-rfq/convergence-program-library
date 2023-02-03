@@ -1,19 +1,78 @@
+import { Program, BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
+import { Rfq as RfqIdl } from "../../target/types/rfq";
 import {
+  BASE_ASSET_INFO_SEED,
   COLLATERAL_SEED,
   COLLATERAL_TOKEN_SEED,
+  INSTRUMENT_ESCROW_SEED,
+  MINT_INFO_SEED,
   PROTOCOL_SEED,
   QUOTE_ESCROW_SEED,
-  INSTRUMENT_ESCROW_SEED,
-  BASE_ASSET_INFO_SEED,
-  MINT_INFO_SEED,
+  RESPONSE_SEED,
+  RFQ_SEED,
   RISK_ENGINE_CONFIG_SEED,
 } from "./constants";
 import { toLittleEndian } from "./helpers";
 import { AssetIdentifier, assetIdentifierToSeedBytes } from "./types";
+import { sha256 } from "@noble/hashes/sha256";
 
 export async function getProtocolPda(programId: PublicKey) {
   const [pda] = await PublicKey.findProgramAddress([Buffer.from(PROTOCOL_SEED)], programId);
+  return pda;
+}
+
+export async function getRfqPda(
+  taker: PublicKey,
+  legsHash: Buffer,
+  orderType,
+  quoteAssetData,
+  fixedSize,
+  activeWindow: number,
+  settlingWindow: number,
+  currentTimestamp: BN,
+  program: Program<RfqIdl>
+) {
+  const orderTypeBuffer = program.coder.types.encode("OrderType", orderType);
+  const quoteAssetDataSerialized = program.coder.types.encode("QuoteAsset", quoteAssetData);
+  const hashedQuoteAsset = sha256(quoteAssetDataSerialized);
+  const fixedSizeSerialized = program.coder.types.encode("FixedSize", fixedSize);
+  const [pda] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from(RFQ_SEED),
+      taker.toBuffer(),
+      legsHash,
+      orderTypeBuffer,
+      hashedQuoteAsset,
+      fixedSizeSerialized,
+      toLittleEndian(activeWindow, 4),
+      toLittleEndian(settlingWindow, 4),
+      currentTimestamp.toBuffer("le", 8),
+    ],
+    program.programId
+  );
+  return pda;
+}
+
+export async function getResponsePda(
+  rfq: PublicKey,
+  maker: PublicKey,
+  programId: PublicKey,
+  bidBuffer: Buffer,
+  askBuffer: Buffer,
+  pdaDistinguisher: number
+) {
+  const [pda] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from(RESPONSE_SEED),
+      rfq.toBuffer(),
+      maker.toBuffer(),
+      bidBuffer,
+      askBuffer,
+      toLittleEndian(pdaDistinguisher, 2),
+    ],
+    programId
+  );
   return pda;
 }
 

@@ -2,6 +2,7 @@ import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { BITCOIN_BASE_ASSET_INDEX } from "../utilities/constants";
 import {
+  calculateLegsHash,
   calculateLegsSize,
   sleep,
   toAbsolutePrice,
@@ -294,7 +295,7 @@ describe("RFQ Spot instrument integration tests", () => {
   });
 
   it("Create RFQ with a lot of spot legs and settle it", async () => {
-    const legAmount = 6;
+    const legAmount = 10;
     const mints = await Promise.all(
       [...Array(legAmount)].map(async () => {
         const mint = await Mint.create(context);
@@ -310,6 +311,7 @@ describe("RFQ Spot instrument integration tests", () => {
     const rfq = await context.createRfq({
       legs: legs.slice(0, legAmount / 2),
       legsSize: calculateLegsSize(legs),
+      legsHash: calculateLegsHash(legs, context.program),
       finalize: false,
     });
     await rfq.addLegs(legs.slice(legAmount / 2), false);
@@ -352,6 +354,7 @@ describe("RFQ Spot instrument integration tests", () => {
     const rfq = await context.createRfq({
       legs: legs.slice(0, legAmount / 2),
       legsSize: calculateLegsSize(legs),
+      legsHash: calculateLegsHash(legs, context.program),
       finalize: false,
       activeWindow: 2,
       settlingWindow: 1,
