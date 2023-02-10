@@ -4,7 +4,7 @@ import {Context, getUpdatedContext, Rfq} from "../utilities/wrappers";
 import {Dex, DexIdl} from "../../hxro-instrument/dex-cpi/types";
 import {Program} from "@project-serum/anchor";
 import {HxroInstrument} from "../utilities/instruments/hxroInstrument";
-import {Quote, Side} from "../utilities/types";
+import {AuthoritySide, Quote, Side} from "../utilities/types";
 import {toAbsolutePrice, toLegMultiplier, withTokenDecimals} from "../utilities/helpers";
 import spl_token from "@solana/spl-token";
 import {DEFAULT_SOL_FOR_SIGNERS} from "../utilities/constants";
@@ -77,38 +77,475 @@ describe("RFQ HXRO print trade provider integration tests", () => {
         printTrade = _printTrade;
     });
 
-    it("Both parties fail to prepare and both default", async() => {
-
-    })
     it("The taker prepares, but the maker defaults", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
     it("The maker prepares, but the taker defaults", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
     it("The taker prepares, the maker executes, and the maker defaults", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
     it("The taker prepares, the maker executes, and the taker defaults", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
     it("The taker prepares, the maker executes, and both default", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
     it("The taker prepares, and the maker successfully executes", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
     it("The maker prepares, the taker executes, and the maker defaults", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
     it("The maker prepares, the taker executes, and the taker defaults", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
     it("The maker prepares, the taker executes, and both default", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
     it("The maker prepares, and the taker successfully executes", async() => {
+        const rfq: Rfq = await context.createRfqStepByStep({
+            printTradeProvider: program.programId,
+            activeWindow: 2,
+            settlingWindow: 1,
+            legs: [
+                HxroInstrument.createForLeg(
+                    context,
+                    {
+                        amount: 0.5 * (10 ** 6),
+                        side: Side.Bid,
+                        dex: dex,
+                        marketProductGroup: marketProductGroup,
+                        feeModelProgram: feeModelProgram,
+                        riskEngineProgram: riskEngineProgram,
+                        feeModelConfigurationAcct: feeModelConfigurationAcct,
+                        riskModelConfigurationAcct: riskModelConfigurationAcct,
+                        feeOutputRegister: feeOutputRegister,
+                        riskOutputRegister: riskOutputRegister,
+                        riskAndFeeSigner: riskAndFeeSigner,
+                        creatorOwner: context.maker.publicKey,
+                        counterpartyOwner: context.taker.publicKey,
+                        operatorOwner: operator.publicKey,
+                        creator: creatorTrg,
+                        counterparty: counterPartyTrg,
+                        operator: operatorPartyTrg,
+                        printTrade: printTrade,
+                    })],
+            quote: HxroInstrument.createForQuote(context,
+                {
+                    creatorOwner: context.maker.publicKey,
+                    counterpartyOwner: context.taker.publicKey,
+                    operatorOwner: operator.publicKey,
+                    creator: creatorTrg,
+                    counterparty: counterPartyTrg,
+                    operator: operatorPartyTrg,
+                    printTrade: printTrade,
+                })
+        });
 
+        const response = await rfq.respond({
+            bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(5)),
+            ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(1)), toLegMultiplier(2)),
+        });
+
+        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
     })
 
     let createTRG = async (keypair: anchor.web3.Keypair) => {
