@@ -177,3 +177,8 @@ export function serializeOptionQuote(quote: any | null, program: Program<RfqIdl>
   const serializedQuote = program.coder.types.encode("Quote", quote);
   return Buffer.concat([Buffer.from([1]), serializedQuote]);
 }
+
+export function calculateFeesValue(value: BN, fee: number): BN {
+  const bignumValue = new BigNumber(value.toString());
+  return new BN(bignumValue.multipliedBy(fee).toString());
+}

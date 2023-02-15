@@ -92,14 +92,14 @@ fn validate(
     if let FixedSize::QuoteAsset { quote_amount: _ } = rfq.fixed_size {
         if let Some(quote) = bid {
             require!(
-                quote.get_price_bps() >= 0,
-                ProtocolError::PriceCannotBeNegative
+                quote.get_price_bps() > 0,
+                ProtocolError::PriceShouldBePositive
             );
         }
         if let Some(quote) = ask {
             require!(
-                quote.get_price_bps() >= 0,
-                ProtocolError::PriceCannotBeNegative
+                quote.get_price_bps() > 0,
+                ProtocolError::PriceShouldBePositive
             );
         }
     }

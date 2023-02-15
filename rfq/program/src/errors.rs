@@ -8,6 +8,8 @@ pub enum ProtocolError {
     NotAProtocolAuthority,
     #[msg("Instrument already added")]
     InstrumentAlreadyAdded,
+    #[msg("Fee can't be higher than 100%")]
+    InvalidValueForAFee,
     #[msg("Invalid risk engine register")]
     InvalidRiskEngineRegister,
     #[msg("Passed mint is not a collateral mint")]
@@ -98,6 +100,6 @@ pub enum ProtocolError {
     InvalidQuoteInstrument,
     #[msg("Amount of asset to transfer overflows")]
     AssetAmountOverflow,
-    #[msg("Price cannot be negative for fixed quote asset amount RFQ")]
-    PriceCannotBeNegative,
+    #[msg("Price should be positive for fixed quote asset amount RFQ")]
+    PriceShouldBePositive,
 }
