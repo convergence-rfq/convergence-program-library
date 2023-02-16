@@ -21,6 +21,8 @@ use instructions::protocol::add_instrument::*;
 use instructions::protocol::change_protocol_fees::*;
 use instructions::protocol::initialize_protocol::*;
 use instructions::protocol::register_mint::*;
+use instructions::protocol::set_base_asset_enabled_status::*;
+use instructions::protocol::set_instrument_enabled_status::*;
 use instructions::rfq::add_legs_to_rfq::*;
 use instructions::rfq::cancel_response::*;
 use instructions::rfq::cancel_rfq::*;
@@ -104,6 +106,21 @@ pub mod rfq {
         default_fees: Option<FeeParameters>,
     ) -> Result<()> {
         change_protocol_fees_instruction(ctx, settle_fees, default_fees)
+    }
+
+    pub fn set_base_asset_enabled_status(
+        ctx: Context<SetBaseAssetEnabledStatusAccounts>,
+        enabled_status_to_set: bool,
+    ) -> Result<()> {
+        set_base_asset_enabled_status_instruction(ctx, enabled_status_to_set)
+    }
+
+    pub fn set_instrument_enabled_status(
+        ctx: Context<SetInstrumentEnabledStatusAccounts>,
+        instrument_key: Pubkey,
+        enabled_status_to_set: bool,
+    ) -> Result<()> {
+        set_instrument_enabled_status_instruction(ctx, instrument_key, enabled_status_to_set)
     }
 
     pub fn register_mint(ctx: Context<RegisterMintAccounts>) -> Result<()> {

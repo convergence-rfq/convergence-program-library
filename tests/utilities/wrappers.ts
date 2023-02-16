@@ -211,7 +211,29 @@ export class Context {
       .rpc();
   }
 
-  // Calculate standard deviation
+  async setBaseAssetEnabledStatus(index: number, statusToSet: boolean) {
+    const baseAsset = await getBaseAssetPda(index, this.program.programId);
+    await this.program.methods
+      .setBaseAssetEnabledStatus(statusToSet)
+      .accounts({
+        authority: this.dao.publicKey,
+        protocol: this.protocolPda,
+        baseAsset,
+      })
+      .signers([this.dao])
+      .rpc();
+  }
+
+  async setInstrumentEnabledStatus(instrument: PublicKey, statusToSet: boolean) {
+    await this.program.methods
+      .setInstrumentEnabledStatus(instrument, statusToSet)
+      .accounts({
+        authority: this.dao.publicKey,
+        protocol: this.protocolPda,
+      })
+      .signers([this.dao])
+      .rpc();
+  }
 
   async initializeCollateral(user: Keypair) {
     await this.program.methods
@@ -277,6 +299,7 @@ export class Context {
     legsHash = legsHash ?? calculateLegsHash(legs, this.program);
     const legData = legs.map((x) => x.toLegData());
     const quoteAccounts = await quote.getValidationAccounts();
+    const baseAssetAccounts = await Promise.all(legs.map((leg) => leg.getBaseAssetAccount(this.program.programId)));
     const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
     const currentTimestamp = new BN(Math.floor(Date.now() / 1000) - 1); // -1 second because for some reason local validator is late for 1 second
     const rfq = await getRfqPda(
@@ -310,7 +333,7 @@ export class Context {
         rfq,
         systemProgram: SystemProgram.programId,
       })
-      .remainingAccounts([...quoteAccounts, ...legAccounts])
+      .remainingAccounts([...quoteAccounts, ...baseAssetAccounts, ...legAccounts])
       .preInstructions([expandComputeUnits])
       .signers([this.taker]);
 
@@ -617,7 +640,11 @@ export class Rfq {
     this.legs = this.legs.concat(legs);
 
     const legData = legs.map((x) => x.toLegData());
-    const remainingAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
+
+    const baseAssetAccounts = await Promise.all(
+      legs.map((leg) => leg.getBaseAssetAccount(this.context.program.programId))
+    );
+    const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
 
     let txConstructor = this.context.program.methods
       .addLegsToRfq(legData)
@@ -626,7 +653,7 @@ export class Rfq {
         protocol: this.context.protocolPda,
         rfq: this.account,
       })
-      .remainingAccounts(remainingAccounts)
+      .remainingAccounts([...baseAssetAccounts, ...legAccounts])
       .signers([this.context.taker]);
 
     if (finalize) {
