@@ -16,7 +16,6 @@ import {
 import {
   DEFAULT_ACTIVE_WINDOW,
   DEFAULT_COLLATERAL_FUNDED,
-  DEFAULT_FEES,
   DEFAULT_ORDER_TYPE,
   DEFAULT_SETTLING_WINDOW,
   DEFAULT_SOL_FOR_SIGNERS,
@@ -33,6 +32,8 @@ import {
   DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
   DEFAULT_OVERALL_SAFETY_FACTOR,
   DEFAULT_RISK_CATEGORIES_INFO,
+  DEFAULT_SETTLE_FEES,
+  DEFAULT_DEFAULT_FEES,
 } from "./constants";
 import {
   AuthoritySide,
@@ -44,6 +45,7 @@ import {
   InstrumentType,
   instrumentTypeToObject,
   RiskCategoryInfo,
+  toApiFeeParams,
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
@@ -70,8 +72,6 @@ export class Context {
   public collateralToken: CollateralMint;
   public protocolPda: PublicKey;
   public baseAssets: { [baseAssetIndex: number]: { oracleAddress: PublicKey } };
-  private rfqNonce: number;
-  private responseNonce: number;
 
   constructor() {
     this.provider = AnchorProvider.env();
@@ -79,8 +79,6 @@ export class Context {
     this.program = workspace.Rfq as Program<RfqIdl>;
     this.riskEngine = new RiskEngine(this);
     this.baseAssets = {};
-    this.rfqNonce = 0;
-    this.responseNonce = 0;
   }
 
   async initialize() {
@@ -122,9 +120,9 @@ export class Context {
     );
   }
 
-  async initializeProtocol({ settleFees = DEFAULT_FEES, defaultFees = DEFAULT_FEES } = {}) {
+  async initializeProtocol({ settleFees = DEFAULT_SETTLE_FEES, defaultFees = DEFAULT_DEFAULT_FEES } = {}) {
     await this.program.methods
-      .initializeProtocol(settleFees, defaultFees)
+      .initializeProtocol(toApiFeeParams(settleFees), toApiFeeParams(defaultFees))
       .accounts({
         signer: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -180,6 +178,17 @@ export class Context {
     this.baseAssets[baseAssetIndex] = {
       oracleAddress: oracle,
     };
+  }
+
+  async changeProtocolFees({ settleFees = null, defaultFees = null } = {}) {
+    await this.program.methods
+      .changeProtocolFees(toApiFeeParams(settleFees), toApiFeeParams(defaultFees))
+      .accounts({
+        authority: this.dao.publicKey,
+        protocol: this.protocolPda,
+      })
+      .signers([this.dao])
+      .rpc();
   }
 
   async registerMint(mint: Mint, baseAssetIndex: number | null) {
@@ -335,6 +344,10 @@ export class Context {
     await txConstructor.rpc();
 
     return rfqObject;
+  }
+
+  async getProtocolState() {
+    return await this.program.account.protocolState.fetch(this.protocolPda);
   }
 }
 
@@ -894,6 +907,18 @@ export class Response {
         response: this.account,
         takerCollateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
         makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
+        takerCollateralTokens: await getCollateralTokenPda(
+          this.context.taker.publicKey,
+          this.context.program.programId
+        ),
+        makerCollateralTokens: await getCollateralTokenPda(
+          this.context.maker.publicKey,
+          this.context.program.programId
+        ),
+        protocolCollateralTokens: await getCollateralTokenPda(
+          this.context.dao.publicKey,
+          this.context.program.programId
+        ),
       })
       .rpc();
   }
@@ -913,6 +938,10 @@ export class Response {
         ),
         makerCollateralTokens: await getCollateralTokenPda(
           this.context.maker.publicKey,
+          this.context.program.programId
+        ),
+        protocolCollateralTokens: await getCollateralTokenPda(
+          this.context.dao.publicKey,
           this.context.program.programId
         ),
         tokenProgram: TOKEN_PROGRAM_ID,

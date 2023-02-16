@@ -18,6 +18,7 @@ use instructions::collateral::initialize_collateral::*;
 use instructions::collateral::withdraw_collateral::*;
 use instructions::protocol::add_base_asset::*;
 use instructions::protocol::add_instrument::*;
+use instructions::protocol::change_protocol_fees::*;
 use instructions::protocol::initialize_protocol::*;
 use instructions::protocol::register_mint::*;
 use instructions::protocol::set_base_asset_enabled_status::*;
@@ -97,6 +98,14 @@ pub mod rfq {
         price_oracle: PriceOracle,
     ) -> Result<()> {
         add_base_asset_instruction(ctx, index, ticker, risk_category, price_oracle)
+    }
+
+    pub fn change_protocol_fees(
+        ctx: Context<ChangeProtocolFeesAccounts>,
+        settle_fees: Option<FeeParameters>,
+        default_fees: Option<FeeParameters>,
+    ) -> Result<()> {
+        change_protocol_fees_instruction(ctx, settle_fees, default_fees)
     }
 
     pub fn set_base_asset_enabled_status(

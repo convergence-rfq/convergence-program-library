@@ -15,12 +15,14 @@ export const EMPTY_LEG_SIZE = 32 + 2 + 4 + 8 + 1 + 1;
 
 export const LEG_MULTIPLIER_DECIMALS = 9;
 export const ABSOLUTE_PRICE_DECIMALS = 9;
+export const FEE_BPS_DECIMALS = 9;
 
 export const DEFAULT_SOL_FOR_SIGNERS = 100_000_000_000;
 export const DEFAULT_TOKEN_AMOUNT = new BN(10_000_000).mul(new BN(10).pow(new BN(9)));
 export const DEFAULT_COLLATERAL_FUNDED = new BN(1_000_000).mul(new BN(10).pow(new BN(9)));
 
-export const DEFAULT_FEES = { takerBps: new BN(1), makerBps: new BN(0) };
+export const DEFAULT_SETTLE_FEES = { taker: 0.02, maker: 0.01 };
+export const DEFAULT_DEFAULT_FEES = { taker: 0.1, maker: 0.5 };
 export const DEFAULT_ORDER_TYPE = OrderType.TwoWay;
 export const DEFAULT_INSTRUMENT_AMOUNT = new BN(1_000_000_000);
 export const DEFAULT_INSTRUMENT_SIDE = Side.Bid;
