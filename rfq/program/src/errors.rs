@@ -100,4 +100,10 @@ pub enum ProtocolError {
     AssetAmountOverflow,
     #[msg("Price cannot be negative for fixed quote asset amount RFQ")]
     PriceCannotBeNegative,
+    #[msg("Already has a status to set")]
+    AlreadyHasAStatusToSet,
+    #[msg("Can't create an rfq using a disabled instrument")]
+    InstrumentIsDisabled,
+    #[msg("Can't create an rfq using a disabled base asset")]
+    BaseAssetIsDisabled,
 }

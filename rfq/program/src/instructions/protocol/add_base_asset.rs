@@ -33,6 +33,7 @@ pub fn add_base_asset_instruction(
     base_asset.set_inner(BaseAssetInfo {
         bump: *ctx.bumps.get("base_asset").unwrap(),
         index,
+        enabled: true,
         risk_category,
         price_oracle,
         ticker,

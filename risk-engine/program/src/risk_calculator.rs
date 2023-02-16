@@ -340,6 +340,7 @@ mod tests {
         let base_assets = vec![BaseAssetInfo {
             index: BTC_INDEX,
             bump: Default::default(),
+            enabled: true,
             risk_category: RiskCategory::VeryLow,
             price_oracle: PriceOracle::Switchboard {
                 address: Default::default(),
@@ -416,6 +417,7 @@ mod tests {
         let base_assets = vec![BaseAssetInfo {
             index: BTC_INDEX,
             bump: Default::default(),
+            enabled: true,
             risk_category: RiskCategory::VeryLow,
             price_oracle: PriceOracle::Switchboard {
                 address: Default::default(),
@@ -493,6 +495,7 @@ mod tests {
             BaseAssetInfo {
                 index: BTC_INDEX,
                 bump: Default::default(),
+                enabled: true,
                 risk_category: RiskCategory::VeryLow,
                 price_oracle: PriceOracle::Switchboard {
                     address: Default::default(),
@@ -502,6 +505,7 @@ mod tests {
             BaseAssetInfo {
                 index: SOL_INDEX,
                 bump: Default::default(),
+                enabled: true,
                 risk_category: RiskCategory::Medium,
                 price_oracle: PriceOracle::Switchboard {
                     address: Default::default(),
@@ -573,6 +577,7 @@ mod tests {
         let base_assets = vec![BaseAssetInfo {
             index: BTC_INDEX,
             bump: Default::default(),
+            enabled: true,
             risk_category: RiskCategory::VeryLow,
             price_oracle: PriceOracle::Switchboard {
                 address: Default::default(),
