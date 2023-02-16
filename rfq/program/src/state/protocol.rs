@@ -36,11 +36,22 @@ impl ProtocolState {
             .find(|x| x.program_key == instrument_key)
             .ok_or_else(|| error!(ProtocolError::NotAWhitelistedInstrument))
     }
+
+    pub fn get_instrument_parameters_mut(
+        &mut self,
+        instrument_key: Pubkey,
+    ) -> Result<&mut Instrument> {
+        self.instruments
+            .iter_mut()
+            .find(|x| x.program_key == instrument_key)
+            .ok_or_else(|| error!(ProtocolError::NotAWhitelistedInstrument))
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct Instrument {
     pub program_key: Pubkey,
+    pub enabled: bool,
     pub can_be_used_as_quote: bool,
     pub validate_data_account_amount: u8,
     pub prepare_to_settle_account_amount: u8,
@@ -63,6 +74,7 @@ impl FeeParameters {
 pub struct BaseAssetInfo {
     pub bump: u8,
     pub index: BaseAssetIndex,
+    pub enabled: bool,
     pub risk_category: RiskCategory,
     pub price_oracle: PriceOracle,
     pub ticker: String,
