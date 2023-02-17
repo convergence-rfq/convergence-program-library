@@ -1,8 +1,9 @@
 use std::mem;
 
 use crate::{
+    common::validate_legs as common_validate_legs,
     errors::ProtocolError,
-    interfaces::instrument::{validate_leg_instrument_data, validate_quote_instrument_data},
+    interfaces::instrument::validate_quote_instrument_data,
     seeds::{PROTOCOL_SEED, RFQ_SEED},
     state::{rfq::QuoteAsset, FixedSize, Leg, OrderType, ProtocolState, Rfq, StoredRfqState},
 };
@@ -78,9 +79,7 @@ fn validate_legs<'a, 'info: 'a>(
         ProtocolError::LegsDataTooBig
     );
 
-    for leg in legs.iter() {
-        validate_leg_instrument_data(leg, protocol, remaining_accounts)?;
-    }
+    common_validate_legs(legs, protocol, remaining_accounts)?;
 
     Ok(())
 }

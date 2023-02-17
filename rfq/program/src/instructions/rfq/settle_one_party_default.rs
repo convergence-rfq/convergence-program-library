@@ -3,8 +3,8 @@ use crate::{
     errors::ProtocolError,
     seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     state::{
-        CollateralInfo, DefaultingParty, ProtocolState, Response, ResponseState, Rfq,
-        StoredResponseState,
+        AuthoritySide, CollateralInfo, DefaultingParty, ProtocolState, Response, ResponseState,
+        Rfq, StoredResponseState,
     },
 };
 use anchor_lang::prelude::*;
@@ -31,6 +31,9 @@ pub struct SettleOnePartyDefaultAccounts<'info> {
     #[account(mut, seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), response.maker.as_ref()],
                 bump = maker_collateral_info.token_account_bump)]
     pub maker_collateral_tokens: Account<'info, TokenAccount>,
+    #[account(mut, seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), protocol.authority.as_ref()],
+                bump)]
+    pub protocol_collateral_tokens: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -56,12 +59,14 @@ pub fn settle_one_party_default_instruction(
     validate(&ctx)?;
 
     let SettleOnePartyDefaultAccounts {
+        protocol,
         rfq,
         response,
         taker_collateral_info,
         maker_collateral_info,
         taker_collateral_tokens,
         maker_collateral_tokens,
+        protocol_collateral_tokens,
         token_program,
         ..
     } = ctx.accounts;
@@ -79,23 +84,53 @@ pub fn settle_one_party_default_instruction(
         ProtocolError::InvalidDefaultingParty
     );
 
+    let fees_params = protocol.default_fees;
+    let taker_fees =
+        fees_params.calculate_fees(response.taker_collateral_locked, AuthoritySide::Taker);
+    let maker_fees =
+        fees_params.calculate_fees(response.maker_collateral_locked, AuthoritySide::Maker);
+    let total_fees = taker_fees + maker_fees;
     match response.defaulting_party.unwrap() {
-        DefaultingParty::Taker => transfer_collateral_token(
-            response.taker_collateral_locked,
-            taker_collateral_tokens,
-            maker_collateral_tokens,
-            &taker_collateral_info.clone(),
-            token_program,
-        ),
-        DefaultingParty::Maker => transfer_collateral_token(
-            response.maker_collateral_locked,
-            maker_collateral_tokens,
-            taker_collateral_tokens,
-            &maker_collateral_info.clone(),
-            token_program,
-        ),
+        DefaultingParty::Taker => {
+            // transfer collateral from the taker to the maker
+            transfer_collateral_token(
+                response.taker_collateral_locked,
+                taker_collateral_tokens,
+                maker_collateral_tokens,
+                &taker_collateral_info.clone(),
+                token_program,
+            )?;
+
+            // collect fees
+            transfer_collateral_token(
+                total_fees,
+                maker_collateral_tokens,
+                protocol_collateral_tokens,
+                &maker_collateral_info.clone(),
+                token_program,
+            )?;
+        }
+        DefaultingParty::Maker => {
+            // transfer collateral from the maker to the taker
+            transfer_collateral_token(
+                response.maker_collateral_locked,
+                maker_collateral_tokens,
+                taker_collateral_tokens,
+                &maker_collateral_info.clone(),
+                token_program,
+            )?;
+
+            // collect fees
+            transfer_collateral_token(
+                total_fees,
+                taker_collateral_tokens,
+                protocol_collateral_tokens,
+                &taker_collateral_info.clone(),
+                token_program,
+            )?;
+        }
         _ => unreachable!(),
-    }?;
+    };
 
     unlock_response_collateral(rfq, response, taker_collateral_info, maker_collateral_info);
 
