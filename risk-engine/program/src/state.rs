@@ -12,6 +12,8 @@ pub struct Config {
     pub collateral_mint_decimals: u64, // is used as u8, but represented as u64 to avoid memory padding
     pub safety_price_shift_factor: f64,
     pub overall_safety_factor: f64,
+    pub accepted_oracle_staleness: u64,
+    pub accepted_oracle_confidence_interval_portion: f64,
     pub risk_categories_info: [RiskCategoryInfo; 5],
     pub instrument_types: [InstrumentInfo; 50], // Embed ProtocolState::MAX_INSTRUMENTS to work around anchor idl generation issue
 }
