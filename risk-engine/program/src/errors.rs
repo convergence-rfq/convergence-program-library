@@ -8,8 +8,10 @@ pub enum Error {
     MathInvalidConversion,
     #[msg("Not enough accounts for collateral calculations")]
     NotEnoughAccounts,
-    #[msg("Failed to extract price")]
-    FailedToExtractPrice,
+    #[msg("Can't extract price because an oracle is stale")]
+    StaleOracle,
+    #[msg("Can't extract price because oracle confidence is out of bounds")]
+    OracleConfidenceOutOfRange,
     #[msg("Base asset info account mismatch with rfq legs")]
     InvalidBaseAssetInfo,
     #[msg("Oracle account mismatch with rfq legs")]

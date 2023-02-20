@@ -32,6 +32,8 @@ import {
   DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
   DEFAULT_OVERALL_SAFETY_FACTOR,
   DEFAULT_RISK_CATEGORIES_INFO,
+  DEFAULT_ACCEPTED_ORACLE_STALENESS,
+  DEFAULT_ACCEPTED_ORACLE_CONFIDENCE_INTERVAL_PORTION,
   DEFAULT_SETTLE_FEES,
   DEFAULT_DEFAULT_FEES,
 } from "./constants";
@@ -370,7 +372,9 @@ export class RiskEngine {
         DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
         DEFAULT_MINT_DECIMALS,
         DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
-        DEFAULT_OVERALL_SAFETY_FACTOR
+        DEFAULT_OVERALL_SAFETY_FACTOR,
+        DEFAULT_ACCEPTED_ORACLE_STALENESS,
+        DEFAULT_ACCEPTED_ORACLE_CONFIDENCE_INTERVAL_PORTION
       )
       .accounts({
         signer: this.context.dao.publicKey,
@@ -403,6 +407,8 @@ export class RiskEngine {
     collateralMintDecimals = null,
     safetyPriceShiftFactor = null,
     overallSafetyFactor = null,
+    defaultAcceptedOracleStaleness = null,
+    defaultAcceptedOracleConfidenceIntervalPortion = null,
   } = {}) {
     await this.program.methods
       .updateConfig(
@@ -410,7 +416,9 @@ export class RiskEngine {
         collateralForFixedQuoteAmountRfq,
         collateralMintDecimals,
         safetyPriceShiftFactor,
-        overallSafetyFactor
+        overallSafetyFactor,
+        defaultAcceptedOracleStaleness,
+        defaultAcceptedOracleConfidenceIntervalPortion
       )
       .accounts({
         authority: this.context.dao.publicKey,
