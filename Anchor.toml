@@ -2,14 +2,14 @@ anchor_version = "0.25.0"
 
 [programs.localnet]
 rfq = "5Mqd2rYZ1YcmZ711H78mTHaevwSCwAf6Qh4Bc8DjZanH"
-risk_engine = "AY9P4T28wvG7zHGvMNmdUAzAdwQFrfyzQRdi8nhH5fpv"
+risk_engine = "AKHxbHfXzsfzaxadyBGZfttzRKaLJeFnu2yWiAWDyh86"
 spot_instrument = "ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS"
 psyoptions_european_instrument = "Hk3n7BobDvZuf7sVAD68vpth2ziTFqvuytVtiBGmCwes"
 psyoptions_american_instrument = "DgP7BXvyTUzDDWVThy6usX7HZvBF5b6QwHovCz271hAv"
 
 [programs.devnet]
 rfq = "5Mqd2rYZ1YcmZ711H78mTHaevwSCwAf6Qh4Bc8DjZanH"
-risk_engine = "AY9P4T28wvG7zHGvMNmdUAzAdwQFrfyzQRdi8nhH5fpv"
+risk_engine = "AKHxbHfXzsfzaxadyBGZfttzRKaLJeFnu2yWiAWDyh86"
 spot_instrument = "ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS"
 psyoptions_european_instrument = "Hk3n7BobDvZuf7sVAD68vpth2ziTFqvuytVtiBGmCwes"
 psyoptions_american_instrument = "DgP7BXvyTUzDDWVThy6usX7HZvBF5b6QwHovCz271hAv"
@@ -23,7 +23,7 @@ wallet = "~/.config/solana/id.json"
 
 [workspace]
 members = [
-    "rfq/program",
+   "rfq/program",
     "risk-engine/program",
     "spot-instrument/program",
     "psyoptions-american-instrument/program",
