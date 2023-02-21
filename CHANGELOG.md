@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.1] - 2023-02-21
+
+### Features
+
+- risk-engine: Oracle parameters `accepted_oracle_staleness` and `accepted_oracle_confidence_interval_portion` are now saved in storage ([#113](https://github.com/convergence-rfq/convergence-program-library/pull/113))
+
+### Fixes
+
+- tests: Improved test speed
+
 ## [2.2.0] - 2023-02-17
 
 ### Features
