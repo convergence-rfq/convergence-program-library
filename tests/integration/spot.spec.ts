@@ -4,7 +4,7 @@ import { BITCOIN_BASE_ASSET_INDEX } from "../utilities/constants";
 import {
   calculateLegsHash,
   calculateLegsSize,
-  sleep,
+  runInParallelWithWait,
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
@@ -210,12 +210,17 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create RFQ, respond and confirm, taker prepares but maker defaults", async () => {
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
-    const response = await rfq.respond();
-    await response.confirm();
 
-    let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await sleep(3000);
+    const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+
+      let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
+      await response.prepareSettlement(AuthoritySide.Taker);
+
+      return [response, tokenMeasurer];
+    }, 3.5);
+
     await response.revertSettlementPreparation(AuthoritySide.Taker);
     // no assets are exchanged
     await tokenMeasurer.expectChange([
@@ -231,12 +236,17 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create RFQ, respond and confirm, maker prepares but taker defaults", async () => {
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
-    const response = await rfq.respond();
-    await response.confirm();
 
-    let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
-    await response.prepareSettlement(AuthoritySide.Maker);
-    await sleep(3000);
+    const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+
+      let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
+      await response.prepareSettlement(AuthoritySide.Maker);
+
+      return [response, tokenMeasurer];
+    }, 3.5);
+
     await response.revertSettlementPreparation(AuthoritySide.Maker);
     // no assets are exchanged
     await tokenMeasurer.expectChange([
@@ -253,10 +263,13 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create RFQ, respond and confirm, both parties default", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
-    const response = await rfq.respond();
-    await response.confirm();
 
-    await sleep(3000);
+    const response = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+
+      return response;
+    }, 3.5);
 
     await response.settleTwoPartyDefault();
     await response.cleanUp();
@@ -271,12 +284,12 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create RFQ, respond, cancel response and close all", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
-    const response = await rfq.respond();
-    await response.cancel();
-    await response.unlockResponseCollateral();
-    await response.cleanUp();
-
-    await sleep(2000);
+    await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.cancel();
+      await response.unlockResponseCollateral();
+      await response.cleanUp();
+    }, 2.5);
 
     await rfq.unlockCollateral();
     await rfq.cleanUp();
@@ -360,13 +373,16 @@ describe("RFQ Spot instrument integration tests", () => {
       settlingWindow: 1,
     });
     await rfq.addLegs(legs.slice(legAmount / 2));
-    const response = await rfq.respond();
-    await response.confirm();
-    await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
-    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
-    await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
 
-    await sleep(2000);
+    const response = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+      await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
+      await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+      await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
+
+      return response;
+    }, 3.5);
 
     await response.partlyRevertSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
     await response.revertSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
