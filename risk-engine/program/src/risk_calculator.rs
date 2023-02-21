@@ -310,6 +310,8 @@ mod tests {
             collateral_mint_decimals: 9,
             safety_price_shift_factor: 0.01,
             overall_safety_factor: 0.1,
+            accepted_oracle_staleness: 300,
+            accepted_oracle_confidence_interval_portion: 0.01,
             risk_categories_info: [RiskCategoryInfo {
                 interest_rate: 0.05,
                 annualized_30_day_volatility: 0.5,

@@ -29,8 +29,8 @@ export const expectError = async (promise: Promise<any>, errorText: string) => {
   }
 };
 
-export const sleep = (ms: number) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = (seconds: number) => {
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 };
 
 export function toAbsolutePrice(value: BN) {
@@ -49,6 +49,21 @@ export function withTokenDecimals(value: number) {
 
 export function executeInParallel(...fns: (() => Promise<any>)[]) {
   return Promise.all(fns.map((x) => x()));
+}
+
+/**
+ * Runs a promise in parallel with wait promise, awaiting both of them.
+ *
+ * @remarks
+ * Is usually is used to do things in parallel while waiting for an RFQ to default to save time on the test run
+ *
+ * @param promiseGetter - A promise getter. It's easier to convert a block of async code to a getter than to a promise
+ * @param waitInSeconds - Wait time in seconds
+ * @returns Result of `promiseGetter`
+ */
+export async function runInParallelWithWait<T>(promiseGetter: () => Promise<T>, waitInSeconds: number): Promise<T> {
+  const [result] = await Promise.all([promiseGetter(), sleep(waitInSeconds)]);
+  return result;
 }
 
 export function calculateLegsSize(legs: InstrumentController[]) {

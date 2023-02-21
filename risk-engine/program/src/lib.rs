@@ -35,6 +35,8 @@ pub mod risk_engine {
         collateral_mint_decimals: u8,
         safety_price_shift_factor: f64,
         overall_safety_factor: f64,
+        accepted_oracle_staleness: u64,
+        accepted_oracle_confidence_interval_portion: f64,
     ) -> Result<()> {
         let mut config = ctx.accounts.config.load_init()?;
 
@@ -45,6 +47,9 @@ pub mod risk_engine {
         config.collateral_mint_decimals = collateral_mint_decimals as u64;
         config.safety_price_shift_factor = safety_price_shift_factor;
         config.overall_safety_factor = overall_safety_factor;
+        config.accepted_oracle_staleness = accepted_oracle_staleness;
+        config.accepted_oracle_confidence_interval_portion =
+            accepted_oracle_confidence_interval_portion;
 
         Ok(())
     }
@@ -77,6 +82,8 @@ pub mod risk_engine {
         collateral_mint_decimals: Option<u8>,
         safety_price_shift_factor: Option<f64>,
         overall_safety_factor: Option<f64>,
+        accepted_oracle_staleness: Option<u64>,
+        accepted_oracle_confidence_interval_portion: Option<f64>,
     ) -> Result<()> {
         let mut config = ctx.accounts.config.load_mut()?;
 
@@ -98,6 +105,14 @@ pub mod risk_engine {
 
         if let Some(value) = overall_safety_factor {
             config.overall_safety_factor = value;
+        }
+
+        if let Some(value) = accepted_oracle_staleness {
+            config.accepted_oracle_staleness = value;
+        }
+
+        if let Some(value) = accepted_oracle_confidence_interval_portion {
+            config.accepted_oracle_confidence_interval_portion = value;
         }
 
         Ok(())
@@ -322,7 +337,7 @@ fn construct_risk_calculator<'a>(
     remaining_accounts: &mut &[AccountInfo],
 ) -> Result<RiskCalculator<'a>> {
     let base_assets = extract_base_assets(&rfq.legs, remaining_accounts)?;
-    let prices = extract_prices(&base_assets, remaining_accounts)?;
+    let prices = extract_prices(&base_assets, remaining_accounts, config)?;
     let instrument_types = config.get_instrument_types_map();
     let current_timestamp = Clock::get()?.unix_timestamp;
     let scenarios_selector = ScenarioSelector {
