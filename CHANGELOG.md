@@ -21,4 +21,4 @@ The minor version will be incremented upon a breaking change and the patch versi
 
 ### Breaking
 
-- rfq: Rework RFQ and response accounts to PDAs ([#97](https://gihub.com/convergence-rfq/convergence-program-library/pull/97))
+- rfq: Rework RFQ and response accounts to PDAs ([#97](https://github.com/convergence-rfq/convergence-program-library/pull/97))
