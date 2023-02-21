@@ -3,7 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 import {
   calculateLegsHash,
   calculateLegsSize,
-  sleep,
+  runInParallelWithWait,
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
@@ -90,18 +90,22 @@ describe("Psyoptions European instrument integration tests", () => {
         }),
       ],
     });
-    // response with agreeing to buy 5 options for 450$
-    const response = await rfq.respond({
-      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
-    });
-    // taker confirms to sell 2 options
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
 
-    await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
+    const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
+      // response with agreeing to buy 5 options for 450$
+      const response = await rfq.respond({
+        bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      });
+      // taker confirms to sell 2 options
+      await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
 
-    let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.putMint], [taker]);
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await sleep(3000);
+      await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
+
+      let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.putMint], [taker]);
+      await response.prepareSettlement(AuthoritySide.Taker);
+
+      return [response, tokenMeasurer];
+    }, 3.5);
 
     await response.revertSettlementPreparation(AuthoritySide.Taker);
 

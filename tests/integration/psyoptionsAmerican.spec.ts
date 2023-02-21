@@ -1,6 +1,12 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
+import {
+  runInParallelWithWait,
+  toAbsolutePrice,
+  TokenChangeMeasurer,
+  toLegMultiplier,
+  withTokenDecimals,
+} from "../utilities/helpers";
 import * as anchor from "@project-serum/anchor";
 import { Context, getContext } from "../utilities/wrappers";
 import { AuthoritySide, Quote, Side, OrderType } from "../utilities/types";
@@ -138,17 +144,20 @@ describe("Psyoptions American instrument integration tests", async () => {
       orderType: OrderType.TwoWay,
     });
 
-    // response with agreeing to buy 5 options for 45$
-    const response = await rfq.respond({
-      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(5)),
-    });
+    const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
+      // response with agreeing to buy 5 options for 45$
+      const response = await rfq.respond({
+        bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(5)),
+      });
 
-    // taker confirms to sell 2 options
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
-    const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.callMint], [taker]);
+      // taker confirms to sell 2 options
+      await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
+      const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.callMint], [taker]);
+      await response.prepareSettlement(AuthoritySide.Taker);
 
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await sleep(3000);
+      return [response, tokenMeasurer];
+    }, 3.5);
+
     await response.revertSettlementPreparation(AuthoritySide.Taker);
 
     // taker have returned his assets
@@ -175,17 +184,21 @@ describe("Psyoptions American instrument integration tests", async () => {
       orderType: OrderType.TwoWay,
     });
 
-    // response with agreeing to buy 5 options for 45$
-    const response = await rfq.respond({
-      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(5)),
-    });
+    const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
+      // response with agreeing to buy 5 options for 45$
+      const response = await rfq.respond({
+        bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(5)),
+      });
 
-    // taker confirms to sell 2 options
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
-    const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote"], [maker]);
-    await response.prepareSettlement(AuthoritySide.Maker);
-    await tokenMeasurer.expectChange([{ token: "quote", user: maker, delta: withTokenDecimals(new BN(-90)) }]);
-    await sleep(3000);
+      // taker confirms to sell 2 options
+      await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
+      const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote"], [maker]);
+      await response.prepareSettlement(AuthoritySide.Maker);
+      await tokenMeasurer.expectChange([{ token: "quote", user: maker, delta: withTokenDecimals(new BN(-90)) }]);
+
+      return [response, tokenMeasurer];
+    }, 3.5);
+
     await response.revertSettlementPreparation(AuthoritySide.Maker);
 
     // taker have returned his assets

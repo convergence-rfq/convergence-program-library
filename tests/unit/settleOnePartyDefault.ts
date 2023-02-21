@@ -1,10 +1,8 @@
-import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { DEFAULT_DEFAULT_FEES } from "../utilities/constants";
 import {
   calculateFeesValue,
-  executeInParallel,
-  sleep,
+  runInParallelWithWait,
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
@@ -13,7 +11,7 @@ import {
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 
 import { AuthoritySide, Quote, Side } from "../utilities/types";
-import { Context, getContext, Response } from "../utilities/wrappers";
+import { Context, getContext } from "../utilities/wrappers";
 
 describe("Settle one party default", () => {
   let context: Context;
@@ -35,22 +33,18 @@ describe("Settle one party default", () => {
       activeWindow: 2,
       settlingWindow: 1,
     });
-    // execute the flow in the parallel with 3 seconds wait for default to save some time
-    const [t] = await executeInParallel(
-      async () => {
-        const response = await rfq.respond({
-          bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(5)),
-        });
 
-        await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(1) });
-        await response.prepareSettlement(AuthoritySide.Maker);
-        const responseState = await response.getData();
+    const [response, takerCollateralLocked, makerCollateralLocked] = await runInParallelWithWait(async () => {
+      const response = await rfq.respond({
+        bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(5)),
+      });
 
-        return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];
-      },
-      () => sleep(3000)
-    );
-    const [response, takerCollateralLocked, makerCollateralLocked] = t as [Response, BN, BN];
+      await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(1) });
+      await response.prepareSettlement(AuthoritySide.Maker);
+      const responseState = await response.getData();
+
+      return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];
+    }, 3.5);
 
     await response.settleOnePartyDefault();
     const totalFees = calculateFeesValue(takerCollateralLocked, DEFAULT_DEFAULT_FEES.taker).add(
@@ -77,22 +71,18 @@ describe("Settle one party default", () => {
       activeWindow: 2,
       settlingWindow: 1,
     });
-    // execute the flow in the parallel with 3 seconds wait for default to save some time
-    const [t] = await executeInParallel(
-      async () => {
-        const response = await rfq.respond({
-          ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(30)), toLegMultiplier(1000)),
-        });
 
-        await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(500) });
-        await response.prepareSettlement(AuthoritySide.Taker);
-        const responseState = await response.getData();
+    const [response, takerCollateralLocked, makerCollateralLocked] = await runInParallelWithWait(async () => {
+      const response = await rfq.respond({
+        ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(30)), toLegMultiplier(1000)),
+      });
 
-        return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];
-      },
-      () => sleep(3000)
-    );
-    const [response, takerCollateralLocked, makerCollateralLocked] = t as [Response, BN, BN];
+      await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(500) });
+      await response.prepareSettlement(AuthoritySide.Taker);
+      const responseState = await response.getData();
+
+      return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];
+    }, 3.5);
 
     await response.settleOnePartyDefault();
     const totalFees = calculateFeesValue(takerCollateralLocked, DEFAULT_DEFAULT_FEES.taker).add(

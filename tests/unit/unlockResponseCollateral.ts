@@ -1,10 +1,7 @@
-import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { DEFAULT_DEFAULT_FEES, DEFAULT_SETTLE_FEES } from "../utilities/constants";
+import { DEFAULT_SETTLE_FEES } from "../utilities/constants";
 import {
   calculateFeesValue,
-  executeInParallel,
-  sleep,
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
@@ -13,7 +10,7 @@ import {
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 
 import { AuthoritySide, Quote, Side } from "../utilities/types";
-import { Context, getContext, Response } from "../utilities/wrappers";
+import { Context, getContext } from "../utilities/wrappers";
 
 describe("Unlock response collateral", () => {
   let context: Context;
