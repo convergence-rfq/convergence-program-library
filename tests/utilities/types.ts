@@ -1,6 +1,4 @@
 import { BN } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
-import { FEE_BPS_DECIMALS } from "./constants";
 
 export const OrderType = {
   Buy: { buy: {} },
@@ -132,15 +130,4 @@ export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
   } else {
     return Buffer.from([0, assetIdentifier.legIndex]);
   }
-}
-
-export function toApiFeeParams(params: { taker: number; maker: number } | null) {
-  if (params === null) {
-    return null;
-  }
-
-  return {
-    takerBps: new BN(params.taker * 10 ** FEE_BPS_DECIMALS),
-    makerBps: new BN(params.maker * 10 ** FEE_BPS_DECIMALS),
-  };
 }
