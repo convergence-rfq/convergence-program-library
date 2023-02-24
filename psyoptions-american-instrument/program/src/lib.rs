@@ -28,6 +28,7 @@ pub mod psyoptions_american_instrument {
         let ValidateData {
             american_meta,
             mint_info,
+            quote_mint,
             ..
         } = &ctx.accounts;
 
@@ -55,9 +56,19 @@ pub mod psyoptions_american_instrument {
                 == american_meta.underlying_amount_per_contract,
             PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
         );
+        require_eq!(
+            option_common_data.underlying_amound_per_contract_decimals,
+            mint_info.decimals,
+            PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
+        );
         require!(
             option_common_data.strike_price == american_meta.quote_amount_per_contract,
             PsyoptionsAmericanError::PassedStrikePriceDoesNotMatch
+        );
+        require_eq!(
+            option_common_data.strike_price_decimals,
+            quote_mint.decimals,
+            PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
         );
         require!(
             option_common_data.expiration_timestamp == american_meta.expiration_unix_timestamp,

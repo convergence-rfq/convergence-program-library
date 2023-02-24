@@ -56,14 +56,18 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     const mint = this.getOptionMint().publicKey.toBytes();
     const meta = this.optionFacade.metaKey.toBytes();
     const underlyingAmountPerContract = this.optionFacade.meta.underlyingAmountPerContract.toBuffer("le", 8);
+    const underlyingAmountPerContractDecimals = this.optionFacade.meta.underlyingDecimals;
     const strikePrice = this.optionFacade.meta.strikePrice.toBuffer("le", 8);
+    const strikePriceDecimals = this.optionFacade.meta.priceDecimals;
     const expirationTimestamp = this.optionFacade.meta.expiration.toBuffer("le", 8);
 
     return Buffer.from(
       new Uint8Array([
         this.optionType == OptionType.CALL ? 0 : 1,
         ...underlyingAmountPerContract,
+        underlyingAmountPerContractDecimals,
         ...strikePrice,
+        strikePriceDecimals,
         ...expirationTimestamp,
         ...mint,
         ...meta,
@@ -249,7 +253,7 @@ export class EuroOptionsFacade {
       stableMint.publicKey,
       oracle,
       expiration,
-      8
+      9
     );
     const {
       instruction: ix,
@@ -258,13 +262,13 @@ export class EuroOptionsFacade {
     } = await createEuroMetaInstruction(
       program,
       underlyingMint.publicKey,
-      8,
+      underlyingMint.decimals,
       stableMint.publicKey,
-      8,
+      stableMint.decimals,
       expiration,
       underlyingPerContract,
       strikePrice,
-      8,
+      9,
       oracle
     );
     const transaction = new web3.Transaction().add(...preparationIxs, ix);

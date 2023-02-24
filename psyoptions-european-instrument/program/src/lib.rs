@@ -63,9 +63,19 @@ pub mod psyoptions_european_instrument {
                 == euro_meta.underlying_amount_per_contract,
             PsyoptionsEuropeanError::PassedUnderlyingAmountPerContractDoesNotMatch
         );
+        require_eq!(
+            option_common_data.underlying_amound_per_contract_decimals,
+            euro_meta.underlying_decimals,
+            PsyoptionsEuropeanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
+        );
         require!(
             option_common_data.strike_price == euro_meta.strike_price,
             PsyoptionsEuropeanError::PassedStrikePriceDoesNotMatch
+        );
+        require_eq!(
+            option_common_data.strike_price_decimals,
+            euro_meta.price_decimals,
+            PsyoptionsEuropeanError::PassedStrikePriceDecimalsDoesNotMatch
         );
         require!(
             option_common_data.expiration_timestamp == euro_meta.expiration,
