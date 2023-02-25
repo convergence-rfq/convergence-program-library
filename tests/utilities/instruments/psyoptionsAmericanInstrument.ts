@@ -47,7 +47,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
   }
 
   static async addInstrument(context: Context) {
-    await context.addInstrument(getAmericanOptionsInstrumentProgram().programId, false, 2, 7, 3, 3, 4);
+    await context.addInstrument(getAmericanOptionsInstrumentProgram().programId, false, 3, 7, 3, 3, 4);
     await context.riskEngine.setInstrumentType(getAmericanOptionsInstrumentProgram().programId, InstrumentType.Option);
   }
 
@@ -57,14 +57,18 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     const optionMarket = this.OptionMarket.optionMarketKey.toBytes();
 
     const underlyingamountPerContract = op.underlyingAmountPerContract.toBuffer("le", 8);
-    const expirationtime = op.expirationUnixTimestamp.toBuffer("le", 8);
-    const strikeprice = op.quoteAmountPerContract.toBuffer("le", 8);
+    const underlyingAmountPerContractDecimals = this.OptionMarket.underlyingMint.decimals;
+    const strikePrice = op.quoteAmountPerContract.toBuffer("le", 8);
+    const strikePriceDecimals = this.OptionMarket.quoteMint.decimals;
+    const expirationTime = op.expirationUnixTimestamp.toBuffer("le", 8);
     return Buffer.from(
       new Uint8Array([
         this.OptionType == OptionType.CALL ? 0 : 1,
         ...underlyingamountPerContract,
-        ...strikeprice,
-        ...expirationtime,
+        underlyingAmountPerContractDecimals,
+        ...strikePrice,
+        strikePriceDecimals,
+        ...expirationTime,
         ...mint,
         ...optionMarket,
       ])
@@ -78,6 +82,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     return [
       { pubkey: this.OptionMarket.optionMarketKey, isSigner: false, isWritable: false },
       { pubkey: this.OptionMarket.underlyingMint.mintInfoAddress, isSigner: false, isWritable: false },
+      { pubkey: this.OptionMarket.quoteMint.mintInfoAddress, isSigner: false, isWritable: false },
     ];
   }
 
