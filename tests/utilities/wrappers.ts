@@ -47,7 +47,6 @@ import {
   InstrumentType,
   instrumentTypeToObject,
   RiskCategoryInfo,
-  toApiFeeParams,
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
@@ -57,6 +56,7 @@ import {
   executeInParallel,
   expandComputeUnits,
   serializeOptionQuote,
+  toApiFeeParams,
 } from "./helpers";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
 import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmericanInstrument";

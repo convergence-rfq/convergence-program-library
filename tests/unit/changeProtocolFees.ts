@@ -1,7 +1,8 @@
 import { BN } from "@project-serum/anchor";
 import { expect } from "chai";
-import { DEFAULT_DEFAULT_FEES, DEFAULT_SETTLE_FEES, FEE_BPS_DECIMALS } from "../utilities/constants";
+import { DEFAULT_DEFAULT_FEES, DEFAULT_SETTLE_FEES } from "../utilities/constants";
 import { expectError } from "../utilities/helpers";
+import { FEE_BPS_DECIMALS } from "../utilities/constants";
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Change protocol fees", () => {

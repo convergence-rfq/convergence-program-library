@@ -21,7 +21,10 @@ fn validate(ctx: &Context<CancelRfqAccounts>) -> Result<()> {
 
     rfq.get_state()?.assert_state_in([RfqState::Active])?;
 
-    require!(rfq.total_responses == 0, ProtocolError::HaveResponses);
+    require!(
+        rfq.total_responses == rfq.cleared_responses,
+        ProtocolError::HaveResponses
+    );
 
     Ok(())
 }

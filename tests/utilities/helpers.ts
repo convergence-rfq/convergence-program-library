@@ -4,7 +4,7 @@ import { BigNumber } from "bignumber.js";
 import { PublicKey, ComputeBudgetProgram } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
-import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, LEG_MULTIPLIER_DECIMALS } from "./constants";
+import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, FEE_BPS_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
 import { InstrumentController } from "./instrument";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
@@ -196,4 +196,15 @@ export function serializeOptionQuote(quote: any | null, program: Program<RfqIdl>
 export function calculateFeesValue(value: BN, fee: number): BN {
   const bignumValue = new BigNumber(value.toString());
   return new BN(bignumValue.multipliedBy(fee).toString());
+}
+
+export function toApiFeeParams(params: { taker: number; maker: number } | null) {
+  if (params === null) {
+    return null;
+  }
+
+  return {
+    takerBps: new BN(params.taker * 10 ** FEE_BPS_DECIMALS),
+    makerBps: new BN(params.maker * 10 ** FEE_BPS_DECIMALS),
+  };
 }
