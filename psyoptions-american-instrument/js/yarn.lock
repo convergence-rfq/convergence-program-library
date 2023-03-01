@@ -9,38 +9,40 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@metaplex-foundation/beet-solana@^0.3.1":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@metaplex-foundation/beet-solana/-/beet-solana-0.3.1.tgz#4b37cda5c7f32ffd2bdd8b3164edc05c6463ab35"
-  integrity sha512-tgyEl6dvtLln8XX81JyBvWjIiEcjTkUwZbrM5dIobTmoqMuGewSyk9CClno8qsMsFdB5T3jC91Rjeqmu/6xk2g==
+"@convergence-rfq/beet-solana@^0.4.11":
+  version "0.4.11"
+  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet-solana/-/beet-solana-0.4.11.tgz#92bb9bb012b2978575cd1e245cfbe4ff32265056"
+  integrity sha512-gBuuJQ/wh8Nfsc10RQxJVEWf07fAuJlvb5EZYhArlIrO3ZY8AqvJpUJzh6tuLnEX9rvONEVKWJfjJSes8GsFUg==
   dependencies:
-    "@metaplex-foundation/beet" ">=0.1.0"
+    "@convergence-rfq/beet" "^0.7.10"
     "@solana/web3.js" "^1.56.2"
     bs58 "^5.0.0"
     debug "^4.3.4"
 
-"@metaplex-foundation/beet@>=0.1.0", "@metaplex-foundation/beet@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@metaplex-foundation/beet/-/beet-0.6.1.tgz#6331bdde0648bf2cae6f9e482f8e3552db05d69f"
-  integrity sha512-OYgnijLFzw0cdUlRKH5POp0unQECPOW9muJ2X3QIVyak5G6I6l/rKo72sICgPLIFKdmsi2jmnkuLY7wp14iXdw==
+"@convergence-rfq/beet@^0.7.10":
+  version "0.7.10"
+  resolved "https://registry.yarnpkg.com/@convergence-rfq/beet/-/beet-0.7.10.tgz#dabce4c8645333cb530ff8f09732c2e8013343a3"
+  integrity sha512-mwCQjD5v+FSZiQwyhgdpoqJ9W0jpqxS8FPgwok3gXgTJQnAAwzzVRoyvNc7GhkIjtsr7H8uJAftiTAEr5DeXyg==
   dependencies:
     ansicolors "^0.3.2"
     bn.js "^5.2.0"
     debug "^4.3.3"
 
-"@metaplex-foundation/beet@^0.7.1":
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/@metaplex-foundation/beet/-/beet-0.7.1.tgz#0975314211643f87b5f6f3e584fa31abcf4c612c"
-  integrity sha512-hNCEnS2WyCiYyko82rwuISsBY3KYpe828ubsd2ckeqZr7tl0WVLivGkoyA/qdiaaHEBGdGl71OpfWa2rqL3DiA==
+"@convergence-rfq/solita@^0.15.10":
+  version "0.15.10"
+  resolved "https://registry.yarnpkg.com/@convergence-rfq/solita/-/solita-0.15.10.tgz#6a00ffcf9b656b7b0596cf7a6330c8875baca92f"
+  integrity sha512-Owy51H0uXDONeX6IEuCblKvO9Jsw6RLr7aoJwMvewGv2t4qJfjZ30NAyqYuo/r+lpbadqZXpS26zUBGVb4XaDw==
   dependencies:
-    ansicolors "^0.3.2"
-    bn.js "^5.2.0"
+    "@convergence-rfq/beet" "^0.7.10"
+    "@convergence-rfq/beet-solana" "^0.4.11"
+    "@metaplex-foundation/rustbin" "^0.3.0"
+    "@solana/web3.js" "^1.56.2"
+    camelcase "^6.2.1"
     debug "^4.3.3"
-
-"@metaplex-foundation/cusper@^0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@metaplex-foundation/cusper/-/cusper-0.0.2.tgz#dc2032a452d6c269e25f016aa4dd63600e2af975"
-  integrity sha512-S9RulC2fFCFOQraz61bij+5YCHhSO9llJegK8c8Y6731fSi6snUSQJdCUqYS8AIgR0TKbQvdvgSyIIdbDFZbBA==
+    js-sha256 "^0.9.0"
+    prettier "^2.5.1"
+    snake-case "^3.0.4"
+    spok "^1.4.3"
 
 "@metaplex-foundation/rustbin@^0.3.0":
   version "0.3.1"
@@ -51,23 +53,6 @@
     semver "^7.3.7"
     text-table "^0.2.0"
     toml "^3.0.0"
-
-"@metaplex-foundation/solita@^0.18.0":
-  version "0.18.0"
-  resolved "https://registry.yarnpkg.com/@metaplex-foundation/solita/-/solita-0.18.0.tgz#5a253646fe0bbf95ca457112a0e8bd29264b69d5"
-  integrity sha512-bSh1yDovITcJStMGKuLwsxilt0F81wPg7l4RIjDjcjMg14WJksO8G9sEKnDkZKVETODb8BGzbIG2FXc9an1NRA==
-  dependencies:
-    "@metaplex-foundation/beet" "^0.7.1"
-    "@metaplex-foundation/beet-solana" "^0.3.1"
-    "@metaplex-foundation/rustbin" "^0.3.0"
-    "@solana/web3.js" "^1.56.2"
-    ansi-colors "^4.1.3"
-    camelcase "^6.2.1"
-    debug "^4.3.3"
-    js-sha256 "^0.9.0"
-    prettier "^2.5.1"
-    snake-case "^3.0.4"
-    spok "^1.4.3"
 
 "@noble/ed25519@^1.7.0":
   version "1.7.0"
@@ -193,11 +178,6 @@ agentkeepalive@^4.2.1:
     debug "^4.1.0"
     depd "^1.1.2"
     humanize-ms "^1.2.1"
-
-ansi-colors@^4.1.3:
-  version "4.1.3"
-  resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-4.1.3.tgz#37611340eb2243e70cc604cad35d63270d48781b"
-  integrity sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==
 
 ansicolors@^0.3.2, ansicolors@~0.3.2:
   version "0.3.2"
@@ -467,6 +447,11 @@ regenerator-runtime@^0.13.4:
   version "0.13.9"
   resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.13.9.tgz#8925742a98ffd90814988d7566ad30ca3b263b52"
   integrity sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==
+
+rimraf@^4.1.2:
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-4.1.2.tgz#20dfbc98083bdfaa28b01183162885ef213dbf7c"
+  integrity sha512-BlIbgFryTbw3Dz6hyoWFhKk+unCcHMSkZGrTFVAx2WmttdBSonsdtRlwiuTbDqTKr+UlXIUqJVS4QT5tUzGENQ==
 
 rpc-websockets@^7.5.0:
   version "7.5.0"
