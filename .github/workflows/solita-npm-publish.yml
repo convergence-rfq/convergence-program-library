@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        solana: ["1.14.11"]
         package:
           - "rfq"
           - "risk-engine"
@@ -23,6 +24,18 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+      - name: Install Rust
+        run: curl --proto '=https' -y --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      - name: Install AVM
+        run: cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+      - name: Install Anchor
+        run: avm install 0.25.0
+      - name: Use Anchor
+        run: avm use 0.25.0
+      - name: Install Solana
+        uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ matrix.solana }}
       - name: Yarn install
         run: yarn
       - name: Solita
