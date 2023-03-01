@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        solana: ["1.14.11"]
+        solana: ["1.14.12"]
         package:
           - "rfq"
           - "risk-engine"
