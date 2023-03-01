@@ -21,9 +21,8 @@ jobs:
         working-directory: ./${{ matrix.package }}/js
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          fetch-depth: 0
       - name: Install Rust
         run: curl --proto '=https' -y --tlsv1.2 -sSf https://sh.rustup.rs | sh
       - name: Install AVM
@@ -36,6 +35,10 @@ jobs:
         uses: ./.github/actions/install-solana
         with:
           solana_version: ${{ matrix.solana }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+         cache: "yarn"
       - name: Yarn install
         run: yarn
       - name: Solita
