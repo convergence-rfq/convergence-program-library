@@ -20,7 +20,8 @@ jobs:
       run:
         working-directory: ./${{ matrix.package }}/js
     steps:
-      - uses: actions/checkout@v3
+      - name: Git Checkout
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Install Rust
@@ -38,7 +39,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "16.x"
-         cache: "yarn"
+          cache: "yarn"
       - name: Yarn install
         run: yarn
       - name: Solita
