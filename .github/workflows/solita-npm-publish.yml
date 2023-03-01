@@ -15,6 +15,9 @@ jobs:
           - "spot-instrument"
           - "psyoptions-american-instrument"
           - "psyoptions-european-instrument"
+    defaults:
+      run:
+        working-directory: ./${{ matrix.package }}/js
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -22,14 +25,10 @@ jobs:
           node-version: 12
       - name: Yarn install
         run: yarn
-        working-directory: ./${{ matrix.package }}/js
       - name: Solita
-        working-directory: ./${{ matrix.package }}/js
         run: yarn solita
       - name: Build
-        working-directory: ./${{ matrix.package }}/js
         run: yarn build
       - uses: JS-DevTools/npm-publish@v1
-        working-directory: ./${{ matrix.package }}/js
         with:
           token: ${{ secrets.NPM_TOKEN }}
