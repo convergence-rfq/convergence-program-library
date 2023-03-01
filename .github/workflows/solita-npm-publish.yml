@@ -1,4 +1,8 @@
-on: push
+name: Solita NPM Publish
+
+on:
+  push:
+    branches: [main, dev]
 
 jobs:
   publish:
