@@ -49,4 +49,6 @@ jobs:
         run: yarn build
       - uses: JS-DevTools/npm-publish@v1
         with:
+          debug: true
+          package: ${{ github.workspace }}/${{ matrix.package }}/js/package.json
           token: ${{ secrets.NPM_TOKEN }}
