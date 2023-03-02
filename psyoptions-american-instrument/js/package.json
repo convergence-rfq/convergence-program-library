@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/psyoptions-american-instrument",
-  "version": "2.2.2-dev",
+  "version": "2.2.2-rc",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
