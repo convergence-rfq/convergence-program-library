@@ -110,8 +110,7 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
         ctx.accounts.fee_model_program.to_account_info(),
         ctx.accounts
             .fee_model_configuration_acct
-            .to_account_info()
-            .clone(),
+            .to_account_info(),
         ctx.accounts.fee_output_register.to_account_info(),
         ctx.accounts.risk_engine_program.to_account_info(),
         ctx.accounts.risk_model_configuration_acct.to_account_info(),

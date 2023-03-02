@@ -1,4 +1,8 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
+use std::ops::Deref;
 
 use dex_cpi;
 use rfq::state::{AuthoritySide, Side};
@@ -13,16 +17,27 @@ pub fn create_print_trade(
     ctx: &Context<CreatePrintTrade>,
     authority_side_duplicate: AuthoritySideDuplicate,
 ) -> Result<()> {
-    let cpi_accounts = dex_cpi::cpi::accounts::InitializePrintTrade {
-        user: ctx.accounts.creator_owner.to_account_info(),
-        creator: ctx.accounts.creator.to_account_info(),
-        counterparty: ctx.accounts.counterparty.to_account_info(),
-        operator: ctx.accounts.operator.to_account_info(),
-        market_product_group: ctx.accounts.market_product_group.to_account_info(),
-        print_trade: ctx.accounts.print_trade.to_account_info(),
-        system_program: ctx.accounts.system_program.to_account_info(),
-        operator_owner: ctx.accounts.operator_owner.to_account_info(),
-    };
+    let cpi_accounts = Box::new([
+        ctx.accounts.creator_owner.to_account_info(),
+        ctx.accounts.creator.to_account_info(),
+        ctx.accounts.counterparty.to_account_info(),
+        ctx.accounts.operator.to_account_info(),
+        ctx.accounts.market_product_group.to_account_info(),
+        ctx.accounts.print_trade.to_account_info(),
+        ctx.accounts.system_program.to_account_info(),
+        ctx.accounts.operator_owner.to_account_info(),
+        ctx.accounts.fee_model_program.to_account_info(),
+        ctx.accounts.fee_model_configuration_acct.to_account_info(),
+        ctx.accounts.fee_output_register.to_account_info(),
+        ctx.accounts.risk_engine_program.to_account_info(),
+        ctx.accounts.risk_model_configuration_acct.to_account_info(),
+        ctx.accounts.risk_output_register.to_account_info(),
+        ctx.accounts.risk_and_fee_signer.to_account_info(),
+        ctx.accounts.creator_trader_fee_state_acct.to_account_info(),
+        ctx.accounts
+            .creator_trader_risk_state_acct
+            .to_account_info(),
+    ]);
 
     let response = &ctx.accounts.response;
     let rfq = &ctx.accounts.rfq;
@@ -58,7 +73,8 @@ pub fn create_print_trade(
         .collect();
 
     // we need to pass an array with fixed size to HXRO
-    let mut products = [dex_cpi::typedefs::PrintTradeProductIndex::default(); MAX_PRODUCTS_PER_TRADE];
+    let mut products =
+        [dex_cpi::typedefs::PrintTradeProductIndex::default(); MAX_PRODUCTS_PER_TRADE];
     for i in 0..product_vec.len() {
         products[i] = product_vec[i];
     }
@@ -77,10 +93,45 @@ pub fn create_print_trade(
         operator_creator_fee_proportion: OPERATOR_CREATOR_FEE_PROPORTION,
         operator_counterparty_fee_proportion: OPERATOR_COUNTERPARTY_FEE_PROPORTION,
         is_operator_signer: false,
+        is_collateral_locked: true,
     };
 
-    dex_cpi::cpi::initialize_print_trade(
-        CpiContext::new(ctx.accounts.dex.to_account_info(), cpi_accounts),
-        cpi_params,
+    solana_program::program::invoke(
+        &Instruction {
+            program_id: ctx.accounts.dex.key(),
+            accounts: vec![
+                AccountMeta::new(ctx.accounts.creator_owner.key(), true),
+                AccountMeta::new_readonly(ctx.accounts.creator.key.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.counterparty.key.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.operator.key.key(), false),
+                AccountMeta::new(ctx.accounts.market_product_group.key.key(), false),
+                AccountMeta::new(ctx.accounts.print_trade.key.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.system_program.key.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.operator_owner.key.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.fee_model_program.key.key(), false),
+                AccountMeta::new_readonly(
+                    ctx.accounts.fee_model_configuration_acct.key.key(),
+                    false,
+                ),
+                AccountMeta::new(ctx.accounts.fee_output_register.key.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.risk_engine_program.key.key(), false),
+                AccountMeta::new_readonly(
+                    ctx.accounts.risk_model_configuration_acct.key.key(),
+                    false,
+                ),
+                AccountMeta::new(ctx.accounts.risk_output_register.key.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.risk_and_fee_signer.key.key(), false),
+                AccountMeta::new(ctx.accounts.creator_trader_fee_state_acct.key.key(), false),
+                AccountMeta::new(ctx.accounts.creator_trader_risk_state_acct.key.key(), false),
+            ],
+            data: dex_cpi::instruction::InitializePrintTrade {
+                _params: cpi_params,
+            }
+            .data(),
+        },
+        cpi_accounts.deref(),
     )
+    .unwrap();
+
+    Ok(())
 }

@@ -90,9 +90,9 @@ pub struct ValidateData<'info> {
 
 #[derive(Accounts)]
 pub struct CreatePrintTrade<'info> {
-    pub protocol: Account<'info, ProtocolState>,
-    pub rfq: Account<'info, Rfq>,
-    pub response: Account<'info, Response>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
+    pub rfq: Box<Account<'info, Rfq>>,
+    pub response: Box<Account<'info, Response>>,
 
     /// CHECK:
     pub dex: Program<'info, Dex>,
@@ -111,6 +111,28 @@ pub struct CreatePrintTrade<'info> {
     /// CHECK:
     #[account(mut)]
     pub market_product_group: AccountInfo<'info>,
+
+    /// CHECK:
+    pub fee_model_program: AccountInfo<'info>,
+    /// CHECK:
+    pub fee_model_configuration_acct: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub fee_output_register: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_engine_program: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_model_configuration_acct: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_output_register: AccountInfo<'info>,
+    /// CHECK:
+    pub risk_and_fee_signer: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub creator_trader_fee_state_acct: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub creator_trader_risk_state_acct: AccountInfo<'info>,
 
     /// CHECK:
     #[account(mut)]

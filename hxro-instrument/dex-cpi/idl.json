@@ -220,6 +220,51 @@
           "name": "operatorOwner",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "feeModelProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeModelConfigurationAcct",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeOutputRegister",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "riskEngineProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "riskModelConfigurationAcct",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "riskOutputRegister",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "riskAndFeeSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "creatorTraderFeeStateAcct",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "creatorTraderRiskStateAcct",
+          "isMut": true,
+          "isSigner": false
         }
       ],
       "args": [
@@ -1347,6 +1392,10 @@
           },
           {
             "name": "isOperatorSigner",
+            "type": "bool"
+          },
+          {
+            "name": "isCollateralLocked",
             "type": "bool"
           }
         ]
