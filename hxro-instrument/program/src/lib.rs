@@ -124,6 +124,7 @@ pub struct CreatePrintTrade<'info> {
     /// CHECK:
     pub risk_model_configuration_acct: AccountInfo<'info>,
     /// CHECK:
+    #[account(mut)]
     pub risk_output_register: AccountInfo<'info>,
     /// CHECK:
     pub risk_and_fee_signer: AccountInfo<'info>,

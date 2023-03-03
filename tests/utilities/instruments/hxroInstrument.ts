@@ -38,6 +38,8 @@ export class HxroInstrument implements Instrument {
     private counterparty: PublicKey;
     private operator: PublicKey;
     private printTrade: PublicKey;
+    private creatorTraderFeeStateAcct: PublicKey;
+    private creatorTraderRiskStateAcct: PublicKey;
 
     private productIndex: number;
 
@@ -63,6 +65,8 @@ export class HxroInstrument implements Instrument {
             counterparty = null,
             operator = null,
             printTrade = null,
+            creatorTraderFeeStateAcct = null,
+            creatorTraderRiskStateAcct = null,
             productIndex = 0,
         }= {}
     ): InstrumentController {
@@ -87,6 +91,8 @@ export class HxroInstrument implements Instrument {
         instrument.operator = operator;
         instrument.printTrade = printTrade;
         instrument.productIndex = productIndex;
+        instrument.creatorTraderFeeStateAcct = creatorTraderFeeStateAcct;
+        instrument.creatorTraderRiskStateAcct = creatorTraderRiskStateAcct;
 
         return new InstrumentController(
             instrument,
@@ -113,6 +119,8 @@ export class HxroInstrument implements Instrument {
         counterparty = null,
         operator = null,
         printTrade = null,
+        creatorTraderFeeStateAcct = null,
+        creatorTraderRiskStateAcct = null,
         productIndex = 0,
     }): InstrumentController {
         const instrument = new HxroInstrument(context, mint);
@@ -133,6 +141,8 @@ export class HxroInstrument implements Instrument {
         instrument.operator = operator;
         instrument.printTrade = printTrade;
         instrument.productIndex = productIndex;
+        instrument.creatorTraderFeeStateAcct = creatorTraderFeeStateAcct;
+        instrument.creatorTraderRiskStateAcct = creatorTraderRiskStateAcct;
 
         mint.assertRegistered();
         return new InstrumentController(instrument, null, mint.decimals);
@@ -205,6 +215,17 @@ export class HxroInstrument implements Instrument {
             { pubkey: this.counterparty, isSigner: false, isWritable: false },
             { pubkey: this.operator, isSigner: false, isWritable: false },
             { pubkey: this.marketProductGroup, isSigner: false, isWritable: true },
+
+            { pubkey: this.feeModelProgram, isSigner: false, isWritable: false },
+            { pubkey: this.feeModelConfigurationAcct, isSigner: false, isWritable: false },
+            { pubkey: this.feeOutputRegister, isSigner: false, isWritable: true },
+            { pubkey: this.riskEngineProgram, isSigner: false, isWritable: false },
+            { pubkey: this.riskModelConfigurationAcct, isSigner: false, isWritable: false },
+            { pubkey: this.riskOutputRegister, isSigner: false, isWritable: true },
+            { pubkey: this.riskAndFeeSigner, isSigner: false, isWritable: false },
+            { pubkey: this.creatorTraderFeeStateAcct, isSigner: false, isWritable: true },
+            { pubkey: this.creatorTraderRiskStateAcct, isSigner: false, isWritable: true },
+
             { pubkey: this.printTrade, isSigner: false, isWritable: true },
             { pubkey: anchor.web3.SystemProgram.programId, isSigner: false, isWritable: false },
         ];

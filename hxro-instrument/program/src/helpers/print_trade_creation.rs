@@ -39,6 +39,11 @@ pub fn create_print_trade(
             .to_account_info(),
     ]);
 
+    msg!("ACCOUNTS:");
+    for acc in cpi_accounts.iter() {
+        msg!("{}", acc.key());
+    }
+
     let response = &ctx.accounts.response;
     let rfq = &ctx.accounts.rfq;
 

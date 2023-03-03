@@ -133,6 +133,8 @@ describe("RFQ HXRO instrument integration tests", () => {
                         counterparty: counterPartyTrg,
                         operator: operatorPartyTrg,
                         printTrade: printTrade,
+                        creatorTraderFeeStateAcct: creatorTraderFeeStateAcct,
+                        creatorTraderRiskStateAcct: creatorTraderRiskStateAcct,
                     })],
             quote: HxroInstrument.createForQuote(context,
                 {
@@ -143,6 +145,8 @@ describe("RFQ HXRO instrument integration tests", () => {
                     counterparty: counterPartyTrg,
                     operator: operatorPartyTrg,
                     printTrade: printTrade,
+                    creatorTraderFeeStateAcct: creatorTraderFeeStateAcct,
+                    creatorTraderRiskStateAcct: creatorTraderRiskStateAcct,
                 })
         });
 
