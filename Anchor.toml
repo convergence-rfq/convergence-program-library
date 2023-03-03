@@ -30,7 +30,7 @@ wallet = "~/.config/solana/id.json"
 
 [workspace]
 members = [
-    "rfq/program",
+   "rfq/program",
     "risk-engine/program",
     "spot-instrument/program",
     "psyoptions-american-instrument/program",

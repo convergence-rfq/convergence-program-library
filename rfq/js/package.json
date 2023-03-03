@@ -9,9 +9,10 @@
   "repository": "https://github.com/convergence-rfq/convergence-program-library.git",
   "author": "Convergence RFQ Maintainers <contact@tradersguild.so>",
   "main": "./generated/index.js",
+  "types": "./generated/index.d.ts",
   "files": [
-    "generated",
-    "idl"
+    "/generated",
+    "/idl"
   ],
   "scripts": {
     "build": "rimraf dist && yarn solita && tsc -p tsconfig.json --declaration"
