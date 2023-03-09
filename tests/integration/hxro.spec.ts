@@ -16,7 +16,7 @@ function getTrgSeeds(name: string, marketProductGroup: anchor.web3.PublicKey): s
 describe("RFQ HXRO instrument integration tests", () => {
     anchor.setProvider(anchor.AnchorProvider.env())
 
-    const tokenOwner = anchor.web3.Keypair.fromSecretKey(
+    const creator = anchor.web3.Keypair.fromSecretKey(
         Buffer.from(
             [
                 174,0,231,45,221,204,179,151,16,120,255,207,200,60,242,
@@ -24,6 +24,18 @@ describe("RFQ HXRO instrument integration tests", () => {
                 61,86,238,210,223,44,186,127,248,161,168,0,219,156,89,
                 43,133,62,195,229,3,130,60,155,237,41,152,220,86,4,84,
                 115,71,162
+            ]
+        )
+    );
+
+    const counterparty = anchor.web3.Keypair.fromSecretKey(
+        Buffer.from(
+            [
+                143,144,124,181,57,51,106,180,91,113,212,155,219,218,253,
+                98,198,123,220,136,15,23,169,116,188,41,239,244,105,151,
+                159,110,74,157,163,25,6,50,1,105,209,31,13,170,117,156,
+                41,203,159,73,15,120,215,0,252,38,186,150,247,53,57,129,
+                114,189
             ]
         )
     );
@@ -47,13 +59,13 @@ describe("RFQ HXRO instrument integration tests", () => {
         program.provider.connection,
         new anchor.web3.PublicKey("6QFnukEmE8kgaYD6Cn2kTbuQp9vUHw6MDnaZbRFBy7BL"),
         spl_token.TOKEN_PROGRAM_ID,
-        tokenOwner,
+        creator,
     )
     let vaultMint = new spl_token.Token(
         program.provider.connection,
         new anchor.web3.PublicKey("HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"),
         spl_token.TOKEN_PROGRAM_ID,
-        tokenOwner,
+        creator,
     )
 
     let context: Context;
@@ -65,7 +77,7 @@ describe("RFQ HXRO instrument integration tests", () => {
         )
         console.log("airdropTX", airdropTX)
 
-        context = await getContext();
+        context = await getContext(creator, counterparty);
     });
 
     it("HXRO flow works", async () => {
@@ -272,49 +284,6 @@ describe("RFQ HXRO instrument integration tests", () => {
         return [trg, traderFeeStateAcct, traderRiskStateAcct]
     }
 
-    let airdropWhitelistATA = async (keypair: anchor.web3.Keypair) => {
-        const ownerWhitelistAtaAcct = await spl_token.Token.getAssociatedTokenAddress(
-            spl_token.ASSOCIATED_TOKEN_PROGRAM_ID,
-            spl_token.TOKEN_PROGRAM_ID,
-            whitelistMint.publicKey,
-            tokenOwner.publicKey
-        );
-
-        const userWhitelistAtaAcct = (await whitelistMint.getOrCreateAssociatedAccountInfo(keypair.publicKey)).address
-        const whitelistTransferTx = await whitelistMint.transfer(
-            ownerWhitelistAtaAcct,
-            userWhitelistAtaAcct,
-            tokenOwner,
-            [tokenOwner],
-            1
-        ).catch((e) => {console.log(e)});
-        console.log("whitelistTransferTx", whitelistTransferTx);
-
-        return userWhitelistAtaAcct;
-    }
-
-    let airdropVaultMintATA = async (keypair: anchor.web3.Keypair) => {
-        const tokenAccount = await spl_token.Token.getAssociatedTokenAddress(
-            spl_token.ASSOCIATED_TOKEN_PROGRAM_ID,
-            spl_token.TOKEN_PROGRAM_ID,
-            vaultMint.publicKey,
-            tokenOwner.publicKey
-        );
-
-        const userTokenAccount = (await vaultMint.getOrCreateAssociatedAccountInfo(keypair.publicKey)).address
-
-        const transferTx = await vaultMint.transfer(
-            tokenAccount,
-            userTokenAccount,
-            tokenOwner,
-            [tokenOwner],
-            (10 ** 6)
-        ).catch((e) => {console.log(e)});
-        console.log("transferTx", transferTx);
-
-        return userTokenAccount;
-    }
-
     let hxroDeposit = async (
         trg: anchor.web3.PublicKey,
         keypair: anchor.web3.Keypair
@@ -327,12 +296,11 @@ describe("RFQ HXRO instrument integration tests", () => {
             dex
         )
 
-        let userWhitelistAtaAcct = await airdropWhitelistATA(keypair).catch(
-            (e) => console.log("ERROR:", e)
-        );
-        let userVaultMintAtaAcct = await airdropVaultMintATA(keypair).catch(
-            (e) => console.log("ERROR:", e)
-        );
+        const userWhitelistAtaAcct = (await whitelistMint.getOrCreateAssociatedAccountInfo(keypair.publicKey)).address
+        const userVaultMintAtaAcct = (await vaultMint.getOrCreateAssociatedAccountInfo(keypair.publicKey)).address
+
+        console.log("userWhitelistAtaAcct: ", userWhitelistAtaAcct)
+        console.log("userVaultMintAtaAcct: ", userVaultMintAtaAcct)
 
         let depositTX = new anchor.web3.Transaction().add(
             new anchor.web3.TransactionInstruction (
@@ -354,10 +322,20 @@ describe("RFQ HXRO instrument integration tests", () => {
             )
         )
 
+        console.log("- dex", dex,)
+        console.log("- ", spl_token.TOKEN_PROGRAM_ID,)
+        console.log("- ", keypair.publicKey,)
+        console.log("- ", userVaultMintAtaAcct,)
+        console.log("- ", trg,)
+        console.log("- ", marketProductGroup,)
+        console.log("- ", marketProductGroupVault,)
+        console.log("- ", capitalLimitsState,)
+        console.log("- ", userWhitelistAtaAcct)
+
         return await anchor.web3.sendAndConfirmTransaction(
             program.provider.connection,
             depositTX,
-            [keypair]
+            [{publicKey: keypair.publicKey, secretKey: keypair.secretKey}]
         ).catch(e => {
             console.log(e)
         })

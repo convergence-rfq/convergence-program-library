@@ -72,11 +72,23 @@ export class Context {
     this.baseAssets = {};
   }
 
-  async initialize() {
+  async initialize(taker: Keypair = null, maker: Keypair = null) {
     await executeInParallel(
       async () => (this.dao = await this.createPayer()),
-      async () => (this.taker = await this.createPayer()),
-      async () => (this.maker = await this.createPayer())
+      async () => {
+          if (taker == null) {
+              this.taker = await this.createPayer()
+          } else {
+              this.taker = taker
+          }
+      },
+      async () => {
+          if (maker == null) {
+              this.maker = await this.createPayer()
+          } else {
+              this.maker = maker
+          }
+      }
     );
 
     this.protocolPda = await getProtocolPda(this.program.programId);
@@ -1065,13 +1077,13 @@ export class Response {
 }
 
 let context: Context | null = null;
-export async function getContext() {
+export async function getContext(taker: Keypair = null, maker: Keypair = null) {
   if (context !== null) {
     return context;
   }
 
   context = new Context();
-  await context.initialize();
+  await context.initialize(taker, maker);
   await context.initializeProtocol();
 
   await executeInParallel(

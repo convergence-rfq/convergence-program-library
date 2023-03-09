@@ -23,7 +23,6 @@ pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
                 AccountMeta::new(ctx.accounts.user.key(), true),
                 AccountMeta::new(ctx.accounts.mark_prices.key(), false),
                 AccountMeta::new_readonly(ctx.accounts.market_product_group.key(), false),
-                AccountMeta::new_readonly(ctx.accounts.system_clock.key(), false),
                 AccountMeta::new_readonly(ctx.accounts.btcusd_pyth_oracle.key(), false),
             ],
             data,
@@ -32,7 +31,6 @@ pub fn update_mark_price(ctx: &Context<SettlePrintTrade>) -> Result<()> {
             ctx.accounts.user.to_account_info(),
             ctx.accounts.mark_prices.to_account_info(),
             ctx.accounts.market_product_group.to_account_info(),
-            ctx.accounts.system_clock.to_account_info(),
             ctx.accounts.btcusd_pyth_oracle.to_account_info(),
         ],
     )
