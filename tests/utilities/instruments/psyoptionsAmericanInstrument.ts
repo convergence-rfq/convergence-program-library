@@ -1,5 +1,5 @@
 import { Program, BN, workspace } from "@project-serum/anchor";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer, Keypair } from "@solana/web3.js";
 import { instructions, createProgram, getOptionByKey, OptionMarketWithKey } from "@mithraic-labs/psy-american";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
@@ -97,12 +97,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     return [
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
       {
-        pubkey: await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          this.OptionMarket.callMint.publicKey,
-          caller.publicKey
-        ),
+        pubkey: await getAssociatedTokenAddress(this.OptionMarket.callMint.publicKey, caller.publicKey),
         isSigner: false,
         isWritable: true,
       },

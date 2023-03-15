@@ -1,5 +1,5 @@
 import { Program, web3, BN, workspace } from "@project-serum/anchor";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
@@ -97,12 +97,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     return [
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
       {
-        pubkey: await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          this.getOptionMint().publicKey,
-          caller.publicKey
-        ),
+        pubkey: await getAssociatedTokenAddress(this.getOptionMint().publicKey, caller.publicKey),
         isSigner: false,
         isWritable: true,
       },

@@ -1,5 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
@@ -67,12 +67,7 @@ export class SpotInstrument implements Instrument {
     return [
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
       {
-        pubkey: await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          this.mint.publicKey,
-          caller.publicKey
-        ),
+        pubkey: await getAssociatedTokenAddress(this.mint.publicKey, caller.publicKey),
         isSigner: false,
         isWritable: true,
       },

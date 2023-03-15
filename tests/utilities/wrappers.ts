@@ -1,6 +1,13 @@
 import { BN, Program, Provider, workspace, AnchorProvider, setProvider } from "@project-serum/anchor";
 import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccount,
+  mintTo,
+  getAccount,
+  createMint,
+} from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { RiskEngine as RiskEngineIdl } from "../../target/types/risk_engine";
 import {
@@ -112,14 +119,7 @@ export class Context {
   }
 
   async createMint() {
-    return await Token.createMint(
-      this.provider.connection,
-      this.dao,
-      this.dao.publicKey,
-      null,
-      DEFAULT_MINT_DECIMALS,
-      TOKEN_PROGRAM_ID
-    );
+    return await createMint(this.provider.connection, this.dao, this.dao.publicKey, null, DEFAULT_MINT_DECIMALS);
   }
 
   async initializeProtocol({ settleFees = DEFAULT_SETTLE_FEES, defaultFees = DEFAULT_DEFAULT_FEES } = {}) {
@@ -481,19 +481,18 @@ export class Mint {
   public baseAssetIndex?: number;
   public mintInfoAddress?: PublicKey;
 
-  protected constructor(protected context: Context, public token: Token) {
-    this.publicKey = token.publicKey;
+  protected constructor(protected context: Context, address: PublicKey) {
+    this.publicKey = address;
     this.decimals = DEFAULT_MINT_DECIMALS;
   }
 
   public static async wrap(context: Context, address: PublicKey) {
-    const token = new Token(context.provider.connection, address, TOKEN_PROGRAM_ID, context.dao);
-    const mint = new Mint(context, token);
+    const mint = new Mint(context, address);
 
     await executeInParallel(
-      async () => await token.createAssociatedTokenAccount(context.taker.publicKey),
-      async () => await token.createAssociatedTokenAccount(context.maker.publicKey),
-      async () => await token.createAssociatedTokenAccount(context.dao.publicKey)
+      async () => await mint.createAssociatedTokenAccount(context.taker.publicKey),
+      async () => await mint.createAssociatedTokenAccount(context.maker.publicKey),
+      async () => await mint.createAssociatedTokenAccount(context.dao.publicKey)
     );
 
     return mint;
@@ -518,22 +517,33 @@ export class Mint {
   }
 
   public async createAssociatedAccountWithTokens(address: PublicKey, amount = DEFAULT_TOKEN_AMOUNT) {
-    const account = await this.token.createAssociatedTokenAccount(address);
-    await this.token.mintTo(account, this.context.dao, [], amount.toString());
+    const account = await this.createAssociatedTokenAccount(address);
+    await mintTo(
+      this.context.provider.connection,
+      this.context.dao,
+      this.publicKey,
+      account,
+      this.context.dao,
+      amount.toString()
+    );
   }
 
-  public async getAssociatedAddress(address: PublicKey) {
-    return await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+  public async createAssociatedTokenAccount(address: PublicKey) {
+    return await createAssociatedTokenAccount(
+      this.context.provider.connection,
+      this.context.dao,
       this.publicKey,
       address
     );
   }
 
+  public async getAssociatedAddress(address: PublicKey) {
+    return await getAssociatedTokenAddress(this.publicKey, address);
+  }
+
   public async getAssociatedBalance(address: PublicKey) {
-    const account = await this.token.getAccountInfo(await this.getAssociatedAddress(address));
-    return account.amount;
+    const account = await getAccount(this.context.provider.connection, await this.getAssociatedAddress(address));
+    return new BN(account.amount);
   }
 
   public assertRegistered() {
@@ -546,25 +556,26 @@ export class Mint {
 export class CollateralMint extends Mint {
   public static async create(context: Context) {
     const mint = await Mint.create(context);
-    return new CollateralMint(context, mint.token);
+    return new CollateralMint(context, mint.publicKey);
   }
 
   public async getTotalCollateral(address: PublicKey) {
-    const account = await this.token.getAccountInfo(
+    const account = await getAccount(
+      this.context.provider.connection,
       await getCollateralTokenPda(address, this.context.program.programId)
     );
     return account.amount;
   }
 
   public async getUnlockedCollateral(address: PublicKey) {
-    const tokenAccount = await this.token.getAccountInfo(
+    const tokenAccount = await getAccount(
+      this.context.provider.connection,
       await getCollateralTokenPda(address, this.context.program.programId)
     );
     const collateralInfo = await this.context.program.account.collateralInfo.fetch(
       await getCollateralInfoPda(address, this.context.program.programId)
     );
-    // @ts-ignore
-    return tokenAccount.amount.sub(collateralInfo.lockedTokensAmount);
+    return new BN(tokenAccount.amount).sub(collateralInfo.lockedTokensAmount);
   }
 }
 
