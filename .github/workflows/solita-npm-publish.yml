@@ -1,0 +1,54 @@
+name: Solita NPM Publish
+
+on:
+  push:
+    branches: [main, dev]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: build
+    strategy:
+      matrix:
+        solana: ["1.14.12"]
+        package:
+          - "rfq"
+          - "risk-engine"
+          - "spot-instrument"
+          - "psyoptions-american-instrument"
+          - "psyoptions-european-instrument"
+    defaults:
+      run:
+        working-directory: ./${{ matrix.package }}/js
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Install Rust
+        run: curl --proto '=https' -y --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      - name: Install AVM
+        run: cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+      - name: Install Anchor
+        run: avm install 0.25.0
+      - name: Use Anchor
+        run: avm use 0.25.0
+      - name: Install Solana
+        uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ matrix.solana }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+          cache: "yarn"
+      - name: Yarn install
+        run: yarn
+      - name: Solita
+        run: yarn solita
+      - name: Build
+        run: yarn build
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          debug: true
+          package: ${{ github.workspace }}/${{ matrix.package }}/js/package.json
+          token: ${{ secrets.NPM_TOKEN }}
