@@ -5,7 +5,7 @@ import { instructions, createProgram, getOptionByKey, OptionMarketWithKey } from
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AuthoritySide, AssetIdentifier, InstrumentType } from "../types";
+import { AuthoritySide, AssetIdentifier, InstrumentType, Side } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { executeInParallel, withTokenDecimals } from "../helpers";
 import * as anchor from "@project-serum/anchor";
@@ -19,7 +19,7 @@ enum OptionType {
 }
 
 const psyOptionsAmericanLocalNetProgramId = new anchor.web3.PublicKey("R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs");
-let psyoptionsAmericanInstrumentProgram = null;
+let psyoptionsAmericanInstrumentProgram: Program<PsyoptionsAmericanInstrument> | null = null;
 export function getAmericanOptionsInstrumentProgram() {
   if (psyoptionsAmericanInstrumentProgram === null) {
     psyoptionsAmericanInstrumentProgram =
@@ -35,13 +35,19 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     context: Context,
     OptionMarket: AmericanPsyoptions,
     Optiontype: OptionType,
-    { amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
+    {
+      amount = DEFAULT_INSTRUMENT_AMOUNT,
+      side = DEFAULT_INSTRUMENT_SIDE,
+    }: {
+      amount?: BN;
+      side?: Side;
+    } = {}
   ): InstrumentController {
     const instrument = new PsyoptionsAmericanInstrumentClass(context, OptionMarket, Optiontype);
-    context.assetToken.assertRegistered();
+    OptionMarket.underlyingMint.assertRegisteredAsBaseAsset();
     return new InstrumentController(
-      instrument,
-      { amount, side: side ?? DEFAULT_INSTRUMENT_SIDE, baseAssetIndex: OptionMarket.underlyingMint.baseAssetIndex },
+      instrument as Instrument,
+      { amount, side: side, baseAssetIndex: OptionMarket.underlyingMint.baseAssetIndex },
       0
     );
   }
@@ -79,6 +85,8 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
   }
 
   async getValidationAccounts() {
+    this.OptionMarket.underlyingMint.assertRegistered();
+    this.OptionMarket.quoteMint.assertRegistered();
     return [
       { pubkey: this.OptionMarket.optionMarketKey, isSigner: false, isWritable: false },
       { pubkey: this.OptionMarket.underlyingMint.mintInfoAddress, isSigner: false, isWritable: false },
@@ -188,17 +196,17 @@ export class AmericanPsyoptions {
     public OptionInfo: OptionMarketWithKey
   ) {}
 
-  public static createProgramWithProvider(user: anchor.web3.Keypair, context: Context) {
+  private static createProgramWithProvider(user: anchor.web3.Keypair, context: Context) {
     const provider = new anchor.AnchorProvider(
       context.provider.connection,
       new NodeWallet(user),
       anchor.AnchorProvider.defaultOptions()
     );
-    let program = createProgram(psyOptionsAmericanLocalNetProgramId, provider);
-    return program;
+    return createProgram(psyOptionsAmericanLocalNetProgramId, provider);
   }
 
-  public static async initializeMarket(
+  private static async initializeMarket(
+    // @ts-ignore
     program,
     expirationTimestamp: number,
     quoteMintPubkey: PublicKey,
@@ -249,6 +257,11 @@ export class AmericanPsyoptions {
       () => Mint.wrap(context, psyOptMarket.writerMintKey)
     );
 
+    const market = await getOptionByKey(program, psyOptMarket.optionMarketKey);
+    if (market === null) {
+      throw Error(`Option market haven't been found!`);
+    }
+
     return new AmericanPsyoptions(
       context,
       program,
@@ -259,19 +272,18 @@ export class AmericanPsyoptions {
       quoteMint,
       callMint,
       callWriterMint,
-      await getOptionByKey(program, psyOptMarket.optionMarketKey)
+      market
     );
   }
 
-  public async mintPsyOptions(mintBy: Signer, amount: anchor.BN, optiontype: OptionType, context: Context) {
-    let optionMarketWithKey = await getOptionByKey(this.program, this.optionMarketKey);
+  public async mintPsyOptions(mintBy: Signer, amount: anchor.BN) {
     let ix = await instructions.mintOptionV2Instruction(
       this.program,
       await this.callMint.getAssociatedAddress(mintBy.publicKey),
       await this.callWriterMint.getAssociatedAddress(mintBy.publicKey),
       await this.underlyingMint.getAssociatedAddress(mintBy.publicKey),
       amount,
-      optionMarketWithKey
+      this.OptionInfo
     );
 
     let tx = new anchor.web3.Transaction();

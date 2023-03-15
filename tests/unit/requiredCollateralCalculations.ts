@@ -15,13 +15,11 @@ describe("Required collateral calculation and lock", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
-  let dao: PublicKey;
 
   before(async () => {
     context = await getContext();
     taker = context.taker.publicKey;
     maker = context.maker.publicKey;
-    dao = context.dao.publicKey;
   });
 
   it("Correct collateral locked for variable size rfq creation", async () => {

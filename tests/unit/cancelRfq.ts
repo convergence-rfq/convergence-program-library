@@ -7,13 +7,11 @@ describe("Cancel RFQ", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
-  let dao: PublicKey;
 
   before(async () => {
     context = await getContext();
     taker = context.taker.publicKey;
     maker = context.maker.publicKey;
-    dao = context.dao.publicKey;
   });
 
   it("Can cancel Rfq after response settlement", async () => {
