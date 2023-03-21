@@ -1,15 +1,17 @@
 use anchor_lang::prelude::*;
-mod state;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{close_account, transfer, CloseAccount, Token, TokenAccount, Transfer};
-use state::{AssetIdentifierDuplicate, ParsedLegData};
-mod instructions;
-use instructions::*;
-use state::{AuthoritySideDuplicate, TOKEN_DECIMALS};
-mod errors;
 use errors::PsyoptionsAmericanError;
+use instructions::*;
 use rfq::state::MintType;
 use rfq::state::{AssetIdentifier, AuthoritySide};
+use state::{AssetIdentifierDuplicate, ParsedLegData};
+use state::{AuthoritySideDuplicate, TOKEN_DECIMALS};
+
+mod american_options;
+mod errors;
+mod instructions;
+mod state;
 
 declare_id!("7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR");
 
@@ -84,7 +86,7 @@ pub mod psyoptions_american_instrument {
             (base_asset_index, mint_info.mint_type)
         {
             require!(
-                passed_base_asset_index == base_asset_index.into(),
+                passed_base_asset_index == u16::from(base_asset_index),
                 PsyoptionsAmericanError::BaseAssetDoesNotMatch
             );
         } else {

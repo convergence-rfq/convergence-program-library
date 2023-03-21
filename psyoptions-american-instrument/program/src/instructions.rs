@@ -1,11 +1,13 @@
+use crate::american_options::OptionMarket;
 use crate::errors;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use errors::PsyoptionsAmericanError;
-use psy_american::OptionMarket;
 use rfq::state::MintInfo;
 use rfq::state::{AssetIdentifier, ProtocolState, Response, Rfq};
+
 const ESCROW_SEED: &str = "escrow";
+
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
     /// protocol provided

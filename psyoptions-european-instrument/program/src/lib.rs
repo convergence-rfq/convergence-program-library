@@ -91,7 +91,7 @@ pub mod psyoptions_european_instrument {
             (base_asset_index, mint_info.mint_type)
         {
             require!(
-                passed_base_asset_index == base_asset_index.into(),
+                passed_base_asset_index == u16::from(base_asset_index),
                 PsyoptionsEuropeanError::BaseAssetDoesNotMatch
             );
         } else {
