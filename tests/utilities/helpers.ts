@@ -8,6 +8,7 @@ import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, FEE_BPS_DECIMALS, LEG_MULTIPLI
 import { Context, Mint } from "./wrappers";
 import { InstrumentController } from "./instrument";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
+import { FeeParams } from "./types";
 
 chai.use(chaiBn(BN));
 
@@ -71,8 +72,6 @@ export function calculateLegsSize(legs: InstrumentController[]) {
 }
 
 export function calculateLegsHash(legs: InstrumentController[], program: Program<RfqIdl>) {
-  let x = program.idl.types[12];
-  let y = x.type;
   const serializedLegsData = legs.map((leg) => program.coder.types.encode("Leg", leg.toLegData()));
   const lengthBuffer = Buffer.alloc(4);
   lengthBuffer.writeInt32LE(legs.length);
@@ -158,6 +157,9 @@ export class TokenChangeMeasurer {
     );
     for (const change of extendedChanges) {
       const snapshot = this.snapshots.find((x) => x.token == change.token && x.user.equals(change.user));
+      if (!snapshot) {
+        throw Error(`Missing snapshot for token ${change.token} and user ${change.user.toString()}`);
+      }
       if (change.precision === undefined) {
         expect(change.delta).to.be.bignumber.equal(
           change.currentBalance.sub(snapshot.balance),
@@ -198,11 +200,7 @@ export function calculateFeesValue(value: BN, fee: number): BN {
   return new BN(bignumValue.multipliedBy(fee).toString());
 }
 
-export function toApiFeeParams(params: { taker: number; maker: number } | null) {
-  if (params === null) {
-    return null;
-  }
-
+export function toApiFeeParams(params: FeeParams) {
   return {
     takerBps: new BN(params.taker * 10 ** FEE_BPS_DECIMALS),
     makerBps: new BN(params.maker * 10 ** FEE_BPS_DECIMALS),

@@ -1,15 +1,21 @@
 import { BN } from "@project-serum/anchor";
 
+export type OrderType = { buy: {} } | { sell: {} } | { twoWay: {} };
+
 export const OrderType = {
   Buy: { buy: {} },
   Sell: { sell: {} },
   TwoWay: { twoWay: {} },
 };
 
+export type Side = { bid: {} } | { ask: {} };
+
 export const Side = {
   Bid: { bid: {} },
   Ask: { ask: {} },
 };
+
+export type AuthoritySide = { taker: {} } | { maker: {} };
 
 export const AuthoritySide = {
   Taker: { taker: {} },
@@ -58,8 +64,21 @@ export function instrumentTypeToObject(value: InstrumentType) {
   };
 }
 
+export type Quote =
+  | {
+      standard: {
+        priceQuote: { absolutePrice: { amountBps: BN } };
+        legsMultiplierBps: BN;
+      };
+    }
+  | {
+      fixedSize: {
+        priceQuote: { absolutePrice: { amountBps: BN } };
+      };
+    };
+
 export const Quote = {
-  getStandard: (priceBps: BN, legsMultiplierBps: BN) => {
+  getStandard: (priceBps: BN, legsMultiplierBps: BN): Quote => {
     return {
       standard: {
         priceQuote: {
@@ -71,7 +90,7 @@ export const Quote = {
       },
     };
   },
-  getFixedSize: (priceBps: BN) => {
+  getFixedSize: (priceBps: BN): Quote => {
     return {
       fixedSize: {
         priceQuote: {
@@ -83,6 +102,19 @@ export const Quote = {
     };
   },
 };
+
+export type FixedSize =
+  | { none: { padding: BN } }
+  | {
+      baseAsset: {
+        legsMultiplierBps: BN;
+      };
+    }
+  | {
+      quoteAsset: {
+        quoteAmount: BN;
+      };
+    };
 
 export const FixedSize = {
   None: {
@@ -131,3 +163,5 @@ export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
     return Buffer.from([0, assetIdentifier.legIndex]);
   }
 }
+
+export type FeeParams = { taker: number; maker: number };

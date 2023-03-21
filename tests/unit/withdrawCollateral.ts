@@ -5,14 +5,10 @@ import { Context, getContext } from "../utilities/wrappers";
 describe("Withdraw collateral instruction", () => {
   let context: Context;
   let taker: PublicKey;
-  let maker: PublicKey;
-  let dao: PublicKey;
 
   before(async () => {
     context = await getContext();
     taker = context.taker.publicKey;
-    maker = context.maker.publicKey;
-    dao = context.dao.publicKey;
   });
 
   it("Can withdraw unlocked collateral", async () => {

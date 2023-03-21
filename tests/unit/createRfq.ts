@@ -1,5 +1,4 @@
 import { BN } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
 import { calculateLegsHash, expectError } from "../utilities/helpers";
 import { getSpotInstrumentProgram, SpotInstrument } from "../utilities/instruments/spotInstrument";
 
@@ -7,15 +6,9 @@ import { Context, getContext } from "../utilities/wrappers";
 
 describe("Create RFQ", () => {
   let context: Context;
-  let taker: PublicKey;
-  let maker: PublicKey;
-  let dao: PublicKey;
 
   before(async () => {
     context = await getContext();
-    taker = context.taker.publicKey;
-    maker = context.maker.publicKey;
-    dao = context.dao.publicKey;
   });
 
   it("Cannot create rfq with invalid legs hash", async () => {
@@ -28,6 +21,7 @@ describe("Create RFQ", () => {
   });
 
   it("Cannot create rfq with the disabled base asset", async () => {
+    context.assetToken.assertRegisteredAsBaseAsset();
     await context.setBaseAssetEnabledStatus(context.assetToken.baseAssetIndex, false);
     await expectError(
       context.createRfq({

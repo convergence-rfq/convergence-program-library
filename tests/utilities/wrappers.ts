@@ -1,6 +1,23 @@
 import { BN, Program, Provider, workspace, AnchorProvider, setProvider } from "@project-serum/anchor";
-import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import {
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  Transaction,
+  AccountMeta,
+  Signer,
+  ConfirmOptions,
+  TransactionSignature,
+} from "@solana/web3.js";
+import {
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccount,
+  mintTo,
+  getAccount,
+  createMint,
+} from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { RiskEngine as RiskEngineIdl } from "../../target/types/risk_engine";
 import {
@@ -47,6 +64,8 @@ import {
   InstrumentType,
   instrumentTypeToObject,
   RiskCategoryInfo,
+  OrderType,
+  FeeParams,
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
@@ -63,27 +82,41 @@ import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmeri
 
 export class Context {
   public program: Program<RfqIdl>;
-  public riskEngine: RiskEngine;
-  public provider: Provider;
-  public dao: Keypair;
-  public taker: Keypair;
-  public maker: Keypair;
-  public assetToken: Mint; // BTC with the price of 20k$ in oracle
-  public additionalAssetToken: Mint; // SOL with the price of 30$ in oracle
-  public quoteToken: Mint;
-  public collateralToken: CollateralMint;
-  public protocolPda: PublicKey;
+  public riskEngine!: RiskEngine;
+  public provider: Provider & {
+    sendAndConfirm: (tx: Transaction, signers?: Signer[], opts?: ConfirmOptions) => Promise<TransactionSignature>;
+  };
+  public dao!: Keypair;
+  public taker!: Keypair;
+  public maker!: Keypair;
+  public assetToken!: Mint; // BTC with the price of 20k$ in oracle
+  public additionalAssetToken!: Mint; // SOL with the price of 30$ in oracle
+  public quoteToken!: Mint;
+  public collateralToken!: CollateralMint;
+  public protocolPda!: PublicKey;
   public baseAssets: { [baseAssetIndex: number]: { oracleAddress: PublicKey } };
 
   constructor() {
     this.provider = AnchorProvider.env();
+    this.assertProvider();
     setProvider(this.provider);
     this.program = workspace.Rfq as Program<RfqIdl>;
-    this.riskEngine = new RiskEngine(this);
     this.baseAssets = {};
   }
 
+  assertProvider(): asserts this is {
+    provider: {
+      sendAndConfirm: (tx: Transaction, signers?: Signer[], opts?: ConfirmOptions) => Promise<TransactionSignature>;
+    };
+  } {
+    if (!this.provider.sendAndConfirm) {
+      throw Error("Provider doesn't support send and confirm!");
+    }
+  }
+
   async initialize() {
+    this.riskEngine = await RiskEngine.create(this);
+
     await executeInParallel(
       async () => (this.dao = await this.createPayer()),
       async () => (this.taker = await this.createPayer()),
@@ -112,14 +145,7 @@ export class Context {
   }
 
   async createMint() {
-    return await Token.createMint(
-      this.provider.connection,
-      this.dao,
-      this.dao.publicKey,
-      null,
-      DEFAULT_MINT_DECIMALS,
-      TOKEN_PROGRAM_ID
-    );
+    return await createMint(this.provider.connection, this.dao, this.dao.publicKey, null, DEFAULT_MINT_DECIMALS);
   }
 
   async initializeProtocol({ settleFees = DEFAULT_SETTLE_FEES, defaultFees = DEFAULT_DEFAULT_FEES } = {}) {
@@ -182,9 +208,14 @@ export class Context {
     };
   }
 
-  async changeProtocolFees({ settleFees = null, defaultFees = null } = {}) {
+  async changeProtocolFees({
+    settleFees = null,
+    defaultFees = null,
+  }: { settleFees?: FeeParams | null; defaultFees?: FeeParams | null } = {}) {
+    let serializedSettleFees = settleFees ? toApiFeeParams(settleFees) : null;
+    let serializedDettleFees = defaultFees ? toApiFeeParams(defaultFees) : null;
     await this.program.methods
-      .changeProtocolFees(toApiFeeParams(settleFees), toApiFeeParams(defaultFees))
+      .changeProtocolFees(serializedSettleFees, serializedDettleFees)
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -287,18 +318,24 @@ export class Context {
   async createRfq({
     legs = [SpotInstrument.createForLeg(this)],
     quote = SpotInstrument.createForQuote(this, this.quoteToken),
-    orderType = null,
-    fixedSize = null,
+    orderType = DEFAULT_ORDER_TYPE,
+    fixedSize = FixedSize.None,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
-    legsSize = null,
-    legsHash = null,
+    legsSize = calculateLegsSize(legs),
+    legsHash = calculateLegsHash(legs, this.program),
     finalize = true,
+  }: {
+    legs?: InstrumentController[];
+    quote?: InstrumentController;
+    orderType?: OrderType;
+    fixedSize?: FixedSize;
+    activeWindow?: number;
+    settlingWindow?: number;
+    legsSize?: number;
+    legsHash?: Uint8Array;
+    finalize?: boolean;
   } = {}) {
-    orderType = orderType ?? DEFAULT_ORDER_TYPE;
-    fixedSize = fixedSize ?? FixedSize.None;
-    legsSize = legsSize ?? calculateLegsSize(legs);
-    legsHash = legsHash ?? calculateLegsHash(legs, this.program);
     const legData = legs.map((x) => x.toLegData());
     const quoteAccounts = await quote.getValidationAccounts();
     const baseAssetAccounts = await Promise.all(legs.map((leg) => leg.getBaseAssetAccount(this.program.programId)));
@@ -308,7 +345,7 @@ export class Context {
       this.taker.publicKey,
       legsHash,
       orderType,
-      quote.toQuoteData(),
+      quote,
       fixedSize,
       activeWindow,
       settlingWindow,
@@ -320,11 +357,11 @@ export class Context {
     let txConstructor = await this.program.methods
       .createRfq(
         legsSize,
-        legsHash,
+        Array.from(legsHash),
         legData,
         orderType,
         quote.toQuoteData(),
-        fixedSize,
+        fixedSize as any,
         activeWindow,
         settlingWindow,
         new BN(currentTimestamp)
@@ -354,13 +391,19 @@ export class Context {
 }
 
 export class RiskEngine {
-  public program: Program<RiskEngineIdl>;
-  public programId: PublicKey;
-  public configAddress?: PublicKey;
+  private constructor(
+    private context: Context,
+    public program: Program<RiskEngineIdl>,
+    public programId: PublicKey,
+    public configAddress: PublicKey
+  ) {}
 
-  constructor(private context: Context) {
-    this.program = workspace.RiskEngine as Program<RiskEngineIdl>;
-    this.programId = this.program.programId;
+  static async create(context: Context) {
+    const program = workspace.RiskEngine as Program<RiskEngineIdl>;
+    const programId = program.programId;
+    const configAddress = await getRiskEngineConfig(programId);
+
+    return new RiskEngine(context, program, programId, configAddress);
   }
 
   async initializeDefaultConfig() {
@@ -409,6 +452,14 @@ export class RiskEngine {
     overallSafetyFactor = null,
     defaultAcceptedOracleStaleness = null,
     defaultAcceptedOracleConfidenceIntervalPortion = null,
+  }: {
+    collateralForVariableSizeRfq?: number | null;
+    collateralForFixedQuoteAmountRfq?: number | null;
+    collateralMintDecimals?: number | null;
+    safetyPriceShiftFactor?: number | null;
+    overallSafetyFactor?: number | null;
+    defaultAcceptedOracleStaleness?: number | null;
+    defaultAcceptedOracleConfidenceIntervalPortion?: number | null;
   } = {}) {
     await this.program.methods
       .updateConfig(
@@ -478,22 +529,23 @@ export class RiskEngine {
 export class Mint {
   public publicKey: PublicKey;
   public decimals: number;
-  public baseAssetIndex?: number;
-  public mintInfoAddress?: PublicKey;
+  public baseAssetIndex: number | null;
+  public mintInfoAddress: PublicKey | null;
 
-  protected constructor(protected context: Context, public token: Token) {
-    this.publicKey = token.publicKey;
+  protected constructor(protected context: Context, address: PublicKey) {
+    this.publicKey = address;
     this.decimals = DEFAULT_MINT_DECIMALS;
+    this.baseAssetIndex = null;
+    this.mintInfoAddress = null;
   }
 
   public static async wrap(context: Context, address: PublicKey) {
-    const token = new Token(context.provider.connection, address, TOKEN_PROGRAM_ID, context.dao);
-    const mint = new Mint(context, token);
+    const mint = new Mint(context, address);
 
     await executeInParallel(
-      async () => await token.createAssociatedTokenAccount(context.taker.publicKey),
-      async () => await token.createAssociatedTokenAccount(context.maker.publicKey),
-      async () => await token.createAssociatedTokenAccount(context.dao.publicKey)
+      async () => await mint.createAssociatedTokenAccount(context.taker.publicKey),
+      async () => await mint.createAssociatedTokenAccount(context.maker.publicKey),
+      async () => await mint.createAssociatedTokenAccount(context.dao.publicKey)
     );
 
     return mint;
@@ -518,26 +570,43 @@ export class Mint {
   }
 
   public async createAssociatedAccountWithTokens(address: PublicKey, amount = DEFAULT_TOKEN_AMOUNT) {
-    const account = await this.token.createAssociatedTokenAccount(address);
-    await this.token.mintTo(account, this.context.dao, [], amount.toString());
+    const account = await this.createAssociatedTokenAccount(address);
+    await mintTo(
+      this.context.provider.connection,
+      this.context.dao,
+      this.publicKey,
+      account,
+      this.context.dao,
+      amount.toString()
+    );
   }
 
-  public async getAssociatedAddress(address: PublicKey) {
-    return await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+  public async createAssociatedTokenAccount(address: PublicKey) {
+    return await createAssociatedTokenAccount(
+      this.context.provider.connection,
+      this.context.dao,
       this.publicKey,
       address
     );
   }
 
-  public async getAssociatedBalance(address: PublicKey) {
-    const account = await this.token.getAccountInfo(await this.getAssociatedAddress(address));
-    return account.amount;
+  public async getAssociatedAddress(address: PublicKey) {
+    return await getAssociatedTokenAddress(this.publicKey, address);
   }
 
-  public assertRegistered() {
-    if (this.baseAssetIndex === undefined) {
+  public async getAssociatedBalance(address: PublicKey) {
+    const account = await getAccount(this.context.provider.connection, await this.getAssociatedAddress(address));
+    return new BN(account.amount);
+  }
+
+  public assertRegisteredAsBaseAsset(): asserts this is { baseAssetIndex: number; mintInfoAddress: PublicKey } {
+    if (this.baseAssetIndex === null || this.mintInfoAddress === null) {
+      throw new Error(`Mint ${this.publicKey.toString()} is not registered as base asset!`);
+    }
+  }
+
+  public assertRegistered(): asserts this is { mintInfoAddress: PublicKey } {
+    if (this.mintInfoAddress === null) {
       throw new Error(`Mint ${this.publicKey.toString()} is not registered!`);
     }
   }
@@ -546,25 +615,26 @@ export class Mint {
 export class CollateralMint extends Mint {
   public static async create(context: Context) {
     const mint = await Mint.create(context);
-    return new CollateralMint(context, mint.token);
+    return new CollateralMint(context, mint.publicKey);
   }
 
   public async getTotalCollateral(address: PublicKey) {
-    const account = await this.token.getAccountInfo(
+    const account = await getAccount(
+      this.context.provider.connection,
       await getCollateralTokenPda(address, this.context.program.programId)
     );
     return account.amount;
   }
 
   public async getUnlockedCollateral(address: PublicKey) {
-    const tokenAccount = await this.token.getAccountInfo(
+    const tokenAccount = await getAccount(
+      this.context.provider.connection,
       await getCollateralTokenPda(address, this.context.program.programId)
     );
     const collateralInfo = await this.context.program.account.collateralInfo.fetch(
       await getCollateralInfoPda(address, this.context.program.programId)
     );
-    // @ts-ignore
-    return tokenAccount.amount.sub(collateralInfo.lockedTokensAmount);
+    return new BN(tokenAccount.amount).sub(collateralInfo.lockedTokensAmount);
   }
 }
 
@@ -576,7 +646,7 @@ export class Rfq {
     public legs: InstrumentController[]
   ) {}
 
-  async respond({ bid = null, ask = null } = {}) {
+  async respond({ bid = null, ask = null }: { bid?: Quote | null; ask?: Quote | null } = {}) {
     if (bid === null && ask === null) {
       bid = Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
     }
@@ -591,7 +661,7 @@ export class Rfq {
     );
 
     await this.context.program.methods
-      .respondToRfq(bid, ask, 0)
+      .respondToRfq(bid as any, ask as any, 0)
       .accounts({
         maker: this.context.maker.publicKey,
         protocol: this.context.protocolPda,
@@ -674,7 +744,7 @@ export class Rfq {
   async finalizeConstruction() {
     let instruction = await this.getFinalizeConstructionInstruction();
     let transaction = new Transaction().add(instruction);
-    await this.context.program.provider.sendAndConfirm(transaction, [this.context.taker]);
+    await this.context.provider.sendAndConfirm(transaction, [this.context.taker]);
   }
 
   async getFinalizeConstructionInstruction() {
@@ -696,7 +766,7 @@ export class Rfq {
     return await this.context.program.account.rfq.fetch(this.account);
   }
 
-  async getRiskEngineAccounts() {
+  async getRiskEngineAccounts(): Promise<AccountMeta[]> {
     const config = { pubkey: this.context.riskEngine.configAddress, isSigner: false, isWritable: false };
 
     let uniqueIndecies = Array.from(new Set(this.legs.map((leg) => leg.getBaseAssetIndex())));
@@ -708,7 +778,7 @@ export class Rfq {
       return { pubkey: address, isSigner: false, isWritable: false };
     });
     const oracles = uniqueIndecies
-      .map((index) => context.baseAssets[index].oracleAddress)
+      .map((index) => this.context.baseAssets[index].oracleAddress)
       .map((address) => {
         return { pubkey: address, isSigner: false, isWritable: false };
       });
@@ -725,7 +795,13 @@ export class Response {
     this.firstToPrepare = PublicKey.default;
   }
 
-  async confirm({ side = null, legMultiplierBps = null } = {}) {
+  async confirm({
+    side = Side.Bid,
+    legMultiplierBps = null,
+  }: {
+    side?: Side;
+    legMultiplierBps?: BN | null;
+  } = {}) {
     await this.context.program.methods
       .confirmResponse(side ?? Side.Bid, legMultiplierBps)
       .accounts({
@@ -744,7 +820,7 @@ export class Response {
       .rpc();
   }
 
-  async prepareSettlement(side, legAmount = this.rfq.legs.length) {
+  async prepareSettlement(side: AuthoritySide, legAmount = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     if (this.firstToPrepare.equals(PublicKey.default)) {
@@ -773,7 +849,7 @@ export class Response {
       .rpc();
   }
 
-  async prepareMoreLegsSettlement(side, from: number, legAmount: number) {
+  async prepareMoreLegsSettlement(side: AuthoritySide, from: number, legAmount: number) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
     const remainingAccounts = await (
       await Promise.all(
@@ -984,7 +1060,7 @@ export class Response {
   }
 
   async cleanUp(preparedLegs = this.rfq.legs.length) {
-    let remainingAccounts = [];
+    let remainingAccounts: AccountMeta[] = [];
     if (this.firstToPrepare) {
       const quoteAccounts = await this.rfq.quote.getCleanUpAccounts("quote", this.rfq, this);
       const legAccounts = await (
@@ -1012,7 +1088,7 @@ export class Response {
   }
 
   async cleanUpLegs(legAmount: number, preparedLegs = this.rfq.legs.length) {
-    let remainingAccounts = [];
+    let remainingAccounts: AccountMeta[] = [];
     if (this.firstToPrepare) {
       remainingAccounts = await (
         await Promise.all(
@@ -1056,13 +1132,14 @@ export class Response {
   }
 }
 
-let context: Context | null = null;
+let globalContext: Context | null = null;
 export async function getContext() {
-  if (context !== null) {
-    return context;
+  if (globalContext !== null) {
+    return globalContext;
   }
 
-  context = new Context();
+  let context = new Context();
+  globalContext = context;
   await context.initialize();
   await context.initializeProtocol();
 

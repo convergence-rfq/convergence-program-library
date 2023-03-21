@@ -14,8 +14,9 @@ import {
   RISK_ENGINE_CONFIG_SEED,
 } from "./constants";
 import { toLittleEndian } from "./helpers";
-import { AssetIdentifier, assetIdentifierToSeedBytes } from "./types";
+import { AssetIdentifier, assetIdentifierToSeedBytes, FixedSize, OrderType } from "./types";
 import { sha256 } from "@noble/hashes/sha256";
+import { InstrumentController } from "./instrument";
 
 export async function getProtocolPda(programId: PublicKey) {
   const [pda] = await PublicKey.findProgramAddress([Buffer.from(PROTOCOL_SEED)], programId);
@@ -24,17 +25,17 @@ export async function getProtocolPda(programId: PublicKey) {
 
 export async function getRfqPda(
   taker: PublicKey,
-  legsHash: Buffer,
-  orderType,
-  quoteAssetData,
-  fixedSize,
+  legsHash: Uint8Array,
+  orderType: OrderType,
+  quoteAsset: InstrumentController,
+  fixedSize: FixedSize,
   activeWindow: number,
   settlingWindow: number,
   currentTimestamp: BN,
   program: Program<RfqIdl>
 ) {
   const orderTypeBuffer = program.coder.types.encode("OrderType", orderType);
-  const quoteAssetDataSerialized = program.coder.types.encode("QuoteAsset", quoteAssetData);
+  const quoteAssetDataSerialized = program.coder.types.encode("QuoteAsset", quoteAsset.toQuoteData());
   const hashedQuoteAsset = sha256(quoteAssetDataSerialized);
   const fixedSizeSerialized = program.coder.types.encode("FixedSize", fixedSize);
   const [pda] = await PublicKey.findProgramAddress(
