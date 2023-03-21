@@ -10,9 +10,15 @@ The minor version will be incremented upon a breaking change and the patch versi
 
 ## [2.2.2-rc.2] - 2023-03-21
 
+### Features
+
+- risk-engine: Improved logging ([#122](https://github.com/convergence-rfq/convergence-program-library/pull/122))
+
 ### Breaking
 
-- all: Updated Switchboard dependencies
+- all: Updated Switchboard fixtures ([#123](https://github.com/convergence-rfq/convergence-program-library/pull/123))
+- all: Updated Switchboard dependencies ([#121](https://github.com/convergence-rfq/convergence-program-library/pull/121))
+- all: Updated JS dependencies ([#120](https://github.com/convergence-rfq/convergence-program-library/pull/120))
 
 ## [2.2.2-rc.1] - 2023-03-07
 
