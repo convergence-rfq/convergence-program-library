@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.2-rc.2] - 2023-03-21
+
+### Features
+
+- risk-engine: Improved logging ([#122](https://github.com/convergence-rfq/convergence-program-library/pull/122))
+
+### Breaking
+
+- all: Updated Switchboard fixtures ([#123](https://github.com/convergence-rfq/convergence-program-library/pull/123))
+- all: Updated Switchboard dependencies ([#121](https://github.com/convergence-rfq/convergence-program-library/pull/121))
+- all: Updated JS dependencies ([#120](https://github.com/convergence-rfq/convergence-program-library/pull/120))
+
 ## [2.2.2-rc.1] - 2023-03-07
 
 ### Breaking
