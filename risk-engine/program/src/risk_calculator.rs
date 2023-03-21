@@ -104,6 +104,14 @@ impl<'a> RiskCalculator<'a> {
             all_profits += biggest_profit;
             all_losses -= biggest_loss;
             total_leg_values += absolute_value_of_legs;
+
+            msg!(
+                "Statistics for {}, profit:{:.2}, loss:{:.2}, legs value:{:.2}",
+                base_asset.ticker,
+                all_profits,
+                all_losses,
+                total_leg_values
+            );
         }
 
         let price_shift = self.apply_safety_price_shift_factor(total_leg_values);
@@ -143,7 +151,7 @@ impl<'a> RiskCalculator<'a> {
         for scenario in scenarios.iter() {
             let scenario_calculator = ScenarioRiskCalculator {
                 legs_with_meta: &legs,
-                unit_values: &leg_values,
+                leg_values: &leg_values,
                 risk_category_info,
                 scenario,
                 price: *price,
@@ -193,7 +201,7 @@ impl<'a> RiskCalculator<'a> {
 
 struct ScenarioRiskCalculator<'a> {
     legs_with_meta: &'a Vec<LegWithMetadata<'a>>,
-    unit_values: &'a Vec<f64>,
+    leg_values: &'a Vec<f64>,
     risk_category_info: RiskCategoryInfo,
     scenario: &'a Scenario,
     price: f64,
@@ -204,17 +212,17 @@ impl ScenarioRiskCalculator<'_> {
     fn calculate(self) -> Result<f64> {
         let mut total_pnl = 0.0;
 
-        for (leg_with_meta, unit_value) in self.legs_with_meta.iter().zip(self.unit_values.iter()) {
-            let pnl = self.calculate_leg_pnl(leg_with_meta, *unit_value)?;
+        for (leg_with_meta, leg_value) in self.legs_with_meta.iter().zip(self.leg_values.iter()) {
+            let pnl = self.calculate_leg_pnl(leg_with_meta, *leg_value)?;
             total_pnl += pnl;
         }
 
         Ok(total_pnl)
     }
 
-    fn calculate_leg_pnl(&self, leg_with_meta: &LegWithMetadata, unit_value: f64) -> Result<f64> {
+    fn calculate_leg_pnl(&self, leg_with_meta: &LegWithMetadata, leg_value: f64) -> Result<f64> {
         let shocked_value = self.calculate_shocked_value(leg_with_meta)?;
-        Ok(shocked_value - unit_value)
+        Ok(shocked_value - leg_value)
     }
 
     fn calculate_shocked_value(&self, leg_with_meta: &LegWithMetadata) -> Result<f64> {
