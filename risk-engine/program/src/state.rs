@@ -1,6 +1,7 @@
 use std::{collections::HashMap, mem};
 
 use anchor_lang::prelude::*;
+use bytemuck::{Pod, Zeroable};
 use rfq::state::RiskCategory;
 
 use crate::utils::convert_fixed_point_to_f64;
@@ -35,8 +36,8 @@ impl Config {
     }
 }
 
-#[zero_copy]
-#[derive(AnchorSerialize, AnchorDeserialize, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Zeroable, Pod)]
+#[repr(C)]
 pub struct InstrumentInfo {
     pub program: Pubkey,
     pub r#type: InstrumentType,
@@ -80,7 +81,8 @@ impl RiskCategoryInfo {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, Zeroable, Pod)]
+#[repr(C)]
 pub struct Scenario {
     pub base_asset_price_change: f64,
     pub volatility_change: f64,
@@ -97,11 +99,14 @@ impl Scenario {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
 pub enum InstrumentType {
-    Spot,
+    Spot = 0,
     Option,
     TermFuture,
     PerpFuture,
 }
+
+unsafe impl Zeroable for InstrumentType {} // Allows 0 value, so it's okay
+unsafe impl Pod for InstrumentType {} // Does not allow for all bit patterns, but it is okay in our case as only the program can set this byte
 
 impl Default for InstrumentType {
     fn default() -> Self {
