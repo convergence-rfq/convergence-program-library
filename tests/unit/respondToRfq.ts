@@ -1,11 +1,15 @@
 import { BN } from "@project-serum/anchor";
-import { expectError } from "../utilities/helpers";
+import { attachImprovedLogDisplay, expectError } from "../utilities/helpers";
 
 import { FixedSize, Quote } from "../utilities/types";
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Respond to RFQ", () => {
   let context: Context;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();

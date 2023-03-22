@@ -1,12 +1,16 @@
 import { PublicKey } from "@solana/web3.js";
+import { attachImprovedLogDisplay } from "../utilities/helpers";
 import { AuthoritySide } from "../utilities/types";
-
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Cancel RFQ", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();

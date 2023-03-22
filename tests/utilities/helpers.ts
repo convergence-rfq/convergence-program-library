@@ -1,4 +1,4 @@
-import { BN, Program } from "@project-serum/anchor";
+import { AnchorError, BN, Program } from "@project-serum/anchor";
 import { sha256 } from "@noble/hashes/sha256";
 import { BigNumber } from "bignumber.js";
 import { PublicKey, ComputeBudgetProgram } from "@solana/web3.js";
@@ -14,16 +14,10 @@ chai.use(chaiBn(BN));
 
 // This function supresses solana error traces making test output clearer
 export const expectError = async (promise: Promise<any>, errorText: string) => {
-  // Disable error logs to prevent errors from blockchain validator spam
-  const cachedStderrWrite = process.stdout.write;
-  process.stderr.write = () => true;
   try {
     await promise;
     throw new Error(`No error thrown!`);
   } catch (e) {
-    // Restore error logs
-    process.stderr.write = cachedStderrWrite;
-
     if (!e?.message.includes(errorText) && !e?.logs?.some((e: string) => e.includes(errorText))) {
       throw e;
     }
@@ -205,4 +199,47 @@ export function toApiFeeParams(params: FeeParams) {
     takerBps: new BN(params.taker * 10 ** FEE_BPS_DECIMALS),
     makerBps: new BN(params.maker * 10 ** FEE_BPS_DECIMALS),
   };
+}
+
+// call this function from mocha beforeAll hook
+export function attachImprovedLogDisplay(mochaContext: Mocha.Context, context: Context) {
+  function customErrorHandler(error: Error) {
+    if (error instanceof AnchorError) {
+      console.error(`Logs for error "${error.error.errorMessage}"`);
+      for (const log of error.logs) {
+        const modifiedLog = addPubkeyExplanations(context, log);
+        console.error(modifiedLog);
+      }
+    }
+  }
+
+  function wrapTestFunction(fn: Mocha.Func | Mocha.AsyncFunc): Mocha.Func | Mocha.AsyncFunc {
+    return async function (this: Mocha.Context, done) {
+      try {
+        if (fn.length === 1) {
+          // The test function expects a 'done' callback
+          (fn as Mocha.Func).call(this, done);
+        } else {
+          // The test function returns a promise
+          await (fn as Mocha.AsyncFunc).call(this);
+        }
+      } catch (error) {
+        customErrorHandler(error);
+        throw error;
+      }
+    };
+  }
+
+  if (mochaContext.currentTest?.fn) {
+    mochaContext.currentTest.fn = wrapTestFunction(mochaContext.currentTest.fn);
+  }
+}
+
+export function addPubkeyExplanations(context: Context, input: string) {
+  let result = input;
+  for (const [pubkeyString, name] of Object.entries(context.pubkeyToName)) {
+    result = result.replace(new RegExp(pubkeyString, "g"), `${pubkeyString}(${name})`);
+  }
+
+  return result;
 }

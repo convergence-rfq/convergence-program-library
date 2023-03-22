@@ -1,5 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { expect } from "chai";
+import { attachImprovedLogDisplay } from "../utilities/helpers";
 import {
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
   DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
@@ -10,6 +11,10 @@ import { Context, getContext, RiskEngine } from "../utilities/wrappers";
 describe("Update Risk Engine config", () => {
   let context: Context;
   let riskEngine: RiskEngine;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();

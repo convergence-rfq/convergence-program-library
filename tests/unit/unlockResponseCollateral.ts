@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { DEFAULT_SETTLE_FEES } from "../utilities/constants";
 import {
+  attachImprovedLogDisplay,
   calculateFeesValue,
   toAbsolutePrice,
   TokenChangeMeasurer,
@@ -17,6 +18,10 @@ describe("Unlock response collateral", () => {
   let taker: PublicKey;
   let maker: PublicKey;
   let dao: PublicKey;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();

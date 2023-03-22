@@ -34,6 +34,8 @@ members = [
     "risk-engine/program",
     "spot-instrument/program",
     "psyoptions-american-instrument/program",
-    "psyoptions-european-instrument/program"
+    "psyoptions-european-instrument/program",
 ]
 
+[scripts]
+generate-test-fixtures = "yarn ts-node -T tests/scripts/fixturesGenerator.ts"

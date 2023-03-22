@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { DEFAULT_DEFAULT_FEES } from "../utilities/constants";
 import {
+  attachImprovedLogDisplay,
   calculateFeesValue,
   runInParallelWithWait,
   toAbsolutePrice,
@@ -18,6 +19,10 @@ describe("Settle one party default", () => {
   let taker: PublicKey;
   let maker: PublicKey;
   let dao: PublicKey;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();

@@ -1,6 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
+  attachImprovedLogDisplay,
   calculateLegsHash,
   calculateLegsSize,
   runInParallelWithWait,
@@ -20,6 +21,10 @@ describe("Psyoptions European instrument integration tests", () => {
   let taker: PublicKey;
   let maker: PublicKey;
   let options: EuroOptionsFacade;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();

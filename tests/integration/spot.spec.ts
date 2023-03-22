@@ -2,6 +2,7 @@ import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { BITCOIN_BASE_ASSET_INDEX } from "../utilities/constants";
 import {
+  attachImprovedLogDisplay,
   calculateLegsHash,
   calculateLegsSize,
   runInParallelWithWait,
@@ -19,6 +20,10 @@ describe("RFQ Spot instrument integration tests", () => {
   let taker: PublicKey;
   let maker: PublicKey;
   let dao: PublicKey;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();
