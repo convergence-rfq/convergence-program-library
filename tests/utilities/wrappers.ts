@@ -420,7 +420,8 @@ export class RiskEngine {
         DEFAULT_ACCEPTED_ORACLE_CONFIDENCE_INTERVAL_PORTION
       )
       .accounts({
-        signer: this.context.dao.publicKey,
+        authority: this.context.dao.publicKey,
+        protocol: this.context.protocolPda,
         config: this.configAddress,
         systemProgram: SystemProgram.programId,
       })
@@ -439,9 +440,39 @@ export class RiskEngine {
         await this.setRiskCategoriesInfo([
           { riskCategory: RiskCategory.High, newValue: DEFAULT_RISK_CATEGORIES_INFO[3] },
           { riskCategory: RiskCategory.VeryHigh, newValue: DEFAULT_RISK_CATEGORIES_INFO[4] },
+          { riskCategory: RiskCategory.Custom1, newValue: DEFAULT_RISK_CATEGORIES_INFO[5] },
         ]);
+      },
+      async () => {
+        await this.setRiskCategoriesInfo([
+          { riskCategory: RiskCategory.Custom2, newValue: DEFAULT_RISK_CATEGORIES_INFO[6] },
+          { riskCategory: RiskCategory.Custom3, newValue: DEFAULT_RISK_CATEGORIES_INFO[7] },
+        ]);
+      },
+      async () => {
+        await SpotInstrument.setRiskEngineInstrumentType(this.context);
+      },
+      async () => {
+        await PsyoptionsEuropeanInstrument.setRiskEngineInstrumentType(this.context);
+      },
+      async () => {
+        await PsyoptionsAmericanInstrumentClass.setRiskEngineInstrumentType(this.context);
       }
     );
+  }
+
+  async closeConfig({ signer = this.context.dao } = {}) {
+    this.configAddress = await getRiskEngineConfig(this.programId);
+
+    await this.program.methods
+      .closeConfig()
+      .accounts({
+        authority: signer.publicKey,
+        protocol: this.context.protocolPda,
+        config: this.configAddress,
+      })
+      .signers([signer])
+      .rpc();
   }
 
   async updateConfig({
@@ -522,7 +553,7 @@ export class RiskEngine {
   }
 
   async getConfig() {
-    return this.program.account.config.fetch(this.configAddress);
+    return this.program.account.config.fetchNullable(this.configAddress);
   }
 }
 

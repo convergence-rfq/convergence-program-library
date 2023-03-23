@@ -23,6 +23,9 @@ describe("Update Risk Engine config", () => {
     });
 
     const config = await riskEngine.getConfig();
+    if (config === null) {
+      throw Error("Config is expected to exist");
+    }
     expect(config.collateralForVariableSizeRfqCreation).to.be.bignumber.equal(new BN(100_000_000));
     expect(config.collateralMintDecimals).to.be.bignumber.equal(new BN(3));
     expect(config.collateralForFixedQuoteAmountRfqCreation).to.be.bignumber.equal(

@@ -49,6 +49,9 @@ export class SpotInstrument implements Instrument {
 
   static async addInstrument(context: Context) {
     await context.addInstrument(getSpotInstrumentProgram().programId, true, 1, 7, 3, 3, 4);
+  }
+
+  static async setRiskEngineInstrumentType(context: Context) {
     await context.riskEngine.setInstrumentType(getSpotInstrumentProgram().programId, InstrumentType.Spot);
   }
 

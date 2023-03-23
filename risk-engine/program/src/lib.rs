@@ -54,6 +54,10 @@ pub mod risk_engine {
         Ok(())
     }
 
+    pub fn close_config(_ctx: Context<CloseConfigAccounts>) -> Result<()> {
+        Ok(())
+    }
+
     // used only for passing data in the set_risk_category_info instruction
     #[derive(AnchorSerialize, AnchorDeserialize)]
     pub struct RiskCategoryChange {
@@ -375,17 +379,33 @@ fn construct_risk_calculator<'a>(
 
 #[derive(Accounts)]
 pub struct InitializeConfigAccounts<'info> {
-    #[account(mut)]
-    pub signer: Signer<'info>,
+    #[account(mut, constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Account<'info, ProtocolState>,
     #[account(
         init,
-        payer = signer,
+        payer = authority,
         seeds = [CONFIG_SEED.as_bytes()],
         space = Config::get_allocated_size(),
         bump
     )]
     pub config: AccountLoader<'info, Config>,
+    
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct CloseConfigAccounts<'info> {
+    #[account(mut, constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Account<'info, ProtocolState>,
+    #[account(
+        mut,
+        close = authority,        
+        seeds = [CONFIG_SEED.as_bytes()],
+        bump
+    )]
+    pub config: AccountLoader<'info, Config>,
 }
 
 #[derive(Accounts)]
