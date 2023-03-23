@@ -28,6 +28,9 @@ export enum RiskCategory {
   Medium,
   High,
   VeryHigh,
+  Custom1,
+  Custom2,
+  Custom3,
 }
 
 export function riskCategoryToObject(value: RiskCategory) {

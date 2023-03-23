@@ -439,6 +439,13 @@ export class RiskEngine {
         await this.setRiskCategoriesInfo([
           { riskCategory: RiskCategory.High, newValue: DEFAULT_RISK_CATEGORIES_INFO[3] },
           { riskCategory: RiskCategory.VeryHigh, newValue: DEFAULT_RISK_CATEGORIES_INFO[4] },
+          { riskCategory: RiskCategory.Custom1, newValue: DEFAULT_RISK_CATEGORIES_INFO[5] },
+        ]);
+      },
+      async () => {
+        await this.setRiskCategoriesInfo([
+          { riskCategory: RiskCategory.Custom2, newValue: DEFAULT_RISK_CATEGORIES_INFO[6] },
+          { riskCategory: RiskCategory.Custom3, newValue: DEFAULT_RISK_CATEGORIES_INFO[7] },
         ]);
       }
     );

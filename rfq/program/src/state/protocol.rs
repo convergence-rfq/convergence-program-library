@@ -128,6 +128,9 @@ pub enum RiskCategory {
     Medium,
     High,
     VeryHigh,
+    Custom1,
+    Custom2,
+    Custom3,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

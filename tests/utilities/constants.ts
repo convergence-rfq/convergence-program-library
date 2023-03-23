@@ -92,4 +92,28 @@ export const DEFAULT_RISK_CATEGORIES_INFO = [
     toScenario(1, 3),
     toScenario(1.5, 3.5),
   ]), // very high
+  toRiskCategoryInfo(0.05, 10, [
+    toScenario(0.2, 0.5),
+    toScenario(0.3, 0.5),
+    toScenario(0.4, 0.5),
+    toScenario(0.5, 0.5),
+    toScenario(0.6, 0.5),
+    toScenario(0.7, 0.5),
+  ]), // custom 1
+  toRiskCategoryInfo(0.05, 15, [
+    toScenario(0.2, 0.5),
+    toScenario(0.3, 0.5),
+    toScenario(0.4, 0.5),
+    toScenario(0.5, 0.5),
+    toScenario(0.6, 0.5),
+    toScenario(0.7, 0.5),
+  ]), // custom 2
+  toRiskCategoryInfo(0.05, 20, [
+    toScenario(0.2, 0.5),
+    toScenario(0.3, 0.5),
+    toScenario(0.4, 0.5),
+    toScenario(0.5, 0.5),
+    toScenario(0.6, 0.5),
+    toScenario(0.7, 0.5),
+  ]), // custom 3
 ];
