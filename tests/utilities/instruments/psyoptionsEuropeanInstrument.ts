@@ -55,6 +55,9 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
 
   static async addInstrument(context: Context) {
     await context.addInstrument(getEuroOptionsInstrumentProgram().programId, false, 2, 7, 3, 3, 4);
+  }
+
+  static async setRiskEngineInstrumentType(context: Context) {
     await context.riskEngine.setInstrumentType(getEuroOptionsInstrumentProgram().programId, InstrumentType.Option);
   }
 
