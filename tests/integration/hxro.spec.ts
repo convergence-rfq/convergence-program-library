@@ -55,12 +55,6 @@ describe("RFQ HXRO instrument integration tests", () => {
     const riskAndFeeSigner = new anchor.web3.PublicKey("AQJYsJ9k47ahEEXhvnNBFca4yH3zcFUfVaKrLPLgftYg");
     const BTCUSDPythOracle = new anchor.web3.PublicKey("HovQMDrbAgAYPCmHVSrezcSmkMtXSSUsLDFANExrZh2J");
     const marketProductGroupVault = new anchor.web3.PublicKey("HLzQZ9DndaXkrwfwq8RbZFsDdSQ91Hufht6ekBSmfbQq")
-    const whitelistMint = new spl_token.Token(
-        program.provider.connection,
-        new anchor.web3.PublicKey("6QFnukEmE8kgaYD6Cn2kTbuQp9vUHw6MDnaZbRFBy7BL"),
-        spl_token.TOKEN_PROGRAM_ID,
-        creator,
-    )
     let vaultMint = new spl_token.Token(
         program.provider.connection,
         new anchor.web3.PublicKey("HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"),
@@ -296,10 +290,8 @@ describe("RFQ HXRO instrument integration tests", () => {
             dex
         )
 
-        const userWhitelistAtaAcct = (await whitelistMint.getOrCreateAssociatedAccountInfo(keypair.publicKey)).address
         const userVaultMintAtaAcct = (await vaultMint.getOrCreateAssociatedAccountInfo(keypair.publicKey)).address
 
-        console.log("userWhitelistAtaAcct: ", userWhitelistAtaAcct)
         console.log("userVaultMintAtaAcct: ", userVaultMintAtaAcct)
 
         let depositTX = new anchor.web3.Transaction().add(
@@ -314,7 +306,7 @@ describe("RFQ HXRO instrument integration tests", () => {
                         marketProductGroup,
                         marketProductGroupVault,
                         capitalLimitsState,
-                        userWhitelistAtaAcct
+                        anchor.web3.PublicKey.default
                     ],
                     data: Buffer.from([1]),
                     programId: dex,
