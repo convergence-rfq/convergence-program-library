@@ -1,11 +1,15 @@
 import { BN } from "@project-serum/anchor";
-import { calculateLegsHash, expectError } from "../utilities/helpers";
+import { attachImprovedLogDisplay, calculateLegsHash, expectError } from "../utilities/helpers";
 import { getSpotInstrumentProgram, SpotInstrument } from "../utilities/instruments/spotInstrument";
 
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Create RFQ", () => {
   let context: Context;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();

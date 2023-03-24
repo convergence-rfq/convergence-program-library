@@ -1,6 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
+  attachImprovedLogDisplay,
   runInParallelWithWait,
   toAbsolutePrice,
   TokenChangeMeasurer,
@@ -20,6 +21,10 @@ describe("Psyoptions American instrument integration tests", async () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();

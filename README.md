@@ -12,3 +12,9 @@ Convergence RFQ smart contracts and NPM SDK.
 ```bash
 anchor build
 ```
+
+**Tests**
+
+For test speed up purposes, some test setup is done via loading a lot of pre-initialized accounts. The script `anchor run generate-test-fixtures` generates accounts, keypairs and public keys to names mapping and saves them to `tests/fixtures` folder. Also this scripts adds accounts to load to `Test.toml` files.
+
+In case those pre-initialized accounts need to change, the scripts should be re-run to generate them once more.
