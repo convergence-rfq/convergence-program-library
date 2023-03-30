@@ -32,12 +32,12 @@ members = [
 startup_wait = 100000
 
 [test.validator]
-url = "https://api.testnet.solana.com"
+url = "https://api.devnet.solana.com"
 
 [[test.validator.clone]]
 address = "FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL"
 [[test.validator.clone]]
-address = "5AZioCPiC7uZ4zRmkKSg5nsb2A98RhmW89a1pMwiDoeT"
+address = "5u8mLVnUSQNSbKdZPNGTfWHGwV5uJh9by5Fa6jb6BP6h"
 [[test.validator.clone]]
 address = "HyWxreWnng9ZBDPYpuYugAfpCMkRkJ1oz93oyoybDFLB"
 [[test.validator.clone]]
@@ -48,8 +48,8 @@ address = "4Zwghg3tNaHZuzpQHDWA4mbSyoVrNEfvS765z7s4tNYd"
 address = "rPnaqXrvo3aBMChVLywnVz6nykSfXwvBYu1Yz1p6crv"
 [[test.validator.clone]]
 address = "92wdgEqyiDKrcbFHoBTg8HxMj932xweRCKaciGSW3uMr"
-# [[test.validator.clone]]
-# address = "DevB1VB5Tt3YAeYZ8XTB1fXiFtXBqcP7PbfWGB71YyCE"
+[[test.validator.clone]]
+address = "DevB1VB5Tt3YAeYZ8XTB1fXiFtXBqcP7PbfWGB71YyCE"
 [[test.validator.clone]]
 address = "86V5ZKCjUzabYh7CmkRovpGxE9AKooeU6PyC4WdpyUJK"
 [[test.validator.clone]]
@@ -80,3 +80,4 @@ filename = "tests/dependencies/sol_30_oracle_switchboard.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+#test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/integration/hxro.spec.ts"
