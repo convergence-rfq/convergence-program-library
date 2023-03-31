@@ -1,7 +1,7 @@
 import { AnchorError, BN, Program } from "@project-serum/anchor";
 import { sha256 } from "@noble/hashes/sha256";
 import { BigNumber } from "bignumber.js";
-import { PublicKey, ComputeBudgetProgram } from "@solana/web3.js";
+import { PublicKey, ComputeBudgetProgram, SendTransactionError } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
 import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, FEE_BPS_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
@@ -204,9 +204,22 @@ export function toApiFeeParams(params: FeeParams) {
 // call this function from mocha beforeAll hook
 export function attachImprovedLogDisplay(mochaContext: Mocha.Context, context: Context) {
   function customErrorHandler(error: Error) {
+    let parsedError;
     if (error instanceof AnchorError) {
-      console.error(`Logs for error "${error.error.errorMessage}"`);
-      for (const log of error.logs) {
+      parsedError = {
+        logs: error.logs,
+        message: error.error.errorMessage,
+      };
+    } else if (error instanceof SendTransactionError && error.logs) {
+      parsedError = {
+        logs: error.logs,
+        message: error.message,
+      };
+    }
+
+    if (parsedError) {
+      console.error(`Logs for error "${parsedError.message}"`);
+      for (const log of parsedError.logs) {
         const modifiedLog = addPubkeyExplanations(context, log);
         console.error(modifiedLog);
       }

@@ -1,4 +1,5 @@
 import { BN } from "@project-serum/anchor";
+import { PublicKey } from "@solana/web3.js";
 
 export type OrderType = { buy: {} } | { sell: {} } | { twoWay: {} };
 
@@ -168,3 +169,10 @@ export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
 }
 
 export type FeeParams = { taker: number; maker: number };
+
+export function toPriceOracle(address: PublicKey) {
+  return {
+    address,
+    switchboard: { address },
+  };
+}
