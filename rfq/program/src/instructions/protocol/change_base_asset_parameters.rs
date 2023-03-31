@@ -27,7 +27,7 @@ pub fn change_base_asset_parameters_instruction(
 
     if let Some(enabled) = enabled {
         base_asset.enabled = enabled;
-        msg!("Enabled set to  {}", base_asset.enabled);
+        msg!("Enabled set to {}", base_asset.enabled);
     }
 
     if let Some(risk_category) = risk_category {
