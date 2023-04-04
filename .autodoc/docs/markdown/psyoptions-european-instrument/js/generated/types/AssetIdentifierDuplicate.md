@@ -1,0 +1,16 @@
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-european-instrument/js/generated/types/AssetIdentifierDuplicate.ts)
+
+This code defines types and functions related to the AssetIdentifierDuplicate data enum in the Convergence Program Library project. The AssetIdentifierDuplicateRecord type is used to derive the AssetIdentifierDuplicate type as well as the de/serializer. However, the AssetIdentifierDuplicateRecord type should not be referred to in code, but rather the AssetIdentifierDuplicate type should be used instead. 
+
+The AssetIdentifierDuplicate type is a union type representing the AssetIdentifierDuplicate data enum defined in Rust. It includes a `__kind` property which allows for narrowing types in switch/if statements. Additionally, `isAssetIdentifierDuplicateLeg` and `isAssetIdentifierDuplicateQuote` type guards are exposed to narrow to a specific variant. 
+
+The `assetIdentifierDuplicateBeet` function is a fixable Beet function that takes an array of tuples, where each tuple represents a variant of the AssetIdentifierDuplicate enum. Each tuple contains a string representing the variant name and a BeetArgsStruct object representing the variant's fields. The `assetIdentifierDuplicateBeet` function returns a fixable Beet object that can be used to serialize and deserialize AssetIdentifierDuplicate objects. 
+
+This code is likely used in the larger project to define and work with AssetIdentifierDuplicate objects. For example, if there is a need to serialize an AssetIdentifierDuplicate object, the `assetIdentifierDuplicateBeet` function can be used to create a fixable Beet object that can be used to serialize the object. Similarly, the `isAssetIdentifierDuplicateLeg` and `isAssetIdentifierDuplicateQuote` type guards can be used to narrow the type of an AssetIdentifierDuplicate object in code.
+## Questions: 
+ 1. What is the purpose of the `AssetIdentifierDuplicate` type and how is it used?
+   - The `AssetIdentifierDuplicate` type is a union type representing a data enum defined in Rust, and it includes a `__kind` property which allows for narrowing types in switch/if statements. It is used to derive the `AssetIdentifierDuplicateRecord` type as well as the de/serializer.
+2. Why are there `isAssetIdentifierDuplicateLeg` and `isAssetIdentifierDuplicateQuote` type guards defined?
+   - These type guards are defined to narrow the `AssetIdentifierDuplicate` type to a specific variant, either `Leg` or `Quote`, respectively. They are used to check the `__kind` property of an `AssetIdentifierDuplicate` object and return a boolean indicating whether it matches the specified variant.
+3. What is the purpose of the `assetIdentifierDuplicateBeet` constant?
+   - The `assetIdentifierDuplicateBeet` constant is a `FixableBeet` object that is used to serialize and deserialize `AssetIdentifierDuplicate` objects using the `@convergence-rfq/beet` library. It is generated using the `beet.dataEnum` function and takes an array of tuples representing each variant of the `AssetIdentifierDuplicate` type and its corresponding `BeetArgsStruct`.

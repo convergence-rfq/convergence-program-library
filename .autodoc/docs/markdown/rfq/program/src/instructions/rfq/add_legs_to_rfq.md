@@ -1,0 +1,18 @@
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/rfq/add_legs_to_rfq.rs)
+
+The code defines an instruction for adding legs to a request for quote (RFQ) in the Convergence Program Library project. An RFQ is a financial instrument that allows a buyer to request a quote from a seller for a specific financial product or service. A leg is a component of an RFQ that specifies the terms of the transaction, such as the product, quantity, price, and settlement date.
+
+The `AddLegsToRfqAccounts` struct defines the accounts required to execute the instruction. It includes a `taker` account, which is a signer that must match the `taker` field of the `rfq` account, a `protocol` account, which is a state account for the Convergence Protocol, and an `rfq` account, which is a mutable box account for the RFQ to which legs will be added.
+
+The `validate` function validates the input parameters and the state of the accounts before executing the instruction. It takes a `Context` object and a vector of `Leg` objects as input parameters. The `Context` object contains the accounts required to execute the instruction. The `validate_legs` function validates the legs using the `protocol` account and the remaining accounts in the `Context`. It returns an error if the legs are invalid. The `require!` macro checks that the number of legs is greater than zero and does not exceed the maximum number of legs allowed for an RFQ. The `assert_state_in` function checks that the state of the `rfq` account is `Constructed`. If any of these checks fail, the function returns an error.
+
+The `add_legs_to_rfq_instruction` function adds the legs to the `rfq` account if the validation succeeds. It takes a `Context` object and a vector of `Leg` objects as input parameters. The `validate` function is called to validate the input parameters and the state of the accounts. If the validation succeeds, the legs are appended to the `rfq` account.
+
+This instruction can be used in the larger project to add legs to an RFQ. For example, a user can call this instruction to add legs to an RFQ that they have created. The instruction will validate the legs and the state of the accounts before adding the legs to the RFQ. This helps to ensure that the RFQ is valid and that the transaction will execute correctly.
+## Questions: 
+ 1. What is the purpose of the `AddLegsToRfqAccounts` struct and what are its fields used for?
+   - The `AddLegsToRfqAccounts` struct is used to define the accounts required for the `add_legs_to_rfq_instruction` function. Its fields include `taker`, `protocol`, and `rfq`, which are used to ensure the taker is valid, retrieve the protocol state, and access the RFQ account, respectively.
+2. What is the `validate` function used for and what are the constraints it checks?
+   - The `validate` function is used to validate the legs being added to the RFQ account. It checks constraints such as ensuring the legs are valid, the number of legs being added is not too many, and the RFQ account is in the correct state.
+3. What does the `add_legs_to_rfq_instruction` function do and what is its expected input?
+   - The `add_legs_to_rfq_instruction` function adds legs to the RFQ account after validating them using the `validate` function. Its expected input is a `Context` object and a vector of `Leg` objects to be added to the RFQ account.
