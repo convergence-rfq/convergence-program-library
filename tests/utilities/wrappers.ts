@@ -1,7 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import { BN } from "@project-serum/anchor";
-import {PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, AccountMeta} from "@solana/web3.js";
-import {TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token, AuthorityType} from "@solana/spl-token";
+import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, AccountMeta } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token, AuthorityType } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { RiskEngine as RiskEngineIdl } from "../../target/types/risk_engine";
 import {
@@ -48,7 +48,7 @@ import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
 import { calculateLegsSize, executeInParallel, expandComputeUnits } from "./helpers";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
-import {HxroInstrument} from "./instruments/hxroInstrument";
+import { HxroInstrument } from "./instruments/hxroInstrument";
 
 export class Context {
   public program: anchor.Program<RfqIdl>;
@@ -72,23 +72,11 @@ export class Context {
     this.baseAssets = {};
   }
 
-  async initialize(taker: Keypair = null, maker: Keypair = null) {
+  async initialize() {
     await executeInParallel(
       async () => (this.dao = await this.createPayer()),
-      async () => {
-          if (taker == null) {
-              this.taker = await this.createPayer()
-          } else {
-              this.taker = taker
-          }
-      },
-      async () => {
-          if (maker == null) {
-              this.maker = await this.createPayer()
-          } else {
-              this.maker = maker
-          }
-      }
+      async () => (this.taker = await this.createPayer()),
+      async () => (this.maker = await this.createPayer())
     );
 
     this.protocolPda = await getProtocolPda(this.program.programId);
@@ -164,21 +152,16 @@ export class Context {
       .rpc();
   }
 
-  async addPrintTradeProvider(
-      programId: PublicKey,
-      validateDataAccounts: number,
-  ) {
+  async addPrintTradeProvider(programId: PublicKey, validateDataAccounts: number) {
     await this.program.methods
-        .addPrintTradeProvider(
-            validateDataAccounts,
-        )
-        .accounts({
-          authority: this.dao.publicKey,
-          protocol: this.protocolPda,
-          printTradeProviderProgram: programId,
-        })
-        .signers([this.dao])
-        .rpc();
+      .addPrintTradeProvider(validateDataAccounts)
+      .accounts({
+        authority: this.dao.publicKey,
+        protocol: this.protocolPda,
+        printTradeProviderProgram: programId,
+      })
+      .signers([this.dao])
+      .rpc();
   }
 
   async addBaseAsset(baseAssetIndex: number, ticker: string, riskCategory: RiskCategory, oracle: PublicKey) {
@@ -301,67 +284,6 @@ export class Context {
     if (finalize) {
       txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeConstructionInstruction()]);
     }
-
-    return rfqObject;
-  }
-
-  async createRfqStepByStep({
-                              legs = [],
-                              quote = HxroInstrument.createForQuote(this, {}),
-                              printTradeProvider = null,
-                              orderType = null,
-                              fixedSize = null,
-                              activeWindow = DEFAULT_ACTIVE_WINDOW,
-                              settlingWindow = DEFAULT_SETTLING_WINDOW,
-                              legsSize = null,
-                            } = {}) {
-    let legData = [];
-    orderType = orderType ?? DEFAULT_ORDER_TYPE;
-    fixedSize = fixedSize ?? FixedSize.None;
-    legsSize = legsSize ?? calculateLegsSize(legs);
-    const quoteAccounts = await quote.getValidationAccounts();
-    const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
-    const rfq = new Keypair();
-    const rfqObject = new Rfq(this, rfq.publicKey, quote, legs);
-
-    let createRfq = await this.program.methods
-        .createRfq(legsSize, legData, printTradeProvider, orderType, quote.toQuoteData(), fixedSize, activeWindow, settlingWindow)
-        .accounts({
-          taker: this.taker.publicKey,
-          protocol: this.protocolPda,
-          rfq: rfqObject.account,
-          systemProgram: SystemProgram.programId,
-        })
-        .remainingAccounts([...quoteAccounts, ...legAccounts])
-        .preInstructions([expandComputeUnits])
-        .signers([this.taker, rfq])
-        .rpc();
-
-    legData = legs.map((x) => x.toLegData());
-    let addLegsToRfq = await this.program.methods
-        .addLegsToRfq(legData)
-        .accounts({
-          taker: this.taker.publicKey,
-          protocol: this.protocolPda,
-          rfq: rfqObject.account,
-        })
-        .remainingAccounts(await rfqObject.getRiskEngineAccounts())
-        .signers([this.taker])
-        .rpc()
-
-    let finalizeRfq = await this.program.methods
-        .finalizeRfqConstruction()
-        .accounts({
-          taker: this.taker.publicKey,
-          protocol: this.protocolPda,
-          rfq: rfqObject.account,
-          collateralInfo: await getCollateralInfoPda(this.taker.publicKey, this.program.programId),
-          collateralToken: await getCollateralTokenPda(this.taker.publicKey, this.program.programId),
-          riskEngine: this.riskEngine.programId,
-        })
-        .remainingAccounts([...quoteAccounts, ...(await rfqObject.getRiskEngineAccounts())])
-        .signers([this.taker])
-        .rpc();
 
     return rfqObject;
   }
@@ -606,7 +528,9 @@ export class Rfq {
       .signers([this.context.maker, response])
       .preInstructions([expandComputeUnits])
       .rpc()
-      .catch((e) => {console.log("ERROR: ", e)});
+      .catch((e) => {
+        console.log("ERROR: ", e);
+      });
 
     return new Response(this.context, this, this.context.maker, response.publicKey);
   }
@@ -790,7 +714,9 @@ export class Response {
       .remainingAccounts([...quoteAccounts])
       .preInstructions([expandComputeUnits])
       .rpc()
-        .catch(e => {console.log("EERR:", e)});
+      .catch((e) => {
+        console.log("EERR:", e);
+      });
   }
 
   async prepareMoreEscrowLegsSettlement(side, from: number, legAmount: number) {
@@ -847,9 +773,7 @@ export class Response {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     await this.context.program.methods
-      .executePrintTradeSettlement(
-          side
-      )
+      .executePrintTradeSettlement(side)
       .accounts({
         caller: caller.publicKey,
         protocol: this.context.protocolPda,
@@ -1077,13 +1001,13 @@ export class Response {
 }
 
 let context: Context | null = null;
-export async function getContext(taker: Keypair = null, maker: Keypair = null) {
+export async function getContext() {
   if (context !== null) {
     return context;
   }
 
   context = new Context();
-  await context.initialize(taker, maker);
+  await context.initialize();
   await context.initializeProtocol();
 
   await executeInParallel(
@@ -1123,46 +1047,5 @@ export async function getContext(taker: Keypair = null, maker: Keypair = null) {
     }
   );
 
-    return context;
-}
-
-
-export async function getUpdatedContext() {
-    if (context !== null) {
-        context.taker = await context.createPayer()
-        context.maker = await context.createPayer()
-
-        // create ATAs
-        await executeInParallel(
-            async () => await context.assetToken.createAssociatedAccountWithTokens(context.taker.publicKey),
-            async () => await context.assetToken.createAssociatedAccountWithTokens(context.maker.publicKey),
-        );
-        await executeInParallel(
-            async () => await context.additionalAssetToken.createAssociatedAccountWithTokens(context.taker.publicKey),
-            async () => await context.additionalAssetToken.createAssociatedAccountWithTokens(context.maker.publicKey),
-        );
-        await executeInParallel(
-            async () => await context.quoteToken.createAssociatedAccountWithTokens(context.taker.publicKey),
-            async () => await context.quoteToken.createAssociatedAccountWithTokens(context.maker.publicKey),
-        );
-        await executeInParallel(
-            async () => await context.collateralToken.createAssociatedAccountWithTokens(context.taker.publicKey),
-            async () => await context.collateralToken.createAssociatedAccountWithTokens(context.maker.publicKey),
-        );
-
-        await executeInParallel(
-            async () => {
-                await context.initializeCollateral(context.taker);
-                await context.fundCollateral(context.taker, DEFAULT_COLLATERAL_FUNDED);
-            },
-            async () => {
-                await context.initializeCollateral(context.maker);
-                await context.fundCollateral(context.maker, DEFAULT_COLLATERAL_FUNDED);
-            },
-        )
-
-        return context;
-    }
-
-    return await getContext();
+  return context;
 }
