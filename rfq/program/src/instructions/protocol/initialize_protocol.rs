@@ -24,11 +24,20 @@ pub struct InitializeProtocolAccounts<'info> {
     pub system_program: Program<'info, System>,
 }
 
+fn validate(settle_fees: FeeParameters, default_fees: FeeParameters) -> Result<()> {
+    settle_fees.validate()?;
+    default_fees.validate()?;
+
+    Ok(())
+}
+
 pub fn initialize_protocol_instruction(
     ctx: Context<InitializeProtocolAccounts>,
     settle_fees: FeeParameters,
     default_fees: FeeParameters,
 ) -> Result<()> {
+    validate(settle_fees, default_fees)?;
+
     let InitializeProtocolAccounts {
         protocol,
         risk_engine,

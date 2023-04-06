@@ -1,23 +1,35 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { sleep, toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
+import {
+  attachImprovedLogDisplay,
+  calculateLegsHash,
+  calculateLegsSize,
+  runInParallelWithWait,
+  toAbsolutePrice,
+  TokenChangeMeasurer,
+  toLegMultiplier,
+  withTokenDecimals,
+} from "../utilities/helpers";
 import { PsyoptionsEuropeanInstrument, EuroOptionsFacade } from "../utilities/instruments/psyoptionsEuropeanInstrument";
-import { AuthoritySide, Quote, Side } from "../utilities/types";
-import { Context, getContext } from "../utilities/wrappers";
-import { CONTRACT_DECIMALS_BN, OptionType } from "../dependencies/tokenized-euros/src";
+import { AuthoritySide, Quote, RiskCategory, Side } from "../utilities/types";
+import { Context, getContext, Mint } from "../utilities/wrappers";
+import { CONTRACT_DECIMALS_BN, OptionType } from "@mithraic-labs/tokenized-euros";
+import { SWITCHBOARD_BTC_ORACLE } from "../utilities/constants";
 
 describe("Psyoptions European instrument integration tests", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
-  let dao: PublicKey;
   let options: EuroOptionsFacade;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();
     taker = context.taker.publicKey;
     maker = context.maker.publicKey;
-    dao = context.dao.publicKey;
 
     options = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
       underlyingMint: context.assetToken,
@@ -44,8 +56,8 @@ describe("Psyoptions European instrument integration tests", () => {
     });
     // response with agreeing to sell 2 options for 500$ or buy 5 for 450$
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
     });
     // taker confirms to buy 1 option
     await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
@@ -81,18 +93,22 @@ describe("Psyoptions European instrument integration tests", () => {
         }),
       ],
     });
-    // response with agreeing to buy 5 options for 450$
-    const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
-    });
-    // taker confirms to sell 2 options
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
 
-    await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
+    const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
+      // response with agreeing to buy 5 options for 450$
+      const response = await rfq.respond({
+        bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      });
+      // taker confirms to sell 2 options
+      await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
 
-    let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.putMint], [taker]);
-    await response.prepareEscrowSettlement(AuthoritySide.Taker);
-    await sleep(3000);
+      await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
+
+      let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.putMint], [taker]);
+      await response.prepareEscrowSettlement(AuthoritySide.Taker);
+
+      return [response, tokenMeasurer];
+    }, 3.5);
 
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker);
 
@@ -102,5 +118,64 @@ describe("Psyoptions European instrument integration tests", () => {
     await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
+  });
+
+  it("Successful settlement flow with a lot of different base asset options", async () => {
+    const legAmount = 6;
+    const baseAssetOffset = 6300;
+    const mints = await Promise.all(
+      [...Array(legAmount)].map(async (_, i) => {
+        const mint = await Mint.create(context);
+        await context.addBaseAsset(baseAssetOffset + i, "TEST", RiskCategory.High, SWITCHBOARD_BTC_ORACLE);
+        await mint.register(baseAssetOffset + i);
+        return mint;
+      })
+    );
+    const options = await Promise.all(
+      mints.map(
+        async (mint, i) =>
+          await EuroOptionsFacade.initalizeNewOptionMeta(context, {
+            underlyingMint: mint,
+            stableMint: context.quoteToken,
+            underlyingPerContract: withTokenDecimals(i + 1),
+          })
+      )
+    );
+    const legs = options.map((option) =>
+      PsyoptionsEuropeanInstrument.create(context, option, OptionType.CALL, {
+        amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
+        side: Side.Bid,
+      })
+    );
+    const rfq = await context.createRfq({
+      legs: [legs[0]],
+      legsSize: calculateLegsSize(legs),
+      legsHash: calculateLegsHash(legs, context.program),
+      finalize: false,
+    });
+    await rfq.addLegs([...legs.slice(1, 3)], false);
+    await rfq.addLegs([...legs.slice(3, 5)], false);
+    await rfq.addLegs([...legs.slice(5)]);
+
+    const response = await rfq.respond({
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
+    });
+    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
+
+    // mint options
+    await Promise.all(options.map(async (option) => option.mintOptions(context.maker, new BN(2), OptionType.CALL)));
+
+    await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+    await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
+    await response.prepareMoreLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
+
+    await response.settle(
+      maker,
+      [...Array(legAmount)].map(() => taker)
+    );
+    await response.unlockResponseCollateral();
+    await response.cleanUp();
   });
 });

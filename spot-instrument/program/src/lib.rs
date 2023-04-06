@@ -12,7 +12,7 @@ use rfq::state::{
 mod errors;
 mod state;
 
-declare_id!("EaTiAXD8QBVjKCTYmddt3HFbpCMCEtrxFurkyweWqnXN");
+declare_id!("HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW");
 
 const ESCROW_SEED: &str = "escrow";
 
@@ -44,7 +44,7 @@ pub mod spot_instrument {
             (None, MintType::Stablecoin) => (),
             (Some(passed_base_asset_index), MintType::AssetWithRisk { base_asset_index }) => {
                 require!(
-                    passed_base_asset_index == base_asset_index.into(),
+                    passed_base_asset_index == u16::from(base_asset_index),
                     SpotError::BaseAssetDoesNotMatch
                 );
             }
@@ -80,17 +80,18 @@ pub mod spot_instrument {
             SpotError::PassedMintDoesNotMatch
         );
 
-        let token_amount =
-            response.get_asset_amount_to_transfer(rfq, asset_identifier.into(), side.into());
-
-        if token_amount > 0 {
+        let side = AuthoritySide::from(side);
+        let asset_receiver = response.get_assets_receiver(rfq, asset_identifier.into());
+        let asset_sender = asset_receiver.inverse();
+        if side == asset_sender {
+            let token_amount = response.get_asset_amount_to_transfer(rfq, asset_identifier.into());
             let transfer_accounts = Transfer {
                 from: caller_tokens.to_account_info(),
                 to: escrow.to_account_info(),
                 authority: caller.to_account_info(),
             };
             let transfer_ctx = CpiContext::new(token_program.to_account_info(), transfer_accounts);
-            transfer(transfer_ctx, token_amount as u64)?;
+            transfer(transfer_ctx, token_amount)?;
         }
 
         Ok(())
@@ -147,7 +148,7 @@ pub mod spot_instrument {
         if side
             == response
                 .get_assets_receiver(rfq, asset_identifier.into())
-                .revert()
+                .inverse()
         {
             transfer_from_an_escrow(
                 escrow,

@@ -19,8 +19,11 @@ use instructions::collateral::withdraw_collateral::*;
 use instructions::protocol::add_base_asset::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::add_print_trade_provider::*;
+use instructions::protocol::change_protocol_fees::*;
 use instructions::protocol::initialize_protocol::*;
 use instructions::protocol::register_mint::*;
+use instructions::protocol::set_base_asset_enabled_status::*;
+use instructions::protocol::set_instrument_enabled_status::*;
 use instructions::rfq::add_legs_to_rfq::*;
 use instructions::rfq::cancel_response::*;
 use instructions::rfq::cancel_rfq::*;
@@ -55,7 +58,7 @@ security_txt! {
     auditors: "None"
 }
 
-declare_id!("2NivPZeNtQ7B7vDBXNMCi9x3C9SWDvqCfiZNcDckB6hp");
+declare_id!("AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx");
 
 /// Request for quote (RFQ) protocol module.
 #[program]
@@ -107,6 +110,29 @@ pub mod rfq {
         add_base_asset_instruction(ctx, index, ticker, risk_category, price_oracle)
     }
 
+    pub fn change_protocol_fees(
+        ctx: Context<ChangeProtocolFeesAccounts>,
+        settle_fees: Option<FeeParameters>,
+        default_fees: Option<FeeParameters>,
+    ) -> Result<()> {
+        change_protocol_fees_instruction(ctx, settle_fees, default_fees)
+    }
+
+    pub fn set_base_asset_enabled_status(
+        ctx: Context<SetBaseAssetEnabledStatusAccounts>,
+        enabled_status_to_set: bool,
+    ) -> Result<()> {
+        set_base_asset_enabled_status_instruction(ctx, enabled_status_to_set)
+    }
+
+    pub fn set_instrument_enabled_status(
+        ctx: Context<SetInstrumentEnabledStatusAccounts>,
+        instrument_key: Pubkey,
+        enabled_status_to_set: bool,
+    ) -> Result<()> {
+        set_instrument_enabled_status_instruction(ctx, instrument_key, enabled_status_to_set)
+    }
+
     pub fn register_mint(ctx: Context<RegisterMintAccounts>) -> Result<()> {
         register_mint_instruction(ctx)
     }
@@ -128,7 +154,8 @@ pub mod rfq {
 
     pub fn create_rfq<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
-        expected_leg_size: u16,
+        expected_legs_size: u16,
+        expected_legs_hash: [u8; 32],
         legs: Vec<Leg>,
         print_trade_provider: Option<Pubkey>,
         order_type: OrderType,
@@ -136,10 +163,12 @@ pub mod rfq {
         fixed_size: FixedSize,
         active_window: u32,
         settling_window: u32,
+        recent_timestamp: u64, // used to allow the same rfq creation using different recent timestamps
     ) -> Result<()> {
         create_rfq_instruction(
             ctx,
-            expected_leg_size,
+            expected_legs_size,
+            expected_legs_hash,
             legs,
             print_trade_provider,
             order_type,
@@ -147,6 +176,7 @@ pub mod rfq {
             fixed_size,
             active_window,
             settling_window,
+            recent_timestamp,
         )
     }
 
@@ -167,8 +197,9 @@ pub mod rfq {
         ctx: Context<'_, '_, '_, 'info, RespondToRfqAccounts<'info>>,
         bid: Option<Quote>,
         ask: Option<Quote>,
+        pda_distinguisher: u16, // allows creation of the same response multiple times specifying a different distinguisher
     ) -> Result<()> {
-        respond_to_rfq_instruction(ctx, bid, ask)
+        respond_to_rfq_instruction(ctx, bid, ask, pda_distinguisher)
     }
 
     pub fn confirm_response<'info>(

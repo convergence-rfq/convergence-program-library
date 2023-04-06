@@ -1,5 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { AccountMeta, PublicKey } from "@solana/web3.js";
+import { getBaseAssetPda } from "./pdas";
 import { AssetIdentifier } from "./types";
 import { Response, Rfq } from "./wrappers";
 
@@ -84,6 +85,11 @@ export class InstrumentController {
 
   private getProgramAccount() {
     return { pubkey: this.instrument.getProgramId(), isSigner: false, isWritable: false };
+  }
+
+  async getBaseAssetAccount(rfqProgramAddress: PublicKey) {
+    const baseAssetAddress = await getBaseAssetPda(this.getBaseAssetIndex(), rfqProgramAddress);
+    return { pubkey: baseAssetAddress, isSigner: false, isWritable: false };
   }
 
   async getValidationAccounts() {

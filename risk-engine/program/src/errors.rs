@@ -8,14 +8,16 @@ pub enum Error {
     MathInvalidConversion,
     #[msg("Not enough accounts for collateral calculations")]
     NotEnoughAccounts,
-    #[msg("Failed to extract price")]
-    FailedToExtractPrice,
+    #[msg("Can't extract price because an oracle is stale")]
+    StaleOracle,
+    #[msg("Can't extract price because oracle confidence is out of bounds")]
+    OracleConfidenceOutOfRange,
     #[msg("Base asset info account mismatch with rfq legs")]
     InvalidBaseAssetInfo,
     #[msg("Oracle account mismatch with rfq legs")]
     InvalidOracle,
-    #[msg("Group max loss can't be negative")]
-    RiskCanNotBeNegative,
+    #[msg("Sanity check failed: group risk out of bounds")]
+    RiskOutOfBounds,
     #[msg("Price for a base asset is missing")]
     MissingPriceForABaseAsset,
     #[msg("Require protocol authority")]

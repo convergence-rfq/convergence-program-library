@@ -1,6 +1,6 @@
 use std::f64::consts::SQRT_2;
 
-use crate::{fraction::Fraction, state::OptionType};
+use crate::state::OptionType;
 
 // call and put calculations taken from `black_scholes` crate up to erf calculations, which is taken from `statrs` crate
 
@@ -8,33 +8,33 @@ const SECONDS_IN_THE_YEAR: f64 = 365.0 * 24.0 * 60.0 * 60.0;
 
 pub fn calculate_option_value(
     option_type: OptionType,
-    underlying_price: Fraction,
-    underlying_amount_per_contract: Fraction,
-    strike_price: Fraction,
-    interest_rate: Fraction,
-    volatility: Fraction,
+    underlying_price: f64,
+    underlying_amount_per_contract: f64,
+    strike_price: f64,
+    interest_rate: f64,
+    volatility: f64,
     seconds_till_expiration: i64,
-) -> Option<Fraction> {
+) -> f64 {
     let maturity = seconds_till_expiration as f64 / SECONDS_IN_THE_YEAR;
 
     let value_per_underlying_asset = match option_type {
         OptionType::Call => calculate_call(
-            underlying_price.into(),
-            strike_price.into(),
-            interest_rate.into(),
-            volatility.into(),
+            underlying_price,
+            strike_price,
+            interest_rate,
+            volatility,
             maturity,
         ),
         OptionType::Put => calculate_put(
-            underlying_price.into(),
-            strike_price.into(),
-            interest_rate.into(),
-            volatility.into(),
+            underlying_price,
+            strike_price,
+            interest_rate,
+            volatility,
             maturity,
         ),
     };
 
-    Fraction::from(value_per_underlying_asset).checked_mul(underlying_amount_per_contract)
+    value_per_underlying_asset * underlying_amount_per_contract
 }
 
 fn calculate_call(

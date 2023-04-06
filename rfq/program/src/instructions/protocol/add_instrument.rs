@@ -59,6 +59,7 @@ pub fn add_instrument_instruction(
 
     protocol.instruments.push(Instrument {
         program_key: instrument_program.key(),
+        enabled: true,
         can_be_used_as_quote,
         validate_data_account_amount,
         prepare_to_settle_account_amount,

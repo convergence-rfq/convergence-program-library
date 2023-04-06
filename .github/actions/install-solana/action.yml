@@ -29,6 +29,9 @@ runs:
       run: |
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       shell: bash
+    - name: Create key
+      run: solana-keygen new --no-bip39-passphrase
+      shell: bash
     - name: Verify Solana install
       run: |
         solana --version

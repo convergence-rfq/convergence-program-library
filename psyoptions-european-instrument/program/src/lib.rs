@@ -14,7 +14,7 @@ mod errors;
 mod euro_options;
 mod state;
 
-declare_id!("3JFY9G2f34J8UmDSh97g9qayJYBoZ4z1J42R4rn6Uzqm");
+declare_id!("HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1");
 
 const ESCROW_SEED: &str = "escrow";
 
@@ -63,9 +63,19 @@ pub mod psyoptions_european_instrument {
                 == euro_meta.underlying_amount_per_contract,
             PsyoptionsEuropeanError::PassedUnderlyingAmountPerContractDoesNotMatch
         );
+        require_eq!(
+            option_common_data.underlying_amound_per_contract_decimals,
+            euro_meta.underlying_decimals,
+            PsyoptionsEuropeanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
+        );
         require!(
             option_common_data.strike_price == euro_meta.strike_price,
             PsyoptionsEuropeanError::PassedStrikePriceDoesNotMatch
+        );
+        require_eq!(
+            option_common_data.strike_price_decimals,
+            euro_meta.price_decimals,
+            PsyoptionsEuropeanError::PassedStrikePriceDecimalsDoesNotMatch
         );
         require!(
             option_common_data.expiration_timestamp == euro_meta.expiration,
@@ -81,7 +91,7 @@ pub mod psyoptions_european_instrument {
             (base_asset_index, mint_info.mint_type)
         {
             require!(
-                passed_base_asset_index == base_asset_index.into(),
+                passed_base_asset_index == u16::from(base_asset_index),
                 PsyoptionsEuropeanError::BaseAssetDoesNotMatch
             );
         } else {
@@ -114,17 +124,18 @@ pub mod psyoptions_european_instrument {
             PsyoptionsEuropeanError::PassedMintDoesNotMatch
         );
 
-        let token_amount =
-            response.get_asset_amount_to_transfer(rfq, asset_identifier.into(), side.into());
-
-        if token_amount > 0 {
+        let side = AuthoritySide::from(side);
+        let asset_receiver = response.get_assets_receiver(rfq, asset_identifier.into());
+        let asset_sender = asset_receiver.inverse();
+        if side == asset_sender {
+            let token_amount = response.get_asset_amount_to_transfer(rfq, asset_identifier.into());
             let transfer_accounts = Transfer {
                 from: caller_tokens.to_account_info(),
                 to: escrow.to_account_info(),
                 authority: caller.to_account_info(),
             };
             let transfer_ctx = CpiContext::new(token_program.to_account_info(), transfer_accounts);
-            transfer(transfer_ctx, token_amount as u64)?;
+            transfer(transfer_ctx, token_amount)?;
         }
 
         Ok(())
@@ -181,7 +192,7 @@ pub mod psyoptions_european_instrument {
         if side
             == response
                 .get_assets_receiver(rfq, asset_identifier.into())
-                .revert()
+                .inverse()
         {
             transfer_from_an_escrow(
                 escrow,

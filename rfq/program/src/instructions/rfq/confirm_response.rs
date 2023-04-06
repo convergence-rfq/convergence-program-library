@@ -72,7 +72,7 @@ fn validate(
         };
 
         match quote {
-            Quote::Standart {
+            Quote::Standard {
                 price_quote: _,
                 legs_multiplier_bps,
             } => {

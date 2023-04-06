@@ -2,8 +2,10 @@ import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { BITCOIN_BASE_ASSET_INDEX } from "../utilities/constants";
 import {
+  attachImprovedLogDisplay,
+  calculateLegsHash,
   calculateLegsSize,
-  sleep,
+  runInParallelWithWait,
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
@@ -11,7 +13,7 @@ import {
   expectError,
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
-import { AuthoritySide, FixedSize, OrderType, Quote, RiskCategory, Side } from "../utilities/types";
+import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 
 describe("RFQ escrow settlement using spot integration tests", () => {
@@ -19,6 +21,10 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   let taker: PublicKey;
   let maker: PublicKey;
   let dao: PublicKey;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();
@@ -70,8 +76,8 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
-      ask: Quote.getStandart(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
     });
     // taker confirms to buy 1 bitcoin
     await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
@@ -84,6 +90,35 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "asset", user: maker, delta: withTokenDecimals(-1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-22_000) },
       { token: "quote", user: maker, delta: withTokenDecimals(22_000) },
+    ]);
+
+    await response.unlockResponseCollateral();
+    await response.cleanUp();
+  });
+
+  it("Successfully can settle rfq with negative prices", async () => {
+    let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
+
+    // create a two way RFQ specifying 1 bitcoin ask as a leg
+    const rfq = await context.createRfq({
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: Side.Ask })],
+    });
+    // response with agreeing to sell 5 bitcoins for 22k$ or buy 2 for 20000$
+    const response = await rfq.respond({
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(-22_000)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(-20_000)), toLegMultiplier(2)),
+    });
+    // taker confirms to sell 1.5 bitcoin
+    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1.5) });
+    await response.prepareSettlement(AuthoritySide.Taker);
+    await response.prepareSettlement(AuthoritySide.Maker);
+    // taker should receive 30k$, maker should receive 1.5 bitcoin
+    await response.settle(taker, [maker]);
+    await tokenMeasurer.expectChange([
+      { token: "asset", user: taker, delta: withTokenDecimals(-1.5) },
+      { token: "asset", user: maker, delta: withTokenDecimals(1.5) },
+      { token: "quote", user: taker, delta: withTokenDecimals(30_000) },
+      { token: "quote", user: maker, delta: withTokenDecimals(-30_000) },
     ]);
 
     await response.unlockResponseCollateral();
@@ -105,11 +140,11 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     });
     // respond with quote for half of legs
     const response = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(70_000)), toLegMultiplier(0.5)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(70_000)), toLegMultiplier(0.5)),
     });
     // respond with quote for twice of legs once more with higher price
     const secondResponse = await rfq.respond({
-      bid: Quote.getStandart(toAbsolutePrice(withTokenDecimals(71_000)), toLegMultiplier(2)),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(71_000)), toLegMultiplier(2)),
     });
 
     // taker confirms first response, but only half of it
@@ -230,12 +265,17 @@ describe("RFQ escrow settlement using spot integration tests", () => {
 
   it("Create RFQ, respond and confirm, taker prepares but maker defaults", async () => {
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
-    const response = await rfq.respond();
-    await response.confirm();
 
-    let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
-    await response.prepareEscrowSettlement(AuthoritySide.Taker);
-    await sleep(3000);
+    const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+
+      let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
+      await response.prepareEscrowSettlement(AuthoritySide.Taker);
+
+      return [response, tokenMeasurer];
+    }, 3.5);
+
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker);
     // no assets are exchanged
     await tokenMeasurer.expectChange([
@@ -274,12 +314,17 @@ describe("RFQ escrow settlement using spot integration tests", () => {
 
   it("Create RFQ, respond and confirm, maker prepares but taker defaults", async () => {
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
-    const response = await rfq.respond();
-    await response.confirm();
 
-    let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
-    await response.prepareEscrowSettlement(AuthoritySide.Maker);
-    await sleep(3000);
+    const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+
+      let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
+      await response.prepareEscrowSettlement(AuthoritySide.Maker);
+
+      return [response, tokenMeasurer];
+    }, 3.5);
+
     await response.revertEscrowSettlementPreparation(AuthoritySide.Maker);
     // no assets are exchanged
     await tokenMeasurer.expectChange([
@@ -319,10 +364,13 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create RFQ, respond and confirm, both parties default", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
-    const response = await rfq.respond();
-    await response.confirm();
 
-    await sleep(3000);
+    const response = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+
+      return response;
+    }, 3.5);
 
     await response.settleTwoPartyDefault();
     await response.cleanUp();
@@ -360,12 +408,12 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create RFQ, respond, cancel response and close all", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
-    const response = await rfq.respond();
-    await response.cancel();
-    await response.unlockResponseCollateral();
-    await response.cleanUp();
-
-    await sleep(2000);
+    await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.cancel();
+      await response.unlockResponseCollateral();
+      await response.cleanUp();
+    }, 2.5);
 
     await rfq.unlockCollateral();
     await rfq.cleanUp();
@@ -376,7 +424,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   });
 
   it("Create RFQ with a lot of spot legs and settle it", async () => {
-    const legAmount = 8;
+    const legAmount = 10;
     const mints = await Promise.all(
       [...Array(legAmount)].map(async () => {
         const mint = await Mint.create(context);
@@ -392,6 +440,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     const rfq = await context.createRfq({
       legs: legs.slice(0, legAmount / 2),
       legsSize: calculateLegsSize(legs),
+      legsHash: calculateLegsHash(legs, context.program),
       finalize: false,
     });
     await rfq.addLegs(legs.slice(legAmount / 2), false);
@@ -434,18 +483,22 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     const rfq = await context.createRfq({
       legs: legs.slice(0, legAmount / 2),
       legsSize: calculateLegsSize(legs),
+      legsHash: calculateLegsHash(legs, context.program),
       finalize: false,
       activeWindow: 2,
       settlingWindow: 1,
     });
     await rfq.addLegs(legs.slice(legAmount / 2));
-    const response = await rfq.respond();
-    await response.confirm();
-    await response.prepareEscrowSettlement(AuthoritySide.Taker, legAmount / 2);
-    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
-    await response.prepareEscrowSettlement(AuthoritySide.Maker, legAmount / 2);
 
-    await sleep(2000);
+    const response = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+      await response.prepareEscrowSettlement(AuthoritySide.Taker, legAmount / 2);
+      await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+      await response.prepareEscrowSettlement(AuthoritySide.Maker, legAmount / 2);
+
+      return response;
+    }, 3.5);
 
     await response.partlyRevertEscrowSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker, legAmount / 2);

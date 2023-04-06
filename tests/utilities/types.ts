@@ -1,15 +1,21 @@
 import { BN } from "@project-serum/anchor";
 
+export type OrderType = { buy: {} } | { sell: {} } | { twoWay: {} };
+
 export const OrderType = {
   Buy: { buy: {} },
   Sell: { sell: {} },
   TwoWay: { twoWay: {} },
 };
 
+export type Side = { bid: {} } | { ask: {} };
+
 export const Side = {
   Bid: { bid: {} },
   Ask: { ask: {} },
 };
+
+export type AuthoritySide = { taker: {} } | { maker: {} };
 
 export const AuthoritySide = {
   Taker: { taker: {} },
@@ -22,6 +28,9 @@ export enum RiskCategory {
   Medium,
   High,
   VeryHigh,
+  Custom1,
+  Custom2,
+  Custom3,
 }
 
 export function riskCategoryToObject(value: RiskCategory) {
@@ -32,19 +41,14 @@ export function riskCategoryToObject(value: RiskCategory) {
   };
 }
 
-export type Fraction = {
-  mantissa: BN;
-  decimals: number;
-};
-
 export type Scenario = {
-  baseAssetPriceChange: Fraction;
-  volatilityChange: Fraction;
+  baseAssetPriceChange: number;
+  volatilityChange: number;
 };
 
 export type RiskCategoryInfo = {
-  interestRate: Fraction;
-  yearlyVolatility: Fraction;
+  interestRate: number;
+  annualized30DayVolatility: number;
   scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario];
 };
 
@@ -63,10 +67,23 @@ export function instrumentTypeToObject(value: InstrumentType) {
   };
 }
 
+export type Quote =
+  | {
+      standard: {
+        priceQuote: { absolutePrice: { amountBps: BN } };
+        legsMultiplierBps: BN;
+      };
+    }
+  | {
+      fixedSize: {
+        priceQuote: { absolutePrice: { amountBps: BN } };
+      };
+    };
+
 export const Quote = {
-  getStandart: (priceBps: BN, legsMultiplierBps: BN) => {
+  getStandard: (priceBps: BN, legsMultiplierBps: BN): Quote => {
     return {
-      standart: {
+      standard: {
         priceQuote: {
           absolutePrice: {
             amountBps: priceBps,
@@ -76,7 +93,7 @@ export const Quote = {
       },
     };
   },
-  getFixedSize: (priceBps: BN) => {
+  getFixedSize: (priceBps: BN): Quote => {
     return {
       fixedSize: {
         priceQuote: {
@@ -88,6 +105,19 @@ export const Quote = {
     };
   },
 };
+
+export type FixedSize =
+  | { none: { padding: BN } }
+  | {
+      baseAsset: {
+        legsMultiplierBps: BN;
+      };
+    }
+  | {
+      quoteAsset: {
+        quoteAmount: BN;
+      };
+    };
 
 export const FixedSize = {
   None: {
@@ -111,26 +141,18 @@ export const FixedSize = {
   },
 };
 
-export function toFrational(mantissa: BN | number, decimals: number = 0): Fraction {
-  if (typeof mantissa === "number") {
-    mantissa = new BN(mantissa);
-  }
-
-  return { mantissa: mantissa as BN, decimals };
-}
-
-export function toScenario(baseAssetPriceChange: Fraction, volatilityChange: Fraction): Scenario {
+export function toScenario(baseAssetPriceChange: number, volatilityChange: number): Scenario {
   return { baseAssetPriceChange, volatilityChange };
 }
 
 export function toRiskCategoryInfo(
-  interestRate: Fraction,
-  yearlyVolatility: Fraction,
+  interestRate: number,
+  annualized30DayVolatility: number,
   scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario]
 ): RiskCategoryInfo {
   return {
     interestRate,
-    yearlyVolatility,
+    annualized30DayVolatility,
     scenarioPerSettlementPeriod: scenarioPerSettlementPeriod,
   };
 }
@@ -144,3 +166,5 @@ export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
     return Buffer.from([0, assetIdentifier.legIndex]);
   }
 }
+
+export type FeeParams = { taker: number; maker: number };

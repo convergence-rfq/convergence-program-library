@@ -4,8 +4,13 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 
 use crate::{
+    errors::ProtocolError,
+    interfaces::instrument::validate_leg_instrument_data,
     seeds::COLLATERAL_SEED,
-    state::{AuthoritySide, CollateralInfo, Response, Rfq, StoredResponseState},
+    state::{
+        AuthoritySide, BaseAssetInfo, CollateralInfo, Leg, ProtocolState, Response, Rfq,
+        StoredResponseState,
+    },
 };
 
 pub fn unlock_response_collateral(
@@ -80,4 +85,27 @@ pub fn update_state_after_escrow_preparation(
     {
         response.state = StoredResponseState::ReadyForSettling;
     }
+}
+
+pub fn validate_legs<'a, 'info: 'a>(
+    legs: &[Leg],
+    protocol: &Account<'info, ProtocolState>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
+    for leg in legs.iter() {
+        let instrument = protocol.get_instrument_parameters(leg.instrument_program)?;
+        require!(instrument.enabled, ProtocolError::InstrumentIsDisabled);
+
+        let base_asset_account = remaining_accounts
+            .next()
+            .ok_or_else(|| error!(ProtocolError::NotEnoughAccounts))?;
+        let base_asset = Account::<BaseAssetInfo>::try_from(base_asset_account)?;
+        require!(base_asset.enabled, ProtocolError::BaseAssetIsDisabled);
+    }
+
+    for leg in legs.iter() {
+        validate_leg_instrument_data(leg, protocol, remaining_accounts)?;
+    }
+
+    Ok(())
 }

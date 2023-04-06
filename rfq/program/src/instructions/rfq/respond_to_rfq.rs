@@ -3,9 +3,9 @@ use std::mem;
 use crate::{
     errors::ProtocolError,
     interfaces::risk_engine::calculate_required_collateral_for_response,
-    seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
+    seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED, RESPONSE_SEED},
     state::{
-        CollateralInfo, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
+        CollateralInfo, FixedSize, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
         StoredResponseState,
     },
 };
@@ -13,6 +13,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
 
 #[derive(Accounts)]
+#[instruction(bid: Option<Quote>, ask: Option<Quote>, pda_distinguisher: u16)]
 pub struct RespondToRfqAccounts<'info> {
     #[account(mut)]
     pub maker: Signer<'info>,
@@ -22,7 +23,14 @@ pub struct RespondToRfqAccounts<'info> {
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     // rfq legs additional storage for first_to_prepare_legs field
-    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>() + rfq.legs.len() * 1)]
+    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>() + rfq.legs.len() * 1, seeds = [
+        RESPONSE_SEED.as_bytes(),
+        rfq.key().as_ref(),
+        maker.key().as_ref(),
+        &bid.try_to_vec().unwrap(),
+        &ask.try_to_vec().unwrap(),
+        &pda_distinguisher.to_le_bytes(),
+    ], bump)]
     pub response: Account<'info, Response>,
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
                 bump = collateral_info.bump)]
@@ -80,6 +88,22 @@ fn validate(
         );
     }
 
+    // check that in case the rfq is fixed in quote asset amount, prices provided are positive
+    if let FixedSize::QuoteAsset { quote_amount: _ } = rfq.fixed_size {
+        if let Some(quote) = bid {
+            require!(
+                quote.get_price_bps() > 0,
+                ProtocolError::PriceShouldBePositive
+            );
+        }
+        if let Some(quote) = ask {
+            require!(
+                quote.get_price_bps() > 0,
+                ProtocolError::PriceShouldBePositive
+            );
+        }
+    }
+
     Ok(())
 }
 
@@ -87,6 +111,7 @@ pub fn respond_to_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, RespondToRfqAccounts<'info>>,
     bid: Option<Quote>,
     ask: Option<Quote>,
+    _pda_distinguisher: u16,
 ) -> Result<()> {
     validate(&ctx, bid, ask)?;
 

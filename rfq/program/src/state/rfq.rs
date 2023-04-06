@@ -9,16 +9,15 @@ pub struct Rfq {
     pub taker: Pubkey,
 
     pub order_type: OrderType,
-    pub last_look_enabled: bool,
     pub fixed_size: FixedSize,
     pub quote_asset: QuoteAsset,
-    pub access_manager: Option<Pubkey>, // replase with nullable wrapper
 
     pub creation_timestamp: i64,
     pub active_window: u32,
     pub settling_window: u32,
 
-    pub expected_leg_size: u16,
+    pub expected_legs_size: u16,
+    pub expected_legs_hash: [u8; 32],
     pub state: StoredRfqState,
     pub non_response_taker_collateral_locked: u64,
     pub total_taker_collateral_locked: u64,
@@ -108,7 +107,7 @@ pub struct Leg {
 pub enum FixedSize {
     None { padding: u64 }, // for consistent serialization purposes
     BaseAsset { legs_multiplier_bps: u64 },
-    QuoteAsset { quote_amount: u64 },
+    QuoteAsset { quote_amount: u64 }, // only a positive quote amount allowed. If a negative one is required, the leg structure can be inversed in the RFQ
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

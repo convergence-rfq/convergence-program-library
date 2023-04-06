@@ -1,10 +1,12 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { OrderType, Side, toFrational, toRiskCategoryInfo, toScenario } from "./types";
+import { OrderType, Side, toRiskCategoryInfo, toScenario } from "./types";
 
 export const PROTOCOL_SEED = "protocol";
 export const COLLATERAL_SEED = "collateral_info";
 export const COLLATERAL_TOKEN_SEED = "collateral_token";
+export const RFQ_SEED = "rfq";
+export const RESPONSE_SEED = "response";
 export const QUOTE_ESCROW_SEED = "quote_escrow";
 export const BASE_ASSET_INFO_SEED = "base_asset";
 export const MINT_INFO_SEED = "mint_info";
@@ -13,12 +15,14 @@ export const EMPTY_LEG_SIZE = 32 + 2 + 4 + 8 + 1 + 1;
 
 export const LEG_MULTIPLIER_DECIMALS = 9;
 export const ABSOLUTE_PRICE_DECIMALS = 9;
+export const FEE_BPS_DECIMALS = 9;
 
 export const DEFAULT_SOL_FOR_SIGNERS = 100_000_000_000;
 export const DEFAULT_TOKEN_AMOUNT = new BN(10_000_000).mul(new BN(10).pow(new BN(9)));
 export const DEFAULT_COLLATERAL_FUNDED = new BN(1_000_000).mul(new BN(10).pow(new BN(9)));
 
-export const DEFAULT_FEES = { takerBps: new BN(0), makerBps: new BN(0) };
+export const DEFAULT_SETTLE_FEES = { taker: 0.02, maker: 0.01 };
+export const DEFAULT_DEFAULT_FEES = { taker: 0.1, maker: 0.5 };
 export const DEFAULT_ORDER_TYPE = OrderType.TwoWay;
 export const DEFAULT_INSTRUMENT_AMOUNT = new BN(1_000_000_000);
 export const DEFAULT_INSTRUMENT_SIDE = Side.Bid;
@@ -42,48 +46,74 @@ export const RISK_ENGINE_CONFIG_SEED = "config";
 
 export const DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ = new BN(1_000_000_000);
 export const DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ = new BN(2_000_000_000);
-export const DEFAULT_SAFETY_PRICE_SHIFT_FACTOR = toFrational(1, 2);
-export const DEFAULT_OVERALL_SAFETY_FACTOR = toFrational(1, 1);
+export const DEFAULT_SAFETY_PRICE_SHIFT_FACTOR = 0.01;
+export const DEFAULT_OVERALL_SAFETY_FACTOR = 0.1;
+export const DEFAULT_ACCEPTED_ORACLE_STALENESS = new BN(300);
+export const DEFAULT_ACCEPTED_ORACLE_CONFIDENCE_INTERVAL_PORTION = 0.01;
 
 export const DEFAULT_RISK_CATEGORIES_INFO = [
-  toRiskCategoryInfo(toFrational(5, 2), toFrational(5, 1), [
-    toScenario(toFrational(2, 2), toFrational(2, 1)),
-    toScenario(toFrational(4, 2), toFrational(3, 1)),
-    toScenario(toFrational(8, 2), toFrational(4, 1)),
-    toScenario(toFrational(12, 2), toFrational(5, 1)),
-    toScenario(toFrational(2, 1), toFrational(6, 1)),
-    toScenario(toFrational(3, 1), toFrational(7, 1)),
+  toRiskCategoryInfo(0.05, 0.5, [
+    toScenario(0.02, 0.2),
+    toScenario(0.04, 0.3),
+    toScenario(0.08, 0.4),
+    toScenario(0.12, 0.5),
+    toScenario(0.2, 0.6),
+    toScenario(0.3, 0.7),
   ]), // very low
-  toRiskCategoryInfo(toFrational(5, 2), toFrational(8, 1), [
-    toScenario(toFrational(4, 2), toFrational(4, 1)),
-    toScenario(toFrational(8, 2), toFrational(6, 1)),
-    toScenario(toFrational(16, 2), toFrational(8, 1)),
-    toScenario(toFrational(24, 2), toFrational(1, 0)),
-    toScenario(toFrational(4, 1), toFrational(12, 1)),
-    toScenario(toFrational(6, 1), toFrational(14, 1)),
+  toRiskCategoryInfo(0.05, 0.8, [
+    toScenario(0.04, 0.4),
+    toScenario(0.08, 0.6),
+    toScenario(0.16, 0.8),
+    toScenario(0.24, 1),
+    toScenario(0.4, 1.2),
+    toScenario(0.6, 1.4),
   ]), // low
-  toRiskCategoryInfo(toFrational(5, 2), toFrational(12, 1), [
-    toScenario(toFrational(6, 2), toFrational(6, 1)),
-    toScenario(toFrational(12, 2), toFrational(9, 1)),
-    toScenario(toFrational(24, 2), toFrational(12, 1)),
-    toScenario(toFrational(36, 2), toFrational(15, 1)),
-    toScenario(toFrational(6, 1), toFrational(18, 1)),
-    toScenario(toFrational(9, 1), toFrational(21, 1)),
+  toRiskCategoryInfo(0.05, 1.2, [
+    toScenario(0.06, 0.6),
+    toScenario(0.12, 0.9),
+    toScenario(0.24, 1.2),
+    toScenario(0.36, 1.5),
+    toScenario(0.6, 1.8),
+    toScenario(0.9, 2.1),
   ]), // medium
-  toRiskCategoryInfo(toFrational(5, 2), toFrational(24, 1), [
-    toScenario(toFrational(8, 2), toFrational(8, 1)),
-    toScenario(toFrational(16, 2), toFrational(12, 1)),
-    toScenario(toFrational(32, 2), toFrational(16, 1)),
-    toScenario(toFrational(48, 2), toFrational(2, 0)),
-    toScenario(toFrational(8, 1), toFrational(24, 1)),
-    toScenario(toFrational(12, 1), toFrational(28, 1)),
+  toRiskCategoryInfo(0.05, 2.4, [
+    toScenario(0.08, 0.8),
+    toScenario(0.16, 1.2),
+    toScenario(0.32, 1.6),
+    toScenario(0.48, 2),
+    toScenario(0.8, 2.4),
+    toScenario(1.2, 2.8),
   ]), // high
-  toRiskCategoryInfo(toFrational(5, 2), toFrational(5, 0), [
-    toScenario(toFrational(1, 1), toFrational(1, 0)),
-    toScenario(toFrational(2, 1), toFrational(15, 1)),
-    toScenario(toFrational(4, 1), toFrational(2, 0)),
-    toScenario(toFrational(6, 1), toFrational(25, 1)),
-    toScenario(toFrational(1, 0), toFrational(3, 0)),
-    toScenario(toFrational(15, 1), toFrational(35, 1)),
+  toRiskCategoryInfo(0.05, 5, [
+    toScenario(0.1, 1),
+    toScenario(0.2, 1.5),
+    toScenario(0.4, 2),
+    toScenario(0.6, 2.5),
+    toScenario(1, 3),
+    toScenario(1.5, 3.5),
   ]), // very high
+  toRiskCategoryInfo(0.05, 10, [
+    toScenario(0.2, 0.5),
+    toScenario(0.3, 0.5),
+    toScenario(0.4, 0.5),
+    toScenario(0.5, 0.5),
+    toScenario(0.6, 0.5),
+    toScenario(0.7, 0.5),
+  ]), // custom 1
+  toRiskCategoryInfo(0.05, 15, [
+    toScenario(0.2, 0.5),
+    toScenario(0.3, 0.5),
+    toScenario(0.4, 0.5),
+    toScenario(0.5, 0.5),
+    toScenario(0.6, 0.5),
+    toScenario(0.7, 0.5),
+  ]), // custom 2
+  toRiskCategoryInfo(0.05, 20, [
+    toScenario(0.2, 0.5),
+    toScenario(0.3, 0.5),
+    toScenario(0.4, 0.5),
+    toScenario(0.5, 0.5),
+    toScenario(0.6, 0.5),
+    toScenario(0.7, 0.5),
+  ]), // custom 3
 ];

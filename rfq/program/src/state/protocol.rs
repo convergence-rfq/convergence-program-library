@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 
 use crate::errors::ProtocolError;
 
+use super::AuthoritySide;
+
 #[account]
 pub struct ProtocolState {
     // Protocol initiator
@@ -41,6 +43,16 @@ impl ProtocolState {
             .ok_or_else(|| error!(ProtocolError::NotAWhitelistedInstrument))
     }
 
+    pub fn get_instrument_parameters_mut(
+        &mut self,
+        instrument_key: Pubkey,
+    ) -> Result<&mut Instrument> {
+        self.instruments
+            .iter_mut()
+            .find(|x| x.program_key == instrument_key)
+            .ok_or_else(|| error!(ProtocolError::NotAWhitelistedInstrument))
+    }
+
     pub fn get_print_trade_provider_parameters(
         &self,
         print_trade_provider_key: Pubkey,
@@ -55,12 +67,12 @@ impl ProtocolState {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct PrintTradeProvider {
     pub program_key: Pubkey,
-    pub validate_data_accounts: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct Instrument {
     pub program_key: Pubkey,
+    pub enabled: bool,
     pub can_be_used_as_quote: bool,
     pub validate_data_account_amount: u8,
     pub prepare_to_settle_account_amount: u8,
@@ -71,18 +83,41 @@ pub struct Instrument {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct FeeParameters {
-    taker_bps: u64,
-    maker_bps: u64,
+    pub taker_bps: u64,
+    pub maker_bps: u64,
 }
 
 impl FeeParameters {
     pub const BPS_DECIMALS: usize = 9;
+
+    pub fn calculate_fees(&self, collateral_amount: u64, side: AuthoritySide) -> u64 {
+        let fees_bps = match side {
+            AuthoritySide::Taker => self.taker_bps,
+            AuthoritySide::Maker => self.maker_bps,
+        };
+
+        let result = (collateral_amount as u128) * (fees_bps as u128)
+            / 10_u128.pow(Self::BPS_DECIMALS as u32);
+
+        result as u64
+    }
+
+    pub fn validate(&self) -> Result<()> {
+        if self.taker_bps > 10_u64.pow(Self::BPS_DECIMALS as u32) {
+            return err!(ProtocolError::InvalidValueForAFee);
+        }
+        if self.maker_bps > 10_u64.pow(Self::BPS_DECIMALS as u32) {
+            return err!(ProtocolError::InvalidValueForAFee);
+        }
+        Ok(())
+    }
 }
 
 #[account]
 pub struct BaseAssetInfo {
     pub bump: u8,
     pub index: BaseAssetIndex,
+    pub enabled: bool,
     pub risk_category: RiskCategory,
     pub price_oracle: PriceOracle,
     pub ticker: String,
@@ -112,6 +147,9 @@ pub enum RiskCategory {
     Medium,
     High,
     VeryHigh,
+    Custom1,
+    Custom2,
+    Custom3,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

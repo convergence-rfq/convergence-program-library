@@ -10,6 +10,8 @@ pub enum ProtocolError {
     AlreadyAdded,
     #[msg("Can't add because the max limit is reached")]
     CannotAddBecauseOfMaxAmountLimit,
+    #[msg("Fee can't be higher than 100%")]
+    InvalidValueForAFee,
     #[msg("Invalid risk engine register")]
     InvalidRiskEngineRegister,
     #[msg("Passed mint is not a collateral mint")]
@@ -18,10 +20,14 @@ pub enum ProtocolError {
     NotACollateralTokenAccount,
     #[msg("Passed account is not a risk engine in the protocol")]
     NotARiskEngine,
+    #[msg("Invalid recent blockhash")]
+    InvalidRecentBlockhash,
     #[msg("An Rfq without legs is not supported")]
     EmptyLegsNotSupported,
-    #[msg("Leg size does not match specified expected leg size")]
-    LegSizeDoesNotMatchExpectedSize,
+    #[msg("Legs size does not match specified expected leg size")]
+    LegsSizeDoesNotMatchExpectedSize,
+    #[msg("Legs hash does not match specified expected leg hash")]
+    LegsHashDoesNotMatchExpectedHash,
     #[msg("Not enough tokens")]
     NotEnoughTokens,
     #[msg("Not enough collateral")]
@@ -104,4 +110,14 @@ pub enum ProtocolError {
     NoPrintTradeToCleanUp,
     #[msg("Print trade not cleaned up")]
     PrintTradeNotCleanedUp,
+    #[msg("Amount of asset to transfer overflows")]
+    AssetAmountOverflow,
+    #[msg("Price should be positive for fixed quote asset amount RFQ")]
+    PriceShouldBePositive,
+    #[msg("Already has a status to set")]
+    AlreadyHasAStatusToSet,
+    #[msg("Can't create an rfq using a disabled instrument")]
+    InstrumentIsDisabled,
+    #[msg("Can't create an rfq using a disabled base asset")]
+    BaseAssetIsDisabled,
 }

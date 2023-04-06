@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::get_associated_token_address;
 
@@ -85,36 +87,33 @@ impl Response {
         &self,
         rfq: &Rfq,
         asset_identifier: AssetIdentifier,
-        side: AuthoritySide,
-    ) -> i64 {
+    ) -> u64 {
         match asset_identifier {
-            AssetIdentifier::Leg { leg_index } => {
-                self.get_leg_amount_to_transfer(rfq, leg_index, side)
-            }
-            AssetIdentifier::Quote => self.get_quote_amount_to_transfer(rfq, side),
+            AssetIdentifier::Leg { leg_index } => self.get_leg_amount_to_transfer(rfq, leg_index),
+            AssetIdentifier::Quote => self.get_quote_amount_to_transfer(rfq),
         }
     }
 
-    pub fn get_leg_amount_to_transfer(&self, rfq: &Rfq, leg_index: u8, side: AuthoritySide) -> i64 {
+    pub fn get_leg_amount_to_transfer(&self, rfq: &Rfq, leg_index: u8) -> u64 {
         let leg = &rfq.legs[leg_index as usize];
-        let confirmation = self.confirmed.unwrap();
         let leg_multiplier_bps = self.calculate_confirmed_legs_multiplier_bps(rfq);
 
-        let result = leg.instrument_amount as u128 * leg_multiplier_bps as u128
-            / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS);
-        let mut result = result as i64;
+        let result_with_more_decimals = leg.instrument_amount as u128 * leg_multiplier_bps as u128;
 
-        if let Side::Ask = leg.side {
-            result = -result;
-        }
-        if let AuthoritySide::Taker = side {
-            result = -result;
-        }
-        if let Side::Bid = confirmation.side {
-            result = -result;
+        let decimals_factor = Quote::LEG_MULTIPLIER_FACTOR;
+        let mut result = result_with_more_decimals / decimals_factor;
+
+        // if a maker receives assets, we round additinal decimals up
+        // to prevent taker from leg multiplier manipulation attack by a taker
+        let receiver = self.get_leg_assets_receiver(rfq, leg_index);
+        if receiver == AuthoritySide::Maker && result_with_more_decimals % decimals_factor > 0 {
+            result += 1;
         }
 
         result
+            .try_into()
+            .map_err(|_| error!(ProtocolError::AssetAmountOverflow))
+            .unwrap()
     }
 
     pub fn calculate_confirmed_legs_multiplier_bps(&self, rfq: &Rfq) -> u64 {
@@ -125,7 +124,7 @@ impl Response {
 
     pub fn calculate_legs_multiplier_bps_for_quote(&self, rfq: &Rfq, quote: Quote) -> u64 {
         match quote {
-            Quote::Standart {
+            Quote::Standard {
                 price_quote: _,
                 legs_multiplier_bps,
             } => legs_multiplier_bps,
@@ -140,62 +139,67 @@ impl Response {
                     legs_multiplier_bps,
                 } => legs_multiplier_bps,
                 FixedSize::QuoteAsset { quote_amount } => {
+                    // only positive prices allowed for fixed quote asset rfqs
+                    let price_bps = price_bps as u128;
+
                     // quote multiplied by leg decimals divided by the price
                     let leg_multiplier_bps = quote_amount as u128
                         * 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS)
                         * 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS)
                         / price_bps;
-                    leg_multiplier_bps as u64
+
+                    leg_multiplier_bps
+                        .try_into()
+                        .map_err(|_| error!(ProtocolError::AssetAmountOverflow))
+                        .unwrap()
                 }
             },
         }
     }
 
-    pub fn get_quote_amount_to_transfer(&self, rfq: &Rfq, side: AuthoritySide) -> i64 {
-        let confirmation = self.confirmed.unwrap();
-        let quote = self.get_confirmed_quote().unwrap();
+    pub fn get_quote_amount_to_transfer(&self, rfq: &Rfq) -> u64 {
+        // if an rfq is with fixed quote amount, just return it
+        if let FixedSize::QuoteAsset { quote_amount } = rfq.fixed_size {
+            return quote_amount;
+        }
 
-        let mut result = if let FixedSize::QuoteAsset { quote_amount } = rfq.fixed_size {
-            quote_amount as i64
-        } else {
-            let legs_multiplier_bps = match quote {
-                Quote::Standart {
-                    price_quote: _,
+        let quote = self.get_confirmed_quote().unwrap();
+        let legs_multiplier_bps = match quote {
+            Quote::Standard {
+                price_quote: _,
+                legs_multiplier_bps,
+            } => legs_multiplier_bps,
+            Quote::FixedSize {
+                price_quote: PriceQuote::AbsolutePrice { amount_bps: _ },
+            } => match rfq.fixed_size {
+                FixedSize::BaseAsset {
                     legs_multiplier_bps,
                 } => legs_multiplier_bps,
-                Quote::FixedSize {
-                    price_quote: PriceQuote::AbsolutePrice { amount_bps: _ },
-                } => match rfq.fixed_size {
-                    FixedSize::BaseAsset {
-                        legs_multiplier_bps,
-                    } => legs_multiplier_bps,
-                    FixedSize::None { padding: _ } => unreachable!(),
-                    FixedSize::QuoteAsset { quote_amount: _ } => unreachable!(),
-                },
-            };
-            let price_bps = match quote {
-                Quote::Standart {
-                    price_quote: PriceQuote::AbsolutePrice { amount_bps },
-                    legs_multiplier_bps: _,
-                } => amount_bps,
-                Quote::FixedSize {
-                    price_quote: PriceQuote::AbsolutePrice { amount_bps },
-                } => amount_bps,
-            };
-
-            let result = legs_multiplier_bps as u128 * price_bps
-                / 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS + PriceQuote::ABSOLUTE_PRICE_DECIMALS);
-            result as i64
+                FixedSize::None { padding: _ } => unreachable!(),
+                FixedSize::QuoteAsset { quote_amount: _ } => unreachable!(),
+            },
         };
 
-        if let Side::Bid = confirmation.side {
-            result = -result;
-        }
-        if let AuthoritySide::Maker = side {
-            result = -result;
+        let price_bps = quote.get_price_bps();
+        let positibe_price_bps = price_bps.abs() as u128; // negative price is handled in get_quote_tokens_receiver
+
+        let result_with_more_decimals = legs_multiplier_bps as u128 * positibe_price_bps
+            / 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS);
+
+        let decimals_factor = Quote::LEG_MULTIPLIER_FACTOR;
+        let mut result = result_with_more_decimals / decimals_factor;
+
+        // if a maker receives a quote, we round additinal decimals up
+        // to prevent taker from leg multiplier manipulation attack by a taker
+        let receiver = self.get_quote_tokens_receiver();
+        if receiver == AuthoritySide::Maker && result_with_more_decimals % decimals_factor > 0 {
+            result += 1;
         }
 
         result
+            .try_into()
+            .map_err(|_| error!(ProtocolError::AssetAmountOverflow))
+            .unwrap()
     }
 
     pub fn get_assets_receiver(
@@ -205,26 +209,44 @@ impl Response {
     ) -> AuthoritySide {
         match asset_identifier {
             AssetIdentifier::Leg { leg_index } => self.get_leg_assets_receiver(rfq, leg_index),
-            AssetIdentifier::Quote => self.get_quote_tokens_receiver(rfq),
+            AssetIdentifier::Quote => self.get_quote_tokens_receiver(),
         }
     }
 
     pub fn get_leg_assets_receiver(&self, rfq: &Rfq, leg_index: u8) -> AuthoritySide {
-        let taker_amount = self.get_leg_amount_to_transfer(rfq, leg_index, AuthoritySide::Taker);
-        if taker_amount > 0 {
-            AuthoritySide::Maker
-        } else {
-            AuthoritySide::Taker
+        let leg = &rfq.legs[leg_index as usize];
+        let confirmation = self.confirmed.unwrap();
+
+        // leg assets receiver for a bid leg and with the ask response from maker is a taker
+        let mut receiver = AuthoritySide::Taker;
+
+        if let Side::Ask = leg.side {
+            receiver = receiver.inverse();
         }
+        if let Side::Bid = confirmation.side {
+            receiver = receiver.inverse();
+        }
+
+        receiver
     }
 
-    pub fn get_quote_tokens_receiver(&self, rfq: &Rfq) -> AuthoritySide {
-        let taker_amount = self.get_quote_amount_to_transfer(rfq, AuthoritySide::Taker);
-        if taker_amount > 0 {
-            AuthoritySide::Maker
-        } else {
-            AuthoritySide::Taker
+    pub fn get_quote_tokens_receiver(&self) -> AuthoritySide {
+        let confirmation = self.confirmed.unwrap();
+        let quote = self.get_confirmed_quote().unwrap();
+        let price_bps = quote.get_price_bps();
+
+        // quote assets receiver for the ask response from maker is a maker
+        let mut receiver = AuthoritySide::Maker;
+
+        if let Side::Bid = confirmation.side {
+            receiver = receiver.inverse();
         }
+
+        if price_bps < 0 {
+            receiver = receiver.inverse();
+        }
+
+        receiver
     }
 
     pub fn get_confirmed_quote(&self) -> Option<Quote> {
@@ -241,7 +263,7 @@ impl Response {
                 if let Some(override_leg_multiplier_bps) = confirmation.override_leg_multiplier_bps
                 {
                     match &mut quote {
-                        Quote::Standart {
+                        Quote::Standard {
                             price_quote: _,
                             legs_multiplier_bps,
                         } => *legs_multiplier_bps = override_leg_multiplier_bps,
@@ -363,7 +385,7 @@ pub enum AuthoritySide {
 }
 
 impl AuthoritySide {
-    pub fn revert(self) -> Self {
+    pub fn inverse(self) -> Self {
         match self {
             AuthoritySide::Taker => AuthoritySide::Maker,
             AuthoritySide::Maker => AuthoritySide::Taker,
@@ -396,7 +418,7 @@ impl AuthoritySide {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum Quote {
-    Standart {
+    Standard {
         price_quote: PriceQuote,
         legs_multiplier_bps: u64,
     },
@@ -407,11 +429,24 @@ pub enum Quote {
 
 impl Quote {
     pub const LEG_MULTIPLIER_DECIMALS: u32 = 9;
+    pub const LEG_MULTIPLIER_FACTOR: u128 = 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS);
+
+    pub fn get_price_bps(&self) -> i128 {
+        match self {
+            Quote::Standard {
+                price_quote: PriceQuote::AbsolutePrice { amount_bps },
+                legs_multiplier_bps: _,
+            } => *amount_bps,
+            Quote::FixedSize {
+                price_quote: PriceQuote::AbsolutePrice { amount_bps },
+            } => *amount_bps,
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum PriceQuote {
-    AbsolutePrice { amount_bps: u128 },
+    AbsolutePrice { amount_bps: i128 }, // this value have ABSOLUTE_PRICE_DECIMALS + quote asset mint decimals
 }
 
 impl PriceQuote {
