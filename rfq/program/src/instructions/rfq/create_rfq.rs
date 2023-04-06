@@ -83,7 +83,12 @@ fn validate_legs<'a, 'info: 'a>(
         ProtocolError::LegsDataTooBig
     );
 
-    common_validate_legs(legs, protocol, remaining_accounts)?;
+    common_validate_legs(
+        legs,
+        protocol,
+        remaining_accounts,
+        is_settled_as_print_trade,
+    )?;
 
     Ok(())
 }
@@ -115,8 +120,19 @@ pub fn create_rfq_instruction<'info>(
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-    validate_quote(protocol, &mut remaining_accounts, &quote_asset)?;
-    validate_legs(protocol, &mut remaining_accounts, expected_legs_size, &legs)?;
+    validate_quote(
+        protocol,
+        &mut remaining_accounts,
+        &quote_asset,
+        print_trade_provider.is_some(),
+    )?;
+    validate_legs(
+        protocol,
+        &mut remaining_accounts,
+        expected_legs_size,
+        &legs,
+        print_trade_provider.is_some(),
+    )?;
     validate_recent_timestamp(recent_timestamp)?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;

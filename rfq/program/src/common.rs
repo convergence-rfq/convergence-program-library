@@ -91,20 +91,29 @@ pub fn validate_legs<'a, 'info: 'a>(
     legs: &[Leg],
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+    is_settled_as_print_trade: bool,
 ) -> Result<()> {
     for leg in legs.iter() {
-        let instrument = protocol.get_instrument_parameters(leg.instrument_program)?;
-        require!(instrument.enabled, ProtocolError::InstrumentIsDisabled);
-
         let base_asset_account = remaining_accounts
             .next()
             .ok_or_else(|| error!(ProtocolError::NotEnoughAccounts))?;
         let base_asset = Account::<BaseAssetInfo>::try_from(base_asset_account)?;
+        require!(
+            leg.base_asset_index == base_asset.index,
+            ProtocolError::BaseAssetIsDisabled
+        );
         require!(base_asset.enabled, ProtocolError::BaseAssetIsDisabled);
     }
 
-    for leg in legs.iter() {
-        validate_leg_instrument_data(leg, protocol, remaining_accounts)?;
+    if !is_settled_as_print_trade {
+        for leg in legs.iter() {
+            let instrument = protocol.get_instrument_parameters(leg.instrument_program)?;
+            require!(instrument.enabled, ProtocolError::InstrumentIsDisabled);
+        }
+
+        for leg in legs.iter() {
+            validate_leg_instrument_data(leg, protocol, remaining_accounts)?;
+        }
     }
 
     Ok(())

@@ -9,8 +9,8 @@ crate-type = ["cdylib", "lib"]
 name = "hxro_instrument"
 
 [dependencies]
-anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
-dex-cpi = { path="../dex-cpi", features=["cpi"] }
-risk-cpi = { path="../risk-cpi", features=["cpi"] }
+anchor-lang = { version = "0.27.0", features = ["init-if-needed"] }
+dex-cpi = { path = "../dex-cpi", features = ["cpi"] }
+risk-cpi = { path = "../risk-cpi", features = ["cpi"] }
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
 borsh = "0.9.3"

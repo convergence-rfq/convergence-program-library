@@ -1,8 +1,8 @@
-use std::ops::Deref;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
+use std::ops::Deref;
 
 use rfq::state::{AuthoritySide, Side};
 
@@ -65,10 +65,15 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
             let leg_data: ParsedLegData =
                 AnchorDeserialize::try_from_slice(&leg.instrument_data).unwrap();
 
+            let mut amount = response.get_leg_amount_to_transfer(&rfq, i as u8) as i64;
+            if authority_side != response.get_leg_assets_receiver(&rfq, i as u8) {
+                amount = -amount;
+            }
+
             dex_cpi::typedefs::PrintTradeProductIndex {
                 product_index: leg_data.product_index as u64,
                 size: dex_cpi::typedefs::Fractional {
-                    m: response.get_leg_amount_to_transfer(&rfq, i as u8, authority_side),
+                    m: amount,
                     exp: leg.instrument_decimals as u64,
                 },
             }
@@ -82,9 +87,9 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
         products[i] = product_vec[i];
     }
 
-    let abs_price = response.get_quote_amount_to_transfer(&rfq, authority_side);
+    let abs_price = response.get_quote_amount_to_transfer(&rfq);
     let price = dex_cpi::typedefs::Fractional {
-        m: abs_price,
+        m: abs_price as i64,
         exp: 1,
     };
 
@@ -106,9 +111,7 @@ pub fn sign_print_trade(ctx: &Context<SettlePrintTrade>) -> Result<()> {
         ctx.accounts.print_trade.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
         ctx.accounts.fee_model_program.to_account_info(),
-        ctx.accounts
-            .fee_model_configuration_acct
-            .to_account_info(),
+        ctx.accounts.fee_model_configuration_acct.to_account_info(),
         ctx.accounts.fee_output_register.to_account_info(),
         ctx.accounts.risk_engine_program.to_account_info(),
         ctx.accounts.risk_model_configuration_acct.to_account_info(),

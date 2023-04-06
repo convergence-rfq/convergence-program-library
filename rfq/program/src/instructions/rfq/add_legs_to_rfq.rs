@@ -24,9 +24,12 @@ fn validate<'info>(
     let AddLegsToRfqAccounts { protocol, rfq, .. } = &ctx.accounts;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    if !rfq.is_settled_as_print_trade() {
-        validate_legs(legs, protocol, &mut remaining_accounts)?;
-    }
+    validate_legs(
+        legs,
+        protocol,
+        &mut remaining_accounts,
+        rfq.is_settled_as_print_trade(),
+    )?;
 
     require!(legs.len() > 0, ProtocolError::EmptyLegsNotSupported);
     require!(
