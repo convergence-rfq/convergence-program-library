@@ -65,6 +65,7 @@ import {
   RiskCategoryInfo,
   OrderType,
   FeeParams,
+  toPriceOracle,
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
@@ -238,10 +239,8 @@ export class Context {
   async addBaseAsset(baseAssetIndex: number, ticker: string, riskCategory: RiskCategory, oracle: PublicKey) {
     const baseAssetPda = await getBaseAssetPda(baseAssetIndex, this.program.programId);
 
-    await this.program.methods // @ts-ignore Strange error with anchor IDL parsing
-      .addBaseAsset({ value: baseAssetIndex }, ticker, riskCategoryToObject(riskCategory), {
-        switchboard: { address: oracle },
-      })
+    await this.program.methods
+      .addBaseAsset({ value: baseAssetIndex }, ticker, riskCategoryToObject(riskCategory), toPriceOracle(oracle))
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -293,10 +292,21 @@ export class Context {
       .rpc();
   }
 
-  async setBaseAssetEnabledStatus(index: number, statusToSet: boolean) {
+  async changeBaseAssetParametersStatus(
+    index: number,
+    {
+      enabled = null,
+      riskCategory = null,
+      priceOracle = null,
+    }: {
+      enabled?: boolean | null;
+      riskCategory?: RiskCategory | null;
+      priceOracle?: PublicKey | null;
+    }
+  ) {
     const baseAsset = await getBaseAssetPda(index, this.program.programId);
     await this.program.methods
-      .setBaseAssetEnabledStatus(statusToSet)
+      .changeBaseAssetParameters(enabled, riskCategory, priceOracle && toPriceOracle(priceOracle))
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,

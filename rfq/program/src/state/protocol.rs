@@ -141,7 +141,7 @@ impl From<BaseAssetIndex> for u16 {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq, Debug)]
 pub enum RiskCategory {
     VeryLow,
     Low,
@@ -153,7 +153,7 @@ pub enum RiskCategory {
     Custom3,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
 pub enum PriceOracle {
     Switchboard { address: Pubkey },
 }

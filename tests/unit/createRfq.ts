@@ -26,14 +26,14 @@ describe("Create RFQ", () => {
 
   it("Cannot create rfq with the disabled base asset", async () => {
     context.assetToken.assertRegisteredAsBaseAsset();
-    await context.setBaseAssetEnabledStatus(context.assetToken.baseAssetIndex, false);
+    await context.changeBaseAssetParametersStatus(context.assetToken.baseAssetIndex, { enabled: false });
     await expectError(
       context.createRfq({
         legs: [SpotInstrument.createForLeg(context, { mint: context.assetToken, amount: new BN(10) })],
       }),
       "BaseAssetIsDisabled"
     );
-    await context.setBaseAssetEnabledStatus(context.assetToken.baseAssetIndex, true);
+    await context.changeBaseAssetParametersStatus(context.assetToken.baseAssetIndex, { enabled: true });
   });
 
   it("Cannot create rfq with the disabled instrument", async () => {
