@@ -1,16 +1,26 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/spot-instrument/program/src/errors.rs)
 
-This code defines an error handling module for the Convergence Program Library project. The module defines an enum called `SpotError` which contains several error codes that can be used to handle errors that may occur during the execution of the project.
+This code defines an error handling module for the Convergence Program Library project. The module uses the `anchor_lang` crate, which is a Rust-based framework for building Solana blockchain applications. The purpose of this module is to provide a set of error codes that can be used throughout the project to handle various types of errors that may occur during execution.
 
-Each error code is defined using the `#[msg("error message")]` attribute, which allows for a custom error message to be associated with each error code. For example, the `InvalidDataSize` error code has the message "Invalid data size" associated with it.
+The `SpotError` enum defines a set of error codes using the `#[error_code]` attribute. Each error code is associated with a message that describes the error. For example, the `InvalidDataSize` error code is associated with the message "Invalid data size". These error codes can be used to provide more detailed information about the cause of an error when it occurs.
 
-The `#[error_code]` attribute is used to mark the `SpotError` enum as an error code, which allows it to be used with the `ProgramError` type from the `anchor_lang` crate. This type is used to represent errors that occur during the execution of a Solana program.
+The `SpotError` module can be used throughout the Convergence Program Library project to handle errors that occur during execution. For example, if a function in the project encounters an error related to data size, it can return the `InvalidDataSize` error code to indicate the cause of the error. This allows the calling code to handle the error appropriately, such as by logging the error or displaying an error message to the user.
 
-The purpose of this module is to provide a standardized way of handling errors that may occur during the execution of the Convergence Program Library project. By defining custom error codes with associated error messages, developers can easily identify and handle errors that occur during the execution of the project.
+Here is an example of how the `SpotError` module might be used in the Convergence Program Library project:
 
-For example, if the `InvalidDataSize` error code is returned during the execution of the project, the developer can easily identify that the error is related to invalid data size and take appropriate action to handle the error.
+```rust
+fn process_data(data: &[u8]) -> Result<(), SpotError> {
+    if data.len() > MAX_DATA_SIZE {
+        return Err(SpotError::InvalidDataSize);
+    }
+    // process data
+    Ok(())
+}
+```
 
-Overall, this module is an important part of the Convergence Program Library project as it provides a standardized way of handling errors that may occur during the execution of the project.
+In this example, the `process_data` function takes a slice of bytes as input and returns a `Result` indicating whether the processing was successful or not. If the data size exceeds a maximum value, the function returns an `Err` containing the `InvalidDataSize` error code. The calling code can then handle the error appropriately, such as by displaying an error message to the user or logging the error for debugging purposes.
+
+Overall, the `SpotError` module provides a useful set of error codes that can be used throughout the Convergence Program Library project to handle errors in a consistent and informative way.
 ## Questions: 
  1. What is the purpose of this code?
 - This code defines an error handling system for the Convergence Program Library using the `anchor_lang` crate.

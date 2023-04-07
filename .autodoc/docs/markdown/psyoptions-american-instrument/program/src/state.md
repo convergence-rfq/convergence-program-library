@@ -2,21 +2,45 @@
 
 This code defines several enums and structs that are used in the Convergence Program Library project. 
 
-The `AuthoritySideDuplicate` enum is a duplicate of the `AuthoritySide` enum from the `rfq` crate. It has two variants, `Taker` and `Maker`, which are used to represent the two sides of an RFQ (request for quote) transaction. The `From` trait is implemented for `AuthoritySideDuplicate` to convert it into `AuthoritySide`.
+The `AuthoritySideDuplicate` enum is a duplicate of the `AuthoritySide` enum from the `rfq` crate. It has two variants, `Taker` and `Maker`, which are used to represent the two sides of an RFQ (request for quote) transaction. The `From` trait is implemented for `AuthoritySideDuplicate` to convert it to `AuthoritySide`.
 
-The `OptionType` enum is used to represent the type of an option contract. It has two variants, `CALL` and `PUT`, which correspond to call and put options, respectively.
+The `OptionType` enum is used to represent the type of an option, either a call or a put. It has two variants, `CALL` and `PUT`, which are represented as `0` and `1`, respectively.
 
-The `AssetIdentifierDuplicate` enum is a duplicate of the `AssetIdentifier` enum from the `rfq` crate. It has two variants, `Leg` and `Quote`, which are used to identify the underlying asset of an option contract. The `From` trait is implemented for `AssetIdentifierDuplicate` to convert it into `AssetIdentifier`.
+The `AssetIdentifierDuplicate` enum is a duplicate of the `AssetIdentifier` enum from the `rfq` crate. It has two variants, `Leg` and `Quote`, which are used to identify the assets involved in an RFQ transaction. The `From` trait is implemented for `AssetIdentifierDuplicate` to convert it to `AssetIdentifier`.
 
-The `ParsedLegData` struct is used to store data about an option contract leg. It contains an `OptionCommonData` struct, which stores common data about the option contract, as well as the mint address and American meta address of the leg. The `SERIALIZED_SIZE` constant is defined for `ParsedLegData` to indicate the size of a serialized `ParsedLegData` instance.
+The `ParsedLegData` struct is used to store data about an option leg. It contains an `OptionCommonData` struct, which stores common data about the option, such as the strike price and expiration date. It also contains the mint address and American meta address for the option leg. The `SERIALIZED_SIZE` constant is defined to be the size of the serialized `ParsedLegData` struct.
 
-Overall, these enums and structs are used to represent various aspects of option contracts and RFQ transactions in the Convergence Program Library project. They provide a standardized way of representing these concepts and allow for easy conversion between related types. For example, the `From` trait implementations allow for easy conversion between `AuthoritySideDuplicate` and `AuthoritySide`, as well as between `AssetIdentifierDuplicate` and `AssetIdentifier`.
+Overall, this code provides a set of enums and structs that are used to represent various aspects of options trading, such as the type of option, the assets involved in a transaction, and data about an option leg. These enums and structs are likely used throughout the Convergence Program Library project to facilitate options trading. 
+
+Example usage:
+
+```
+let option_type = OptionType::CALL;
+let asset_identifier = AssetIdentifierDuplicate::Leg { leg_index: 0 };
+let authority_side = AuthoritySideDuplicate::Taker;
+let parsed_leg_data = ParsedLegData {
+    option_common_data: OptionCommonData {
+        strike_price: 100,
+        expiration_date: 1234567890,
+    },
+    mint_address: Pubkey::new_unique(),
+    american_meta_address: Pubkey::new_unique(),
+};
+
+// Convert enums to their corresponding types
+let option_type_u8 = option_type as u8;
+let asset_identifier_converted = AssetIdentifier::from(asset_identifier);
+let authority_side_converted = AuthoritySide::from(authority_side);
+
+// Use the parsed leg data
+let serialized_size = ParsedLegData::SERIALIZED_SIZE;
+```
 ## Questions: 
- 1. What is the purpose of this code file?
-- This code file defines enums and structs related to options trading, including asset identifiers, authority sides, and option types.
+ 1. What is the purpose of this code and what problem does it solve?
+- This code defines enums and structs for asset and authority identification, option types, and parsed leg data for use in the Convergence Program Library.
 
-2. What is the significance of the `TOKEN_DECIMALS` constant?
-- The `TOKEN_DECIMALS` constant is set to 0, which indicates that the token being used in this context has 0 decimal places.
+2. What external dependencies does this code rely on?
+- This code relies on the `anchor_lang` and `rfq` crates for prelude and state functionality, respectively, as well as the `risk_engine` crate for option common data.
 
-3. What is the `ParsedLegData` struct used for?
-- The `ParsedLegData` struct contains data related to a single leg of an options contract, including option common data, the mint address, and the American meta address.
+3. What is the significance of the `TOKEN_DECIMALS` constant?
+- The `TOKEN_DECIMALS` constant is set to 0, indicating that the token has no decimal places. This may be important for certain calculations or formatting of token values.

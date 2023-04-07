@@ -1,47 +1,33 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/rfq/unlock_rfq_collateral.rs)
 
-The code defines an instruction and its associated accounts for unlocking collateral in the context of a Request for Quote (RFQ) protocol. The instruction is part of a larger project called Convergence Program Library. 
+The code is a Rust module that defines an instruction to unlock collateral for a Request for Quote (RFQ) in the Convergence Program Library project. The module defines a struct `UnlockRfqCollateralAccounts` that specifies the accounts required to execute the instruction. The accounts include a `ProtocolState` account, a mutable `Rfq` account, and a `CollateralInfo` account. The `ProtocolState` account is used to verify the authenticity of the instruction, while the `Rfq` account represents the RFQ for which the collateral is being unlocked. The `CollateralInfo` account contains information about the collateral locked for the RFQ.
 
-The `UnlockRfqCollateralAccounts` struct defines the accounts required for the instruction. It includes a reference to the `ProtocolState` account, a mutable reference to the `Rfq` account, and a mutable reference to the `CollateralInfo` account. The `ProtocolState` account is used to ensure that the instruction is authorized by the protocol. The `Rfq` account represents the RFQ for which collateral is being unlocked. The `CollateralInfo` account contains information about the collateral locked by the taker in the RFQ.
+The module also defines a `validate` function that checks if the RFQ is in a valid state for collateral unlocking. The RFQ must be in one of the following states: `Canceled`, `Expired`, `Settling`, or `SettlingEnded`. Additionally, the RFQ must have non-zero collateral locked for the taker. If any of these conditions are not met, the function returns an error.
 
-The `validate` function checks that the RFQ is in a valid state for collateral to be unlocked. The RFQ must be in one of the following states: `Canceled`, `Expired`, `Settling`, or `SettlingEnded`. Additionally, the RFQ must have non-zero collateral locked by the taker, otherwise a `NoCollateralLocked` error is returned.
+The main function of the module is `unlock_rfq_collateral_instruction`, which unlocks the collateral for the RFQ. The function first calls the `validate` function to ensure that the RFQ is in a valid state. If the validation succeeds, the function unlocks the collateral by calling the `unlock_collateral` method on the `CollateralInfo` account with the amount of collateral locked for the taker. The function then sets the `non_response_taker_collateral_locked` field of the `Rfq` account to zero and subtracts the amount of collateral from the `total_taker_collateral_locked` field.
 
-The `unlock_rfq_collateral_instruction` function unlocks the collateral locked by the taker in the RFQ. It first calls the `validate` function to ensure that the RFQ is in a valid state. It then retrieves the collateral and RFQ accounts from the context. The collateral is unlocked by calling the `unlock_collateral` function on the `CollateralInfo` account with the amount of collateral locked by the taker. The collateral locked by the taker is then set to zero, and the total collateral locked by the taker is updated to reflect the unlocked collateral.
-
-This instruction can be used in the larger project to allow the taker to unlock their collateral in an RFQ protocol. This is useful in cases where the RFQ is no longer valid or has expired, and the taker wants to retrieve their collateral. The instruction ensures that the RFQ is in a valid state for collateral to be unlocked, and that the collateral is unlocked correctly. 
-
-Example usage of this instruction might look like:
+This module can be used in the larger Convergence Program Library project to allow takers to unlock their collateral after an RFQ has been canceled, expired, or settled. The module ensures that the RFQ is in a valid state for collateral unlocking and that the correct amount of collateral is unlocked. The `UnlockRfqCollateralAccounts` struct specifies the required accounts for the instruction, which can be passed to the Solana runtime for execution. An example usage of the module is shown below:
 
 ```rust
-let program = anchor_lang::Program::new("convergence_program_library", client, payer);
-
-let protocol = program.account(PROTOCOL_STATE_ACCOUNT).await?;
-let rfq = program.account(RFQ_ACCOUNT).await?;
-let collateral_info = program.account(COLLATERAL_INFO_ACCOUNT).await?;
+let program_id = Pubkey::new_unique();
+let protocol = Account::new(&[0; 32], ProtocolState::LEN, &program_id);
+let rfq = Account::new(&[0; 32], Rfq::LEN, &program_id);
+let collateral_info = Account::new(&[0; 32], CollateralInfo::LEN, &program_id);
 
 let accounts = UnlockRfqCollateralAccounts {
-    protocol,
-    rfq: Box::new(rfq),
-    collateral_info,
+    protocol: protocol.into(),
+    rfq: Box::new(rfq.into()),
+    collateral_info: collateral_info.into(),
 };
 
-program
-    .instruction::<UnlockRfqCollateralAccounts>(
-        &accounts,
-        &[],
-        &[],
-    )
-    .await?;
+unlock_rfq_collateral_instruction(accounts)?;
 ```
 ## Questions: 
  1. What is the purpose of the `UnlockRfqCollateralAccounts` struct and its associated `Accounts` derive macro?
-   
-   The `UnlockRfqCollateralAccounts` struct is used to define the accounts required for the `unlock_rfq_collateral_instruction` function. The `Accounts` derive macro is used to generate the necessary Anchor accounts for the function.
+- The `UnlockRfqCollateralAccounts` struct is used to define the accounts required for the `unlock_rfq_collateral_instruction` function. The `Accounts` derive macro is used to generate the necessary Anchor accounts for the function.
 
-2. What is the `validate` function checking for and what happens if it fails?
-   
-   The `validate` function checks that the RFQ state is in one of four possible states and that there is non-zero collateral locked by the taker. If the validation fails, a `ProtocolError::NoCollateralLocked` error is returned.
+2. What is the `validate` function checking for and why is it necessary?
+- The `validate` function checks that the RFQ state is in one of the allowed states, that there is collateral locked by the taker, and that the protocol bump is correct. It is necessary to ensure that the function can only be called in the correct context and with the correct parameters.
 
-3. What happens in the `unlock_rfq_collateral_instruction` function and what accounts are involved?
-   
-   The `unlock_rfq_collateral_instruction` function unlocks the collateral locked by the taker in the RFQ and updates the RFQ state accordingly. The `rfq` and `collateral_info` accounts are involved in the function.
+3. What happens in the `unlock_rfq_collateral_instruction` function and why is it important?
+- The `unlock_rfq_collateral_instruction` function unlocks the collateral locked by the taker in the RFQ and updates the RFQ state accordingly. It is important because it allows the taker to retrieve their collateral after the RFQ has been settled or cancelled.

@@ -1,22 +1,32 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/spot-instrument/program/src/lib.rs)
 
-The code is a part of the Convergence Program Library and provides functionality for settling trades in a spot market. The spot market is a market where financial instruments, such as stocks and currencies, are traded for immediate delivery. The code defines a program called `spot_instrument` that contains several methods for preparing and settling trades in a spot market.
+The code is a part of the Convergence Program Library project and contains a program called `spot_instrument`. This program provides functionality for settling trades of financial instruments on the Convergence platform. The program is implemented as a set of methods that can be called by users of the platform.
 
-The `spot_instrument` program has five methods: `validate_data`, `prepare_to_settle`, `settle`, `revert_preparation`, and `clean_up`. The `validate_data` method validates the data provided by the user against the protocol's data. The `prepare_to_settle` method prepares the trade for settlement by transferring the assets from the user's account to an escrow account. The `settle` method settles the trade by transferring the assets from the escrow account to the user's account. The `revert_preparation` method reverts the preparation for settlement by transferring the assets from the escrow account back to the user's account. The `clean_up` method cleans up the escrow account after settlement by transferring any remaining assets to a backup account.
+The `spot_instrument` program has several methods that are used to validate data, prepare for settlement, settle trades, revert preparation, and clean up after settlement. These methods take in various accounts and data structures as arguments and perform operations on them.
 
-The `spot_instrument` program uses several external crates, including `anchor_lang`, `anchor_spl`, and `rfq`. The `anchor_lang` crate provides a framework for writing Solana programs in Rust. The `anchor_spl` crate provides a set of Solana Program Library (SPL) instructions for interacting with SPL tokens. The `rfq` crate provides a set of data structures for implementing a request for quote (RFQ) protocol.
+The `validate_data` method is used to validate the data provided by the user for a given financial instrument. It checks that the size of the data is correct, that the passed mint matches the expected mint, and that the base asset matches the expected base asset.
 
-The `spot_instrument` program defines several structs and enums, including `AssetIdentifier`, `AuthoritySide`, `MintInfo`, `MintType`, `ProtocolState`, `Response`, and `Rfq`. These data structures are used to represent the state of the spot market and the trades being settled.
+The `prepare_to_settle` method is used to prepare for settlement of a trade. It takes in the asset identifier and the side of the trade (buy or sell) and performs the necessary operations to transfer the assets to the escrow account.
 
-The `spot_instrument` program also defines several constants, including `ESCROW_SEED`, which is used as a seed for generating the escrow account's address.
+The `settle` method is used to settle a trade. It takes in the asset identifier and transfers the assets from the escrow account to the receiver's account.
 
-Overall, the `spot_instrument` program provides a set of methods for settling trades in a spot market. The program uses external crates and data structures to implement the functionality. The program is designed to be used as a part of the Convergence Program Library.
+The `revert_preparation` method is used to revert the preparation for settlement of a trade. It takes in the asset identifier and the side of the trade and transfers the assets back to the original owner.
+
+The `clean_up` method is used to clean up after settlement of a trade. It takes in the asset identifier and transfers any remaining assets from the escrow account to the backup receiver's account.
+
+The `transfer_from_an_escrow` method is a helper method that is used to transfer assets from the escrow account to the receiver's account.
+
+The `close_escrow_account` method is a helper method that is used to close the escrow account after settlement of a trade.
+
+The `Response` struct is used to store the response data for a trade. It contains methods that are used to get the assets receiver, the asset amount to transfer, and the preparation initialized by a given asset identifier.
+
+Overall, the `spot_instrument` program provides the necessary functionality for settling trades of financial instruments on the Convergence platform. It is a key component of the Convergence Program Library project and is used extensively by other parts of the project.
 ## Questions: 
  1. What is the purpose of the `Convergence Program Library` and how does this code fit into it?
 - The purpose of the `Convergence Program Library` is not clear from this code alone. Further documentation or context is needed to understand the overall project and how this code fits into it.
 
 2. What are the different functions defined in this code and what do they do?
-- This code defines several functions: `validate_data`, `prepare_to_settle`, `settle`, `revert_preparation`, and `clean_up`. These functions appear to be related to settling trades and transferring tokens between accounts, but further documentation or context is needed to understand their specific purposes and how they interact with each other.
+- This code defines several functions: `validate_data`, `prepare_to_settle`, `settle`, `revert_preparation`, and `clean_up`. These functions appear to be related to settling trades and transferring tokens between accounts, but more information is needed to fully understand their purpose and functionality.
 
 3. What external dependencies does this code rely on?
-- This code relies on several external dependencies, including `anchor_lang`, `anchor_spl`, and `rfq`. It also uses the `Token` program from the Solana SDK. Further documentation or context is needed to understand how these dependencies are used and what their specific roles are in this code.
+- This code relies on several external dependencies, including `anchor_lang`, `anchor_spl`, and `rfq`. It also uses the `Token` program from the Solana SDK.

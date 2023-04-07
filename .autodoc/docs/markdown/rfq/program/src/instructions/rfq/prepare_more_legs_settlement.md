@@ -1,20 +1,31 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/rfq/prepare_more_legs_settlement.rs)
 
-The `prepare_more_legs_settlement_instruction` function in this code file is part of the Convergence Program Library project and is used to prepare more legs for settlement in a request for quote (RFQ) trade. The purpose of this function is to allow the maker or taker of an RFQ trade to prepare additional legs for settlement after the initial preparation has been completed. 
+The `prepare_more_legs_settlement_instruction` function in this code file is part of the Convergence Program Library project and is used to prepare more legs for settlement in a request for quote (RFQ) trade. The function takes in a context object and two arguments: the side of the authority (either Taker or Maker) and the number of legs to prepare for settlement. 
 
-The function takes in three arguments: a context object containing the accounts involved in the transaction, an `AuthoritySide` enum indicating whether the caller is the maker or taker of the trade, and a `u8` indicating the number of legs to prepare. The function first calls the `validate` function to ensure that the caller is authorized to prepare more legs and that the specified number of legs is valid. If validation succeeds, the function then prepares the specified number of legs for settlement by calling the `prepare_to_settle` function for each leg. Finally, the function updates the state of the RFQ trade to reflect the additional leg preparation.
+The function first calls the `validate` function to ensure that the caller is authorized to prepare the specified number of legs for settlement. If validation passes, the function then retrieves the necessary accounts from the context object and iterates over the legs to be prepared, calling the `prepare_to_settle` function for each leg. 
 
-The `PrepareMoreLegsSettlementAccounts` struct is used to define the accounts involved in the transaction. The `caller` account is the signer of the transaction, while the `protocol`, `rfq`, and `response` accounts are all accounts associated with the RFQ trade. The `protocol` account is a `ProtocolState` account, which contains information about the current state of the Convergence Protocol. The `rfq` account is a `Rfq` account, which contains information about the RFQ trade being settled. The `response` account is a `Response` account, which contains information about the current state of the RFQ trade settlement.
+The `prepare_to_settle` function is not defined in this code file, but it is likely used to perform some actions related to preparing the leg for settlement. After all legs have been prepared, the function calls the `update_state_after_preparation` function to update the state of the RFQ and response accounts. 
 
-The `validate` function is used to validate the arguments passed to the `prepare_more_legs_settlement_instruction` function. It checks that the caller is authorized to prepare more legs, that the specified number of legs is valid, and that the RFQ trade is in the correct state for additional leg preparation.
+Overall, this code file provides functionality for preparing more legs for settlement in an RFQ trade. It is likely used in conjunction with other functions and modules in the Convergence Program Library project to facilitate RFQ trades. 
 
-Overall, this code file provides functionality for preparing additional legs for settlement in an RFQ trade. This functionality is important for ensuring that RFQ trades can be settled correctly and efficiently.
+Example usage:
+
+```rust
+let ctx = Context::new(...);
+let side = AuthoritySide::Taker;
+let leg_amount_to_prepare = 2;
+
+prepare_more_legs_settlement_instruction(ctx, side, leg_amount_to_prepare)?;
+```
 ## Questions: 
- 1. What is the purpose of the `PrepareMoreLegsSettlementAccounts` struct and its fields?
-- The `PrepareMoreLegsSettlementAccounts` struct is used to define the accounts required for the `prepare_more_legs_settlement_instruction` function. Its fields include the caller's signer account, the protocol account, the RFQ account, and the response account.
+ 1. What is the purpose of the `PrepareMoreLegsSettlementAccounts` struct and what accounts does it contain?
+    
+    The `PrepareMoreLegsSettlementAccounts` struct is used to define the accounts required for the `prepare_more_legs_settlement_instruction` function. It contains a `caller` account, a `protocol` account, a `rfq` account, and a `response` account.
 
-2. What is the purpose of the `validate` function?
-- The `validate` function is used to check if the provided `side` and `leg_amount_to_prepare` are valid for the given `PrepareMoreLegsSettlementAccounts`. It checks if the caller is authorized to prepare the specified leg amount, if the specified leg amount is valid, if the response state is valid for the given `side`, and if the preparation process has already started.
+2. What is the purpose of the `validate` function and what does it check for?
+    
+    The `validate` function is used to validate the input parameters for the `prepare_more_legs_settlement_instruction` function. It checks that the caller is authorized to prepare the specified leg amount, that the specified leg amount is valid, that the response state is valid for the specified side, and that preparation has already started.
 
-3. What is the purpose of the `prepare_more_legs_settlement_instruction` function?
-- The `prepare_more_legs_settlement_instruction` function is used to prepare more legs for settlement for the given `side` and `leg_amount_to_prepare`. It calls the `prepare_to_settle` function for each leg to be prepared, updates the response state after preparation, and returns an `Ok(())` result if successful.
+3. What is the purpose of the `prepare_more_legs_settlement_instruction` function and what does it do?
+    
+    The `prepare_more_legs_settlement_instruction` function is used to prepare additional legs for settlement. It calls the `prepare_to_settle` function for each leg to be prepared, updates the response state after preparation, and returns a success result.

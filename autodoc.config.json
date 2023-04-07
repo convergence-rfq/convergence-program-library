@@ -11,6 +11,8 @@
     "target",
     ".*",
     "*package-lock.json",
+    "**/js",
+    "*/js",
     "risk-engine/js",
     "spot-instrument/js",
     "psyoptions-american-instrument/js",

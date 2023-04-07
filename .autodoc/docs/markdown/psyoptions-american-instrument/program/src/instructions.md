@@ -1,174 +1,79 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/program/src/instructions.rs)
 
-This code is part of a project called Convergence Program Library and provides functionality for settling American options contracts on the PsyOptions protocol. The code defines several structs that are used to validate data, prepare for settlement, settle, revert preparation, and clean up after settlement. 
+This code defines several structs and methods for settling American options trades on the Convergence Program Library. The code is split into several `#[derive(Accounts)]` structs, each of which represents a different stage in the settlement process.
 
-The `ValidateData` struct is used to validate the data provided by the user and the protocol. It takes in an `OptionMarket` account, a `MintInfo` account, and a `ProtocolState` account. The `OptionMarket` account contains information about the American option being settled, such as the underlying asset and quote asset mints. The `MintInfo` account contains information about the mints used for the underlying and quote assets. The `ProtocolState` account contains information about the protocol being used. 
+The `ValidateData` struct is used to validate the data provided by the user and the protocol. It takes in an `OptionMarket` account, which contains information about the American option being traded, as well as `MintInfo` accounts for the underlying and quote assets. The `#[account(constraint = ...)]` attributes enforce constraints on the provided data, such as ensuring that the underlying asset mint matches the one provided in the `MintInfo` account.
 
-The `PrepareToSettle` struct is used to prepare for settlement. It takes in a `Rfq` account, a `Response` account, a `Mint` account, a `TokenAccount` account for the caller, and several other accounts. It initializes an `escrow` account that will hold the tokens being settled. 
+The `PrepareToSettle` struct is used to prepare for settlement by creating an escrow account to hold the underlying asset being traded. It takes in a `TokenAccount` for the caller's account, a `Mint` account for the underlying asset, and an `AssetIdentifier` to identify the specific asset being traded. The `#[account(init_if_needed,...)]` attribute initializes the escrow account if it does not already exist, using the provided seeds to generate a unique account address.
 
-The `Settle` struct is used to settle the American option contract. It takes in a `Rfq` account, a `Response` account, an `escrow` account, and a `TokenAccount` account for the receiver of the settled tokens. 
+The `Settle` struct is used to settle the trade by transferring the underlying asset from the escrow account to the receiver's account. It takes in the same `AssetIdentifier` as the `PrepareToSettle` struct, as well as a `TokenAccount` for the receiver's account. The `#[account(mut, seeds = ...)]` attribute ensures that the escrow account being used matches the one generated in the `PrepareToSettle` struct.
 
-The `RevertPreparation` struct is used to revert the preparation for settlement. It takes in a `Rfq` account, a `Response` account, an `escrow` account, and a `TokenAccount` account for the tokens being reverted. 
+The `RevertPreparation` struct is used to revert the preparation process if settlement cannot be completed. It takes in the same `AssetIdentifier` as the previous structs, as well as the `TokenAccount` for the escrow account and the `TokenAccount` for the tokens being returned to the caller.
 
-The `CleanUp` struct is used to clean up after settlement. It takes in a `Rfq` account, a `Response` account, an `escrow` account, a `TokenAccount` account for the first party to prepare for settlement, and a `TokenAccount` account for a backup receiver of the settled tokens. 
+The `CleanUp` struct is used to clean up any remaining accounts after settlement or preparation has completed. It takes in the same `AssetIdentifier` as the previous structs, as well as the `TokenAccount` for the escrow account, the `UncheckedAccount` for the first user to prepare for settlement, and the `TokenAccount` for the backup receiver.
 
-Overall, this code provides the functionality for settling American options contracts on the PsyOptions protocol. It can be used in conjunction with other code in the Convergence Program Library to create a full-featured options trading platform. 
-
-Example usage:
+Overall, this code provides a framework for settling American options trades on the Convergence Program Library, ensuring that the provided data is valid and that settlement can be completed securely and efficiently. Here is an example of how this code might be used in the larger project:
 
 ```rust
-// Validate data
+// create accounts for the protocol, option market, and underlying/quote assets
+let protocol = ...;
+let option_market = ...;
+let underlying_asset_mint_info = ...;
+let quote_asset_mint_info = ...;
+
+// validate the provided data
 let validate_data_accounts = ValidateData {
-    protocol: protocol_state_account.clone(),
-    american_meta: american_option_account.clone(),
-    mint_info: underlying_mint_info_account.clone(),
-    quote_mint: quote_mint_info_account.clone(),
+    protocol: protocol.clone(),
+    american_meta: option_market.clone(),
+    mint_info: underlying_asset_mint_info.clone(),
+    quote_mint: quote_asset_mint_info.clone(),
 };
-let _ = program
-    .validate_data(ctx.accounts.into(), validate_data_accounts)?;
+let _ = settle_program.validate_data(validate_data_accounts)?;
 
-// Prepare for settlement
+// prepare for settlement
 let prepare_to_settle_accounts = PrepareToSettle {
-    protocol: protocol_state_account.clone(),
-    rfq: Box::new(rfq_account.clone()),
+    protocol: protocol.clone(),
+    rfq: rfq_account.clone(),
     response: response_account.clone(),
-    caller: ctx.accounts.caller.clone(),
-    caller_token_account: caller_token_account_account.clone(),
-    mint: underlying_mint_account.clone(),
+    caller: caller.clone(),
+    caller_token_account: caller_token_account.clone(),
+    mint: underlying_asset_mint_info.mint.clone(),
     escrow: escrow_account.clone(),
-    system_program: ctx.accounts.system_program.clone(),
-    token_program: ctx.accounts.token_program.clone(),
-    rent: ctx.accounts.rent.clone(),
+    system_program: system_program.clone(),
+    token_program: token_program.clone(),
+    rent: rent.clone(),
 };
-let bump = assert_derivation(
-    ctx.accounts.escrow.to_account_info(),
-    &[ESCROW_SEED.as_bytes(), response_account.key().as_ref(), &asset_identifier.to_seed_bytes()],
-)?;
-let seeds = &[
-    ESCROW_SEED.as_bytes(),
-    response_account.key().as_ref(),
-    &asset_identifier.to_seed_bytes(),
-];
-let signer = &[&seeds[..]];
-let ix = token::initialize_account(
-    &ctx.accounts.token_program.to_account_info(),
-    &ctx.accounts.escrow.to_account_info(),
-    &ctx.accounts.mint.to_account_info(),
-    &ctx.accounts.caller.to_account_info(),
-)?;
-let ix2 = token::set_authority(
-    &ctx.accounts.token_program.to_account_info(),
-    &ctx.accounts.escrow.to_account_info(),
-    Some(&ctx.accounts.protocol.to_account_info().key()),
-    TokenAuthorityType::AccountOwner,
-    &ctx.accounts.caller.to_account_info(),
-    signer,
-)?;
-let ix3 = token::mint_to(
-    &ctx.accounts.token_program.to_account_info(),
-    &ctx.accounts.mint.to_account_info(),
-    &ctx.accounts.escrow.to_account_info(),
-    &signer,
-    &[],
-    1,
-)?;
-let ix_vec = vec![ix, ix2, ix3];
-invoke_signed(&ix_vec, ctx.accounts, signer)?;
+let _ = settle_program.prepare_to_settle(prepare_to_settle_accounts)?;
 
-// Settle
+// settle the trade
 let settle_accounts = Settle {
-    protocol: protocol_state_account.clone(),
+    protocol: protocol.clone(),
     rfq: rfq_account.clone(),
     response: response_account.clone(),
     escrow: escrow_account.clone(),
-    receiver_token_account: receiver_token_account_account.clone(),
-    token_program: ctx.accounts.token_program.clone(),
+    receiver_token_account: receiver_token_account.clone(),
+    token_program: token_program.clone(),
 };
-let bump = assert_derivation(
-    ctx.accounts.escrow.to_account_info(),
-    &[ESCROW_SEED.as_bytes(), response_account.key().as_ref(), &asset_identifier.to_seed_bytes()],
-)?;
-let seeds = &[
-    ESCROW_SEED.as_bytes(),
-    response_account.key().as_ref(),
-    &asset_identifier.to_seed_bytes(),
-];
-let signer = &[&seeds[..]];
-let ix = token::transfer(
-    &ctx.accounts.token_program.to_account_info(),
-    &ctx.accounts.escrow.to_account_info(),
-    &ctx.accounts.receiver_token_account.to_account_info(),
-    &ctx.accounts.caller.to_account_info(),
-    &[],
-    1,
-)?;
-invoke_signed(&[ix], ctx.accounts, signer)?;
+let _ = settle_program.settle(settle_accounts)?;
 
-// Revert preparation
-let revert_preparation_accounts = RevertPreparation {
-    protocol: protocol_state_account.clone(),
-    rfq: rfq_account.clone(),
-    response: response_account.clone(),
-    escrow: escrow_account.clone(),
-    tokens: tokens_account.clone(),
-    token_program: ctx.accounts.token_program.clone(),
-};
-let bump = assert_derivation(
-    ctx.accounts.escrow.to_account_info(),
-    &[ESCROW_SEED.as_bytes(), response_account.key().as_ref(), &asset_identifier.to_seed_bytes()],
-)?;
-let seeds = &[
-    ESCROW_SEED.as_bytes(),
-    response_account.key().as_ref(),
-    &asset_identifier.to_seed_bytes(),
-];
-let signer = &[&seeds[..]];
-let ix = token::transfer(
-    &ctx.accounts.token_program.to_account_info(),
-    &ctx.accounts.escrow.to_account_info(),
-    &ctx.accounts.tokens.to_account_info(),
-    &ctx.accounts.caller.to_account_info(),
-    &[],
-    1,
-)?;
-invoke_signed(&[ix], ctx.accounts, signer)?;
-
-// Clean up
+// clean up any remaining accounts
 let clean_up_accounts = CleanUp {
-    protocol: protocol_state_account.clone(),
+    protocol: protocol.clone(),
     rfq: rfq_account.clone(),
     response: response_account.clone(),
     first_to_prepare: first_to_prepare_account.clone(),
     escrow: escrow_account.clone(),
     backup_receiver: backup_receiver_account.clone(),
-    token_program: ctx.accounts.token_program.clone(),
+    token_program: token_program.clone(),
 };
-let bump = assert_derivation(
-    ctx.accounts.escrow.to_account_info(),
-    &[ESCROW_SEED.as_bytes(), response_account.key().as_ref(), &asset_identifier.to_seed_bytes()],
-)?;
-let seeds = &[
-    ESCROW_SEED.as_bytes(),
-    response_account.key().as_ref(),
-    &asset_identifier.to_seed_bytes(),
-];
-let signer = &[&seeds[..]];
-let ix = token::transfer(
-    &ctx.accounts.token_program.to_account_info(),
-    &ctx.accounts.escrow.to_account_info(),
-    &ctx.accounts.backup_receiver.to_account_info(),
-    &ctx.accounts.caller.to_account_info(),
-    &[],
-    1,
-)?;
-invoke_signed(&[ix], ctx.accounts, signer)?;
+let _ = settle_program.clean_up(clean_up_accounts)?;
 ```
 ## Questions: 
  1. What is the purpose of the `Convergence Program Library` and how does this code fit into it?
-- The purpose of the `Convergence Program Library` is not clear from this code alone. This code appears to be a module within the library that provides functionality for settling American options trades on the Psyoptions protocol.
+- The purpose of the `Convergence Program Library` is not clear from this code alone. This code appears to be defining several structs and functions related to settling an options trade, but it's unclear how this fits into the larger library.
 
-2. What is the role of the `ValidateData` struct and what constraints are being enforced on its fields?
-- The `ValidateData` struct is used to validate the data provided by the user for settling an American options trade. It contains several fields that are checked against constraints, including the `underlying_asset_mint` field of the `american_meta` account, which must match the `mint_address` field of the `mint_info` account, and the `quote_asset_mint` field of the `american_meta` account, which must match the `mint_address` field of the `quote_mint` account.
+2. What is the role of the `ValidateData` struct and its associated `Accounts` attribute?
+- The `ValidateData` struct appears to be defining a set of accounts that must be provided in order to validate an options trade. The `Accounts` attribute is likely used by the Solana blockchain to ensure that the required accounts are provided when the associated function is called.
 
-3. What is the purpose of the `PrepareToSettle`, `Settle`, `RevertPreparation`, and `CleanUp` structs and what actions do they perform?
-- These structs are used to define the accounts required for various stages of settling an American options trade on the Psyoptions protocol. `PrepareToSettle` is used to prepare the accounts required for settlement, `Settle` is used to perform the settlement, `RevertPreparation` is used to revert the preparation if necessary, and `CleanUp` is used to clean up the accounts after settlement. Each struct defines the required accounts and constraints on those accounts for its respective stage of the settlement process.
+3. What is the purpose of the `PrepareToSettle` struct and its associated `Accounts` attribute?
+- The `PrepareToSettle` struct appears to be defining a set of accounts that must be provided in order to prepare for settling an options trade. The `Accounts` attribute is likely used by the Solana blockchain to ensure that the required accounts are provided when the associated function is called.

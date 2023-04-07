@@ -1,48 +1,20 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/mod.rs)
 
-This code is a module that contains three sub-modules: collateral, protocol, and rfq. These sub-modules likely contain code related to the Convergence Program Library project, which may involve financial or trading applications. 
+This code is a module that contains three sub-modules: collateral, protocol, and rfq. These sub-modules likely contain code related to different aspects of the Convergence Program Library project. 
 
-The collateral sub-module may contain code related to managing collateral for trades or transactions. This could include functions for calculating the value of collateral, tracking collateral movements, or determining when additional collateral is needed. 
+The collateral sub-module may contain code related to managing collateral for trades or transactions. This could include functions for calculating margin requirements or tracking collateral balances.
 
-The protocol sub-module may contain code related to communication protocols used in the project. This could include functions for sending and receiving messages between different components of the project, or for implementing specific protocols such as FIX or REST. 
+The protocol sub-module may contain code related to the communication protocol used by the Convergence Program Library. This could include functions for encoding and decoding messages, or for establishing and maintaining connections between different components of the library.
 
-The rfq sub-module may contain code related to the request-for-quote process, which is commonly used in financial markets to request pricing information from potential counterparties. This could include functions for generating and sending RFQs, as well as for processing and analyzing the responses received. 
+The rfq sub-module may contain code related to the request-for-quote process, which is a common way for traders to request prices from market makers. This could include functions for sending and receiving RFQs, or for processing and responding to RFQs.
 
-Overall, this module likely plays an important role in the larger Convergence Program Library project by providing key functionality related to collateral management, communication protocols, and RFQ processing. Developers working on the project may use these sub-modules to build out specific features or components, or to integrate the project with other systems or platforms. 
+Overall, this module likely serves as a high-level organization of the different components of the Convergence Program Library. By breaking the code into separate sub-modules, it becomes easier to manage and maintain the different aspects of the project. 
 
-Example usage:
-
-To use the collateral sub-module, a developer might import it into their code and then call a function to calculate the value of a particular piece of collateral:
-
-```
-use convergence_program_library::collateral;
-
-let value = collateral::calculate_value(collateral_type, quantity);
-```
-
-To use the protocol sub-module, a developer might import it and then use a function to send a message using the FIX protocol:
-
-```
-use convergence_program_library::protocol;
-
-let message = protocol::format_fix_message(data);
-protocol::send_message(message);
-```
-
-To use the rfq sub-module, a developer might import it and then call a function to generate an RFQ:
-
-```
-use convergence_program_library::rfq;
-
-let rfq = rfq::generate_rfq(product, quantity, price);
-rfq::send_rfq(rfq);
-```
+Example usage of this module might include importing one or more of the sub-modules into another file in the project, and then using the functions and classes defined within those sub-modules to perform specific tasks. For example, if a trader wanted to request a quote for a particular security, they might use functions from the rfq sub-module to send an RFQ to a market maker and receive a quote in response.
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library? 
-- The code suggests that the library contains modules for collateral, protocol, and RFQ, but it does not provide information on the overall purpose or function of the library.
-
-2. What is the relationship between the collateral, protocol, and rfq modules? 
-- The code indicates that these modules are part of the same library, but it does not provide information on how they are related or how they interact with each other.
-
-3. What is the expected usage of this code? 
-- The code does not provide any examples or documentation on how to use the modules in the Convergence Program Library, leaving developers to figure out the expected usage on their own.
+ 1. What is the purpose of the `collateral`, `protocol`, and `rfq` modules?
+   - These modules likely contain code related to different aspects of the Convergence Program Library, such as handling collateral, implementing a protocol, and managing requests for quotes.
+2. Are there any dependencies or requirements for using this code?
+   - It's unclear from this code alone whether there are any external dependencies or requirements needed to use these modules. Further documentation or code exploration may be necessary to determine this.
+3. Is this code part of a larger project or library?
+   - It's possible that this code is just a small part of a larger project or library, so a smart developer may want to investigate further to understand the context and purpose of this code within the overall system.

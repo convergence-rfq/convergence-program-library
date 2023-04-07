@@ -1,37 +1,53 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/interfaces/mod.rs)
 
-This code is a module that imports two other modules: `instrument` and `risk_engine`. The purpose of this module is to provide access to the functionality of these two modules within the larger Convergence Program Library project. 
+This code is a module that imports two other modules, `instrument` and `risk_engine`, into the larger Convergence Program Library project. 
 
-The `instrument` module likely contains code related to financial instruments, such as stocks, bonds, and derivatives. This module may include classes and functions for pricing, valuation, and risk analysis of these instruments. 
+The `instrument` module likely contains code related to financial instruments, such as stocks, bonds, and options. It may include classes for representing different types of instruments, methods for calculating their values, and functions for generating reports or visualizations of instrument data. 
 
-The `risk_engine` module likely contains code related to risk management, such as calculating risk metrics, stress testing, and scenario analysis. This module may include classes and functions for simulating market conditions and analyzing the impact on a portfolio of financial instruments. 
+The `risk_engine` module is likely focused on risk management and analysis. It may include classes for measuring different types of risk, such as market risk or credit risk, and methods for calculating risk metrics like value-at-risk or expected shortfall. It may also include functions for stress testing or scenario analysis. 
 
-By importing these two modules, the code in this module can access the functionality provided by them. For example, if a function in another module needs to calculate the value of a financial instrument, it can import the `instrument` module and use its classes and functions to perform the calculation. Similarly, if a function needs to analyze the risk of a portfolio, it can import the `risk_engine` module and use its classes and functions to perform the analysis. 
+By importing these modules into the larger project, the code in this file can leverage the functionality provided by the `instrument` and `risk_engine` modules. For example, if the Convergence Program Library includes a trading platform, the `instrument` module may be used to represent and value different financial instruments that can be traded on the platform. The `risk_engine` module may be used to monitor and manage the risk exposure of the platform's portfolio. 
 
-Here is an example of how this module might be used in the larger Convergence Program Library project:
+Here is an example of how the `instrument` module might be used to create a new stock object:
 
-```rust
-use convergence_program_library::instrument::Stock;
-use convergence_program_library::risk_engine::RiskEngine;
+```
+from convergence_program_library.instrument import Stock
 
-fn main() {
-    let stock = Stock::new("AAPL", 100.0);
-    let mut risk_engine = RiskEngine::new();
-    risk_engine.add_instrument(&stock);
-    let value = risk_engine.calculate_portfolio_value();
-    println!("Portfolio value: {}", value);
-}
+# create a new stock object with ticker symbol "AAPL" and current price of $150
+aapl_stock = Stock("AAPL", 150)
+
+# get the current price of the stock
+current_price = aapl_stock.get_price()
+
+# print the current price
+print(f"The current price of {aapl_stock.ticker} is {current_price}")
 ```
 
-In this example, we create a new `Stock` object representing Apple stock with a price of $100. We then create a new `RiskEngine` object and add the stock to its list of instruments. Finally, we calculate the value of the portfolio using the `calculate_portfolio_value` method of the `RiskEngine` object and print the result. 
+And here is an example of how the `risk_engine` module might be used to calculate the value-at-risk of a portfolio:
 
-Overall, this module provides a way for other code in the Convergence Program Library project to access the functionality of the `instrument` and `risk_engine` modules, which are likely important components of the project's financial analysis and risk management capabilities.
+```
+from convergence_program_library.risk_engine import ValueAtRisk, Portfolio
+
+# create a new portfolio object with two stocks and their respective weights
+portfolio = Portfolio({"AAPL": 0.6, "GOOG": 0.4})
+
+# create a new value-at-risk object with a confidence level of 95%
+var = ValueAtRisk(portfolio, confidence_level=0.95)
+
+# calculate the value-at-risk of the portfolio
+portfolio_var = var.calculate()
+
+# print the value-at-risk
+print(f"The 95% value-at-risk of the portfolio is {portfolio_var}")
+```
+
+Overall, this code serves as a way to organize and import the functionality of the `instrument` and `risk_engine` modules into the larger Convergence Program Library project.
 ## Questions: 
  1. What is the purpose of the `instrument` module?
    - The `instrument` module is likely responsible for defining and implementing financial instruments such as stocks, bonds, and derivatives.
-   
+
 2. What is the purpose of the `risk_engine` module?
    - The `risk_engine` module is likely responsible for calculating and managing risk associated with financial instruments and portfolios.
-   
-3. Are there any other modules in the Convergence Program Library?
-   - It is unclear from this code snippet whether there are any other modules in the Convergence Program Library.
+
+3. Are there any other modules within the Convergence Program Library?
+   - It is unclear from this code snippet whether there are any other modules within the Convergence Program Library.

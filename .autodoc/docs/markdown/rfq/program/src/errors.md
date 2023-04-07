@@ -1,35 +1,31 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/errors.rs)
 
-This code defines an error handling module for the Convergence Program Library project. The module defines an enum called `ProtocolError` which contains various error codes that can be returned by the library's functions. Each error code is associated with a message that describes the error. 
+This code defines an error handling system for the Convergence Program Library project. The `ProtocolError` enum contains a list of error codes that can be returned by the program. Each error code has a corresponding error message that can be customized to provide more information about the error. 
 
-The purpose of this module is to provide a standardized way of handling errors that may occur during the execution of the library's functions. By defining specific error codes and messages, the library can provide more detailed information about what went wrong and how to fix it. This can be especially useful for developers who are using the library in their own projects, as it can help them to quickly identify and resolve issues.
+This error handling system is important for ensuring that the program can handle unexpected situations and provide meaningful feedback to users. By defining specific error codes and messages, developers can quickly identify and fix issues that arise during program execution. 
 
-For example, if a function in the library returns the `InvalidValueForAFee` error code, the developer can look up the associated message to see that the fee value passed to the function was greater than 100%. They can then adjust the fee value and try again.
+For example, if the program encounters an error where the passed mint is not a collateral mint, it will return the `NotACollateralMint` error code with the message "Passed mint is not a collateral mint". This allows developers to quickly identify the source of the error and take appropriate action to resolve it. 
 
-Here is an example of how the error handling module might be used in the larger Convergence Program Library project:
+The error handling system can be used throughout the Convergence Program Library project to provide consistent error reporting and handling. Developers can use the error codes and messages defined in this file to handle errors in a standardized way, making it easier to maintain and debug the program over time. 
+
+Here is an example of how the error handling system might be used in a function:
 
 ```rust
-fn add_instrument(instrument: Instrument) -> Result<(), ProtocolError> {
-    if instrument_already_exists(instrument.id) {
-        return Err(ProtocolError::InstrumentAlreadyAdded);
-    }
-    if instrument.fee > 1.0 {
-        return Err(ProtocolError::InvalidValueForAFee);
-    }
-    // add instrument to database
-    Ok(())
+fn do_something() -> ProgramResult {
+    // some code that might return an error
+    Err(ProtocolError::NotEnoughTokens.into())
 }
 ```
 
-In this example, the `add_instrument` function takes an `Instrument` object as an argument and returns a `Result` object. If the instrument already exists or the fee value is invalid, the function returns an error using the `ProtocolError` enum. Otherwise, the function adds the instrument to the database and returns `Ok(())`.
+In this example, the function returns an error with the `NotEnoughTokens` error code. The `into()` method is used to convert the error code into a `ProgramError`, which is the type of error that the Solana blockchain expects. 
 
-Overall, the error handling module provides a useful tool for developers using the Convergence Program Library, allowing them to quickly identify and resolve issues that may arise during the execution of the library's functions.
+Overall, this code provides an important foundation for error handling in the Convergence Program Library project. By defining specific error codes and messages, developers can quickly identify and resolve issues that arise during program execution.
 ## Questions: 
  1. What is the purpose of this code?
-- This code defines an error handling system for the Convergence Program Library, with specific error messages for various scenarios.
+- This code defines an error handling module for the Convergence Program Library, specifically for the ProtocolError enum.
 
-2. What kind of errors might trigger these messages?
-- The error messages cover a range of scenarios, including invalid inputs, insufficient funds, incorrect program IDs, and more.
+2. What are some examples of errors that can be thrown by this code?
+- Examples of errors that can be thrown include: NotAProtocolAuthority, InstrumentAlreadyAdded, InvalidValueForAFee, NotEnoughTokens, NotEnoughCollateral, and many more.
 
-3. How might a developer use this error handling system in their code?
-- A developer could use these error codes to catch and handle specific errors that might occur during the execution of their code, providing more informative error messages to users.
+3. How might a developer use this error handling module in their code?
+- A developer might use this error handling module by importing it into their code and using the ProtocolError enum to throw and handle errors specific to the Convergence Program Library.

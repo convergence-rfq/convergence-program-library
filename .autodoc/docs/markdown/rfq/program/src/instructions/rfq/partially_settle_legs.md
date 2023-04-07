@@ -1,25 +1,22 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/rfq/partially_settle_legs.rs)
 
-The code defines a function called `partially_settle_legs_instruction` that is used to partially settle legs of a Request for Quote (RFQ) in a trading protocol. The function takes in a context object and a `leg_amount_to_settle` parameter, which specifies the number of legs to settle. 
+The `partially_settle_legs_instruction` function is part of the Convergence Program Library project and is used to partially settle legs of an RFQ (Request for Quote) trade. The function takes in a `Context` object and a `leg_amount_to_settle` parameter, and returns a `Result` object.
 
-The function first calls a `validate` function to ensure that the RFQ is in the correct state and that the specified `leg_amount_to_settle` is valid. If the validation passes, the function proceeds to settle the specified number of legs using the `settle` function from the `interfaces::instrument` module. The `settle` function is called for each leg that needs to be settled, and the `response.settled_legs` field is updated accordingly. 
+The `Context` object contains a set of accounts that are required to execute the instruction. These accounts are defined in the `PartiallySettleLegsAccounts` struct, which is annotated with the `#[derive(Accounts)]` attribute. The `PartiallySettleLegsAccounts` struct contains three accounts: `protocol`, `rfq`, and `response`. The `protocol` account is an instance of the `ProtocolState` struct, which represents the state of the Convergence Protocol. The `rfq` account is an instance of the `Rfq` struct, which represents the RFQ trade. The `response` account is an instance of the `Response` struct, which represents the response to the RFQ trade.
 
-The `PartiallySettleLegsAccounts` struct is used to define the accounts required for the function to execute. The struct contains three accounts: `protocol`, `rfq`, and `response`. The `protocol` account is an instance of the `ProtocolState` struct, which contains the state of the trading protocol. The `rfq` account is an instance of the `Rfq` struct, which represents the RFQ being settled. The `response` account is an instance of the `Response` struct, which contains the state of the response to the RFQ. 
+The `validate` function is called to validate the input parameters. The `validate` function takes in a `Context` object and a `leg_amount_to_settle` parameter, and returns a `Result` object. The `validate` function checks that the RFQ trade is in the `ReadyForSettling` state, and that the `leg_amount_to_settle` parameter is valid. If the validation fails, an error is returned.
 
-The `validate` function is used to validate the accounts passed to the `partially_settle_legs_instruction` function. The function checks that the RFQ is in the `ReadyForSettling` state and that the specified `leg_amount_to_settle` is valid. If the validation fails, an error is returned. 
+The `partially_settle_legs_instruction` function then calls the `settle` function for each leg that needs to be settled. The `settle` function takes in an `AssetIdentifier`, the `protocol`, `rfq`, and `response` accounts, and a mutable reference to a vector of remaining accounts. The `AssetIdentifier` parameter specifies the leg that needs to be settled. The `settle` function updates the state of the `response` account to reflect the settlement of the leg.
 
-Overall, this code is used to partially settle legs of an RFQ in a trading protocol. It is part of a larger project called Convergence Program Library, which likely contains other functions and modules for implementing the trading protocol. 
+Finally, the `partially_settle_legs_instruction` function updates the `settled_legs` field of the `response` account to reflect the number of legs that have been settled.
 
-Example usage:
-
-```rust
-let ctx = Context::new(&mut program_test::start().await, accounts);
-partially_settle_legs_instruction(ctx, 2)?;
-```
+Overall, the `partially_settle_legs_instruction` function is used to partially settle legs of an RFQ trade. It takes in a `Context` object and a `leg_amount_to_settle` parameter, and returns a `Result` object. The function validates the input parameters, settles the specified number of legs, and updates the state of the `response` account to reflect the settlement of the legs.
 ## Questions: 
- 1. What is the purpose of the `PartiallySettleLegsAccounts` struct and what accounts does it contain?
-    - The `PartiallySettleLegsAccounts` struct is used to define the accounts required for the `partially_settle_legs_instruction` function. It contains the `protocol` account, a `rfq` account wrapped in a `Box`, and a `response` account.
-2. What is the purpose of the `validate` function and what does it check for?
-    - The `validate` function is used to validate the input parameters for the `partially_settle_legs_instruction` function. It checks that the `response` account is in the `ReadyForSettling` state, and that the `leg_amount_to_settle` parameter is greater than 0 and less than the number of legs left to settle.
-3. What is the purpose of the `partially_settle_legs_instruction` function and what does it do?
-    - The `partially_settle_legs_instruction` function is used to partially settle legs for an RFQ. It first calls the `validate` function to ensure that the input parameters are valid, and then settles the specified number of legs using the `settle` function. Finally, it updates the `settled_legs` field of the `response` account.
+ 1. What is the purpose of the `PartiallySettleLegsAccounts` struct and the `Accounts` derive macro?
+- The `PartiallySettleLegsAccounts` struct is used to define the accounts required for the `partially_settle_legs_instruction` function, and the `Accounts` derive macro is used to generate the necessary Anchor accounts for the struct.
+
+2. What is the purpose of the `validate` function?
+- The `validate` function is used to check that the response state is `ReadyForSettling` and that the specified leg amount to settle is valid.
+
+3. What is the purpose of the `partially_settle_legs_instruction` function?
+- The `partially_settle_legs_instruction` function is used to partially settle legs of an RFQ (request for quote) by calling the `settle` function for each leg to be settled and updating the `settled_legs` field of the `response` account.

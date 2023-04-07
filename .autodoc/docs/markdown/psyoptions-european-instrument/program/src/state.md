@@ -1,23 +1,10 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-european-instrument/program/src/state.rs)
 
-This code defines several enums and a struct that are used in the Convergence Program Library project. The first two enums, `AuthoritySideDuplicate` and `AssetIdentifierDuplicate`, are duplicates of enums defined in other modules of the project. They are used because the IDL generator used by the project does not generate IDL for imported structs. The `From` trait is implemented for both enums to convert them to their original counterparts.
+This code defines several enums and a struct that are used in the Convergence Program Library project. The first two enums, `AuthoritySideDuplicate` and `AssetIdentifierDuplicate`, are duplicates of enums from the `rfq` and `risk_engine` crates, respectively. These duplicates are necessary because the `anchor_lang` crate used in this project does not generate IDL for imported structs. The `From` trait is implemented for each duplicate enum to convert it to the corresponding enum from the imported crate.
 
-The `ParsedLegData` struct contains three fields: `option_common_data`, `mint_address`, and `euro_meta_address`. `option_common_data` is of type `OptionCommonData`, which is defined in the `risk_engine` module of the project. `mint_address` and `euro_meta_address` are of type `Pubkey`, which is defined in the `anchor_lang` module of the project. `ParsedLegData` also has a `const` field `SERIALIZED_SIZE`, which is the size of the struct when serialized.
+The `ParsedLegData` struct contains three fields: `option_common_data`, `mint_address`, and `euro_meta_address`. `option_common_data` is a field of type `OptionCommonData` from the `risk_engine` crate, while `mint_address` and `euro_meta_address` are both of type `Pubkey` from the `anchor_lang` crate. The `SERIALIZED_SIZE` constant is defined for `ParsedLegData` as the sum of the serialized sizes of its fields plus 32 bytes for each `Pubkey` field.
 
-This code is important for the larger project because it defines types that are used in other modules of the project. For example, `ParsedLegData` is used in the `rfq` module to represent the data associated with a leg of an option. The `AuthoritySideDuplicate` and `AssetIdentifierDuplicate` enums are used in the `rfq` module to represent the side of an RFQ and the type of asset being traded, respectively.
-
-Here is an example of how `ParsedLegData` might be used in the larger project:
-
-```rust
-use convergence_program_library::ParsedLegData;
-
-fn process_leg_data(data: &[u8]) {
-    let parsed_data = ParsedLegData::try_deserialize(data).unwrap();
-    // Do something with parsed_data
-}
-```
-
-In this example, `process_leg_data` takes a byte slice `data` that represents serialized `ParsedLegData`. The `try_deserialize` method is called on `ParsedLegData` to deserialize the byte slice into a `ParsedLegData` instance. The deserialized data can then be used in some way within the function.
+Overall, this code provides necessary definitions for enums and a struct used in the Convergence Program Library project. These definitions allow for proper serialization and deserialization of data used in the project. For example, the `ParsedLegData` struct is used to represent parsed data for a leg of an option, including its common data, mint address, and euro meta address. This struct can be serialized and deserialized using the `AnchorSerialize` and `AnchorDeserialize` traits provided by the `anchor_lang` crate.
 ## Questions: 
  1. What is the purpose of this code?
 - This code defines several enums and a struct for use in the Convergence Program Library, specifically related to asset identifiers, authority sides, and parsed leg data.
@@ -25,5 +12,5 @@ In this example, `process_leg_data` takes a byte slice `data` that represents se
 2. Why is there a duplicate enum for AuthoritySide and AssetIdentifier?
 - The duplicate enums are necessary because the IDL generator used by the library does not generate IDL for imported structs.
 
-3. What is the significance of the SERIALIZED_SIZE constant in the ParsedLegData struct?
-- The SERIALIZED_SIZE constant represents the size of the serialized ParsedLegData struct, which is used for deserialization purposes.
+3. What is the significance of the ParsedLegData struct and its SERIALIZED_SIZE constant?
+- The ParsedLegData struct contains information about an option's common data, mint address, and euro meta address. The SERIALIZED_SIZE constant is used to determine the size of the serialized struct.

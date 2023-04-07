@@ -4,17 +4,28 @@ The code defines a struct called `ScenarioSelector` that is used to select scena
 
 The `ScenarioSelector` struct has one method called `select_scenarios` that takes a reference to a vector of `LegWithMetadata` objects and a `RiskCategory` enum value as arguments. The method returns a vector of `Scenario` objects.
 
-The `select_scenarios` method first checks if any of the legs in the input vector are options by iterating over the vector and checking the `instrument_type` field of each `LegWithMetadata` object. If any of the legs are options, the method returns a vector of four `Scenario` objects that represent different combinations of changes in asset price and volatility. If none of the legs are options, the method returns a vector of two `Scenario` objects that represent changes in asset price only.
+The `select_scenarios` method first checks if any of the legs in the input vector are options by iterating over them and checking their `instrument_type` field. If any of the legs are options, the method returns a vector of four `Scenario` objects that represent different combinations of changes in asset price and volatility. If none of the legs are options, the method returns a vector of two `Scenario` objects that represent changes in asset price only.
 
-The `Scenario` struct represents a scenario for a given financial instrument. It has two fields: `base_asset_price_change`, which is a floating-point number representing the change in asset price for the scenario, and `volatility_change`, which is a floating-point number representing the change in volatility for the scenario.
+The purpose of this code is to provide a way to select scenarios for a given set of financial instrument legs based on their risk category and settlement period. This functionality is likely used in a larger financial modeling or risk management application that requires the ability to simulate different market scenarios and evaluate the resulting risk exposure. An example usage of this code might look like:
 
-This code is likely used in the larger Convergence Program Library project to calculate risk for a portfolio of financial instruments. The `ScenarioSelector` struct is used to select scenarios for the legs in the portfolio based on their instrument type and risk category. The resulting scenarios are then used to calculate the risk of the portfolio under different market conditions.
+```
+let selector = ScenarioSelector {
+    config: &config,
+    settlement_period: 30,
+};
+
+let scenarios = selector.select_scenarios(&legs_with_meta, RiskCategory::HighRisk);
+
+for scenario in scenarios {
+    // simulate market scenario and evaluate risk exposure
+}
+```
 ## Questions: 
- 1. What is the purpose of the `ScenarioSelector` struct?
-- The `ScenarioSelector` struct is used to select scenarios based on the given legs and risk category.
+ 1. What is the purpose of the `ScenarioSelector` struct and its `select_scenarios` method?
+- The `ScenarioSelector` struct is used to select scenarios based on the given `legs_with_meta` and `risk_category`. The `select_scenarios` method returns a vector of `Scenario` structs based on whether there are option legs or not.
 
 2. What is the significance of the `have_option_legs` variable?
-- The `have_option_legs` variable is used to determine whether the given legs contain any options. This information is used to determine which scenarios to select.
+- The `have_option_legs` variable is a boolean that is true if there are any legs in `legs_with_meta` that have an `InstrumentType` of `Option`. This is used to determine which scenarios to return in the `select_scenarios` method.
 
-3. What is the purpose of the `select_scenarios` function?
-- The `select_scenarios` function takes in a vector of `LegWithMetadata` and a `RiskCategory` and returns a vector of `Scenario` based on the given inputs. The scenarios are selected based on whether the legs contain options or not.
+3. What is the purpose of the `Scenario::new` method calls in the `select_scenarios` method?
+- The `Scenario::new` method is used to create new `Scenario` structs with the given `base_asset_price_change` and `volatility_change` values. These scenarios are returned in the vector based on whether there are option legs or not.

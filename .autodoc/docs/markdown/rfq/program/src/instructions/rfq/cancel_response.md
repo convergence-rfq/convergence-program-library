@@ -1,33 +1,35 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/rfq/cancel_response.rs)
 
-The code defines a struct `CancelResponseAccounts` that represents the accounts required to cancel a response to a request for quote (RFQ) in the Convergence Program Library project. The struct is annotated with the `#[derive(Accounts)]` macro, which generates a set of accounts that must be provided to the `cancel_response_instruction` function when it is called.
+The code defines a struct called `CancelResponseAccounts` that represents the accounts required to cancel a response to a request for quote (RFQ) in the Convergence Program Library project. The struct has four fields: `maker`, `protocol`, `rfq`, and `response`. 
 
-The `CancelResponseAccounts` struct has four fields:
-- `maker`: a `Signer` account representing the maker of the response being canceled.
-- `protocol`: an `Account` representing the state of the Convergence Protocol.
-- `rfq`: a `Box<Account>` representing the RFQ that the response being canceled was made for.
-- `response`: an `Account` representing the response being canceled.
+The `maker` field is a `Signer` account that represents the maker of the response. The `protocol` field is an `Account` that represents the state of the Convergence Protocol. The `rfq` field is a `Box<Account>` that represents the RFQ account associated with the response. The `response` field is an `Account` that represents the response to be canceled.
 
-The `cancel_response_instruction` function takes a `Context` object containing the `CancelResponseAccounts` accounts and cancels the response by setting its state to `StoredResponseState::Canceled`. Before doing so, it calls the `validate` function to ensure that the response is in the correct state to be canceled. The `validate` function checks that the response is in the `ResponseState::Active` state, meaning that it has not already been canceled or filled.
+The `CancelResponseAccounts` struct is annotated with the `#[derive(Accounts)]` macro, which generates a function that takes the struct as an argument and returns a tuple of the accounts required to execute the instruction. The macro also generates constraints on the accounts to ensure that they meet certain requirements. In this case, the `maker` account must match the maker of the response, and the `response` account must be associated with the `rfq` account.
 
-Overall, this code provides a way to cancel a response to an RFQ in the Convergence Program Library project. It is likely part of a larger set of functions and structs that implement the Convergence Protocol, which is used to facilitate trading of financial instruments. An example usage of this code might look like:
+The code also defines a function called `validate` that takes a `Context` of `CancelResponseAccounts` and returns a `Result` indicating whether the accounts meet certain validation requirements. The function checks that the response is in an active state, meaning it has not already been canceled or filled.
+
+Finally, the code defines a public function called `cancel_response_instruction` that takes a `Context` of `CancelResponseAccounts` and cancels the response by setting its state to `StoredResponseState::Canceled`. This function calls `validate` to ensure that the accounts meet the validation requirements before canceling the response.
+
+This code is part of the Convergence Program Library project and is used to cancel responses to RFQs. It ensures that the maker of the response is the one canceling it and that the response is in an active state before canceling it. This function can be called by any user of the Convergence Protocol who has the required accounts. 
+
+Example usage:
 
 ```rust
-let mut accounts = CancelResponseAccounts {
-    maker: maker.to_account_info(),
-    protocol: protocol.to_account_info(),
-    rfq: rfq.to_account_info().into_boxed(),
-    response: response.to_account_info(),
-};
+let mut program = program_test::start_new().await;
+let mut context = program_test::get_context(accounts.clone(), instruction_data);
 
-cancel_response_instruction(&mut program_context, &accounts)?;
+// Call the cancel_response_instruction function
+cancel_response_instruction(&mut context).unwrap();
+
+// Check that the response state is now Canceled
+let response_account = &accounts.response;
+let response_state = response_account.state().unwrap();
+assert_eq!(response_state, StoredResponseState::Canceled);
 ```
 ## Questions: 
  1. What is the purpose of the `CancelResponseAccounts` struct and its fields?
-- The `CancelResponseAccounts` struct defines the accounts required to cancel a response, including the maker's signer account, the protocol account, the RFQ account, and the response account. The `maker` account must match the `response.maker` field, and the `response.rfq` field must match the `rfq.key()`.
-
-2. What is the purpose of the `validate` function?
-- The `validate` function checks that the response is in an active state before it can be canceled. It does this by getting the response state from the RFQ account and asserting that it is in the `Active` state.
-
+- The `CancelResponseAccounts` struct defines the accounts required for the `cancel_response_instruction` function to execute. The `maker` field is a signer account, `protocol` is an account for the protocol state, `rfq` is an account for the request for quote, and `response` is an account for the response to the request for quote.
+2. What is the `validate` function checking for?
+- The `validate` function checks that the response is in an active state for the given request for quote.
 3. What does the `cancel_response_instruction` function do?
-- The `cancel_response_instruction` function cancels the response by setting its state to `Canceled`. It first calls the `validate` function to ensure that the response is in an active state.
+- The `cancel_response_instruction` function sets the state of the response to "Canceled".
