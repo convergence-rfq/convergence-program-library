@@ -11,6 +11,7 @@ import {
   toLegMultiplier,
   withTokenDecimals,
   expectError,
+  sleep,
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
@@ -39,7 +40,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       finalize: false,
     });
 
-    await expectError(rfq.finalizeConstruction(), "LegSizeDoesNotMatchExpectedSize");
+    await expectError(rfq.finalizeConstruction(), "LegsSizeDoesNotMatchExpectedSize");
     await rfq.cleanUp();
   });
 
@@ -52,15 +53,15 @@ describe("RFQ escrow settlement using spot integration tests", () => {
 
   it("Create an RFQ, it expires and is removed", async () => {
     const rfq = await context.createRfq({ activeWindow: 1 });
-    await sleep(1500);
+    await sleep(1.5);
     await rfq.unlockCollateral();
     await rfq.cleanUp();
   });
 
   it("Create an RFQ, respond, active period ends and remove response and rfq", async () => {
     const rfq = await context.createRfq({ activeWindow: 2 });
-    const response = await rfq.respond();
-    await sleep(2000);
+    const response = await runInParallelWithWait(() => rfq.respond(), 2.5);
+
     await response.unlockResponseCollateral();
     await response.cleanUp();
     await rfq.unlockCollateral();
@@ -110,10 +111,10 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     });
     // taker confirms to sell 1.5 bitcoin
     await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1.5) });
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
     // taker should receive 30k$, maker should receive 1.5 bitcoin
-    await response.settle(taker, [maker]);
+    await response.settleEscrow(taker, [maker]);
     await tokenMeasurer.expectChange([
       { token: "asset", user: taker, delta: withTokenDecimals(-1.5) },
       { token: "asset", user: maker, delta: withTokenDecimals(1.5) },
@@ -250,12 +251,14 @@ describe("RFQ escrow settlement using spot integration tests", () => {
 
   it("Create RFQ, respond, confirm, but settle after settling period ends", async () => {
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
-    const response = await rfq.respond();
-    await response.confirm();
+    const response = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
 
-    await response.prepareEscrowSettlement(AuthoritySide.Taker);
-    await response.prepareEscrowSettlement(AuthoritySide.Maker);
-    await sleep(3000);
+      await response.prepareEscrowSettlement(AuthoritySide.Taker);
+      await response.prepareEscrowSettlement(AuthoritySide.Maker);
+      return response;
+    }, 3.5);
 
     await response.settleEscrow(taker, [maker]);
     await response.unlockResponseCollateral();
@@ -298,12 +301,17 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       activeWindow: 2,
       settlingWindow: 1,
     });
-    const response = await rfq.respond();
-    await response.confirm();
 
-    await response.prepareEscrowSettlement(AuthoritySide.Taker);
-    await response.prepareEscrowSettlement(AuthoritySide.Maker, 1);
-    await sleep(3000);
+    const response = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+
+      await response.prepareEscrowSettlement(AuthoritySide.Taker);
+      await response.prepareEscrowSettlement(AuthoritySide.Maker, 1);
+
+      return response;
+    }, 3.5);
+
     await response.revertEscrowSettlementPreparation(AuthoritySide.Maker, 1);
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker);
 
@@ -347,12 +355,17 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       activeWindow: 2,
       settlingWindow: 1,
     });
-    const response = await rfq.respond();
-    await response.confirm();
 
-    await response.prepareEscrowSettlement(AuthoritySide.Maker);
-    await response.prepareEscrowSettlement(AuthoritySide.Taker, 1);
-    await sleep(3000);
+    const response = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+
+      await response.prepareEscrowSettlement(AuthoritySide.Maker);
+      await response.prepareEscrowSettlement(AuthoritySide.Taker, 1);
+
+      return response;
+    }, 3.5);
+
     await response.revertEscrowSettlementPreparation(AuthoritySide.Maker);
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker, 1);
 
@@ -391,12 +404,14 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       activeWindow: 2,
       settlingWindow: 1,
     });
-    const response = await rfq.respond();
-    await response.confirm();
-    await response.prepareEscrowSettlement(AuthoritySide.Taker, 1);
-    await response.prepareEscrowSettlement(AuthoritySide.Maker, 1);
+    const response = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+      await response.prepareEscrowSettlement(AuthoritySide.Taker, 1);
+      await response.prepareEscrowSettlement(AuthoritySide.Maker, 1);
 
-    await sleep(3000);
+      return response;
+    }, 3.5);
 
     await response.settleTwoPartyDefault();
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker, 1);

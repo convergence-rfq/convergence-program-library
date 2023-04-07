@@ -26,6 +26,7 @@ export async function getProtocolPda(programId: PublicKey) {
 export async function getRfqPda(
   taker: PublicKey,
   legsHash: Uint8Array,
+  printTradeProvider: PublicKey | null,
   orderType: OrderType,
   quoteAsset: InstrumentController,
   fixedSize: FixedSize,
@@ -43,6 +44,7 @@ export async function getRfqPda(
       Buffer.from(RFQ_SEED),
       taker.toBuffer(),
       legsHash,
+      (printTradeProvider || PublicKey.default).toBuffer(),
       orderTypeBuffer,
       hashedQuoteAsset,
       fixedSizeSerialized,

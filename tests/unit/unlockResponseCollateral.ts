@@ -41,9 +41,9 @@ describe("Unlock response collateral", () => {
     });
 
     await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(1) });
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
-    await response.settle(taker, [maker]);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
+    await response.settleEscrow(taker, [maker]);
     const { takerCollateralLocked, makerCollateralLocked } = await response.getData();
     await response.unlockResponseCollateral();
 

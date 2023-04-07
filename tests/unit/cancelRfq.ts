@@ -23,9 +23,9 @@ describe("Cancel RFQ", () => {
 
     let response = await rfq.respond();
     await response.confirm();
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
-    await response.settle(taker, [maker]);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
+    await response.settleEscrow(taker, [maker]);
     await response.unlockResponseCollateral();
     await response.cleanUp();
 

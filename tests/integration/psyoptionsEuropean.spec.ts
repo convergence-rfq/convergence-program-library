@@ -166,12 +166,12 @@ describe("Psyoptions European instrument integration tests", () => {
     // mint options
     await Promise.all(options.map(async (option) => option.mintOptions(context.maker, new BN(2), OptionType.CALL)));
 
-    await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
-    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
-    await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
-    await response.prepareMoreLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker, legAmount / 2);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker, legAmount / 2);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
 
-    await response.settle(
+    await response.settleEscrow(
       maker,
       [...Array(legAmount)].map(() => taker)
     );

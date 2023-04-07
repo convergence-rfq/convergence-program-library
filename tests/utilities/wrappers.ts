@@ -77,6 +77,8 @@ import {
   toApiFeeParams,
 } from "./helpers";
 import { loadPubkeyNaming, readKeypair } from "./fixtures";
+import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
+import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmericanInstrument";
 
 export class Context {
   public program: Program<RfqIdl>;
@@ -391,6 +393,7 @@ export class Context {
     const rfq = await getRfqPda(
       this.taker.publicKey,
       legsHash,
+      null,
       orderType,
       quote,
       fixedSize,
@@ -406,6 +409,7 @@ export class Context {
         legsSize,
         Array.from(legsHash),
         legData,
+        null,
         orderType,
         quote.toQuoteData(),
         fixedSize as any,
@@ -426,6 +430,8 @@ export class Context {
     if (finalize) {
       txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeConstructionInstruction()]);
     }
+
+    await txConstructor.rpc();
 
     return rfqObject;
   }
@@ -775,10 +781,7 @@ export class Rfq {
       .remainingAccounts(await this.getRiskEngineAccounts())
       .signers([this.context.maker])
       .preInstructions([expandComputeUnits])
-      .rpc()
-      .catch((e) => {
-        console.log("ERROR: ", e);
-      });
+      .rpc();
 
     return new Response(this.context, this, this.context.maker, response);
   }
@@ -952,7 +955,7 @@ export class Response {
       .rpc();
   }
 
-  async preparePrintTradeSettlement(side) {
+  async preparePrintTradeSettlement(side: AuthoritySide) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     if (this.firstToPrepare.equals(PublicKey.default)) {
@@ -972,10 +975,7 @@ export class Response {
       .signers([caller])
       .remainingAccounts([...quoteAccounts])
       .preInstructions([expandComputeUnits])
-      .rpc()
-      .catch((e) => {
-        console.log("EERR:", e);
-      });
+      .rpc();
   }
 
   async prepareMoreEscrowLegsSettlement(side: AuthoritySide, from: number, legAmount: number) {
@@ -1029,7 +1029,7 @@ export class Response {
       .rpc();
   }
 
-  async executePrintTrade(side, accounts: AccountMeta[]) {
+  async executePrintTrade(side: AuthoritySide, accounts: AccountMeta[]) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     await this.context.program.methods

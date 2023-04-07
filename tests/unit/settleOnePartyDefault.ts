@@ -45,7 +45,7 @@ describe("Settle one party default", () => {
       });
 
       await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(1) });
-      await response.prepareSettlement(AuthoritySide.Maker);
+      await response.prepareEscrowSettlement(AuthoritySide.Maker);
       const responseState = await response.getData();
 
       return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];
@@ -83,7 +83,7 @@ describe("Settle one party default", () => {
       });
 
       await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(500) });
-      await response.prepareSettlement(AuthoritySide.Taker);
+      await response.prepareEscrowSettlement(AuthoritySide.Taker);
       const responseState = await response.getData();
 
       return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];
