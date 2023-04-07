@@ -1,28 +1,44 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/index.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/index.ts)
 
-This code is a module that exports several functions related to calculating collateral and configuring risk categories for the Convergence Program Library project. The module uses strict mode to enforce better coding practices and avoid common mistakes.
+This code exports several modules from different files within the Convergence Program Library project. These modules are related to calculating collateral, initializing configuration, setting instrument types, and updating configuration. 
 
-The code defines two helper functions: `__createBinding` and `__exportStar`. `__createBinding` is used to create bindings between objects and their properties, while `__exportStar` is used to export all non-default exports from a module as named exports.
+The `calculateCollateralForConfirmation` module likely calculates the amount of collateral required for a trade confirmation. This could be useful in ensuring that both parties have enough collateral to complete the trade. 
 
-The module then exports several functions using `__exportStar`. These functions include:
+The `calculateCollateralForResponse` module may calculate the amount of collateral required for a response to a trade request. This could be useful in determining whether a potential trade is feasible based on the available collateral. 
 
-- `calculateCollateralForConfirmation`: a function that calculates the required collateral for a confirmation trade.
-- `calculateCollateralForResponse`: a function that calculates the required collateral for a response trade.
-- `calculateCollateralForRfq`: a function that calculates the required collateral for a request for quote (RFQ) trade.
-- `initializeConfig`: a function that initializes the configuration for the Convergence Program Library.
-- `setInstrumentType`: a function that sets the instrument type for the Convergence Program Library.
-- `setRiskCategoriesInfo`: a function that sets the risk categories information for the Convergence Program Library.
-- `updateConfig`: a function that updates the configuration for the Convergence Program Library.
+The `calculateCollateralForRfq` module may calculate the amount of collateral required for a request for quote (RFQ). This could be useful in determining the feasibility of a potential trade before it is confirmed. 
 
-These functions are likely used throughout the larger Convergence Program Library project to perform various calculations and configurations related to trading and risk management. For example, `calculateCollateralForConfirmation` may be used to determine the required collateral for a confirmation trade, while `setRiskCategoriesInfo` may be used to configure the risk categories for the library.
+The `initializeConfig` module likely initializes the configuration for the Convergence Program Library. This could include setting default values for various parameters or loading configuration data from a file. 
 
-Overall, this module provides important functionality for the Convergence Program Library project and is likely used extensively throughout the project's codebase.
+The `setInstrumentType` module may set the type of financial instrument being traded. This could be useful in ensuring that the appropriate calculations and rules are applied to the trade. 
+
+The `setRiskCategoriesInfo` module may set information related to risk categories for the trades. This could be useful in determining the appropriate collateral requirements based on the level of risk associated with the trade. 
+
+Finally, the `updateConfig` module likely updates the configuration for the Convergence Program Library. This could include changing parameter values or adding new configuration data. 
+
+Overall, these modules are likely used in conjunction with each other to facilitate the trading process within the Convergence Program Library. For example, the `calculateCollateralForConfirmation` module may be used in conjunction with the `setRiskCategoriesInfo` module to determine the appropriate collateral requirements for a trade confirmation based on the associated risk category. 
+
+Example usage of these modules may look like:
+
+```
+import { calculateCollateralForConfirmation, setRiskCategoriesInfo } from "convergence-program-library";
+
+const riskCategory = "high";
+setRiskCategoriesInfo(riskCategory);
+
+const trade = {
+  // trade details
+};
+
+const collateral = calculateCollateralForConfirmation(trade);
+console.log(`Collateral required for trade confirmation: ${collateral}`);
+```
 ## Questions: 
- 1. What is the purpose of this code file?
-- This code file exports several functions related to calculating collateral, initializing and updating configuration, and setting instrument type and risk categories information.
+ 1. **What is the purpose of this code file?** 
+This code file exports multiple functions from different modules within the Convergence Program Library. 
 
-2. What is the significance of the "use strict" statement at the beginning of the code?
-- The "use strict" statement enables strict mode, which enforces stricter parsing and error handling rules, and disables certain features that are prone to errors or considered bad practice.
+2. **What are the functions being exported and what do they do?** 
+The functions being exported are `calculateCollateralForConfirmation`, `calculateCollateralForResponse`, `calculateCollateralForRfq`, `initializeConfig`, `setInstrumentType`, `setRiskCategoriesInfo`, and `updateConfig`. Without further context, it is unclear what each function does.
 
-3. What is the purpose of the "__createBinding" and "__exportStar" functions defined in this code?
-- The "__createBinding" function is used to create bindings between objects and their properties, while the "__exportStar" function is used to export all properties of a module as named exports. These functions are used to simplify the exporting of multiple functions from different modules in this code file.
+3. **Are there any dependencies required for these functions to work?** 
+It is unclear from this code file whether there are any dependencies required for these functions to work. It is possible that the functions rely on other modules within the Convergence Program Library or external dependencies.

@@ -1,25 +1,18 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/Quote.ts)
 
-This code defines types and functions related to the `Quote` data enum used in the Convergence Program Library project. The `Quote` type is a union type that represents the different variants of the `Quote` data enum defined in Rust. The `QuoteRecord` type is used to derive the `Quote` type as well as the de/serializer, but it should not be referred to in code. Instead, the `Quote` type should be used. 
+This code defines types and functions related to the `Quote` data enum used in the Convergence Program Library project. The `Quote` enum is defined as a union type of two variants: `Standard` and `FixedSize`. Each variant has its own set of properties, including a `priceQuote` property that is of type `PriceQuote`. The `Quote` type is derived from the `QuoteRecord` type, which is not meant to be used directly in code.
 
-The `Quote` type includes a `__kind` property that allows for narrowing types in switch/if statements. Additionally, `isQuoteStandard` and `isQuoteFixedSize` type guards are exposed to narrow to a specific variant. 
+The `quoteBeet` constant is a `FixableBeet` instance that is used to serialize and deserialize `Quote` instances. It takes an array of tuples, where each tuple represents a variant of the `Quote` enum. Each tuple contains the name of the variant, and a `FixableBeetArgsStruct` instance that defines the properties of the variant. The `FixableBeetArgsStruct` constructor takes an array of tuples, where each tuple represents a property of the variant. The first element of the tuple is the name of the property, and the second element is the type of the property. The `priceQuote` property is defined using the `priceQuoteBeet` constant, which is imported from the `PriceQuote` module.
 
-The `quoteBeet` function is a `beet.dataEnum` function that takes an array of tuples, where each tuple represents a variant of the `Quote` data enum. Each tuple contains the name of the variant and a `beet.FixableBeetArgsStruct` object that defines the fields of the variant and their types. The `beet.FixableBeetArgsStruct` object takes an array of tuples, where each tuple represents a field of the variant and its type. The `priceQuoteBeet` function is used to define the `priceQuote` field type. 
+The `isQuoteStandard` and `isQuoteFixedSize` functions are type guards that can be used to narrow the type of a `Quote` instance to a specific variant. They take a `Quote` instance as an argument and return a boolean indicating whether the instance is of the specified variant.
 
-Overall, this code provides the necessary types and functions to work with the `Quote` data enum in the Convergence Program Library project. Here is an example of how the `isQuoteStandard` type guard can be used:
-
-```
-const quote: Quote = { __kind: "Standard", priceQuote: {...}, legsMultiplierBps: {...} };
-
-if (isQuoteStandard(quote)) {
-  // quote is of type Quote & { __kind: "Standard" }
-  console.log(quote.legsMultiplierBps);
-}
-```
+Overall, this code provides a way to define and work with the `Quote` data enum in the Convergence Program Library project. It defines the types and functions needed to serialize and deserialize `Quote` instances, as well as type guards to narrow the type of a `Quote` instance to a specific variant.
 ## Questions: 
- 1. What is the purpose of the `beet` package and how is it used in this code?
-   - The `beet` package is imported and used to define and serialize/deserialize data structures. It is used to define the `QuoteRecord` type and the `quoteBeet` object.
-2. What is the `Quote` type and how is it related to the `QuoteRecord` type?
-   - The `Quote` type is a union type that represents the `QuoteRecord` type defined in Rust. It includes a `__kind` property that allows for narrowing types in switch/if statements. 
-3. Why are there `isQuoteStandard` and `isQuoteFixedSize` functions defined and what do they do?
-   - These functions are type guards that allow for narrowing the `Quote` type to a specific variant (`Standard` or `FixedSize`). They check if the `__kind` property of the `Quote` object matches the corresponding variant.
+ 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
+- The purpose of the Convergence Program Library is not clear from this code alone, but this code defines types and functions related to quotes. 
+
+2. What is the `beet` package and how is it used in this code?
+- The `beet` package is imported at the top of the file and is used to define and serialize/deserialize data structures. It is used to define the `QuoteRecord` type and the `quoteBeet` function.
+
+3. What is the `Quote` type and how is it used in this code?
+- The `Quote` type is a union type representing the `QuoteRecord` data enum defined in Rust. It is used to define the `quoteBeet` function and also has two type guard functions `isQuoteStandard` and `isQuoteFixedSize` to narrow down the type of a `Quote` object.

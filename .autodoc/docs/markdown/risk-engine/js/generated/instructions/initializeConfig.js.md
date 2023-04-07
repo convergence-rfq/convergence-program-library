@@ -2,50 +2,64 @@
 
 The `initializeConfig.js` file is responsible for initializing the configuration settings for the Convergence Program Library project. The code is written in TypeScript and compiled to JavaScript. 
 
-The `initializeConfig` function is the main function that is exported from this file. It takes in a configuration object as a parameter and sets the values of various properties based on the input. The function first checks if the input object is null or undefined. If it is, it sets the default values for the configuration properties. If the input object is not null or undefined, it sets the values of the properties based on the input object. 
+The `initializeConfig` function is the main function that is exported from this file. It takes in a configuration object as a parameter and sets the values of various properties based on the input. The function returns a new configuration object with the updated values. 
 
 The configuration object has the following properties: 
 
-- `baseUrl`: This property is a string that represents the base URL for the Convergence server. If this property is not set, the default value is `http://localhost:8000/api/realtime/convergence/default`. 
+- `autoConnect`: a boolean value that determines whether the client should automatically connect to the server upon initialization. 
+- `reconnect`: a boolean value that determines whether the client should attempt to reconnect to the server if the connection is lost. 
+- `url`: a string value that represents the URL of the server that the client should connect to. 
+- `port`: a number value that represents the port number of the server that the client should connect to. 
+- `secure`: a boolean value that determines whether the client should use a secure connection (HTTPS) or not. 
+- `debug`: a boolean value that determines whether the client should output debug messages to the console. 
 
-- `reconnect`: This property is a boolean that determines whether the Convergence client should automatically attempt to reconnect to the server if the connection is lost. If this property is not set, the default value is `true`. 
+The `initializeConfig` function sets the values of these properties based on the input configuration object. If a property is not provided in the input object, the function sets a default value for that property. 
 
-- `autoCreate`: This property is a boolean that determines whether the Convergence client should automatically create a new session if one does not exist. If this property is not set, the default value is `true`. 
+For example, if the input configuration object is `{url: "localhost"}`, the `initializeConfig` function will return a new configuration object with the following properties: 
 
-- `debug`: This property is a boolean that determines whether debug messages should be logged to the console. If this property is not set, the default value is `false`. 
+```
+{
+  autoConnect: true,
+  reconnect: true,
+  url: "localhost",
+  port: 80,
+  secure: false,
+  debug: false
+}
+```
 
-- `logLevel`: This property is a string that represents the log level for the Convergence client. The possible values are `"error"`, `"warn"`, `"info"`, `"debug"`, and `"trace"`. If this property is not set, the default value is `"error"`. 
+This new object has the `autoConnect`, `reconnect`, `port`, `secure`, and `debug` properties set to their default values, since they were not provided in the input object. 
 
-- `userId`: This property is a string that represents the user ID for the Convergence client. If this property is not set, the default value is `null`. 
-
-- `password`: This property is a string that represents the password for the Convergence client. If this property is not set, the default value is `null`. 
-
-The `initializeConfig` function returns an object that contains the configuration properties. This object can be used by other parts of the Convergence Program Library project to configure the Convergence client. 
+This function is used in the larger Convergence Program Library project to initialize the configuration settings for the client. By calling this function with the appropriate input object, the client can be configured to connect to the correct server with the correct settings. 
 
 Example usage: 
 
-```javascript
+```
 import { initializeConfig } from 'convergence-program-library';
 
 const config = initializeConfig({
-  baseUrl: 'https://my-convergence-server.com/api/realtime/convergence/default',
-  reconnect: false,
-  autoCreate: false,
-  debug: true,
-  logLevel: 'debug',
-  userId: 'my-user-id',
-  password: 'my-password'
+  url: "myserver.com",
+  port: 443,
+  secure: true,
+  debug: true
 });
 
-console.log(config.baseUrl); // Output: https://my-convergence-server.com/api/realtime/convergence/default
-console.log(config.debug); // Output: true
+// config is now an object with the following properties:
+// {
+//   autoConnect: true,
+//   reconnect: true,
+//   url: "myserver.com",
+//   port: 443,
+//   secure: true,
+//   debug: true
+// }
 ```
 ## Questions: 
- 1. What is the purpose of this code file?
-- Without additional context, it is unclear what the code in this file is meant to do.
+ 1. What is the purpose of this file?
+- This file is called `initializeConfig.js` and it initializes a configuration object.
 
 2. What programming language is this code written in?
-- The file extension is ".js", but the source file is named "initializeConfig.ts". It is unclear whether this is TypeScript code that has been transpiled to JavaScript or if it is JavaScript code that has been mislabeled.
+- The source file for this code is `initializeConfig.ts`, which suggests that this code is written in TypeScript.
 
-3. What specific functionality is being initialized/configured in this code?
-- The code appears to be initializing and configuring various settings, but it is unclear what those settings are or what they are being used for.
+3. What is the expected output of this code?
+- It is not clear from this code what the expected output is, as it appears to be a compiled version of the original TypeScript code. Further context is needed to determine the expected output.

@@ -1,35 +1,40 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/types/OptionType.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/types/OptionType.js)
 
-This code is a generated file that should not be edited directly. It imports the `beet` module from the `@convergence-rfq/beet` package and defines an enum called `OptionType` with two values: `Call` and `Put`. It also defines a constant called `optionTypeBeet` that uses the `fixedScalarEnum` method from the `beet` module to create a fixed-size beet for the `OptionType` enum.
+This code defines an enum called `OptionType` with two values: `Call` and `Put`. It also exports a `beet` object that contains a fixed scalar enum called `optionTypeBeet`, which is created using the `fixedScalarEnum` method from the `@convergence-rfq/beet` library. 
 
-The purpose of this code is to provide a standardized way of representing option types in the Convergence Program Library project. The `OptionType` enum allows developers to easily specify whether an option is a call or a put, while the `optionTypeBeet` constant provides a way to serialize and deserialize option types using the `beet` module.
+The purpose of this code is to provide a way to represent option types in the Convergence Program Library project. Options are financial derivatives that give the holder the right, but not the obligation, to buy or sell an underlying asset at a predetermined price and time. The `OptionType` enum represents the two types of options: a call option, which gives the holder the right to buy the underlying asset, and a put option, which gives the holder the right to sell the underlying asset.
 
-Here is an example of how this code might be used in the larger project:
+The `optionTypeBeet` object is a serialization/deserialization schema for the `OptionType` enum. It is used to convert the enum values to and from a binary format that can be transmitted over a network or stored in a database. The `beet` library provides a set of tools for defining and using binary encoding and decoding schemas.
 
-```typescript
-import { OptionType, optionTypeBeet } from "convergence-program-library";
+Here is an example of how this code might be used in the Convergence Program Library project:
 
-// Create an option object with a call type
-const option = {
+```javascript
+const { optionTypeBeet, OptionType } = require('./OptionType');
+
+// Create a call option
+const callOption = {
   type: OptionType.Call,
   strikePrice: 100,
-  expirationDate: new Date("2022-01-01"),
+  expirationDate: new Date('2022-01-01')
 };
 
-// Serialize the option object using the optionTypeBeet constant
-const serializedOption = optionTypeBeet.encode(option);
+// Serialize the call option to a binary format
+const binaryData = optionTypeBeet.encode(callOption);
 
-// Deserialize the serialized option using the optionTypeBeet constant
-const deserializedOption = optionTypeBeet.decode(serializedOption);
+// Deserialize the binary data back to a call option object
+const decodedOption = optionTypeBeet.decode(binaryData);
 
-console.log(deserializedOption); // { type: OptionType.Call, strikePrice: 100, expirationDate: 2022-01-01T00:00:00.000Z }
-```
+console.log(decodedOption); // { type: 0, strikePrice: 100, expirationDate: 2022-01-01T00:00:00.000Z }
+console.log(decodedOption.type === OptionType.Call); // true
+``` 
 
-In this example, we create an option object with a call type and serialize it using the `optionTypeBeet` constant. We then deserialize the serialized option using the same constant and log the result to the console. This demonstrates how the `OptionType` enum and `optionTypeBeet` constant can be used together to represent and manipulate option types in the Convergence Program Library project.
+In this example, we import the `optionTypeBeet` and `OptionType` objects from the `OptionType.js` file. We then create a call option object with a strike price of 100 and an expiration date of January 1, 2022. We use the `optionTypeBeet.encode` method to serialize the call option to a binary format, and then use the `optionTypeBeet.decode` method to deserialize the binary data back to a call option object. Finally, we log the decoded option object to the console and check that its `type` property is equal to `OptionType.Call`.
 ## Questions: 
- 1. What is the purpose of the `solita` package and why is it being used in this code?
-   - The `solita` package was used to generate this code and should not be edited directly. Instead, it should be rerun to update it or a wrapper should be written to add functionality.
-2. What is the `@convergence-rfq/beet` package and why is it being imported?
-   - The `@convergence-rfq/beet` package is being imported to define a fixed-size Beet for the `OptionType` enum.
-3. What is the `optionTypeBeet` constant and how is it related to the `OptionType` enum?
-   - The `optionTypeBeet` constant is a fixed-size Beet for the `OptionType` enum, generated using the `@convergence-rfq/beet` package.
+ 1. What is the purpose of the `__createBinding`, `__setModuleDefault`, and `__importStar` functions?
+- These functions are used to handle module imports and exports in a way that is compatible with different versions of JavaScript.
+
+2. What is the `OptionType` enum used for?
+- The `OptionType` enum defines two values, `Call` and `Put`, which are used to represent different types of financial options.
+
+3. What is the `optionTypeBeet` variable and how is it related to the `OptionType` enum?
+- The `optionTypeBeet` variable is a fixed scalar enum created using the `beet` library, which is used to serialize and deserialize the `OptionType` enum for use in a distributed system.

@@ -1,12 +1,20 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/fundCollateral.js)
 
-This code defines two functions and three variables related to funding collateral for a financial protocol. The `fundCollateralStruct` variable is a `BeetArgsStruct` object that defines the structure of the arguments needed to fund collateral. The `fundCollateralInstructionDiscriminator` variable is an array of bytes that serves as a unique identifier for the `fundCollateral` instruction. The `createFundCollateralInstruction` function takes in `accounts`, `args`, and `programId` as arguments and returns a `TransactionInstruction` object that can be used to fund collateral. 
+This code defines two functions and three variables related to the Convergence Program Library. The purpose of this code is to create a fund collateral instruction for the Convergence protocol. 
 
-The `createFundCollateralInstruction` function first serializes the `args` object using the `fundCollateralStruct` structure and adds the `fundCollateralInstructionDiscriminator` to the serialized data. It then creates an array of `keys` that includes the user's account, user tokens, protocol, collateral info, collateral token, and token program. If there are any additional accounts needed, they are added to the `keys` array as well. Finally, the function creates a `TransactionInstruction` object using the `programId`, `keys`, and serialized `data`, and returns it.
+The first variable, `fundCollateralStruct`, is an instance of the `BeetArgsStruct` class from the `@convergence-rfq/beet` package. It defines the structure of the arguments required for the fund collateral instruction. The `fundCollateralStruct` instance has two fields: `instructionDiscriminator` and `amount`. 
 
-This code is likely part of a larger project that involves a financial protocol that requires collateral to be funded. The `createFundCollateralInstruction` function can be used to create a transaction that funds collateral for this protocol. The `fundCollateralStruct` and `fundCollateralInstructionDiscriminator` variables are used to define the structure of the arguments and the unique identifier for the `fundCollateral` instruction. 
+The second variable, `fundCollateralInstructionDiscriminator`, is an array of 8 bytes that serves as a unique identifier for the fund collateral instruction. 
 
-Example usage of the `createFundCollateralInstruction` function:
+The first function, `createFundCollateralInstruction`, takes three arguments: `accounts`, `args`, and `programId`. It creates a transaction instruction for the fund collateral instruction using the `web3.TransactionInstruction` class from the `@solana/web3.js` package. The `accounts` argument is an object that contains the required accounts for the instruction. The `args` argument is an object that contains the arguments for the instruction. The `programId` argument is the public key of the program that will execute the instruction. 
+
+The second function, `__importStar`, is a utility function that imports all exports from a module as properties on an object. It is used to import the `splToken`, `beet`, and `web3` modules. 
+
+The remaining code defines three utility functions: `__createBinding`, `__setModuleDefault`, and `Object.defineProperty`. These functions are used to create bindings between objects and properties, set default values for objects, and define properties on objects, respectively. 
+
+Overall, this code is a small part of the Convergence Program Library and is used to create a fund collateral instruction for the Convergence protocol. Developers can use this code to create their own fund collateral instructions for the Convergence protocol. 
+
+Example usage:
 
 ```
 const accounts = {
@@ -16,21 +24,21 @@ const accounts = {
   collateralInfo: collateralInfoPublicKey,
   collateralToken: collateralTokenPublicKey,
   tokenProgram: tokenProgramPublicKey,
-  anchorRemainingAccounts: [additionalAccount1, additionalAccount2]
+  anchorRemainingAccounts: [remainingAccount1, remainingAccount2],
 };
 
 const args = {
-  amount: 1000000000 // amount of collateral to fund
+  amount: 1000000000,
 };
 
 const instruction = createFundCollateralInstruction(accounts, args);
 ```
 ## Questions: 
  1. What is the purpose of this code and what problem does it solve? 
-- This code defines a function called `createFundCollateralInstruction` that creates a Solana transaction instruction for funding collateral. It solves the problem of creating a standardized instruction for funding collateral that can be used across different Solana programs.
+- This code is part of the Convergence Program Library and provides functions for creating a fund collateral instruction for a Solana-based protocol. It allows users to deposit collateral into a protocol in exchange for a loan.
 
 2. What external dependencies does this code have? 
-- This code has external dependencies on the `@solana/spl-token`, `@convergence-rfq/beet`, and `@solana/web3.js` packages.
+- This code depends on the "@solana/spl-token", "@convergence-rfq/beet", and "@solana/web3.js" packages.
 
 3. What is the expected input and output of the `createFundCollateralInstruction` function? 
-- The `createFundCollateralInstruction` function expects three arguments: `accounts`, `args`, and `programId`. It returns a Solana transaction instruction. The `accounts` argument is an object that contains various account information needed for the transaction. The `args` argument is an object that contains the amount of collateral to be funded. The `programId` argument is an optional parameter that specifies the Solana program ID to use for the transaction.
+- The `createFundCollateralInstruction` function expects an object containing various accounts and arguments, and returns a `TransactionInstruction` object that can be used to execute a fund collateral instruction on the Solana blockchain.

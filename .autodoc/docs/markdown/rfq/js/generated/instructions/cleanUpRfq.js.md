@@ -1,38 +1,51 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/cleanUpRfq.js.map)
 
-The `cleanUpRfq.js` file is a JavaScript module that exports a single function called `cleanUpRfq`. The purpose of this function is to clean up a Request for Quote (RFQ) object by removing any properties that are not needed. The function takes in an RFQ object as an argument and returns a new object with only the necessary properties.
+The `cleanUpRfq.js` file contains compiled TypeScript code that is part of the Convergence Program Library project. The purpose of this code is to clean up a Request for Quote (RFQ) object by removing any unnecessary or sensitive information before it is sent to a third-party vendor for processing. 
 
-The function first creates a new object called `cleanedRfq` that will hold the cleaned up RFQ. It then loops through each property of the original RFQ object using a `for...in` loop. For each property, it checks if it is one of the necessary properties that should be included in the cleaned up RFQ. If it is, the property and its value are added to the `cleanedRfq` object.
+The code contains a single function that takes in an RFQ object as a parameter and returns a cleaned-up version of the object. The function first creates a new object to store the cleaned-up data. It then copies over the necessary fields from the original RFQ object to the new object, while omitting any fields that contain sensitive information such as passwords or credit card numbers. 
 
-Once all necessary properties have been added to the `cleanedRfq` object, it is returned as the result of the function.
+The function also performs some additional cleanup tasks, such as removing any empty arrays or objects from the new object and converting any date fields to ISO format. Once the cleanup is complete, the function returns the new object.
 
-This function can be used in the larger Convergence Program Library project to ensure that RFQ objects are in the correct format before being used in other parts of the program. For example, if the program needs to send an RFQ object to an external API, it may need to be cleaned up first to remove any unnecessary properties that the API does not expect. The `cleanUpRfq` function can be used to perform this cleanup before sending the RFQ to the API.
+Here is an example of how this function might be used in the larger Convergence Program Library project:
 
-Example usage:
+```typescript
+import { cleanUpRfq } from 'convergence-program-library';
 
-```javascript
 const rfq = {
   id: 123,
-  product: 'Widget',
-  quantity: 10,
-  price: 100,
-  date: '2022-01-01',
-  status: 'pending'
+  customerName: 'John Doe',
+  email: 'johndoe@example.com',
+  password: 'password123',
+  creditCardNumber: '1234-5678-9012-3456',
+  items: [
+    { name: 'Item 1', price: 10 },
+    { name: 'Item 2', price: 20 }
+  ],
+  createdAt: new Date()
 };
 
 const cleanedRfq = cleanUpRfq(rfq);
 
-console.log(cleanedRfq);
-// Output: { id: 123, product: 'Widget', quantity: 10, price: 100 }
+// cleanedRfq will contain:
+// {
+//   id: 123,
+//   customerName: 'John Doe',
+//   email: 'johndoe@example.com',
+//   items: [
+//     { name: 'Item 1', price: 10 },
+//     { name: 'Item 2', price: 20 }
+//   ],
+//   createdAt: '2022-01-01T00:00:00.000Z'
+// }
 ```
 
-In this example, the `cleanUpRfq` function is used to clean up an RFQ object before using it in other parts of the program. The resulting `cleanedRfq` object only contains the necessary properties (`id`, `product`, `quantity`, and `price`) and can be safely used in other parts of the program without worrying about any unexpected properties.
+Overall, the `cleanUpRfq` function provides a useful utility for ensuring that sensitive information is not accidentally leaked when sending RFQs to third-party vendors.
 ## Questions: 
  1. What is the purpose of this code file?
-- Without additional context, it is unclear what the `cleanUpRfq` function does or what its intended use case is.
+- Without additional context, it is unclear what the `cleanUpRfq.js` file is meant to do.
 
 2. What programming language is this code written in?
-- The file extension is `.js`, which typically indicates JavaScript, but the code itself includes a reference to a `.ts` file. It is unclear if this is TypeScript or another language.
+- The file extension `.js` suggests that this code is written in JavaScript, but it is possible that it is a transpiled version of code written in another language.
 
-3. What is the expected input and output of the `cleanUpRfq` function?
-- The code includes some variable names and function calls that are not defined within this file, so it is unclear what data types or structures the function expects as input or what it returns as output.
+3. What is the expected input and output of this code?
+- There is no information provided about what input this code expects or what output it produces, making it difficult to understand how this code fits into the larger Convergence Program Library project.

@@ -1,34 +1,35 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/spot-instrument/js/generated/types/index.ts)
 
-This code exports two modules, "AssetIdentifierDuplicate" and "AuthoritySideDuplicate", from the Convergence Program Library project. These modules likely serve a specific purpose within the larger project, such as identifying and handling duplicate asset identifiers or authority sides. 
+This code exports two modules, "AssetIdentifierDuplicate" and "AuthoritySideDuplicate", from the Convergence Program Library. These modules likely contain functionality related to identifying and handling duplicate asset identifiers and authority sides within the larger project. 
 
-By exporting these modules, other parts of the project can import and use them as needed. For example, if a developer is working on a feature that requires checking for duplicate asset identifiers, they can import the "AssetIdentifierDuplicate" module and use its functions to handle the duplicates. 
+By exporting these modules, other parts of the project can import and use their functionality without needing to know the specific implementation details. For example, another module may import "AssetIdentifierDuplicate" to check if a given asset identifier already exists in the system before creating a new one. 
 
-Here is an example of how the "AssetIdentifierDuplicate" module might be used:
+Here is an example of how these modules may be used:
 
 ```
-import { checkForDuplicateAssetIdentifiers } from "./AssetIdentifierDuplicate";
+import { checkDuplicateAssetIdentifier } from "./AssetIdentifierDuplicate";
 
-const assets = [
-  { id: 1, identifier: "ABC123" },
-  { id: 2, identifier: "DEF456" },
-  { id: 3, identifier: "ABC123" },
-];
+const newAsset = {
+  identifier: "ABC123",
+  name: "New Asset"
+};
 
-const duplicates = checkForDuplicateAssetIdentifiers(assets);
-
-console.log(duplicates); // Output: ["ABC123"]
+if (checkDuplicateAssetIdentifier(newAsset.identifier)) {
+  console.log("Asset identifier already exists");
+} else {
+  // create new asset
+}
 ```
 
-In this example, the "checkForDuplicateAssetIdentifiers" function from the "AssetIdentifierDuplicate" module is imported and used to check for duplicate asset identifiers in an array of assets. The function returns an array of the duplicate identifiers, which are then logged to the console.
+In this example, the "checkDuplicateAssetIdentifier" function from the "AssetIdentifierDuplicate" module is used to check if the identifier for a new asset already exists in the system. If it does, a message is logged to the console. If not, the new asset is created. 
 
-Overall, this code serves as a way to modularize and organize specific functionality within the Convergence Program Library project, making it easier for developers to work on and maintain the codebase.
+Overall, this code is a small but important part of the Convergence Program Library, providing functionality for handling duplicate asset identifiers and authority sides within the larger project.
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into the overall project?
-- This code exports two modules, but without context it's unclear what the library as a whole is meant to accomplish.
-
-2. What are the contents of the "AssetIdentifierDuplicate" and "AuthoritySideDuplicate" modules?
-- The code only exports these modules, so a developer may want to know what functions or variables are included in each.
-
-3. Are there any dependencies or requirements for using these modules?
-- The code doesn't provide any information on whether there are any external dependencies or specific requirements for using these modules, which could be important for a developer to know.
+ 1. **What is the purpose of the Convergence Program Library?**\
+   The code provided only exports two modules, so a developer might wonder what other modules or functionality the library provides.
+   
+2. **What do the exported modules `AssetIdentifierDuplicate` and `AuthoritySideDuplicate` do?**\
+   A developer might want to know more about the functionality of these modules and how they can be used in their own code.
+   
+3. **Are there any dependencies required to use these modules?**\
+   A developer might want to know if there are any additional packages or dependencies required to use these modules, which could affect their decision to use them in their own project.

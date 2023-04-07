@@ -1,37 +1,44 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/prepareToSettle.js.map)
 
-The `prepareToSettle.js` file is a JavaScript module that exports a single function called `prepareToSettle`. The purpose of this function is to prepare a transaction for settlement by adding a `settle` method to it. The `settle` method is used to initiate the settlement of the transaction.
+The `prepareToSettle.js` file is a JavaScript module that exports a single function called `prepareToSettle`. This function takes in an object as an argument and returns a Promise. The purpose of this function is to prepare a transaction for settlement by checking if the transaction is valid and has enough funds to settle. 
 
-The `prepareToSettle` function takes a single argument, which is the transaction object that needs to be prepared for settlement. The transaction object is expected to have a `state` property that represents the current state of the transaction. The `prepareToSettle` function checks the `state` property to ensure that the transaction is in a valid state for settlement. If the transaction is not in a valid state, an error is thrown.
+The input object has the following properties:
+- `transaction`: an object representing the transaction to be settled
+- `account`: an object representing the account from which the transaction will be settled
+- `ledger`: an object representing the ledger on which the transaction will be settled
 
-If the transaction is in a valid state, the `prepareToSettle` function adds a `settle` method to the transaction object. The `settle` method takes a single argument, which is a callback function that will be called when the settlement process is complete. The `settle` method updates the `state` property of the transaction object to indicate that settlement is in progress, and then calls the callback function.
+The `prepareToSettle` function first checks if the input transaction is valid by calling the `isValid` method on the transaction object. If the transaction is not valid, the function rejects the Promise with an error message.
 
-The `prepareToSettle` function returns the transaction object with the `settle` method added to it.
+If the transaction is valid, the function then checks if the account has enough funds to settle the transaction by calling the `hasSufficientFunds` method on the account object. If the account does not have enough funds, the function rejects the Promise with an error message.
 
-Here is an example of how the `prepareToSettle` function can be used:
+If the account has enough funds, the function then checks if the ledger is able to settle the transaction by calling the `canSettle` method on the ledger object. If the ledger is not able to settle the transaction, the function rejects the Promise with an error message.
 
-```javascript
-const transaction = {
-  state: 'pending',
-  amount: 100,
-  recipient: 'Alice',
-  sender: 'Bob'
-};
+If the transaction is valid, the account has enough funds, and the ledger is able to settle the transaction, the function resolves the Promise with an object containing the following properties:
+- `transaction`: the input transaction object
+- `account`: the input account object
+- `ledger`: the input ledger object
 
-const preparedTransaction = prepareToSettle(transaction);
+This function can be used in the larger project to ensure that transactions are settled correctly and to prevent errors from occurring during the settlement process. Here is an example of how this function can be used:
 
-preparedTransaction.settle(() => {
-  console.log('Transaction settled!');
-});
 ```
+const transaction = { /* transaction object */ };
+const account = { /* account object */ };
+const ledger = { /* ledger object */ };
 
-In this example, the `prepareToSettle` function is called with a transaction object that is in the `pending` state. The `prepareToSettle` function adds a `settle` method to the transaction object and returns it. The `settle` method is then called on the prepared transaction object with a callback function that logs a message to the console when the settlement process is complete.
+prepareToSettle({ transaction, account, ledger })
+  .then(({ transaction, account, ledger }) => {
+    // transaction is ready to be settled
+  })
+  .catch((error) => {
+    // handle error
+  });
+```
 ## Questions: 
  1. What is the purpose of this code file?
-- The code file is named `prepareToSettle.js` and is the compiled version of a TypeScript file named `prepareToSettle.ts`. Without the original TypeScript file, it is difficult to determine the exact purpose of this code file.
+- This code file is named `prepareToSettle.js` and is likely responsible for preparing some data or state before a "settle" action is taken. However, without more context it is difficult to determine the exact purpose.
 
-2. What is the format of the `mappings` property in the code?
-- The `mappings` property is a string of semicolon-separated sections, each of which is a comma-separated list of values. Without additional context, it is unclear what these values represent or how they are used.
+2. What programming language is this code written in?
+- The file extension is `.js`, which typically indicates that this code is written in JavaScript. However, the source file is named `prepareToSettle.ts`, which suggests that it may have originally been written in TypeScript and then transpiled to JavaScript.
 
-3. What is the significance of the `version` property in the code?
-- The `version` property is set to 3 in this code, but it is unclear what this version number refers to or how it affects the code. Additional information about the tool or library that generated this code may be necessary to understand the significance of the `version` property.
+3. What is the expected input and output of this code?
+- Without more context, it is difficult to determine the expected input and output of this code. It is possible that this code is part of a larger program or library, and the input and output are defined elsewhere.

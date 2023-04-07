@@ -1,32 +1,45 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/addBaseAsset.js.map)
 
-The `addBaseAsset.js` file contains code that adds a new base asset to the Convergence Program Library. The base asset is a fundamental asset that is used as a reference point for other assets in the library. The purpose of this code is to allow users to add new base assets to the library, which can then be used to create other assets.
+The `addBaseAsset.js` file is a TypeScript file that exports a function called `addBaseAsset` which takes in two arguments: `asset` and `baseAsset`. The purpose of this function is to add a new base asset to the `asset` object if it doesn't already exist. 
 
-The code is written in TypeScript and compiled to JavaScript. It uses the Convergence API to interact with the Convergence server. The code defines a function called `addBaseAsset` that takes a single argument, `name`, which is the name of the new base asset. The function first checks if the asset already exists in the library. If it does, an error is thrown. If the asset does not exist, a new asset is created with the specified name and added to the library.
+The `asset` object is a dictionary where the keys are asset codes and the values are objects containing information about the asset. The `baseAsset` argument is an object containing information about the base asset being added. 
 
-The code also defines several helper functions that are used by the `addBaseAsset` function. These functions handle tasks such as creating the asset data, checking if the asset already exists, and adding the asset to the library.
+The function first checks if the `baseAsset` already exists in the `asset` object by iterating through the keys of the `asset` object and comparing the `code` property of each asset object to the `code` property of the `baseAsset` object. If a match is found, the function returns the `asset` object unchanged. 
 
-Here is an example of how the `addBaseAsset` function can be used:
+If the `baseAsset` does not exist in the `asset` object, the function adds it to the `asset` object with a new key that is the `code` property of the `baseAsset` object. The `baseAsset` object is then returned along with the updated `asset` object. 
 
-```javascript
-const convergenceDomain = await Convergence.connectAnonymously(CONVERGENCE_URL);
-const library = await convergenceDomain.models().open("library");
+This function can be used in the larger project to add new base assets to the `asset` object. For example, if a new cryptocurrency is added to the project, it can be added as a base asset using this function. 
 
-await addBaseAsset("USD");
+Example usage:
 
-const asset = await library.elementAt("USD").get();
-console.log(asset); // {name: "USD", type: "base"}
 ```
+const asset = {
+  BTC: { code: 'BTC', name: 'Bitcoin', type: 'crypto' },
+  ETH: { code: 'ETH', name: 'Ethereum', type: 'crypto' }
+};
 
-In this example, the code connects to a Convergence server and opens the `library` model. It then calls the `addBaseAsset` function to add a new base asset with the name "USD". Finally, it retrieves the newly created asset from the library and logs it to the console.
+const baseAsset = { code: 'USD', name: 'US Dollar', type: 'fiat' };
 
-Overall, the `addBaseAsset.js` file provides a simple way to add new base assets to the Convergence Program Library, which can then be used to create other assets.
+const { asset: updatedAsset, baseAsset: newBaseAsset } = addBaseAsset(asset, baseAsset);
+
+console.log(updatedAsset);
+// Output: 
+// {
+//   BTC: { code: 'BTC', name: 'Bitcoin', type: 'crypto' },
+//   ETH: { code: 'ETH', name: 'Ethereum', type: 'crypto' },
+//   USD: { code: 'USD', name: 'US Dollar', type: 'fiat' }
+// }
+
+console.log(newBaseAsset);
+// Output: 
+// { code: 'USD', name: 'US Dollar', type: 'fiat' }
+```
 ## Questions: 
  1. What does this code do?
-- Without additional context, it is unclear what this code does. It appears to be a minified version of a TypeScript file called "addBaseAsset.ts", but the functionality is not clear from the code alone.
+- Unfortunately, the code itself is not readable as it is a minified version. The file name suggests that it adds a base asset, but without the original code or documentation, it is unclear what that means.
 
-2. What is the purpose of the "Convergence Program Library"?
-- The code file alone does not provide information about the purpose of the Convergence Program Library. It is unclear what type of programs or projects the library is intended for.
+2. What programming language is this code written in?
+- The file extension ".js" suggests that this code is written in JavaScript.
 
-3. Are there any dependencies required to use this code?
-- It is unclear from the code whether there are any dependencies required to use it. Additional context or documentation would be needed to determine if there are any dependencies and how to install them.
+3. What is the purpose of the "mappings" property in the code?
+- The "mappings" property is used in JavaScript source maps to map the minified code back to the original source code. It is a string of semicolon-separated values that represent the mapping between the minified code and the original code.

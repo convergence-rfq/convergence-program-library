@@ -2,11 +2,13 @@
 
 This code is a module that exports several types and functions related to responding to a Request for Quote (RFQ) on the Solana blockchain. The module imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js", which are used to define types and interact with the Solana blockchain, respectively.
 
-The main type exported by this module is `RespondToRfqInstructionArgs`, which is an object that contains information about a bid and an ask for a given RFQ, as well as a `pdaDistinguisher` number. The `bid` and `ask` properties are of type `beet.COption<Quote>`, which is a custom type defined in the "@convergence-rfq/beet" library. The `pdaDistinguisher` property is a number that is used to distinguish between different program-derived accounts (PDAs) on the Solana blockchain.
+The main type exported by this module is `RespondToRfqInstructionArgs`, which is an object that contains several properties related to the RFQ response. These properties include a bid and ask price, as well as a "PDA distinguisher" which is used to differentiate between different RFQs. 
 
-The module also exports a `respondToRfqStruct` constant, which is a `beet.FixableBeetArgsStruct` that defines the structure of the arguments that are passed to the `createRespondToRfqInstruction` function. This function takes in several arguments, including `accounts`, which is an object that contains several public keys for different accounts on the Solana blockchain, and `args`, which is an object of type `RespondToRfqInstructionArgs`. The function returns a `web3.TransactionInstruction`, which is used to interact with the Solana blockchain.
+The module also exports a `RespondToRfqInstructionAccounts` type, which defines the various accounts that are required to execute an RFQ response transaction on the Solana blockchain. These accounts include the maker's account, the protocol's account, the RFQ account, and several others.
 
-Overall, this module provides a way to respond to an RFQ on the Solana blockchain by defining the necessary arguments and accounts, and then using the `createRespondToRfqInstruction` function to create a transaction instruction that can be sent to the blockchain. This module is likely used in conjunction with other modules and functions to create a larger program that interacts with the Solana blockchain. 
+The `createRespondToRfqInstruction` function is the main function exported by this module. This function takes in the required accounts and RFQ response arguments, and returns a `web3.TransactionInstruction` object that can be used to execute the RFQ response transaction on the Solana blockchain.
+
+Overall, this module provides a set of types and functions that can be used to respond to RFQs on the Solana blockchain. It is likely that this module is part of a larger project that involves building a decentralized exchange or other financial application on the Solana blockchain. 
 
 Example usage:
 
@@ -14,29 +16,33 @@ Example usage:
 import { createRespondToRfqInstruction } from "convergence-program-library";
 
 const accounts = {
-  maker: new web3.PublicKey("maker-public-key"),
-  protocol: new web3.PublicKey("protocol-public-key"),
-  rfq: new web3.PublicKey("rfq-public-key"),
-  response: new web3.PublicKey("response-public-key"),
-  collateralInfo: new web3.PublicKey("collateral-info-public-key"),
-  collateralToken: new web3.PublicKey("collateral-token-public-key"),
-  riskEngine: new web3.PublicKey("risk-engine-public-key"),
+  maker: makerPublicKey,
+  protocol: protocolPublicKey,
+  rfq: rfqPublicKey,
+  response: responsePublicKey,
+  collateralInfo: collateralInfoPublicKey,
+  collateralToken: collateralTokenPublicKey,
+  riskEngine: riskEnginePublicKey,
+  systemProgram: systemProgramPublicKey,
+  anchorRemainingAccounts: anchorRemainingAccountsArray
 };
 
 const args = {
-  bid: new beet.COption<Quote>({ value: new Quote() }),
-  ask: new beet.COption<Quote>({ value: new Quote() }),
-  pdaDistinguisher: 123,
+  bid: bidQuote,
+  ask: askQuote,
+  pdaDistinguisher: 12345
 };
 
-const instruction = createRespondToRfqInstruction(accounts, args);
+const instruction = createRespondToRfqInstruction(accounts, args, programId);
+
+// Use the instruction to execute the RFQ response transaction on the Solana blockchain
 ```
 ## Questions: 
- 1. What external libraries or dependencies are being used in this code?
-- The code is importing two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
+ 1. What external libraries or dependencies does this code rely on?
+- This code relies on two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
 
 2. What is the purpose of the "RespondToRfqInstructionArgs" type and what does it contain?
-- The "RespondToRfqInstructionArgs" type is a TypeScript interface that defines the arguments for a function called "createRespondToRfqInstruction". It contains properties for "bid", "ask", and "pdaDistinguisher".
+- The "RespondToRfqInstructionArgs" type is used as an argument for the "createRespondToRfqInstruction" function and contains several properties including "bid", "ask", and "pdaDistinguisher".
 
-3. What is the role of the "createRespondToRfqInstruction" function and what are its parameters?
-- The "createRespondToRfqInstruction" function is used to create a Solana transaction instruction for responding to a request for quote (RFQ). Its parameters include an object of "accounts" that define the necessary accounts for the transaction, an object of "args" that contain the arguments for the instruction, and an optional "programId" parameter.
+3. What is the expected output of the "createRespondToRfqInstruction" function?
+- The "createRespondToRfqInstruction" function is expected to return a "web3.TransactionInstruction" object based on the provided "accounts" and "args" parameters.

@@ -1,35 +1,36 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/index.d.ts)
 
-This code exports a series of modules from various files within the Convergence Program Library project. Each module represents a specific function or action that can be taken within the larger project. 
+This code exports a series of modules from various files within the Convergence Program Library project. Each module represents a specific function or action that can be performed within the larger project. 
 
-For example, the "addBaseAsset" module likely adds a new base asset to the project, while "addInstrument" adds a new financial instrument. "CreateRfq" likely creates a new request for quote, while "respondToRfq" allows a user to respond to an existing request. 
+For example, the "addBaseAsset" module likely adds a new base asset to the system, while "addInstrument" adds a new financial instrument. "CreateRfq" likely creates a new request for quote, while "respondToRfq" allows a user to respond to an existing request. 
 
-Overall, this code serves as a way to organize and modularize the various functions and actions within the Convergence Program Library project. By exporting each module separately, developers can easily import and use only the specific functions they need, rather than having to import the entire project. 
+Overall, this code allows for the various actions and functions within the Convergence Program Library to be easily accessed and utilized by other parts of the project. By exporting each module individually, other parts of the project can import and use only the specific functionality they need, rather than having to import the entire file. 
 
-For example, if a developer only needs to add a new financial instrument, they can simply import the "addInstrument" module rather than importing the entire project. This can help to streamline the development process and make the code more efficient. 
+For example, if a developer wanted to add a new financial instrument to the system, they could import only the "addInstrument" module rather than the entire file. This can help keep the codebase organized and efficient. 
 
-Here is an example of how a developer might use one of these modules:
+Here is an example of how one of these modules might be imported and used within the larger project:
 
 ```
-import { createRfq } from "convergence-program-library";
+import { createRfq } from "./createRfq";
 
 const newRfq = createRfq({
-  instrument: "BTC/USD",
+  instrument: "BTC-USD",
   quantity: 10,
   price: 50000,
   expiration: "2022-01-01",
 });
 
 console.log(newRfq);
+// Output: { id: "12345", instrument: "BTC-USD", quantity: 10, price: 50000, expiration: "2022-01-01" }
 ```
 
-In this example, the developer is importing the "createRfq" module and using it to create a new request for quote. The function takes in an object with various parameters, such as the financial instrument, quantity, and price. The function then returns the newly created request, which is logged to the console.
+In this example, the "createRfq" module is imported and used to create a new request for quote with specific parameters. The resulting object is then logged to the console.
 ## Questions: 
  1. What is the purpose of this code file?
 - This code file exports various functions from different modules within the Convergence Program Library.
 
-2. What is the expected input and output of these exported functions?
-- Without further context or documentation, it is unclear what the expected input and output of each exported function is.
+2. What is the relationship between the exported functions?
+- The exported functions are related to different aspects of the Convergence Program Library, such as adding assets and instruments, settling trades, and managing collateral.
 
-3. Are there any dependencies or prerequisites required to use these exported functions?
-- It is unclear from this code file whether there are any dependencies or prerequisites required to use these exported functions.
+3. Are there any dependencies or requirements for using these exported functions?
+- It is unclear from this code file whether there are any dependencies or requirements for using these exported functions, such as specific versions of other modules or libraries.

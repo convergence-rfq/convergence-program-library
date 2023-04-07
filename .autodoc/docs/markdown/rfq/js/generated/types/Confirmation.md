@@ -1,35 +1,35 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/Confirmation.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/Confirmation.js)
 
-This code defines a TypeScript type called `Confirmation` and creates a `beet.FixableBeetArgsStruct` object called `confirmationBeet` that can be used to serialize and deserialize instances of the `Confirmation` type. 
+This code is a TypeScript module that exports a single object called `confirmationBeet`. The purpose of this object is to define a `FixableBeetArgsStruct` that represents a confirmation message for a financial trade. The confirmation message includes two fields: `side` and `overrideLegMultiplierBps`. 
 
-The `Confirmation` type has two properties: `side`, which is of type `Side`, and `overrideLegMultiplierBps`, which is an optional `beet.COption` of type `beet.bignum`. The `Side` type is imported from another file called `Side.ts`.
+The `side` field is an enum that represents the direction of the trade, either "buy" or "sell". This enum is defined in another module called `Side`. The `sideBeet` object is imported from this module and used as the type for the `side` field in the `confirmationBeet` object.
 
-The `confirmationBeet` object is created using the `beet.FixableBeetArgsStruct` constructor, which takes two arguments: an array of tuples representing the properties of the type and their corresponding serializers/deserializers, and a string representing the name of the type. In this case, the array contains two tuples: one for the `side` property, which uses the `sideBeet` serializer/deserializer defined in the `Side.ts` file, and one for the `overrideLegMultiplierBps` property, which uses the `beet.coption` serializer/deserializer for `beet.u64` values.
+The `overrideLegMultiplierBps` field is an optional number that represents a multiplier for the trade price. This field is defined using the `beet.coption` function, which creates an optional field in the `FixableBeetArgsStruct`. The type of this field is `beet.u64`, which is an unsigned 64-bit integer.
 
-The `confirmationBeet` object can be used to serialize and deserialize instances of the `Confirmation` type using the `beet.serialize` and `beet.deserialize` functions provided by the `@convergence-rfq/beet` package. For example:
+The `FixableBeetArgsStruct` is a class provided by the `@convergence-rfq/beet` library. It is used to define a structured message format that can be serialized and deserialized using the FIX protocol. The `Confirmation` string passed as the second argument to the constructor is the name of the message type.
 
-```typescript
-import { confirmationBeet } from "./Confirmation";
+This module can be used in the larger project to define and send confirmation messages for financial trades. The `confirmationBeet` object can be imported into other modules and used to create instances of the `FixableBeetArgsStruct` that conform to the confirmation message format. These instances can then be serialized and sent over a network using the FIX protocol. 
 
-const confirmation: Confirmation = {
-  side: Side.Buy,
-  overrideLegMultiplierBps: { present: true, value: BigInt(10000) },
-};
+Example usage:
 
-const serializedConfirmation = beet.serialize(confirmationBeet, confirmation);
-console.log(serializedConfirmation); // Uint8Array([...])
-
-const deserializedConfirmation = beet.deserialize(confirmationBeet, serializedConfirmation);
-console.log(deserializedConfirmation); // { side: Side.Buy, overrideLegMultiplierBps: { present: true, value: 10000n } }
 ```
+import { confirmationBeet } from '@convergence-rfq/Confirmation';
+import { Side } from './Side';
 
-Overall, this code provides a convenient way to serialize and deserialize instances of the `Confirmation` type using the `beet` package, which is likely used throughout the larger Convergence Program Library project.
+const confirmation = confirmationBeet.create({
+  side: Side.Buy,
+  overrideLegMultiplierBps: 1000
+});
+
+const serializedConfirmation = confirmation.serialize();
+// send serializedConfirmation over a network using the FIX protocol
+```
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The Convergence Program Library is not described in the given code, so a smart developer might wonder what the overall purpose of the library is and how this specific code contributes to it.
+ 1. What is the purpose of this code file?
+- This code file exports a `confirmationBeet` object which is a `FixableBeetArgsStruct` containing information about a confirmation, including the side and an optional override leg multiplier.
 
-2. What is the significance of the `beet` package and how is it being used in this code?
-- A smart developer might want to know more about the `beet` package being imported and used in this code, including its functionality and how it interacts with other parts of the library.
+2. What is the `@convergence-rfq/beet` module used for?
+- The `@convergence-rfq/beet` module is imported and used to create the `confirmationBeet` object.
 
-3. What is the expected input and output of the `confirmationBeet` function?
-- A smart developer might want to understand the expected input and output of the `confirmationBeet` function, including the structure of the `Confirmation` type and how it is being used to create a `FixableBeetArgsStruct`.
+3. What is the `Side_1` module used for?
+- The `Side_1` module is imported and used to define the `side` property in the `confirmationBeet` object.

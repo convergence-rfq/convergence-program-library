@@ -1,16 +1,32 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/accounts/Response.d.ts)
 
-The `Response` class is a TypeScript implementation of a response object used in the Convergence Program Library. It represents a response to a request for quote (RFQ) in a financial trading context. The class contains various properties that describe the state of the response, such as the maker's public key, the RFQ's public key, the creation timestamp, the amount of collateral locked by the maker and taker, the number of prepared legs, the number of settled legs, and the state of the response. 
+The `Response` class is a TypeScript implementation of a response object used in the Convergence Program Library. It contains properties and methods that allow for the creation, serialization, and deserialization of response objects. 
 
-The `Response` class also contains various methods for creating, serializing, and deserializing response objects. For example, the `fromArgs` method creates a new `Response` object from a set of arguments, while the `serialize` method serializes a `Response` object into a byte buffer. The `fromAccountInfo` method creates a new `Response` object from an account info object returned by the Solana blockchain, while the `fromAccountAddress` method creates a new `Response` object from a public key address. 
+The `Response` class has a constructor that is private, meaning that it cannot be instantiated directly. Instead, it provides a static method `fromArgs` that takes an object of type `ResponseArgs` and returns a new `Response` object. The `ResponseArgs` type defines the properties that can be passed to the `fromArgs` method. These properties include the maker's public key, the RFQ's public key, the creation timestamp, the amount of collateral locked by the maker and taker, the response state, the number of prepared legs, the number of settled legs, and other optional properties such as bid and ask quotes.
 
-The `Response` class also contains a `pretty` method that returns a human-readable representation of the response object. This method is useful for debugging and testing purposes. 
+The `Response` class also provides a static method `fromAccountInfo` that takes an account info object and an optional offset and returns a tuple containing a new `Response` object and the number of bytes read. This method is used to deserialize a response object from a buffer.
 
-Overall, the `Response` class is an important component of the Convergence Program Library, as it provides a standardized way of representing responses to RFQs in a financial trading context. Developers can use this class to create, serialize, and deserialize response objects, as well as to access and manipulate the various properties of these objects.
+The `Response` class provides a static method `fromAccountAddress` that takes a connection object and a public key and returns a promise that resolves to a new `Response` object. This method is used to retrieve a response object from the Solana blockchain.
+
+The `Response` class provides a static method `gpaBuilder` that takes an optional program ID and returns a `GpaBuilder` object. The `GpaBuilder` object is used to build a Solana program account for a response object.
+
+The `Response` class provides a static method `deserialize` that takes a buffer and an optional offset and returns a tuple containing a new `Response` object and the number of bytes read. This method is used to deserialize a response object from a buffer.
+
+The `Response` class provides a method `serialize` that returns a tuple containing a buffer and the number of bytes written. This method is used to serialize a response object to a buffer.
+
+The `Response` class provides a static method `byteSize` that takes an object of type `ResponseArgs` and returns the number of bytes required to serialize the object. This method is used to calculate the size of a response object before serializing it.
+
+The `Response` class provides a static method `getMinimumBalanceForRentExemption` that takes an object of type `ResponseArgs`, a connection object, and an optional commitment and returns a promise that resolves to the minimum balance required to create a Solana program account for a response object.
+
+The `Response` class provides a method `pretty` that returns a formatted string representation of a response object. This method is used for debugging and logging purposes.
+
+The `responseBeet` variable is a `FixableBeetStruct` object that is used to fix any issues with the `Response` object's serialization and deserialization. It takes a `Response` object and an object of type `ResponseArgs` with an additional property `accountDiscriminator` and returns a new `Response` object.
 ## Questions: 
  1. What external libraries are being used in this code?
-- The code is importing web3, beet, and beetSolana libraries.
-2. What is the purpose of the Response class and what are its properties?
-- The Response class is used to represent a response to a request for quote (RFQ) in a trading system. Its properties include information about the maker, RFQ, creation timestamp, collateral locked, state, prepared legs, confirmation, defaulting party, leg preparations, and bid/ask quotes.
-3. What methods are available for creating, serializing, and deserializing a Response object?
-- The Response class has static methods for creating a Response object from arguments, from an account info object, or from an account address. It also has methods for serializing and deserializing a Response object, as well as calculating its byte size and minimum balance for rent exemption. Additionally, there is a pretty() method for formatting the Response object as a readable string.
+- The code is importing two external libraries: "@solana/web3.js" and "@convergence-rfq/beet".
+
+2. What is the purpose of the "Response" class?
+- The "Response" class is used to represent a response to a request for quote (RFQ) in a trading system. It contains various properties related to the response, such as the maker's public key, the state of the response, and the bid and ask quotes.
+
+3. What is the purpose of the "responseBeet" variable?
+- The "responseBeet" variable is a fixable Beet struct that is used to serialize and deserialize instances of the "Response" class. It includes an account discriminator number that is used to differentiate between different types of accounts in the trading system.

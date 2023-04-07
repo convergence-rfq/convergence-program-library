@@ -2,15 +2,15 @@
 
 This code is a module that exports several functions and types related to calculating collateral for a response in the Convergence Program Library project. The module imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js".
 
-The first export is a function called "calculateCollateralForResponseStruct", which takes an object with a property called "instructionDiscriminator" that is an array of numbers. This function is of type "beet.BeetArgsStruct", which is likely a custom type defined in the "@convergence-rfq/beet" library. It is unclear what this function does exactly without more context, but it likely calculates the amount of collateral required for a response in the Convergence Program Library project.
+The main function exported by this module is "createCalculateCollateralForResponseInstruction", which takes an object of type "CalculateCollateralForResponseInstructionAccounts" and an optional "programId" of type "web3.PublicKey" as arguments. This function returns a "web3.TransactionInstruction" object.
 
-The second export is a type called "CalculateCollateralForResponseInstructionAccounts", which is an object with four properties: "rfq", "response", "config", and "anchorRemainingAccounts". The first three properties are of type "web3.PublicKey", which is likely a custom type defined in the "@solana/web3.js" library. The fourth property is an optional array of "web3.AccountMeta" objects. This type is likely used to define the accounts needed for a transaction that calculates collateral for a response.
+The "CalculateCollateralForResponseInstructionAccounts" type defines the required accounts for the instruction, including "rfq", "response", and "config" of type "web3.PublicKey". It also includes an optional "anchorRemainingAccounts" array of type "web3.AccountMeta[]".
 
-The third export is an array of numbers called "calculateCollateralForResponseInstructionDiscriminator". It is unclear what this array is used for without more context.
+The module also exports a constant "calculateCollateralForResponseStruct" of type "beet.BeetArgsStruct", which takes an object with a "instructionDiscriminator" property of type "number[]". This constant is likely used internally by the "createCalculateCollateralForResponseInstruction" function.
 
-The fourth export is a function called "createCalculateCollateralForResponseInstruction", which takes an object of type "CalculateCollateralForResponseInstructionAccounts" and an optional "programId" of type "web3.PublicKey". This function returns a "web3.TransactionInstruction" object, which is likely used to create a transaction that calculates collateral for a response.
+Additionally, the module exports a constant "calculateCollateralForResponseInstructionDiscriminator" of type "number[]", which is likely used as a discriminator for the instruction.
 
-Overall, this module provides types and functions related to calculating collateral for a response in the Convergence Program Library project. It is likely used in conjunction with other modules and libraries to create a fully functional application. Here is an example of how the "createCalculateCollateralForResponseInstruction" function might be used:
+Overall, this module provides a way to create a transaction instruction for calculating collateral for a response in the Convergence Program Library project. It utilizes external libraries and defines specific types and constants for the instruction. An example usage of this module may look like:
 
 ```
 import { createCalculateCollateralForResponseInstruction } from "convergence-program-library";
@@ -18,23 +18,19 @@ import { createCalculateCollateralForResponseInstruction } from "convergence-pro
 const accounts = {
   rfq: new web3.PublicKey("..."),
   response: new web3.PublicKey("..."),
-  config: new web3.PublicKey("..."),
-  anchorRemainingAccounts: [
-    { pubkey: new web3.PublicKey("..."), isWritable: true, isSigner: false },
-    { pubkey: new web3.PublicKey("..."), isWritable: false, isSigner: false }
-  ]
+  config: new web3.PublicKey("...")
 };
 
-const programId = new web3.PublicKey("...");
+const instruction = createCalculateCollateralForResponseInstruction(accounts);
 
-const instruction = createCalculateCollateralForResponseInstruction(accounts, programId);
+// Use the instruction in a Solana transaction
 ```
 ## Questions: 
  1. What is the purpose of the `@convergence-rfq/beet` and `@solana/web3.js` packages being imported?
-- The `@convergence-rfq/beet` package is being used to define a `BeetArgsStruct` type, while the `@solana/web3.js` package is being used to define several `PublicKey` and `AccountMeta` types.
-
-2. What is the `calculateCollateralForResponseStruct` variable and what does it do?
-- `calculateCollateralForResponseStruct` is a `BeetArgsStruct` type that takes in an array of `instructionDiscriminator` numbers as an argument. It is exported for use in other parts of the program.
-
-3. What is the purpose of the `createCalculateCollateralForResponseInstruction` function?
-- `createCalculateCollateralForResponseInstruction` is a function that takes in an object of `CalculateCollateralForResponseInstructionAccounts` type and an optional `programId` of `PublicKey` type as arguments. It returns a `TransactionInstruction` object.
+   - The `@convergence-rfq/beet` package is being used to define the `calculateCollateralForResponseStruct` function, while the `@solana/web3.js` package is being used to define the `CalculateCollateralForResponseInstructionAccounts` type and the `createCalculateCollateralForResponseInstruction` function.
+   
+2. What is the `calculateCollateralForResponseStruct` function and what does it do?
+   - The `calculateCollateralForResponseStruct` function is a type definition for a `BeetArgsStruct` that takes in an object with an `instructionDiscriminator` property that is an array of numbers. It is not clear what this function does beyond defining this type.
+   
+3. What is the purpose of the `createCalculateCollateralForResponseInstruction` function and how is it used?
+   - The `createCalculateCollateralForResponseInstruction` function is used to create a `TransactionInstruction` for the `calculateCollateralForResponse` program. It takes in an object with `rfq`, `response`, `config`, and `anchorRemainingAccounts` properties (the last of which is optional), as well as an optional `programId` parameter. The function returns a `TransactionInstruction` object that can be used to execute the `calculateCollateralForResponse` program.

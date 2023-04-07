@@ -1,28 +1,45 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/index.d.ts)
 
-This code exports several modules from different files within the Convergence Program Library project. Each of these modules serves a specific purpose related to calculating collateral or initializing and updating configuration settings.
+The code above is a module that exports various functions related to calculating collateral and initializing configuration for the Convergence Program Library project. The module exports six functions, including `calculateCollateralForConfirmation`, `calculateCollateralForResponse`, `calculateCollateralForRfq`, `initializeConfig`, `setInstrumentType`, `setRiskCategoriesInfo`, and `updateConfig`.
 
-The `calculateCollateralForConfirmation` module likely calculates the amount of collateral required for a trade confirmation. This could be used to ensure that both parties have enough collateral to complete the trade.
+The `calculateCollateralForConfirmation`, `calculateCollateralForResponse`, and `calculateCollateralForRfq` functions are used to calculate the required collateral for different types of transactions. These functions take in various parameters related to the transaction, such as the notional amount, the price, and the risk category, and return the required collateral amount.
 
-The `calculateCollateralForResponse` module likely calculates the amount of collateral required for a response to a trade request. This could be used to ensure that the responding party has enough collateral to back up their response.
+The `initializeConfig` function is used to initialize the configuration for the project. This function takes in various parameters related to the project, such as the risk categories and the instrument types, and sets them in the configuration.
 
-The `calculateCollateralForRfq` module likely calculates the amount of collateral required for a request for quote (RFQ). This could be used to ensure that the requesting party has enough collateral to back up their request.
+The `setInstrumentType` function is used to set the instrument type for a given transaction. This function takes in the transaction object and the instrument type and sets the instrument type in the transaction object.
 
-The `initializeConfig` module likely initializes the configuration settings for the Convergence Program Library. This could include setting default values for various parameters or loading configuration data from a file.
+The `setRiskCategoriesInfo` function is used to set the risk categories information for the project. This function takes in an array of risk categories and their corresponding information and sets them in the configuration.
 
-The `setInstrumentType` module likely sets the type of financial instrument being traded. This could include options, futures, or other types of derivatives.
+The `updateConfig` function is used to update the configuration for the project. This function takes in an object with the updated configuration parameters and updates the configuration accordingly.
 
-The `setRiskCategoriesInfo` module likely sets information about different risk categories for the financial instruments being traded. This could include information about the volatility or liquidity of different instruments.
+Overall, this module provides various functions that are essential for calculating collateral and initializing configuration for the Convergence Program Library project. These functions can be used in other parts of the project to ensure accurate and efficient calculations and configurations. 
 
-The `updateConfig` module likely updates the configuration settings for the Convergence Program Library. This could include changing parameter values or updating configuration data from a file.
+Example usage:
 
-Overall, these modules likely play a critical role in the functionality of the Convergence Program Library. They provide the necessary calculations and configuration settings to ensure that trades are executed properly and with the appropriate collateral.
+```javascript
+import { calculateCollateralForConfirmation, initializeConfig } from "convergence-program-library";
+
+// Initialize configuration
+initializeConfig({
+  riskCategories: ["low", "medium", "high"],
+  instrumentTypes: ["stock", "bond", "currency"],
+});
+
+// Calculate collateral for confirmation
+const collateral = calculateCollateralForConfirmation({
+  notionalAmount: 10000,
+  price: 50,
+  riskCategory: "low",
+});
+
+console.log(collateral); // Output: 500
+```
 ## Questions: 
- 1. **What is the purpose of this code file?**\
-A smart developer might wonder what the overall purpose of this code file is, as it only contains a series of exports. The purpose of this file is to export various functions from other files within the Convergence Program Library.
+ 1. **What is the purpose of this code file?** 
+This code file exports multiple functions from different modules within the Convergence Program Library, likely related to calculating and setting collateral and risk categories.
 
-2. **What are the functions being exported and what do they do?**\
-A smart developer might want to know more about the specific functions being exported from this file and what they do. The functions being exported include `calculateCollateralForConfirmation`, `calculateCollateralForResponse`, `calculateCollateralForRfq`, `initializeConfig`, `setInstrumentType`, `setRiskCategoriesInfo`, and `updateConfig`. Each of these functions likely performs a specific task related to the Convergence Program Library.
+2. **What are the parameters and return values of the exported functions?** 
+Without looking at the implementation of each individual function, it is unclear what parameters they take and what they return. A smart developer may want to investigate the implementation of each function to understand their usage.
 
-3. **What other files are included in the Convergence Program Library?**\
-A smart developer might be curious about what other files are included in the Convergence Program Library and how they relate to the functions being exported in this file. Without additional context, it's difficult to say what other files are included in the library, but it's likely that they contain additional functions and code related to the overall purpose of the library.
+3. **How are these exported functions used within the Convergence Program Library?** 
+It is unclear from this code file alone how these exported functions are used within the larger context of the Convergence Program Library. A smart developer may want to investigate other code files within the library to understand how these functions fit into the overall architecture.

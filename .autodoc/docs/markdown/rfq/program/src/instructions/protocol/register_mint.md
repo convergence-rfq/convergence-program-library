@@ -1,48 +1,19 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/protocol/register_mint.rs)
 
-The code defines an instruction and associated accounts for registering a new token mint with the Convergence Protocol. The instruction takes in several accounts, including the authority account, the protocol account, the mint account, and the base asset account. 
+The code defines an instruction for registering a new token mint in the Convergence Program Library. The instruction takes in several accounts as arguments, including the authority account, the protocol account, the mint_info account, the base_asset account, the mint account, and the system_program account. 
 
-The `RegisterMintAccounts` struct defines the accounts required for the instruction. The `authority` account is the signer account that has the authority to register the new mint. The `protocol` account is the account that holds the state of the Convergence Protocol. The `mint_info` account is the account that holds the information about the new mint being registered. The `base_asset` account is the account that holds information about the base asset of the new mint. The `mint` account is the account that holds the actual mint being registered. Finally, the `system_program` account is the account that holds the system program.
+The `RegisterMintAccounts` struct defines the accounts required for the instruction. The `authority` account is the signer of the transaction and must match the authority key in the `protocol` account. The `protocol` account is the state account for the Convergence protocol. The `mint_info` account is the state account for the new mint being registered. The `base_asset` account is either a base asset or a default account in case of a stablecoin. The `mint` account is the SPL token mint account for the new token. The `system_program` account is the system program account.
 
-The `register_mint_instruction` function is the actual instruction that registers the new mint. It takes in the `RegisterMintAccounts` struct as its context. The function first checks whether the `base_asset` account is the default account. If it is, then the mint being registered is a stablecoin. Otherwise, the mint being registered is an asset with risk. The function then sets the `mint_info` account with the information about the new mint being registered, including the mint address, the mint type, and the number of decimals.
+The `register_mint_instruction` function is the entry point for the instruction. It takes in a `Context` object containing the accounts defined in `RegisterMintAccounts`. The function first extracts the `mint_info`, `base_asset`, and `mint` accounts from the context. It then determines the `mint_type` based on whether the `base_asset` account is a default account or a base asset. If it is a default account, the `mint_type` is set to `MintType::Stablecoin`. Otherwise, the `base_asset` account is deserialized into a `BaseAssetInfo` struct, and the `mint_type` is set to `MintType::AssetWithRisk` with the `base_asset_index` set to the index of the base asset.
 
-This code is part of the Convergence Program Library project and is used to register new token mints with the Convergence Protocol. The `mint_info` account is used to store information about the new mint, which is then used by other parts of the protocol to perform various operations. The `base_asset` account is used to store information about the base asset of the new mint, which is used to calculate the risk of the new mint. The `mint` account is the actual mint being registered, which is used to create new tokens of the mint. Overall, this code is an important part of the Convergence Protocol and enables the creation of new token mints. 
+Finally, the `mint_info` account is updated with the new `MintInfo` struct, which contains the bump, the mint address, the mint type, and the number of decimals. The function returns `Ok(())` if successful.
 
-Example usage:
-
-```rust
-let program = Program::new("convergence_program_library", pubkey, &keystore);
-let authority = Keypair::new();
-let protocol = Keypair::new();
-let mint_info = Keypair::new();
-let base_asset = Keypair::new();
-let mint = Keypair::new();
-let system_program = anchor_lang::solana_program::system_program::id();
-
-let mut ctx = program
-    .request()
-    .accounts(RegisterMintAccounts {
-        authority: authority.to_account_info(),
-        protocol: protocol.to_account_info(),
-        mint_info: mint_info.to_account_info(),
-        base_asset: base_asset.to_account_info(),
-        mint: mint.to_account_info(),
-        system_program: system_program.to_account_info(),
-    })
-    .args(Args {})
-    .build();
-
-register_mint_instruction(&mut ctx)?;
-```
+This instruction can be used to register new token mints in the Convergence protocol. The `mint_info` account can be used to store additional information about the mint, such as the name, symbol, and total supply. The `base_asset` account can be used to specify the base asset for the new token, which is used in the Convergence AMM to calculate prices. The `mint` account is the SPL token mint account for the new token, which can be used to mint and burn tokens.
 ## Questions: 
  1. What is the purpose of this code?
    
    This code is used to register a new mint in the Convergence Protocol Library.
 
-2. What are the inputs and outputs of the `register_mint_instruction` function?
+2. What are the constraints on the `authority` account?
    
-   The `register_mint_instruction` function takes in a context object of type `RegisterMintAccounts` which contains several accounts including `mint_info`, `base_asset`, `mint`, and `authority`. It sets the `mint_info` account with information about the new mint and returns a `Result` indicating success or failure.
-
-3. What is the purpose of the `base_asset` account and how is it used in this code?
-   
-   The `base_asset` account is either a base asset or a default account in case of a stablecoin. It is used to determine the `mint_type` which is then used to set the `mint_info` account with information about the new mint.
+   The `authority` account must be mutable and its key must match the `protocol

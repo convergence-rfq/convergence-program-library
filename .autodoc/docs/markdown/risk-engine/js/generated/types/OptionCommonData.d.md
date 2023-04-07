@@ -1,48 +1,42 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/types/OptionCommonData.d.ts)
 
-The code above is a TypeScript module that exports a type and a constant. The purpose of this module is to define and export a data structure for common option data, which can be used throughout the Convergence Program Library project.
+The code above is a TypeScript module that exports a type and a constant. The purpose of this module is to define the common data structure for options in the Convergence Program Library project. 
 
-The `OptionCommonData` type is defined as an object with the following properties:
-- `optionType`: an `OptionType` enum value that represents the type of the option (e.g. call or put)
-- `underlyingAmountPerContract`: a `beet.bignum` value that represents the amount of the underlying asset per contract
-- `underlyingAmoundPerContractDecimals`: a number that represents the number of decimal places for the `underlyingAmountPerContract` value
-- `strikePrice`: a `beet.bignum` value that represents the strike price of the option
-- `strikePriceDecimals`: a number that represents the number of decimal places for the `strikePrice` value
-- `expirationTimestamp`: a `beet.bignum` value that represents the expiration timestamp of the option
+The `OptionCommonData` type is an interface that defines the properties of an option. It includes the `optionType`, which is an enum that specifies whether the option is a call or put option. It also includes the `underlyingAmountPerContract`, which is the amount of the underlying asset per contract, `underlyingAmoundPerContractDecimals`, which is the number of decimals for the underlying asset per contract, `strikePrice`, which is the price at which the option can be exercised, `strikePriceDecimals`, which is the number of decimals for the strike price, and `expirationTimestamp`, which is the Unix timestamp at which the option expires.
 
-The `OptionCommonData` type is used to ensure that all option data objects have the same structure and properties, which makes it easier to work with them throughout the project.
+The `optionCommonDataBeet` constant is a `BeetArgsStruct` object that is used to serialize and deserialize the `OptionCommonData` type using the `@convergence-rfq/beet` library. This library provides a way to convert JavaScript objects to and from binary data, which is useful for transmitting data over the network or storing it in a database.
 
-The `optionCommonDataBeet` constant is defined as a `beet.BeetArgsStruct` object that takes an `OptionCommonData` object as its argument. This constant is used to serialize and deserialize `OptionCommonData` objects using the `@convergence-rfq/beet` library.
+This module can be used in other parts of the Convergence Program Library project to define and manipulate options. For example, a function that creates a new option might take an `OptionCommonData` object as an argument and use it to construct a new option object. Similarly, a function that retrieves options from a database might use the `optionCommonDataBeet` constant to serialize and deserialize the option data. 
 
-Here is an example of how this module can be used in the larger project:
+Here is an example of how this module might be used:
 
 ```typescript
-import { OptionCommonData, optionCommonDataBeet } from "path/to/OptionCommonData";
+import { OptionCommonData, optionCommonDataBeet } from "convergence-program-library";
 
-// create an OptionCommonData object
+// Create a new option
 const optionData: OptionCommonData = {
   optionType: OptionType.Call,
   underlyingAmountPerContract: new beet.bignum(100),
   underlyingAmoundPerContractDecimals: 2,
   strikePrice: new beet.bignum(200),
   strikePriceDecimals: 2,
-  expirationTimestamp: new beet.bignum(1635724800),
+  expirationTimestamp: new beet.bignum(1635728400),
 };
 
-// serialize the OptionCommonData object using optionCommonDataBeet
-const serializedOptionData = optionCommonDataBeet.serialize(optionData);
+const optionBinary = optionCommonDataBeet.serialize(optionData);
+// Send optionBinary over the network or store it in a database
 
-// deserialize the serialized data back into an OptionCommonData object
-const deserializedOptionData = optionCommonDataBeet.deserialize(serializedOptionData);
-``` 
-
-In this example, we import the `OptionCommonData` type and `optionCommonDataBeet` constant from the module. We then create an `OptionCommonData` object with some sample data, serialize it using `optionCommonDataBeet`, and then deserialize the serialized data back into an `OptionCommonData` object. This demonstrates how the module can be used to ensure consistent option data throughout the project.
+// Retrieve an option from the database
+const optionBinaryFromDb = /* get binary data from database */;
+const optionDataFromDb = optionCommonDataBeet.deserialize(optionBinaryFromDb);
+// optionDataFromDb is now an OptionCommonData object
+```
 ## Questions: 
  1. What is the purpose of the "@convergence-rfq/beet" import?
 - The "@convergence-rfq/beet" import is likely a library or module that provides functionality used in this code.
 
 2. What is the OptionType interface or class used for?
-- The OptionType interface or class is likely used to define the type of option being represented in the OptionCommonData object.
+- The OptionType interface or class is likely used to define the different types of options that can be created with this code.
 
 3. What is the purpose of the optionCommonDataBeet constant?
-- The optionCommonDataBeet constant is likely used to define a structured object that contains common data for options, using the beet library's argument structure.
+- The optionCommonDataBeet constant is likely used to define a structured data type for common option data, using the beet library's argument structure.

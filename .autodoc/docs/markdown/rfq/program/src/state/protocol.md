@@ -1,24 +1,18 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/state/protocol.rs)
 
-The code defines several account structs and associated methods for the Convergence Program Library project. 
+The code defines several structs and enums that are used in the Convergence Program Library project. The main struct is `ProtocolState`, which represents the state of the Convergence protocol. It contains several fields, including the authority that initiated the protocol, whether the protocol is active, and various fee parameters. It also contains a vector of `Instrument` structs, which represent the financial instruments that can be traded using the protocol.
 
-The `ProtocolState` struct represents the state of the Convergence protocol and contains several fields, including the authority, active status, and various fee parameters. It also contains a vector of `Instrument` structs, which represent whitelisted programs that can be used within the protocol. The `ProtocolState` struct has methods for retrieving the parameters of a specific instrument, either by reference or mutable reference.
+The `ProtocolState` struct has several methods that allow users to interact with the protocol. `get_instrument_parameters` and `get_instrument_parameters_mut` allow users to retrieve the parameters for a specific instrument, given its program key. `calculate_fees` is a method on the `FeeParameters` struct that calculates the fees for a given collateral amount and side (taker or maker).
 
-The `Instrument` struct contains several parameters related to the program it represents, including whether it is enabled, whether it can be used as a quote asset, and various amounts related to account validation and settlement.
+The other structs and enums in the code are used to define various parameters for the protocol. `BaseAssetInfo` represents information about a base asset that can be used in the protocol, such as its ticker symbol and risk category. `MintInfo` represents information about a mint, including its address and decimal places. `MintType` is an enum that represents the type of a mint, such as a stablecoin or an asset with risk.
 
-The `FeeParameters` struct contains two fields representing the taker and maker fees for the protocol. It has methods for calculating fees based on a collateral amount and the side of the trade (taker or maker), as well as for validating that the fee values are within a certain range.
-
-The `BaseAssetInfo` struct represents information about a base asset used in the protocol, including its index, risk category, price oracle, and ticker. The `BaseAssetIndex` struct is a simple wrapper around a `u16` value that represents the index of a base asset. The `RiskCategory` enum represents the risk category of a base asset, with several pre-defined categories and three custom categories. The `PriceOracle` enum represents the type of price oracle used for a base asset, with the only current option being a Switchboard oracle.
-
-The `MintInfo` struct represents information about a mint used in the protocol, including its address, decimals, and type. The `MintType` enum represents the type of mint, with options for stablecoins and assets with risk (which require a base asset index).
-
-Overall, these structs and methods provide a foundation for the Convergence protocol to operate and manage various assets and fees. For example, the `ProtocolState` struct allows the protocol to keep track of whitelisted programs and their associated parameters, while the `FeeParameters` struct allows for the calculation and validation of fees. The `BaseAssetInfo` and `MintInfo` structs provide information about assets used in the protocol, while the associated enums provide options for categorizing and pricing those assets.
+Overall, this code defines the data structures and methods that are used to represent and interact with the Convergence protocol. It provides a high-level view of the protocol's state and the financial instruments that can be traded using it.
 ## Questions: 
- 1. What is the purpose of the `ProtocolState` struct and what are its fields used for?
-- The `ProtocolState` struct represents the state of the protocol and its fields include the authority, bump, active status, fee parameters, risk engine, collateral mint, and a vector of instruments.
+ 1. What is the purpose of the `ProtocolState` struct and what are its fields?
+- The `ProtocolState` struct represents the state of the Convergence Protocol and contains fields such as the authority, active status, fee parameters, risk engine, collateral mint, and a vector of instruments.
 
 2. What is the `calculate_fees` method in the `FeeParameters` struct used for?
-- The `calculate_fees` method takes in a collateral amount and an `AuthoritySide` enum and returns the fees to be charged based on the side of the authority (taker or maker) and the fee parameters (taker_bps and maker_bps).
+- The `calculate_fees` method takes in a collateral amount and an `AuthoritySide` enum (either Taker or Maker) and returns the fees to be charged based on the appropriate fee rate (either `taker_bps` or `maker_bps`).
 
-3. What is the purpose of the `BaseAssetInfo` struct and what are its fields used for?
-- The `BaseAssetInfo` struct represents information about a base asset and its fields include the bump, index, enabled status, risk category, price oracle, and ticker.
+3. What is the purpose of the `BaseAssetInfo` struct and what are its fields?
+- The `BaseAssetInfo` struct represents information about a base asset and contains fields such as the index, enabled status, risk category, price oracle, and ticker.

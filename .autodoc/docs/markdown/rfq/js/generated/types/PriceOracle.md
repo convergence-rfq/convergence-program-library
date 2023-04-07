@@ -1,18 +1,37 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/PriceOracle.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/PriceOracle.js)
 
-This code defines types and functions related to a PriceOracle in the Convergence Program Library project. The PriceOracle is a data structure used to represent a price oracle in Rust, and this code provides TypeScript types and functions to interact with it in JavaScript/TypeScript.
+This code defines two functions and two exports related to a price oracle in the Convergence Program Library project. The first function, `isPriceOracleSwitchboard`, takes an argument `x` and returns a boolean indicating whether `x` is a Switchboard price oracle. The second function, `priceOracleBeet`, exports a data structure representing a price oracle. 
 
-The `PriceOracleRecord` type is used to derive the `PriceOracle` type and the de/serializer. However, it is not meant to be used directly in code, and instead, the `PriceOracle` type should be used. The `PriceOracle` type is a union type representing the `PriceOracleRecord` data enum defined in Rust. It includes a `__kind` property that allows narrowing types in switch/if statements. Additionally, `isPriceOracleSwitchboard` type guards are exposed to narrow to a specific variant.
+The `priceOracleBeet` function uses the `beet` library to create a data structure that represents a price oracle. The data structure is defined using the `dataEnum` function from `beet`, which takes an array of tuples. Each tuple represents a possible value of the data structure, and consists of a string identifier and a `BeetArgsStruct` object. The `BeetArgsStruct` object defines the fields of the value and their types. In this case, the only possible value is a Switchboard price oracle, which is represented by a `BeetArgsStruct` with a single field, `address`, of type `beetSolana.publicKey`. 
 
-The `priceOracleBeet` function is a `beet.dataEnum` function that creates a `FixableBeet` instance for the `PriceOracle` type. It takes an array of tuples, where each tuple represents a variant of the `PriceOracleRecord` data enum. Each tuple contains a string representing the variant name and a `BeetArgsStruct` instance representing the variant's arguments. In this case, there is only one variant, "Switchboard," which has one argument, "address," of type `beetSolana.publicKey`.
+The `isPriceOracleSwitchboard` function is a simple type guard that checks whether an object has a `__kind` property equal to `'Switchboard'`. This function is likely used to ensure that a given object is a valid Switchboard price oracle before using it in other parts of the project. 
 
-Overall, this code provides TypeScript types and functions to interact with the `PriceOracle` data structure defined in Rust. It can be used in the larger Convergence Program Library project to facilitate communication between Rust and JavaScript/TypeScript code. For example, it could be used to fetch price data from a price oracle and use it in a smart contract.
+Overall, this code defines a data structure and a type guard related to a price oracle in the Convergence Program Library project. The `priceOracleBeet` function creates a data structure that represents a Switchboard price oracle, while the `isPriceOracleSwitchboard` function checks whether an object is a valid Switchboard price oracle. These functions are likely used in other parts of the project to ensure that price oracles are used correctly and consistently. 
+
+Example usage:
+
+```
+const oracle = {
+  __kind: 'Switchboard',
+  address: 'some-public-key'
+};
+
+if (isPriceOracleSwitchboard(oracle)) {
+  // do something with the Switchboard oracle
+}
+
+const priceOracle = priceOracleBeet.Switchboard.create({
+  address: 'some-public-key'
+});
+
+console.log(priceOracle); // { __kind: 'Switchboard', address: 'some-public-key' }
+```
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The code is a generated file using the solita package and is used to derive the PriceOracle type and de/serializer. The purpose of the Convergence Program Library is not specified in this code.
+ 1. What is the purpose of this code and what problem does it solve?
+   This code defines two functions and exports them as part of a library called Convergence Program Library. The functions are used to check if a given input is a price oracle switchboard and to create a price oracle beet.
 
-2. What is the PriceOracle type and what does it represent?
-- The PriceOracle type is a union type representing the PriceOracle data enum defined in Rust. It includes a __kind property which allows for narrowing types in switch/if statements, and type guards are exposed to narrow to a specific variant.
+2. What external dependencies does this code have?
+   This code imports two modules from external dependencies: "@convergence-rfq/beet-solana" and "@convergence-rfq/beet".
 
-3. What is the priceOracleBeet constant and how is it used?
-- The priceOracleBeet constant is a fixable Beet object that is used to create a data enum of the PriceOracleRecord type. It takes in an array of tuples representing the different variants of the enum and their associated arguments, and returns a PriceOracle object that can be used in the program.
+3. What is the expected input and output of the functions defined in this code?
+   The expected input for the isPriceOracleSwitchboard function is any value, and the expected output is a boolean indicating whether the input is a price oracle switchboard. The expected input for the priceOracleBeet function is an array of arguments, and the expected output is a price oracle beet.

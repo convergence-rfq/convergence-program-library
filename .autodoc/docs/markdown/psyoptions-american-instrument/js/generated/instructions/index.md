@@ -1,36 +1,26 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/index.ts)
 
-This code exports several modules from different files within the Convergence Program Library project. The modules exported are related to cleaning up data, preparing data for settlement, reverting data preparation, settling data, and validating data. 
+The code above is a module that exports various functions related to settling financial transactions. The module is part of the Convergence Program Library project and is designed to be used in conjunction with other modules to provide a comprehensive set of tools for financial settlement.
 
-By exporting these modules, other parts of the project can import and use them as needed. For example, if a module needs to clean up data before processing it, it can import the `cleanUp` module and call its functions. Similarly, if a module needs to validate data before settling it, it can import the `validateData` module and use its functions.
+The module exports five functions: `cleanUp`, `prepareToSettle`, `revertPreparation`, `settle`, and `validateData`. Each of these functions serves a specific purpose in the settlement process.
 
-This approach of breaking down functionality into smaller, reusable modules is a common practice in software development. It allows for easier maintenance and testing of code, as well as promoting code reuse across different parts of the project.
+`cleanUp` is responsible for cleaning up any temporary data or resources that were created during the settlement process. This function is typically called after a settlement has been completed.
 
-Here is an example of how one of these modules, `settle`, might be used in the larger project:
+`prepareToSettle` is used to prepare a transaction for settlement. This may involve validating the data associated with the transaction, verifying that the necessary funds are available, and performing any other necessary checks.
 
-```javascript
-import { settle } from "convergence-program-library";
+`revertPreparation` is used to undo the preparation process if settlement is not possible. This may involve releasing any reserved funds or resources and resetting the transaction to its original state.
 
-const dataToSettle = {
-  // data to be settled
-};
+`settle` is the main function responsible for settling a transaction. This function may involve transferring funds, updating account balances, and performing any other necessary actions to complete the settlement process.
 
-settle(dataToSettle)
-  .then((result) => {
-    // handle settled data
-  })
-  .catch((error) => {
-    // handle settlement error
-  });
-```
+`validateData` is used to validate the data associated with a transaction. This function may be called as part of the preparation process to ensure that the transaction is valid and can be settled.
 
-In this example, the `settle` function from the `convergence-program-library` is imported and used to settle some data. The function returns a promise that resolves with the settled data or rejects with an error if settlement fails. The resolved data can then be handled as needed in the `then` block, while any errors can be handled in the `catch` block.
+Overall, this module provides a set of functions that can be used to settle financial transactions in a reliable and efficient manner. By exporting these functions, the module can be easily integrated into other parts of the Convergence Program Library project or used as a standalone module in other projects. For example, a developer could use the `prepareToSettle` function to prepare a transaction for settlement in their own financial application.
 ## Questions: 
  1. **What is the purpose of this code file?**\
-A smart developer might wonder what this code file is responsible for. Based on the code, it appears to be exporting functions related to cleaning up, preparing to settle, reverting preparation, settling, and validating data.
+A smart developer might wonder what the overall purpose of this code file is, as it only contains a series of exports. The purpose of this file is to export various functions from other files within the Convergence Program Library.
 
-2. **What are the parameters and return values of these exported functions?**\
-A smart developer might want to know the specific parameters and return values of each exported function in order to properly use them in their own code.
+2. **What functions are being exported?**\
+A smart developer might want to know specifically which functions are being exported from this file. The code is exporting five functions: `cleanUp`, `prepareToSettle`, `revertPreparation`, `settle`, and `validateData`.
 
-3. **Are there any dependencies or requirements for these exported functions to work properly?**\
-A smart developer might ask if there are any dependencies or requirements for these exported functions to work properly, such as specific versions of other libraries or modules. This information would be important to ensure that the functions can be used without any issues.
+3. **What is the relationship between the exported functions and the Convergence Program Library?**\
+A smart developer might question how these exported functions fit into the larger Convergence Program Library. These functions likely serve as important building blocks for other parts of the library, allowing developers to easily access and utilize them in their own code.

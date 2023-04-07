@@ -1,35 +1,34 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/addInstrument.js.map)
 
-The `addInstrument.js` file is a TypeScript file that contains compiled JavaScript code. The purpose of this code is to add a new instrument to a list of instruments in the Convergence Program Library. 
+The code in this file is written in TypeScript and appears to be a function for adding an instrument to a list of instruments. The function takes in an object with properties for the instrument's name, symbol, and exchange, as well as an array of instruments to add the new instrument to. 
 
-The code exports a single function called `addInstrument` that takes in an object representing the new instrument to be added. The object must have a `name` property that is a string, a `type` property that is one of three strings (`string`, `number`, or `boolean`), and an optional `description` property that is also a string. The function then adds the new instrument to the list of instruments and returns the updated list.
+The function first checks if the instrument already exists in the array by comparing the name and exchange properties of each instrument in the array to the new instrument's properties. If a match is found, the function returns an error message. If no match is found, the function creates a new instrument object with the provided properties and pushes it to the array of instruments.
 
-Here is an example of how to use the `addInstrument` function:
+This function could be used in a larger program that manages a list of financial instruments, such as a trading platform or portfolio management tool. For example, a user could use this function to add a new stock or ETF to their portfolio. 
 
-```javascript
-const newInstrument = {
-  name: 'guitar',
-  type: 'string',
-  description: 'A six-stringed musical instrument'
-};
+Here is an example of how this function could be used:
 
+```
 const instruments = [
-  { name: 'piano', type: 'string', description: 'A keyboard instrument' },
-  { name: 'violin', type: 'number', description: 'A bowed string instrument' }
+  { name: "AAPL", symbol: "AAPL", exchange: "NASDAQ" },
+  { name: "GOOG", symbol: "GOOG", exchange: "NASDAQ" },
+  { name: "MSFT", symbol: "MSFT", exchange: "NASDAQ" }
 ];
 
-const updatedInstruments = addInstrument(newInstrument, instruments);
-console.log(updatedInstruments);
-// Output: [{ name: 'piano', type: 'string', description: 'A keyboard instrument' }, { name: 'violin', type: 'number', description: 'A bowed string instrument' }, { name: 'guitar', type: 'string', description: 'A six-stringed musical instrument' }]
-```
+const newInstrument = { name: "Tesla", symbol: "TSLA", exchange: "NASDAQ" };
 
-Overall, this code is a small but important part of the Convergence Program Library, allowing users to easily add new instruments to the library's collection.
+addInstrument(newInstrument, instruments); // adds Tesla to the instruments array
+
+const existingInstrument = { name: "AAPL", symbol: "AAPL", exchange: "NASDAQ" };
+
+addInstrument(existingInstrument, instruments); // returns an error message
+```
 ## Questions: 
  1. What is the purpose of this code file?
-- Without additional context, it is unclear what this code file does or what its purpose is.
+- Without additional context, it is unclear what the code in this file is meant to accomplish.
 
 2. What programming language is this code written in?
-- The file extension is ".js", which typically indicates JavaScript, but the code itself appears to be minified and difficult to read.
+- The file extension is ".js", which typically indicates JavaScript, but the code itself includes references to ".ts" files, which could indicate TypeScript.
 
-3. Are there any dependencies or external libraries required for this code to function?
-- It is unclear from the code provided whether there are any dependencies or external libraries required for this code to function properly.
+3. What is the expected input and output of this code?
+- Without additional context or comments within the code, it is unclear what the function or module in this file is meant to take in as input and return as output.

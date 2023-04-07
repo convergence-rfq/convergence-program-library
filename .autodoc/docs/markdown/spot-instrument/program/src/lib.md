@@ -1,30 +1,22 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/spot-instrument/program/src/lib.rs)
 
-The code provided is a Rust program that defines a module called `spot_instrument` which contains several functions that are used to settle trades for a financial instrument. The module is part of a larger project called Convergence Program Library. 
+The code is a part of the Convergence Program Library and provides functionality for settling trades in a spot market. The spot market is a market where financial instruments, such as stocks and currencies, are traded for immediate delivery. The code defines a program called `spot_instrument` that contains several methods for preparing and settling trades in a spot market.
 
-The `spot_instrument` module defines five functions: `validate_data`, `prepare_to_settle`, `settle`, `revert_preparation`, and `clean_up`. Each function takes in a `Context` struct and other arguments, and returns a `Result` type. 
+The `spot_instrument` program has five methods: `validate_data`, `prepare_to_settle`, `settle`, `revert_preparation`, and `clean_up`. The `validate_data` method validates the data provided by the user against the protocol's data. The `prepare_to_settle` method prepares the trade for settlement by transferring the assets from the user's account to an escrow account. The `settle` method settles the trade by transferring the assets from the escrow account to the user's account. The `revert_preparation` method reverts the preparation for settlement by transferring the assets from the escrow account back to the user's account. The `clean_up` method cleans up the escrow account after settlement by transferring any remaining assets to a backup account.
 
-The `validate_data` function takes in a `MintInfo` struct and validates that the `instrument_data` passed in matches the `mint_address` of the `MintInfo`. It also checks that the `base_asset_index` matches the `MintType` if it is an `AssetWithRisk` type. 
+The `spot_instrument` program uses several external crates, including `anchor_lang`, `anchor_spl`, and `rfq`. The `anchor_lang` crate provides a framework for writing Solana programs in Rust. The `anchor_spl` crate provides a set of Solana Program Library (SPL) instructions for interacting with SPL tokens. The `rfq` crate provides a set of data structures for implementing a request for quote (RFQ) protocol.
 
-The `prepare_to_settle` function prepares to settle a trade by transferring tokens from the caller to an escrow account. It takes in an `AssetIdentifierDuplicate` and an `AuthoritySideDuplicate` as arguments. The function checks that the `mint_address` of the `rfq` matches the expected `mint_address` and that the `caller_tokens` are associated with the `mint`. If the `side` is the `asset_sender`, the function transfers the `token_amount` from the `caller_tokens` to the `escrow` account. 
+The `spot_instrument` program defines several structs and enums, including `AssetIdentifier`, `AuthoritySide`, `MintInfo`, `MintType`, `ProtocolState`, `Response`, and `Rfq`. These data structures are used to represent the state of the spot market and the trades being settled.
 
-The `settle` function settles a trade by transferring tokens from the `escrow` account to the `receiver_tokens` account. It takes in an `AssetIdentifierDuplicate` as an argument. The function checks that the `receiver_tokens` are associated with the `escrow.mint`. 
+The `spot_instrument` program also defines several constants, including `ESCROW_SEED`, which is used as a seed for generating the escrow account's address.
 
-The `revert_preparation` function reverts the preparation for a trade by transferring tokens from the `escrow` account to the `tokens` account. It takes in an `AssetIdentifierDuplicate` and an `AuthoritySideDuplicate` as arguments. The function checks that the `tokens` are associated with the `escrow.mint`. 
-
-The `clean_up` function cleans up after a trade by transferring tokens from the `escrow` account to the `backup_receiver` account and closing the `escrow` account. It takes in an `AssetIdentifierDuplicate` as an argument. The function checks that the `backup_receiver` is associated with the `escrow.mint` and that the `first_to_prepare` is the first to prepare for settlement. 
-
-The `transfer_from_an_escrow` function transfers tokens from an `escrow` account to a `receiver` account. It takes in an `AssetIdentifier` and a `bump` as arguments. 
-
-The `close_escrow_account` function closes an `escrow` account and transfers the tokens to a `sol_receiver` account. It takes in an `AssetIdentifier` and a `bump` as arguments. 
-
-The `Response` struct is used in several of the functions to store information about the trade being settled.
+Overall, the `spot_instrument` program provides a set of methods for settling trades in a spot market. The program uses external crates and data structures to implement the functionality. The program is designed to be used as a part of the Convergence Program Library.
 ## Questions: 
  1. What is the purpose of the `Convergence Program Library` and how does this code fit into it?
-- The purpose of the `Convergence Program Library` is not clear from this code alone. It is unclear how this code fits into the library without additional context.
+- The purpose of the `Convergence Program Library` is not clear from this code alone. Further documentation or context is needed to understand the overall project and how this code fits into it.
 
-2. What is the expected format and content of the `instrument_data` input parameter in the `validate_data` function?
-- The `instrument_data` input parameter is expected to be a vector of bytes with a length equal to the size of a `Pubkey`. It is unclear what the content of this data should be without additional context.
+2. What are the different functions defined in this code and what do they do?
+- This code defines several functions: `validate_data`, `prepare_to_settle`, `settle`, `revert_preparation`, and `clean_up`. These functions appear to be related to settling trades and transferring tokens between accounts, but further documentation or context is needed to understand their specific purposes and how they interact with each other.
 
-3. What is the purpose of the `backup_receiver` account in the `clean_up` function and how is it related to the `escrow` account?
-- The `backup_receiver` account is used to receive any remaining funds from the `escrow` account after settlement has occurred. It is associated with the same mint as the `escrow` account and is used to ensure that no funds are lost in case the `escrow` account cannot be closed for some reason.
+3. What external dependencies does this code rely on?
+- This code relies on several external dependencies, including `anchor_lang`, `anchor_spl`, and `rfq`. It also uses the `Token` program from the Solana SDK. Further documentation or context is needed to understand how these dependencies are used and what their specific roles are in this code.

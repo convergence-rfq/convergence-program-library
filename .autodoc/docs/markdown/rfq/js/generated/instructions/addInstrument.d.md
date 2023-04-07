@@ -1,22 +1,51 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/addInstrument.d.ts)
 
-This code defines a set of types and functions related to adding a financial instrument to a protocol on the Solana blockchain. The code imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js", which are likely dependencies of the larger Convergence Program Library project.
+This code defines a set of types and functions related to adding a new financial instrument to a protocol. The protocol is built using the Convergence Program Library and Solana blockchain technology. 
 
-The main function defined in this code is `createAddInstrumentInstruction()`, which takes two arguments: an object of type `AddInstrumentInstructionAccounts` and an object of type `AddInstrumentInstructionArgs`. The function returns a `web3.TransactionInstruction` object, which can be used to execute the instruction on the Solana blockchain.
+The `AddInstrumentInstructionArgs` type defines the arguments needed to add a new instrument. These arguments include various amounts related to the instrument's preparation, settlement, and cleanup. The `addInstrumentStruct` constant is a `BeetArgsStruct` object that combines these arguments with an instruction discriminator, which is a unique identifier for this particular instruction. 
 
-The `AddInstrumentInstructionAccounts` type defines the accounts that are required to execute the instruction. These include the authority account, which has permission to execute the instruction, the protocol account, which represents the protocol to which the instrument will be added, and the instrument program account, which represents the program that implements the instrument. The `anchorRemainingAccounts` field is optional and can be used to specify additional accounts that are required by the instrument program.
+The `AddInstrumentInstructionAccounts` type defines the accounts needed to execute the instruction. These accounts include the authority that is authorized to execute the instruction, the protocol account, the instrument program account, and an optional array of remaining accounts. The `addInstrumentInstructionDiscriminator` constant is an array of numbers that represents the instruction discriminator. 
 
-The `AddInstrumentInstructionArgs` type defines the arguments that are required to add an instrument to the protocol. These include the amounts of various accounts that will be used during the process, such as the amount of tokens that must be held in a data account to validate the instrument, the amount of tokens that must be held in a preparation account before settling the instrument, and the amount of tokens that must be held in a cleanup account after the instrument has been settled.
+The `createAddInstrumentInstruction` function takes in the necessary accounts and arguments and returns a `TransactionInstruction` object that can be used to add a new instrument to the protocol. This function can be called by other parts of the Convergence Program Library to add new instruments to the protocol. 
 
-The `addInstrumentStruct` and `addInstrumentInstructionDiscriminator` constants are used to define the structure of the instruction and its discriminator value, respectively. These are used internally by the `createAddInstrumentInstruction()` function and are not intended to be used directly by external code.
+Here is an example of how this code might be used in the larger project:
 
-Overall, this code provides a way to add a financial instrument to a protocol on the Solana blockchain, using a set of predefined accounts and arguments. It is likely that this function is part of a larger set of functions and types that make up the Convergence Program Library project, which provides tools for building decentralized finance applications on the Solana blockchain.
+```typescript
+import { createAddInstrumentInstruction } from "@convergence-rfq/instrument";
+import { PublicKey } from "@solana/web3.js";
+
+// Define the necessary accounts
+const accounts = {
+  authority: new PublicKey("..."),
+  protocol: new PublicKey("..."),
+  instrumentProgram: new PublicKey("..."),
+  anchorRemainingAccounts: [...]
+};
+
+// Define the necessary arguments
+const args = {
+  canBeUsedAsQuote: true,
+  validateDataAccountAmount: 100,
+  prepareToSettleAccountAmount: 200,
+  settleAccountAmount: 300,
+  revertPreparationAccountAmount: 400,
+  cleanUpAccountAmount: 500
+};
+
+// Create the transaction instruction
+const instruction = createAddInstrumentInstruction(accounts, args);
+
+// Send the transaction to the Solana blockchain
+...
+```
+
+Overall, this code provides a way to add new financial instruments to a protocol built using the Convergence Program Library and Solana blockchain technology.
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The Convergence Program Library is not described in the given code, so a smart developer might want to know what the library is for and how this code contributes to it.
+ 1. What external libraries or dependencies does this code rely on?
+- This code relies on two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
 
-2. What is the expected input and output of the `createAddInstrumentInstruction` function?
-- A smart developer might want to know what arguments are required for the `createAddInstrumentInstruction` function and what it returns.
+2. What is the purpose of the `AddInstrumentInstructionArgs` type and its properties?
+- The `AddInstrumentInstructionArgs` type defines the arguments needed for the `createAddInstrumentInstruction` function, including amounts for various accounts and a boolean flag for whether the instrument can be used as a quote.
 
-3. What is the significance of the `beet.BeetArgsStruct` type and how is it used in this code?
-- A smart developer might want to know what the `beet.BeetArgsStruct` type represents and how it is used in conjunction with the `AddInstrumentInstructionArgs` type.
+3. What is the significance of the `instructionDiscriminator` property in `addInstrumentStruct`?
+- The `instructionDiscriminator` property is used to differentiate between different types of instructions in the Solana program. In this case, it is used to identify the "add instrument" instruction.

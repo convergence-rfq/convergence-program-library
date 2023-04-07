@@ -1,32 +1,47 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/RfqState.js)
 
-This code defines an enum called `RfqState` and exports it along with a `rfqStateBeet` variable. The `RfqState` enum has six possible values: `Constructed`, `Active`, `Canceled`, `Expired`, `Settling`, and `SettlingEnded`. These values represent the different states that a Request for Quote (RFQ) can be in. 
+This code defines an enum called `RfqState` and exports it along with a `rfqStateBeet` variable. The `RfqState` enum has six possible values: `Constructed`, `Active`, `Canceled`, `Expired`, `Settling`, and `SettlingEnded`. The `rfqStateBeet` variable is defined using a function from the `@convergence-rfq/beet` library called `fixedScalarEnum`, which takes the `RfqState` enum as an argument and returns a scalar type that can be used in GraphQL schemas.
 
-The `rfqStateBeet` variable is defined using a function called `fixedScalarEnum` from the `@convergence-rfq/beet` library. This function takes an enum and returns a Beet type that can be used to serialize and deserialize the enum. Beet is a serialization library that is used in the larger Convergence Program Library project to encode and decode messages sent between different components of the system.
+This code is likely part of a larger project that involves implementing a GraphQL API for an RFQ (request for quote) system. The `RfqState` enum represents the different states that an RFQ can be in, and the `rfqStateBeet` variable is used to define the corresponding scalar type for GraphQL queries and mutations that involve RFQs. 
 
-By exporting the `RfqState` enum and `rfqStateBeet` variable, other parts of the Convergence Program Library project can use them to define and serialize RFQ states. For example, if a component of the system needs to send an RFQ state to another component, it can use the `rfqStateBeet` variable to serialize the state into a format that can be sent over the network. The receiving component can then use the same Beet type to deserialize the state back into an enum value. 
-
-Here is an example of how the `RfqState` enum and `rfqStateBeet` variable might be used in another part of the Convergence Program Library project:
+Here is an example of how this code might be used in a GraphQL schema:
 
 ```
-import { RfqState, rfqStateBeet } from '@convergence-rfq/RfqState';
-import { sendMessage } from '@convergence-rfq/message';
+type Rfq {
+  id: ID!
+  state: RfqState!
+  # other fields...
+}
 
-// Construct an RFQ object
-const rfq = {
-  id: '123',
-  state: RfqState.Constructed,
-  // other properties...
-};
+enum RfqState {
+  Constructed
+  Active
+  Canceled
+  Expired
+  Settling
+  SettlingEnded
+}
 
-// Serialize the RFQ state using rfqStateBeet
-const serializedState = rfqStateBeet.serialize(rfq.state);
+type Query {
+  rfqs: [Rfq!]!
+  # other queries...
+}
 
-// Send the RFQ state to another component using sendMessage
-sendMessage('rfq-state-updated', { id: rfq.id, state: serializedState });
+type Mutation {
+  createRfq(input: RfqInput!): Rfq!
+  updateRfqState(id: ID!, state: RfqState!): Rfq!
+  # other mutations...
+}
+
+scalar RfqStateBeet
+
+schema {
+  query: Query
+  mutation: Mutation
+}
 ```
 
-In this example, the `rfqStateBeet` variable is used to serialize the `state` property of an RFQ object into a format that can be sent over the network. The `sendMessage` function is used to send the serialized state to another component of the system. The receiving component can then use the `rfqStateBeet` variable to deserialize the state back into an enum value.
+In this example, the `Rfq` type represents an RFQ object with an `id` field and a `state` field that is of type `RfqState`. The `RfqState` enum is defined with the same values as in the `RfqState.js` file. The `Query` and `Mutation` types define operations that can be performed on RFQs, such as fetching a list of all RFQs and updating the state of an RFQ. The `RfqStateBeet` scalar type is used to represent the `state` field in the GraphQL schema, and is defined using the `rfqStateBeet` variable from the `RfqState.js` file.
 ## Questions: 
  1. What is the purpose of the `beet` module being imported?
 - The `beet` module is being used to create a fixed scalar enum for the `RfqState` enum.
@@ -35,4 +50,4 @@ In this example, the `rfqStateBeet` variable is used to serialize the `state` pr
 - The `use strict` statement enables strict mode, which enforces stricter parsing and error handling rules in the code.
 
 3. What is the purpose of the `__createBinding`, `__setModuleDefault`, and `__importStar` functions?
-- These functions are used to create bindings between modules and to set default exports for modules, and to import all exports from a module as a single object. They are used to facilitate module importing and exporting.
+- These functions are used to create bindings between modules and to set default exports for modules, and to import all exports from a module as a single object.

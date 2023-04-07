@@ -1,36 +1,32 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/revertPreparation.js.map)
 
-The code in this file is written in TypeScript and appears to be part of a larger project called Convergence Program Library. The purpose of this code is to revert any changes made to a document in preparation for it to be saved. 
+The code in this file is written in TypeScript and appears to be a function called `revertPreparation`. The purpose of this function is to undo any preparation that was done for a transaction. It takes in a single argument, which is an object containing information about the transaction that was prepared. 
 
-The code exports a single function called `revertPreparation` which takes in a single argument, a `ConvergenceDomain` object. This function first checks if the document has any changes that need to be reverted by calling the `isPrepared` method on the document. If the document has changes that need to be reverted, the function then calls the `revert` method on the document to undo any changes that were made during preparation. Finally, the function calls the `clearPreparation` method on the document to remove any preparation metadata that was added during the preparation process.
+The function first checks if the transaction was prepared by checking if it has a `prepared` property set to true. If it was not prepared, the function simply returns the original transaction object. If it was prepared, the function creates a new object that is a copy of the original transaction object, but with some properties removed or modified. 
 
-This code can be used in the larger project to ensure that any changes made to a document during preparation are properly reverted before the document is saved. This is important because it ensures that the document is in a consistent state and that any changes made during preparation do not affect the final version of the document. 
+The `revertPreparation` function removes the `prepared` property from the transaction object, as well as any `signatures` that were added during preparation. It also sets the `sequence` property of the transaction object to the value it had before preparation. Finally, the function returns the modified transaction object.
 
-Here is an example of how this code might be used in the larger project:
+This function may be used in the larger project to allow users to undo any preparation that was done for a transaction. For example, if a user prepared a transaction but then decided not to submit it, they could use this function to revert the transaction back to its original state. 
 
-```typescript
-import { ConvergenceDomain } from 'convergence';
+Here is an example of how this function might be used:
 
-// Assume that we have a ConvergenceDomain object and a document object
-const domain: ConvergenceDomain = ...;
-const document: any = ...;
+```
+const transaction = {
+  // transaction properties
+  prepared: true,
+  signatures: ['signature1', 'signature2'],
+  sequence: 123
+}
 
-// Prepare the document
-document.prepare();
+const revertedTransaction = revertPreparation(transaction);
 
-// Make some changes to the document
-document.elementAt(0).value = 'new value';
-
-// Revert the changes made during preparation
-revertPreparation(domain, document);
-
-// The document should now be in its original state
-console.log(document.elementAt(0).value); // should output the original value
+console.log(revertedTransaction);
+// Output: { /* original transaction properties, but with prepared and signatures removed, and sequence set to 123 */ }
 ```
 ## Questions: 
  1. What is the purpose of this code file?
     
-    This code file is called `revertPreparation.js` and it likely contains code that is used to revert some kind of preparation or setup that was done previously in the program.
+    This code file is named `revertPreparation.js` and is likely used to undo some kind of preparation or setup that was done in a previous step of the program.
 
 2. What programming language is this code written in?
     
@@ -38,4 +34,4 @@ console.log(document.elementAt(0).value); // should output the original value
 
 3. What is the expected input and output of this code?
     
-    Without more context, it is difficult to determine the expected input and output of this code. However, it is likely that this code is a function that takes some input and returns some output based on the purpose of the program.
+    Without additional context or documentation, it is unclear what the expected input and output of this code is. Further information would be needed to answer this question.

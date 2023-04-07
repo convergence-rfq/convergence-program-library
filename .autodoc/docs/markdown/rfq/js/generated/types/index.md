@@ -1,22 +1,24 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/index.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/index.ts)
 
-This code is a module that exports various classes and enums related to financial instruments and trading. The purpose of this module is to provide a library of reusable code for developers building financial applications. 
+This code exports a series of modules from various files within the Convergence Program Library project. These modules likely contain classes, functions, or other code that is used throughout the larger project. 
 
-The code uses TypeScript syntax and includes several named exports, which are made available to other parts of the application that import this module. The `__exportStar` function is used to re-export all of the named exports from other modules in the same directory. 
+By exporting these modules, other files within the project can import them and use their functionality without having to rewrite the code. This promotes code reusability and helps to keep the project organized and modular.
 
-For example, the `AssetIdentifier` class is exported from the `AssetIdentifier.ts` file, and is re-exported from this module using the `__exportStar` function. This allows other parts of the application to import the `AssetIdentifier` class from this module, rather than having to import it directly from the `AssetIdentifier.ts` file. 
+For example, if another file within the project needed to use the `PriceOracle` module, it could simply import it like this:
 
-Similarly, other classes and enums related to financial instruments and trading are exported from their respective files and re-exported from this module. These include classes such as `Confirmation`, `Instrument`, and `Quote`, as well as enums such as `AuthoritySide` and `OrderType`. 
+```
+import { PriceOracle } from "./PriceOracle";
+```
 
-Developers can use these exported classes and enums to build financial applications that require functionality such as trading, risk management, and price quoting. For example, a developer building a trading platform could use the `Instrument` class to represent financial instruments such as stocks or bonds, and the `OrderType` enum to specify the type of order being placed (e.g. limit order or market order). 
+This would give the file access to the `PriceOracle` class or functions defined within that module.
 
-Overall, this module provides a useful set of tools for developers building financial applications, and helps to promote code reuse and maintainability.
+Overall, this code serves as a way to make the various modules within the Convergence Program Library project easily accessible and reusable throughout the project.
 ## Questions: 
- 1. What is the purpose of this code file?
-- This code file exports various modules from the Convergence Program Library.
+ 1. What is the purpose of this code?
+- This code exports various modules from different files within the Convergence Program Library.
 
-2. What is the significance of the "use strict" statement at the beginning of the code?
-- The "use strict" statement enables strict mode, which enforces stricter parsing and error handling rules in JavaScript.
+2. What are some examples of the modules being exported?
+- Some examples of the modules being exported include AssetIdentifier, AuthoritySide, BaseAssetIndex, Confirmation, DefaultingParty, and more.
 
-3. What is the purpose of the "__createBinding" and "__exportStar" functions?
-- The "__createBinding" function creates a binding between two objects, while the "__exportStar" function exports all the modules in a given object. These functions are used to export the various modules from the Convergence Program Library.
+3. How are these modules used within the Convergence Program Library?
+- It is unclear from this code alone how these modules are used within the Convergence Program Library. Further documentation or code examples may be necessary to understand their usage.

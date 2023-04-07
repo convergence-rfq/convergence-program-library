@@ -1,24 +1,18 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/spot-instrument/js/generated/instructions/revertPreparation.ts)
 
-This code defines an instruction for the Convergence Program Library called `RevertPreparation`. The purpose of this instruction is to revert the preparation of an escrow account and return the tokens to their original owners. 
+This code defines an instruction for the Convergence Program Library called `RevertPreparation`. The purpose of this instruction is to revert the preparation of an escrow account and return the tokens to their original accounts. The instruction takes two arguments: `assetIdentifier` and `side`. The `assetIdentifier` argument is of type `AssetIdentifierDuplicate`, which is a custom type defined in another file. The `side` argument is of type `AuthoritySideDuplicate`, which is also a custom type defined in another file. 
 
-The code imports several packages including `@solana/spl-token`, `@convergence-rfq/beet`, and `@solana/web3.js`. These packages provide functionality for interacting with the Solana blockchain, creating and manipulating data structures, and serializing data. 
+The instruction requires several accounts to be accessed while it is being processed. These accounts are defined in the `RevertPreparationInstructionAccounts` type. The `protocol` account is a signer and is not writable. The `rfq`, `response`, `escrow`, and `tokens` accounts are not signers and may be writable. The `tokenProgram` account is optional and defaults to the `TOKEN_PROGRAM_ID` account from the `@solana/spl-token` package. The `anchorRemainingAccounts` property is also optional and is an array of additional accounts that may be required by the instruction.
 
-The `RevertPreparationInstructionArgs` type defines the arguments required for the `RevertPreparation` instruction. These arguments include an `AssetIdentifierDuplicate` and an `AuthoritySideDuplicate`. These types are defined in separate files and are imported at the top of the code. 
+The `createRevertPreparationInstruction` function takes two arguments: `accounts` and `args`. The `accounts` argument is an object of type `RevertPreparationInstructionAccounts` that defines the accounts required by the instruction. The `args` argument is an object of type `RevertPreparationInstructionArgs` that defines the arguments required by the instruction. The function returns a `TransactionInstruction` object that can be used to execute the instruction.
 
-The `revertPreparationStruct` constant defines a `FixableBeetArgsStruct` that serializes the `RevertPreparationInstructionArgs` data into a byte array. This byte array is used as the data parameter for the `TransactionInstruction` object that is returned by the `createRevertPreparationInstruction` function. 
-
-The `RevertPreparationInstructionAccounts` type defines the accounts required by the `RevertPreparation` instruction. These accounts include a `protocol` account, an `rfq` account, a `response` account, an `escrow` account, and a `tokens` account. The `escrow` and `tokens` accounts are writable, while the other accounts are not. 
-
-The `createRevertPreparationInstruction` function takes in the required accounts and arguments and returns a `TransactionInstruction` object that can be used to execute the `RevertPreparation` instruction on the Solana blockchain. The function serializes the arguments into a byte array using the `revertPreparationStruct` constant and creates an array of `AccountMeta` objects that includes the required accounts. 
-
-Overall, this code provides the functionality to revert the preparation of an escrow account and return the tokens to their original owners. It is a small part of the larger Convergence Program Library project and is designed to be used in conjunction with other instructions and data structures to create more complex smart contracts on the Solana blockchain.
+Overall, this code defines an instruction for the Convergence Program Library that allows the preparation of an escrow account to be reverted and the tokens returned to their original accounts. This instruction may be used in conjunction with other instructions to implement more complex functionality in the library.
 ## Questions: 
- 1. What is the purpose of this code?
-- This code generates a Solana program instruction for the RevertPreparation function.
+ 1. What is the purpose of this code and what does it do?
+- This code generates a Solana program instruction called `RevertPreparation` using the `solita` package. It also defines the necessary accounts and arguments for the instruction.
 
-2. What are the required accounts for the RevertPreparation instruction?
-- The required accounts are `protocol`, `rfq`, `response`, `escrow`, and `tokens`. `tokenProgram` and `anchorRemainingAccounts` are optional.
+2. What are the required accounts for the `RevertPreparation` instruction?
+- The required accounts for the `RevertPreparation` instruction are `protocol`, `rfq`, `response`, `escrow`, and `tokens`. Additionally, there are optional accounts `tokenProgram` and `anchorRemainingAccounts`.
 
-3. What is the expected input for the RevertPreparation instruction?
-- The expected input is an object with `assetIdentifier` and `side` properties, both of which have specific types defined in the `AssetIdentifierDuplicate` and `AuthoritySideDuplicate` types.
+3. What is the format of the `RevertPreparationInstructionArgs` and what does it contain?
+- The `RevertPreparationInstructionArgs` is a type that contains two properties: `assetIdentifier` and `side`. These properties are of types `AssetIdentifierDuplicate` and `AuthoritySideDuplicate`, respectively, which are imported from other modules.

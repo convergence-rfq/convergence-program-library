@@ -6,48 +6,23 @@ The purpose of this program is to facilitate the settlement of spot instruments,
 
 The validateData instruction is used to validate the data provided by the user before settlement. It takes in instrumentData, baseAssetIndex, and instrumentDecimals as arguments, and it checks that the data is valid according to the rules defined in the program.
 
-The prepareToSettle instruction is used to prepare for settlement. It takes in assetIdentifier and side as arguments, and it interacts with various accounts on the blockchain to set up the necessary conditions for settlement.
+The prepareToSettle instruction is used to prepare for settlement. It takes in assetIdentifier and side as arguments, and it interacts with various accounts on the blockchain to create and transfer tokens in preparation for settlement.
 
-The settle instruction is used to execute settlement. It takes in assetIdentifier as an argument, and it interacts with various accounts on the blockchain to transfer assets between parties.
+The settle instruction is used to execute settlement. It takes in assetIdentifier as an argument, and it interacts with various accounts on the blockchain to transfer tokens between parties and finalize the settlement.
 
-The revertPreparation instruction is used to revert the preparation for settlement. It takes in assetIdentifier and side as arguments, and it interacts with various accounts on the blockchain to undo the changes made during preparation.
+The revertPreparation instruction is used to revert the preparation process if settlement is not executed. It takes in assetIdentifier and side as arguments, and it interacts with various accounts on the blockchain to return tokens to their original owners.
 
-The cleanUp instruction is used to clean up after settlement. It takes in assetIdentifier as an argument, and it interacts with various accounts on the blockchain to remove unnecessary accounts and data.
+The cleanUp instruction is used to clean up any remaining accounts after settlement or preparation. It takes in assetIdentifier as an argument, and it interacts with various accounts on the blockchain to close accounts and return tokens to their original owners.
 
-Overall, this program provides a standardized way to settle spot instruments on the Solana blockchain. It can be used by developers building financial applications on the blockchain to ensure that settlement is executed correctly and efficiently. Here is an example of how the program might be used in a larger project:
+Overall, this program provides a framework for settling spot instruments on the Solana blockchain. It defines a set of rules and procedures for validating data, preparing for settlement, executing settlement, and cleaning up after settlement. By using this program, parties can settle spot instruments in a secure and efficient manner. 
 
-```javascript
-const programId = new PublicKey('ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS');
-const program = new Program(jsonInterface, programId, provider);
-
-async function settleSpotInstrument(assetIdentifier) {
-  const accounts = {
-    protocol: program.provider.wallet.publicKey,
-    rfq: ...,
-    response: ...,
-    caller: ...,
-    callerTokens: ...,
-    mint: ...,
-    escrow: ...,
-    receiverTokens: ...,
-    systemProgram: ...,
-    tokenProgram: ...,
-    rent: ...,
-    firstToPrepare: ...,
-    backupReceiver: ...
-  };
-  const instruction = program.instruction.settle(assetIdentifier);
-  await program.provider.send(instruction, accounts);
-}
-```
-
-In this example, the settleSpotInstrument function uses the program to settle a spot instrument with the given assetIdentifier. It creates an accounts object that contains all the necessary accounts for settlement, and it creates an instruction object that calls the settle instruction with the given assetIdentifier. Finally, it sends the instruction to the Solana blockchain using the program provider.
+Example usage of this program would involve importing the JSON file into a Solana program, and then calling the various instructions as needed to settle spot instruments. The program would interact with various accounts on the blockchain, such as token accounts and mint accounts, to execute settlement transactions.
 ## Questions: 
  1. What is the purpose of this code and what problem does it solve?
-- The code appears to be part of a program library called "Convergence" that likely deals with settling trades between parties. However, without more context it is difficult to determine the specific problem it solves.
+- The code appears to be part of a program library called "Convergence" that likely deals with settling trades between different assets. However, without more context it is difficult to determine the specific problem it solves.
 
-2. What are the different functions included in this code and what are their inputs and outputs?
-- The code includes five functions: `validateData`, `prepareToSettle`, `settle`, `revertPreparation`, and `cleanUp`. Each function has a list of accounts and arguments as inputs, but the specific outputs are not defined in this code.
+2. What are the different functions included in this code and what do they do?
+- The code includes five different functions: `validateData`, `prepareToSettle`, `settle`, `revertPreparation`, and `cleanUp`. Each function has a list of accounts and arguments that it takes as input, but without more context it is difficult to determine their specific purpose.
 
-3. What are the possible errors that can occur while running this code and how are they handled?
-- The code includes a list of error codes and messages that can occur while running the code. These errors include issues with data size, mismatched account information, and invalid addresses. However, the code does not specify how these errors are handled or what actions should be taken if they occur.
+3. What are the different types and errors defined in this code and how are they used?
+- The code defines two custom types (`AuthoritySideDuplicate` and `AssetIdentifierDuplicate`) and six custom errors that can be thrown during execution. These types and errors are likely used within the functions defined in the code, but without more context it is difficult to determine their specific usage.

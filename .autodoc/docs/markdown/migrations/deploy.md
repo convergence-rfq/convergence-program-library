@@ -1,40 +1,33 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/migrations/deploy.ts)
 
-The code above is a simple deploy script that is used in the Convergence Program Library project. This script is invoked from the command line interface (CLI) and is responsible for configuring a provider from the workspace's Anchor.toml file. 
+The code above is a simple deploy script that is used in the Convergence Program Library project. This script is used to configure a client to use a provider and then deploy a smart contract. The script is written in JavaScript and uses the Anchor framework.
 
-The purpose of this script is to set up the client to use the provider and then execute the deploy script. The deploy script itself is not included in this code snippet, but it can be added to the function as needed. 
+The purpose of this script is to provide a simple way to deploy smart contracts using the Anchor framework. The script is invoked from the command line interface (CLI) and takes a provider as an argument. The provider is used to configure the client to use the correct network and account information.
 
-The `anchor` module is imported at the beginning of the script, which is a library used in the Convergence Program Library project. This module is responsible for interacting with the Solana blockchain and provides a set of tools for building and deploying smart contracts. 
+The script then sets the provider using the `setProvider` method from the Anchor framework. This method takes the provider as an argument and sets it as the default provider for the client.
 
-The `setProvider` method is called to configure the client to use the provider. The `provider` parameter is passed to the function and is used to set up the connection to the Solana blockchain. 
+Finally, the script provides a placeholder for the actual deploy script. This is where the user can add their own deploy script to deploy their smart contract. The deploy script can be written using the Anchor framework and can be customized to suit the user's needs.
 
-This script is a part of the larger Convergence Program Library project and is used to deploy smart contracts to the Solana blockchain. Developers can use this script as a starting point for their own deploy scripts and customize it as needed. 
+Here is an example of how this script can be used:
 
-Here is an example of how this script can be used in a larger project:
-
-```javascript
+```
 const anchor = require("@project-serum/anchor");
-const deploy = require("./deploy");
+const provider = new anchor.Provider(...);
 
-// Set up the provider
-const provider = new anchor.Provider(
-  new anchor.Wallet("myPrivateKey"),
-  {
-    preflightCommitment: "processed",
-  }
-);
+const deployScript = require("./deployScript");
 
-// Deploy the smart contract
-deploy(provider);
+deployScript(provider);
 ```
 
-In this example, the `anchor` module is imported, along with the `deploy` script. The `provider` is set up using a private key and a preflight commitment. Finally, the `deploy` function is called with the `provider` parameter to deploy the smart contract.
+In this example, we first create a new provider using the `Provider` class from the Anchor framework. We then require the `deployScript` module and pass the provider to it. The `deployScript` module is expected to export a function that takes a provider as an argument and deploys the smart contract.
+
+Overall, this script provides a simple and flexible way to deploy smart contracts using the Anchor framework. It can be used as a starting point for more complex deploy scripts or customized to suit the user's needs.
 ## Questions: 
  1. What is the purpose of this code?
-   - This code is a template for a migration script in the Convergence Program Library, which is invoked from the CLI and configures a provider from the workspace's Anchor.toml.
+   - This code is a template for a migration script in the Convergence Program Library, which sets up a provider and allows for a deploy script to be added.
 
 2. What is the "@project-serum/anchor" package used for?
    - The "@project-serum/anchor" package is used to configure the client to use the provider in the migration script.
 
-3. What should be added to the deploy script section?
-   - The developer should add their own deploy script to the section labeled "Add your deploy script here."
+3. What is the significance of the "Anchor.toml" file mentioned in the code?
+   - The "Anchor.toml" file is used to configure the provider for the migration script, allowing for customization of the deployment environment.

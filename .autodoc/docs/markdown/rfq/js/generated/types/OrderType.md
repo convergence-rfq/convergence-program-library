@@ -23,11 +23,11 @@ const decodedType = orderTypeBeet.decode(buffer);
 console.log(decodedType); // Output: OrderType.Buy
 ```
 
-Overall, this code provides a simple and consistent way of working with order types in the Convergence Program Library project. By using the `OrderType` enum and `orderTypeBeet` constant, developers can avoid errors and inconsistencies when working with order types throughout the project.
+Overall, this code provides a simple and consistent way of representing order types within the Convergence Program Library project, and the `beet` module provides a convenient way to serialize and deserialize these values.
 ## Questions: 
- 1. What is the purpose of the solita package and why is it being used in this code?
-   - The solita package was used to generate this code and should not be edited directly. Instead, it should be rerun to update it or a wrapper should be written to add functionality.
-2. What is the "@convergence-rfq/beet" package and why is it being imported?
-   - The "@convergence-rfq/beet" package is being imported to define a fixed size Beet for the OrderType enum.
-3. What is the purpose of the OrderType enum and how is it being used in this code?
-   - The OrderType enum is being used to define the types of orders (Buy, Sell, TwoWay) and is being converted into a fixed size Beet using the orderTypeBeet constant.
+ 1. What is the purpose of the `solita` package and why is it being used in this code?
+   - The `solita` package was used to generate this code and should not be edited directly. Instead, it should be rerun to update it or a wrapper should be written to add functionality.
+2. What is the `@convergence-rfq/beet` package and why is it being imported?
+   - The `@convergence-rfq/beet` package is being imported to define a fixed-size Beet for the `OrderType` enum.
+3. What is the `orderTypeBeet` constant and how is it related to the `OrderType` enum?
+   - The `orderTypeBeet` constant is a fixed-size Beet for the `OrderType` enum, created using the `beet.fixedScalarEnum` method.

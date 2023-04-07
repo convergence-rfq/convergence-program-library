@@ -1,30 +1,37 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/RiskCategory.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/RiskCategory.ts)
 
-This code defines an enum called `RiskCategory` and exports it along with a `riskCategoryBeet` object. The `RiskCategory` enum has five possible values: `VeryLow`, `Low`, `Medium`, `High`, and `VeryHigh`. The `riskCategoryBeet` object is created using a function from the `@convergence-rfq/beet` library called `fixedScalarEnum`, which takes an enum as an argument and returns an object that can be used to encode and decode values of that enum.
+This code is a generated file that should not be edited directly. It imports the `beet` module from the `@convergence-rfq/beet` package and defines an enum called `RiskCategory` with five possible values: `VeryLow`, `Low`, `Medium`, `High`, and `VeryHigh`. It also defines a constant called `riskCategoryBeet` that uses the `fixedScalarEnum` method from the `beet` module to create a fixed-size beet for the `RiskCategory` enum.
 
-This code is likely part of a larger project that involves encoding and decoding data related to risk categories. The `RiskCategory` enum provides a standard set of values that can be used throughout the project, and the `riskCategoryBeet` object provides a way to encode and decode those values in a consistent way. Other parts of the project can use the `riskCategoryBeet` object to convert `RiskCategory` values to and from their encoded form.
+The purpose of this code is to provide a standardized way of representing risk categories within the Convergence Program Library project. The `RiskCategory` enum allows developers to easily refer to one of five predefined risk levels, while the `riskCategoryBeet` constant provides a way to serialize and deserialize risk categories using the `beet` library.
 
-Here is an example of how the `riskCategoryBeet` object might be used:
+Here is an example of how this code might be used in the larger project:
 
-```
-const { riskCategoryBeet, RiskCategory } = require('./RiskCategory');
+```typescript
+import { RiskCategory, riskCategoryBeet } from "convergence-program-library";
 
-// Encode a RiskCategory value
-const encoded = riskCategoryBeet.encode(RiskCategory.Medium);
-console.log(encoded); // 2
+// Define a function that takes a risk category and returns a serialized beet
+function serializeRiskCategory(category: RiskCategory): Uint8Array {
+  return riskCategoryBeet.serialize(category);
+}
 
-// Decode an encoded value
-const decoded = riskCategoryBeet.decode(3);
-console.log(decoded); // RiskCategory.High
-```
+// Define a function that takes a serialized beet and returns a risk category
+function deserializeRiskCategory(bytes: Uint8Array): RiskCategory {
+  return riskCategoryBeet.deserialize(bytes);
+}
 
-In this example, we import the `riskCategoryBeet` object and the `RiskCategory` enum from the `RiskCategory.js` file. We then use the `encode` method of the `riskCategoryBeet` object to encode a `RiskCategory` value (`Medium`) and log the result (`2`). We also use the `decode` method of the `riskCategoryBeet` object to decode an encoded value (`3`) and log the result (`RiskCategory.High`).
+// Use the functions to serialize and deserialize a risk category
+const category = RiskCategory.Medium;
+const serialized = serializeRiskCategory(category);
+const deserialized = deserializeRiskCategory(serialized);
+
+console.log(category === deserialized); // true
+``` 
+
+In this example, we import the `RiskCategory` enum and `riskCategoryBeet` constant from the `convergence-program-library` package. We then define two functions that use the `serialize` and `deserialize` methods of the `riskCategoryBeet` constant to convert between risk categories and serialized beets. Finally, we use these functions to serialize a `Medium` risk category, deserialize the resulting beet, and compare it to the original category.
 ## Questions: 
- 1. What is the purpose of the `beet` module imported from `@convergence-rfq/beet`?
-- The `beet` module is used to create a fixed scalar enum for the `RiskCategory` object.
-
-2. What is the significance of the `use strict` statement at the beginning of the code?
-- The `use strict` statement enables strict mode, which enforces stricter parsing and error handling rules in the code.
-
-3. What is the purpose of the `__createBinding`, `__setModuleDefault`, and `__importStar` functions defined at the beginning of the code?
-- These functions are used to create bindings and set default modules for imported modules, as well as import all exports from a module as a single object.
+ 1. What is the purpose of the `solita` package and why is it being used in this code?
+   - The `solita` package was used to generate this code and should not be edited directly. Instead, it should be rerun to update it or a wrapper should be written to add functionality.
+2. What is the `@convergence-rfq/beet` package and why is it being imported?
+   - The `@convergence-rfq/beet` package is being imported to define a fixed-size Beet for the `RiskCategory` enum.
+3. What is the purpose of the `RiskCategory` enum and how is it being used in this code?
+   - The `RiskCategory` enum is being used to define different levels of risk categories. It is being used to create a fixed-size Beet using the `riskCategoryBeet` constant.

@@ -1,22 +1,22 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/prepareMoreLegsSettlement.d.ts)
 
-This code is a module that exports several types and functions related to preparing a settlement instruction for a financial trading protocol. The module imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js", which are likely dependencies of the larger project.
+This code is a module that exports several types and functions related to preparing settlement instructions for a financial trading protocol. Specifically, it exports a type `PrepareMoreLegsSettlementInstructionArgs` which defines an object with two properties: `side` which is an enum value indicating whether the instruction is for the buyer or seller side of the trade, and `legAmountToPrepare` which is a number indicating the amount of the asset being traded that should be prepared for settlement.
 
-The main function exported by this module is `createPrepareMoreLegsSettlementInstruction()`, which takes two arguments: an object containing several public keys and an optional program ID, and an object containing a side and a leg amount to prepare. The function returns a `web3.TransactionInstruction` object.
+The module also exports a `prepareMoreLegsSettlementStruct` constant which is a `BeetArgsStruct` object from the `@convergence-rfq/beet` library. This object is used to define the structure of the arguments that will be passed to the `createPrepareMoreLegsSettlementInstruction` function.
 
-The `PrepareMoreLegsSettlementInstructionAccounts` type defines the shape of the object that must be passed as the first argument to `createPrepareMoreLegsSettlementInstruction()`. It contains several public keys that likely correspond to accounts in the Solana blockchain, including a caller, protocol, RFQ, and response account. It also includes an optional array of additional accounts that may be needed for the instruction.
+The module also exports a `PrepareMoreLegsSettlementInstructionAccounts` type which defines an object with several properties representing the accounts involved in the settlement instruction. These include the caller account, the protocol account, the RFQ (request for quote) account, and the response account. Additionally, there is an optional `anchorRemainingAccounts` property which is an array of `AccountMeta` objects from the `@solana/web3.js` library.
 
-The `PrepareMoreLegsSettlementInstructionArgs` type defines the shape of the object that must be passed as the second argument to `createPrepareMoreLegsSettlementInstruction()`. It contains a side property, which is an enum value indicating whether the instruction is for the buyer or seller side of the trade, and a legAmountToPrepare property, which is a number indicating the amount of the asset to prepare for settlement.
+The module exports a `prepareMoreLegsSettlementInstructionDiscriminator` constant which is an array of numbers used to identify the type of instruction being created.
 
-The `prepareMoreLegsSettlementStruct` and `prepareMoreLegsSettlementInstructionDiscriminator` variables are likely used internally by the `createPrepareMoreLegsSettlementInstruction()` function to define the structure and discriminator of the instruction.
+Finally, the module exports a `createPrepareMoreLegsSettlementInstruction` function which takes two arguments: an object of type `PrepareMoreLegsSettlementInstructionAccounts` and an object of type `PrepareMoreLegsSettlementInstructionArgs`. This function returns a `TransactionInstruction` object from the `@solana/web3.js` library which can be used to execute the settlement instruction on the Solana blockchain.
 
-Overall, this module appears to be a crucial piece of the larger Convergence Program Library project, as it provides a way to prepare settlement instructions for financial trades on the Solana blockchain. Developers using this library would likely import this module and use the `createPrepareMoreLegsSettlementInstruction()` function to generate the necessary transaction instruction for their specific use case.
+Overall, this module provides a set of types and functions that can be used to prepare settlement instructions for a financial trading protocol. The `PrepareMoreLegsSettlementInstructionArgs` type defines the structure of the arguments needed for the instruction, while the `PrepareMoreLegsSettlementInstructionAccounts` type defines the accounts involved in the instruction. The `createPrepareMoreLegsSettlementInstruction` function takes these arguments and returns a `TransactionInstruction` object which can be used to execute the instruction. This module is likely just one part of a larger project related to financial trading on the Solana blockchain.
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The Convergence Program Library is not described in the given code, so a smart developer might want to know more about the overall project and how this code fits into it.
+ 1. What external libraries or dependencies does this code rely on?
+- This code relies on two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
 
-2. What is the expected input and output of the `createPrepareMoreLegsSettlementInstruction` function?
-- A smart developer might want to know more about the expected input and output of this function, including the format of the `accounts` and `args` parameters and what the function returns.
+2. What is the purpose of the "PrepareMoreLegsSettlementInstructionArgs" type and what does it contain?
+- The "PrepareMoreLegsSettlementInstructionArgs" type is used to define the arguments for a function that prepares more legs for a settlement instruction. It contains two properties: "side" which is of type "AuthoritySide", and "legAmountToPrepare" which is of type "number".
 
-3. What is the purpose of the `prepareMoreLegsSettlementStruct` and `prepareMoreLegsSettlementInstructionDiscriminator` variables?
-- A smart developer might want to know more about the purpose of these variables and how they are used within the code.
+3. What is the purpose of the "createPrepareMoreLegsSettlementInstruction" function and what arguments does it take?
+- The "createPrepareMoreLegsSettlementInstruction" function is used to create a transaction instruction for preparing more legs for a settlement. It takes three arguments: "accounts" which is of type "PrepareMoreLegsSettlementInstructionAccounts", "args" which is of type "PrepareMoreLegsSettlementInstructionArgs", and "programId" which is an optional argument of type "web3.PublicKey".

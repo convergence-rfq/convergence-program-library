@@ -1,46 +1,24 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/cleanUpResponse.d.ts)
 
-This code is a module that exports several functions and types related to the Convergence Program Library. Specifically, it provides functionality for creating a Solana transaction instruction to clean up a response to a request for quote (RFQ) using the Beet protocol.
+This code is a module that exports several functions and types related to the Convergence Program Library. Specifically, it provides functionality for creating a Solana transaction instruction for cleaning up a response to a request for quote (RFQ) using the Beet protocol.
 
-The module imports two external libraries: "@convergence-rfq/beet" and "@solana/web3.js". The former provides a type definition for the structure of the arguments needed to clean up a response, while the latter is a library for interacting with the Solana blockchain.
+The `import` statements at the beginning of the code bring in two external libraries: `@convergence-rfq/beet` and `@solana/web3.js`. The former is likely a library for implementing the Beet protocol, while the latter is a library for interacting with the Solana blockchain.
 
-The module exports three items: a type definition for the accounts needed to execute the clean up response instruction, a constant array of numbers that serves as a discriminator for the instruction, and a function for creating the instruction itself.
+The `cleanUpResponseStruct` variable is a type definition for the arguments that will be passed to the `createCleanUpResponseInstruction` function. It is a `BeetArgsStruct` object that includes a `instructionDiscriminator` property, which is an array of numbers. The purpose of this object is not entirely clear from the code snippet, but it appears to be a way of specifying the arguments needed for the Beet protocol.
 
-The type definition, CleanUpResponseInstructionAccounts, specifies the public keys of several accounts needed to execute the instruction, including the maker's account, the protocol's account, the RFQ's account, and the response's account. It also includes an optional array of additional accounts that may be needed, depending on the specific use case.
+The `CleanUpResponseInstructionAccounts` type is a definition for the accounts that will be used in the `createCleanUpResponseInstruction` function. It includes several `web3.PublicKey` objects that represent the maker, protocol, RFQ, and response accounts involved in the transaction. Additionally, it includes an optional `anchorRemainingAccounts` property, which is an array of `web3.AccountMeta` objects. These objects likely provide additional metadata about the accounts involved in the transaction.
 
-The constant array, cleanUpResponseInstructionDiscriminator, is used to identify the instruction when it is included in a Solana transaction.
+The `cleanUpResponseInstructionDiscriminator` variable is an array of numbers that appears to be related to the `instructionDiscriminator` property in the `cleanUpResponseStruct` object. Again, the purpose of these variables is not entirely clear from the code snippet.
 
-The createCleanUpResponseInstruction function takes an object of type CleanUpResponseInstructionAccounts and an optional programId as arguments, and returns a web3.TransactionInstruction object. This instruction can then be included in a Solana transaction to execute the clean up response operation.
+Finally, the `createCleanUpResponseInstruction` function is the main function exported by this module. It takes in an object of type `CleanUpResponseInstructionAccounts` and an optional `programId` parameter, which is a `web3.PublicKey` object representing the program ID for the Solana transaction. The function returns a `web3.TransactionInstruction` object that can be used to execute the clean-up response transaction on the Solana blockchain.
 
-Overall, this module provides a convenient way for developers to interact with the Beet protocol and the Solana blockchain in order to clean up responses to RFQs. It abstracts away some of the low-level details of interacting with these technologies, making it easier to integrate them into larger projects. Here is an example of how this module might be used:
-
-```
-import { createCleanUpResponseInstruction, CleanUpResponseInstructionAccounts } from "convergence-program-library";
-
-// Define the accounts needed to execute the instruction
-const accounts: CleanUpResponseInstructionAccounts = {
-  maker: new web3.PublicKey("makerPublicKey"),
-  protocol: new web3.PublicKey("protocolPublicKey"),
-  rfq: new web3.PublicKey("rfqPublicKey"),
-  response: new web3.PublicKey("responsePublicKey"),
-  anchorRemainingAccounts: [
-    { pubkey: new web3.PublicKey("account1PublicKey"), isWritable: true, isSigner: false },
-    { pubkey: new web3.PublicKey("account2PublicKey"), isWritable: false, isSigner: false }
-  ]
-};
-
-// Create the instruction
-const instruction = createCleanUpResponseInstruction(accounts);
-
-// Include the instruction in a Solana transaction and send it to the network
-// ...
-```
+Overall, this code appears to be a small but important piece of the Convergence Program Library, providing functionality for cleaning up responses to RFQs using the Beet protocol on the Solana blockchain.
 ## Questions: 
  1. What is the purpose of the `@convergence-rfq/beet` and `@solana/web3.js` packages being imported?
 - The `@convergence-rfq/beet` package is being used to define the `cleanUpResponseStruct` object, while the `@solana/web3.js` package is being used to define the `CleanUpResponseInstructionAccounts` object and the `createCleanUpResponseInstruction` function.
 
 2. What is the `cleanUpResponseStruct` object and what is its significance?
-- The `cleanUpResponseStruct` object is a type definition for a `BeetArgsStruct` object with an `instructionDiscriminator` property. It is significant because it is exported and can be used by other parts of the program.
+- The `cleanUpResponseStruct` object is a type definition for a `BeetArgsStruct` object with an `instructionDiscriminator` property. It is being exported for use in other parts of the Convergence Program Library.
 
-3. What is the purpose of the `createCleanUpResponseInstruction` function?
-- The `createCleanUpResponseInstruction` function is used to create a `web3.TransactionInstruction` object for cleaning up a response to a request for quote (RFQ) on the Solana blockchain. It takes in an object of `CleanUpResponseInstructionAccounts` and an optional `programId` parameter, and returns a `web3.TransactionInstruction` object.
+3. What is the purpose of the `createCleanUpResponseInstruction` function and what arguments does it take?
+- The `createCleanUpResponseInstruction` function is used to create a `web3.TransactionInstruction` object for cleaning up a response to a request for quote (RFQ) on the Convergence platform. It takes an `accounts` object of type `CleanUpResponseInstructionAccounts` and an optional `programId` of type `web3.PublicKey`.

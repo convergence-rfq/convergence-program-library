@@ -1,24 +1,22 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/AssetIdentifier.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/AssetIdentifier.js)
 
-This code defines types and functions related to the AssetIdentifier data enum in Rust. The purpose of this code is to provide a way to serialize and deserialize AssetIdentifier data in TypeScript. 
+This code defines several functions and exports them as part of the Convergence Program Library. The purpose of these functions is to provide asset identifier functionality for the library. 
 
-The `AssetIdentifierRecord` type is used to derive the `AssetIdentifier` type as well as the de/serializer. However, it is not meant to be referred to in code, and instead, the `AssetIdentifier` type should be used. The `AssetIdentifier` type is a union type representing the AssetIdentifier data enum defined in Rust. It includes a `__kind` property that allows for narrowing types in switch/if statements. Additionally, `isAssetIdentifierLeg` and `isAssetIdentifierQuote` type guards are exposed to narrow to a specific variant.
+The `__createBinding`, `__setModuleDefault`, and `__importStar` functions are used to import the `beet` module from the `@convergence-rfq/beet` package. This module is used to define a data structure for asset identifiers. 
 
-The `assetIdentifierBeet` function is a `beet.dataEnum` function that takes an array of tuples. Each tuple contains a string representing the variant name and a `beet.BeetArgsStruct` object representing the variant data. The `beet.BeetArgsStruct` object takes an array of tuples representing the fields of the variant and their types. The `assetIdentifierBeet` function returns a `beet.FixableBeet` object that can be used to serialize and deserialize AssetIdentifier data.
+The `isAssetIdentifierLeg` function takes an argument `x` and returns `true` if `x` is a leg asset identifier, and `false` otherwise. A leg asset identifier is defined as an object with a `__kind` property set to the string `'Leg'`. 
 
-This code is likely used in the larger Convergence Program Library project to provide a standardized way of serializing and deserializing AssetIdentifier data. Other parts of the project that deal with AssetIdentifier data can import this module and use the `assetIdentifierBeet` function to serialize and deserialize data. For example:
+The `isAssetIdentifierQuote` function takes an argument `x` and returns `true` if `x` is a quote asset identifier, and `false` otherwise. A quote asset identifier is defined as an object with a `__kind` property set to the string `'Quote'`. 
 
-```
-import { AssetIdentifier, assetIdentifierBeet } from '@convergence-rfq/beet';
+The `assetIdentifierBeet` function exports a data structure for asset identifiers. This data structure is defined using the `beet.dataEnum` function, which takes an array of tuples. Each tuple defines a variant of the data structure, with the first element being the variant name and the second element being the data type. In this case, there are two variants: `'Leg'` and `'Quote'`. The `'Leg'` variant is defined as a `BeetArgsStruct` with a single field `legIndex` of type `beet.u8`. The `'Quote'` variant is defined as `beet.unit`, which represents a value with no data. 
 
-const assetId: AssetIdentifier = { __kind: 'Leg', legIndex: 1 };
-const serialized = assetIdentifierBeet.serialize(assetId);
-const deserialized = assetIdentifierBeet.deserialize(serialized);
-```
+Overall, this code provides a way to define and work with asset identifiers in the Convergence Program Library. For example, the `isAssetIdentifierLeg` and `isAssetIdentifierQuote` functions could be used to check the type of an asset identifier before performing some operation on it. The `assetIdentifierBeet` data structure could be used to store and manipulate asset identifiers in a type-safe way.
 ## Questions: 
- 1. What is the purpose of the `AssetIdentifier` type and how is it used?
-   - The `AssetIdentifier` type is a union type representing an enum defined in Rust, and it includes a `__kind` property that allows for narrowing types in switch/if statements. It is used to derive the `AssetIdentifierRecord` type and the de/serializer.
-2. Why are there `isAssetIdentifierLeg` and `isAssetIdentifierQuote` type guards?
-   - The `isAssetIdentifierLeg` and `isAssetIdentifierQuote` type guards are used to narrow the `AssetIdentifier` type to a specific variant, either `Leg` or `Quote`, respectively.
-3. What is the purpose of the `assetIdentifierBeet` constant?
-   - The `assetIdentifierBeet` constant is a `FixableBeet` object that is used to serialize and deserialize `AssetIdentifier` objects using the `beet` library.
+ 1. What is the purpose of the `@convergence-rfq/beet` module being imported?
+- The `@convergence-rfq/beet` module is being imported to define a data structure called `assetIdentifierBeet`.
+
+2. What are the functions `isAssetIdentifierLeg` and `isAssetIdentifierQuote` used for?
+- `isAssetIdentifierLeg` and `isAssetIdentifierQuote` are used to check if an object is of type `Leg` or `Quote`, respectively.
+
+3. What is the format of the `assetIdentifierBeet` data structure?
+- The `assetIdentifierBeet` data structure is defined using the `beet.dataEnum` function and contains two possible values: `Leg` and `Quote`. The `Leg` value is a `BeetArgsStruct` with a single field `legIndex`, while the `Quote` value is simply `beet.unit`.

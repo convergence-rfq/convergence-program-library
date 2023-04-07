@@ -1,45 +1,45 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/types/RiskCategoryInfo.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/types/RiskCategoryInfo.js)
 
-This code defines a TypeScript interface called `RiskCategoryInfo` and exports it along with a corresponding `beet.BeetArgsStruct` instance called `riskCategoryInfoBeet`. The `RiskCategoryInfo` interface defines an object type with three properties: `interestRate`, `annualized30DayVolatility`, and `scenarioPerSettlementPeriod`. The `interestRate` and `annualized30DayVolatility` properties are both numbers, while `scenarioPerSettlementPeriod` is an array of `Scenario` objects with a fixed size of 6.
+This code defines a module called `riskCategoryInfoBeet` that exports an instance of a `BeetArgsStruct` class. The `BeetArgsStruct` constructor takes an array of tuples, where each tuple represents a field in the struct and its type. The `RiskCategoryInfo` struct has three fields: `interestRate` and `annualized30DayVolatility`, both of type `f64` (a 64-bit floating point number), and `scenarioPerSettlementPeriod`, which is an array of 6 `Scenario` structs. 
 
-The purpose of this code is to provide a standardized way of representing risk category information within the larger Convergence Program Library project. The `RiskCategoryInfo` interface can be used as a type for objects that contain risk category information, while the `riskCategoryInfoBeet` instance can be used to serialize and deserialize those objects using the `beet` library.
+The `beet` module is imported from `@convergence-rfq/beet`, which is likely a dependency of the larger Convergence Program Library project. The `Scenario` class is also imported from another file in the same directory called `Scenario.ts`. 
 
-For example, suppose we have an object that represents risk category information for a particular asset:
+Based on the names of the fields and the fact that this module is called `riskCategoryInfoBeet`, it seems likely that this code is defining a data structure for representing information about a financial risk category. The `interestRate` and `annualized30DayVolatility` fields are common metrics used in financial risk analysis, and the `scenarioPerSettlementPeriod` field suggests that this struct is intended to be used in the context of financial derivatives or other instruments that require scenario analysis. 
+
+This module could be used in other parts of the Convergence Program Library project to represent and manipulate risk category information. For example, it might be used to define a data model for a financial risk management application, or to serialize and deserialize risk category information for storage or transmission. 
+
+Here is an example of how this module might be used:
 
 ```
-const myRiskCategoryInfo: RiskCategoryInfo = {
+import { riskCategoryInfoBeet } from '@convergence-rfq/risk-category-info';
+
+const myRiskCategory = {
   interestRate: 0.05,
   annualized30DayVolatility: 0.2,
   scenarioPerSettlementPeriod: [
-    { name: "Scenario 1", value: 0.1 },
-    { name: "Scenario 2", value: 0.2 },
-    { name: "Scenario 3", value: 0.3 },
-    { name: "Scenario 4", value: 0.4 },
-    { name: "Scenario 5", value: 0.5 },
-    { name: "Scenario 6", value: 0.6 },
+    { scenarioName: 'Base', shock: 0 },
+    { scenarioName: 'Stress', shock: 0.1 },
+    { scenarioName: 'Adverse', shock: 0.2 },
+    { scenarioName: 'Severe', shock: 0.3 },
+    { scenarioName: 'Extreme', shock: 0.4 },
+    { scenarioName: 'Worst Case', shock: 0.5 },
   ],
 };
+
+const encodedRiskCategory = riskCategoryInfoBeet.encode(myRiskCategory);
+console.log(encodedRiskCategory); // Uint8Array([...])
+
+const decodedRiskCategory = riskCategoryInfoBeet.decode(encodedRiskCategory);
+console.log(decodedRiskCategory); // { interestRate: 0.05, annualized30DayVolatility: 0.2, scenarioPerSettlementPeriod: [...] }
 ```
 
-We can then use the `riskCategoryInfoBeet` instance to serialize this object into a byte array:
-
-```
-const serialized = riskCategoryInfoBeet.serialize(myRiskCategoryInfo);
-```
-
-And we can use the same instance to deserialize the byte array back into an object:
-
-```
-const deserialized = riskCategoryInfoBeet.deserialize(serialized);
-```
-
-This code is important because it provides a standardized way of representing risk category information that can be used throughout the Convergence Program Library project. By using the `RiskCategoryInfo` interface and the `riskCategoryInfoBeet` instance, developers can ensure that risk category information is consistent and can be easily serialized and deserialized as needed.
+In this example, we create a JavaScript object that represents a risk category, with fields for `interestRate`, `annualized30DayVolatility`, and `scenarioPerSettlementPeriod`. We then use the `riskCategoryInfoBeet` module to encode this object as a binary `Uint8Array`, which could be stored or transmitted as needed. Finally, we decode the binary data back into a JavaScript object using the `decode` method provided by the `riskCategoryInfoBeet` instance.
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The code is a generated file using the solita package and is not meant to be edited directly. It defines a type called RiskCategoryInfo and exports it along with a corresponding beet.BeetArgsStruct.
+ 1. What is the purpose of this code file?
+- This code file exports a `riskCategoryInfoBeet` object that defines a data structure for storing risk category information.
 
-2. What is the RiskCategoryInfo type and what information does it contain?
-- The RiskCategoryInfo type contains three fields: interestRate (a number), annualized30DayVolatility (a number), and scenarioPerSettlementPeriod (an array of 6 Scenario objects).
+2. What is the role of the `beet` and `Scenario_1` modules?
+- The `beet` module is imported to define the data structure using the `BeetArgsStruct` class. The `Scenario_1` module is imported to define the `scenarioBeet` data structure used in the `scenarioPerSettlementPeriod` field.
 
-3. What is the purpose of the beet package and how is it used in this code?
-- The beet package is used to define and serialize/deserialize binary data structures. In this code, it is used to define the structure of the RiskCategoryInfo type and create a corresponding beet.BeetArgsStruct object for it.
+3. What is the significance of the `use strict` statement at the beginning of the code?
+- The `use strict` statement enables strict mode in JavaScript, which enforces stricter syntax rules and prevents certain actions that are considered bad practice.

@@ -1,28 +1,33 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/tsconfig.json)
 
-This code is a configuration file for the TypeScript compiler. It specifies the options for compiling TypeScript code into JavaScript. The "extends" property indicates that this configuration file extends another configuration file located at "./tsconfig.build.json". This allows for the reuse of common compiler options across multiple configuration files. 
+This code is a configuration file for the TypeScript compiler. It specifies that the compiler should extend the settings from another configuration file called "tsconfig.build.json". The "compilerOptions" object specifies that the root directory for the compiler should be the current directory. The "include" array specifies which directories should be included in the compilation process. In this case, it includes the "generated" and "idl" directories.
 
-The "compilerOptions" property specifies the root directory for the TypeScript files to be compiled. In this case, the root directory is set to "." which means that all TypeScript files in the current directory will be compiled. 
+This configuration file is important for the Convergence Program Library project because it ensures that the TypeScript code is compiled correctly. TypeScript is a superset of JavaScript that adds static typing and other features to the language. By using TypeScript, the Convergence Program Library can catch errors at compile time instead of at runtime, which can save time and effort in the development process.
 
-The "include" property specifies the directories to be included in the compilation process. In this case, it includes the "./generated" and "./idl" directories. This means that any TypeScript files in these directories will also be compiled. 
+Here is an example of how this configuration file might be used in the larger project:
 
-Overall, this configuration file is an important part of the Convergence Program Library project as it ensures that all TypeScript files are compiled correctly and consistently. It can be used by developers to compile their TypeScript code into JavaScript for use in the project. 
-
-Example usage:
-
-Assuming this configuration file is named "tsconfig.json", a developer can run the TypeScript compiler with the following command:
+Suppose that the Convergence Program Library has a TypeScript file called "main.ts" that imports code from the "generated" and "idl" directories. The "main.ts" file might look something like this:
 
 ```
-tsc -p tsconfig.json
+import { GeneratedCode } from './generated';
+import { IdlCode } from './idl';
+
+// Use the generated and IDL code here
 ```
 
-This will compile all TypeScript files in the current directory and the "./generated" and "./idl" directories according to the options specified in the configuration file. The resulting JavaScript files can then be used in the Convergence Program Library project.
+To compile this file, the developer would run the TypeScript compiler with the configuration file:
+
+```
+tsc --project tsconfig.json
+```
+
+This would compile the "main.ts" file and any other files in the "generated" and "idl" directories that are referenced by the "main.ts" file. The resulting JavaScript code could then be run in a web browser or on a server.
 ## Questions: 
- 1. What is the purpose of the `tsconfig.build.json` file that this code is extending from?
-- The `tsconfig.build.json` file likely contains configuration options for building the TypeScript code, and this file is extending those options.
+ 1. What is the purpose of the "extends" property in the JSON object?
+   - The "extends" property is used to inherit settings from another configuration file, in this case, "./tsconfig.build.json".
 
-2. What is the significance of setting the `rootDir` compiler option to `.`?
-- Setting `rootDir` to `.` likely means that the root directory for the TypeScript files is the current directory.
+2. What is the significance of the "rootDir" property in the "compilerOptions" object?
+   - The "rootDir" property specifies the root directory of the input files, which will be used to determine the output directory structure.
 
-3. What directories are being included in the compilation process?
-- The `generated` and `idl` directories are being included in the compilation process.
+3. What directories are included in the "include" property array?
+   - The "include" property array includes the "./generated" and "./idl" directories, which will be included in the compilation process.

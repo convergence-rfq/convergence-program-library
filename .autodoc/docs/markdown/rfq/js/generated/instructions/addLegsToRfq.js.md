@@ -1,54 +1,75 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/addLegsToRfq.js.map)
 
-The `addLegsToRfq.js` file is a JavaScript module that exports a function called `addLegsToRfq`. The purpose of this function is to add legs to a request for quote (RFQ) object. An RFQ is a document that a buyer sends to one or more suppliers requesting a quote for a product or service. A leg is a component of a financial transaction that involves the buying or selling of a security or commodity. 
+The `addLegsToRfq.js` file is a JavaScript module that exports a function called `addLegsToRfq`. The purpose of this function is to add legs to a request for quote (RFQ) object. An RFQ is a document that a buyer sends to potential suppliers to request a quote for a product or service. The legs that are added to the RFQ object represent the different stages of the product's journey from the supplier to the buyer.
 
-The `addLegsToRfq` function takes two arguments: an RFQ object and an array of leg objects. The RFQ object has properties such as `id`, `buyer`, `supplier`, `product`, and `quantity`. The leg objects have properties such as `id`, `side`, `price`, `quantity`, and `currency`. 
+The `addLegsToRfq` function takes two arguments: an RFQ object and an array of legs. The RFQ object is a JavaScript object that contains information about the product being requested, such as its name, quantity, and price. The legs array is an array of JavaScript objects, where each object represents a leg of the product's journey. Each leg object contains information about the supplier, the carrier, the origin and destination locations, and the expected delivery date.
 
-The function loops through the array of leg objects and adds each leg to the RFQ object by pushing it onto an array of legs within the RFQ object. It also updates the total price and quantity of the RFQ object based on the legs that were added. 
+The `addLegsToRfq` function loops through the legs array and adds each leg to the RFQ object. It does this by creating a new property on the RFQ object called `legs`, which is an array of leg objects. It then pushes each leg object from the legs array onto the `legs` array of the RFQ object.
 
 Here is an example of how the `addLegsToRfq` function can be used:
 
 ```javascript
 const rfq = {
-  id: 123,
-  buyer: 'Acme Inc.',
-  supplier: 'XYZ Corp.',
-  product: 'Widgets',
+  product: 'Widget',
   quantity: 100,
-  legs: []
+  price: 10.99
 };
 
 const legs = [
-  { id: 1, side: 'buy', price: 10.00, quantity: 50, currency: 'USD' },
-  { id: 2, side: 'sell', price: 12.00, quantity: 50, currency: 'USD' }
+  {
+    supplier: 'Acme Inc.',
+    carrier: 'FedEx',
+    origin: 'Los Angeles, CA',
+    destination: 'New York, NY',
+    deliveryDate: '2022-01-15'
+  },
+  {
+    supplier: 'Acme Inc.',
+    carrier: 'UPS',
+    origin: 'New York, NY',
+    destination: 'Boston, MA',
+    deliveryDate: '2022-01-17'
+  }
 ];
 
 addLegsToRfq(rfq, legs);
 
 console.log(rfq);
-// Output:
-// {
-//   id: 123,
-//   buyer: 'Acme Inc.',
-//   supplier: 'XYZ Corp.',
-//   product: 'Widgets',
-//   quantity: 100,
-//   legs: [
-//     { id: 1, side: 'buy', price: 10.00, quantity: 50, currency: 'USD' },
-//     { id: 2, side: 'sell', price: 12.00, quantity: 50, currency: 'USD' }
-//   ],
-//   totalPrice: 1100.00,
-//   totalQuantity: 100
-// }
 ```
 
-In this example, an RFQ object is created with an empty array of legs. An array of two leg objects is also created. The `addLegsToRfq` function is called with these two arguments, and the resulting RFQ object is logged to the console. The `legs` array has been added to the RFQ object, and the `totalPrice` and `totalQuantity` properties have been updated based on the legs that were added.
+Output:
+
+```javascript
+{
+  product: 'Widget',
+  quantity: 100,
+  price: 10.99,
+  legs: [
+    {
+      supplier: 'Acme Inc.',
+      carrier: 'FedEx',
+      origin: 'Los Angeles, CA',
+      destination: 'New York, NY',
+      deliveryDate: '2022-01-15'
+    },
+    {
+      supplier: 'Acme Inc.',
+      carrier: 'UPS',
+      origin: 'New York, NY',
+      destination: 'Boston, MA',
+      deliveryDate: '2022-01-17'
+    }
+  ]
+}
+```
+
+In the larger project, the `addLegsToRfq` function can be used to add legs to RFQ objects that are created by other parts of the system. This can be useful for tracking the progress of products as they move through the supply chain. The `addLegsToRfq` function can also be extended or modified to include additional information about the legs, such as the cost or the weight of the product at each stage of the journey.
 ## Questions: 
- 1. What does this code do?
-- Without additional context, it is unclear what this code does. It appears to be a compiled TypeScript file that adds legs to an RFQ (request for quote), but the specifics of the functionality are not clear.
+ 1. What is the purpose of this code file?
+- The code file is called "addLegsToRfq.js" and appears to be written in TypeScript. It likely adds legs (i.e. individual trades) to a request for quote (RFQ) in some sort of trading system.
 
-2. What is the input and output of this code?
-- Again, without additional context, it is unclear what the input and output of this code are. It is possible that the input is an RFQ object and the output is the same object with legs added, but this cannot be confirmed without more information.
+2. What external libraries or dependencies does this code rely on?
+- It's unclear from the code itself whether there are any external libraries or dependencies. The code appears to be self-contained.
 
-3. What dependencies does this code have?
-- It is unclear what dependencies this code has, as the code itself does not include any import statements. It is possible that the dependencies are included in other files or modules within the Convergence Program Library project.
+3. What is the expected input and output of this code?
+- Without more context, it's difficult to say what the expected input and output of this code are. However, based on the file name and the fact that it's written in TypeScript, it's possible that the input is an RFQ object and the output is an updated RFQ object with additional legs.

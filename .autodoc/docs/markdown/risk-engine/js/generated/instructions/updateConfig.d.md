@@ -1,48 +1,26 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/updateConfig.d.ts)
 
-This code is a TypeScript module that exports several types and functions related to updating configuration settings for a protocol. The module imports two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
+This code defines a set of types and functions related to updating the configuration of a protocol in the Convergence Program Library. The protocol is designed for creating and trading options contracts on the Solana blockchain. 
 
-The main type exported by this module is "UpdateConfigInstructionArgs", which defines the arguments needed to update the configuration settings for a protocol. These arguments include various collateral amounts, safety factors, and oracle settings. Each argument is defined as a "beet.COption" type, which is a custom type from the "@convergence-rfq/beet" library that represents an optional value with a default fallback.
+The `import` statements at the beginning of the code bring in two external libraries: `@convergence-rfq/beet` and `@solana/web3.js`. The former provides a set of utility functions for working with big numbers, while the latter is a library for interacting with the Solana blockchain.
 
-The module also exports a "updateConfigStruct" constant, which is a "FixableBeetArgsStruct" type from the "@convergence-rfq/beet" library. This constant defines the structure of the arguments needed to update the configuration settings, including the instruction discriminator.
+The `UpdateConfigInstructionArgs` type defines a set of arguments that can be passed to a function for updating the protocol configuration. These arguments include various collateral amounts, safety factors, and oracle settings. The `COption` type is used to indicate that these arguments are optional.
 
-The module exports another type called "UpdateConfigInstructionAccounts", which defines the accounts needed to execute the update configuration instruction. These accounts include the authority, protocol, and config accounts, as well as an optional array of remaining accounts.
+The `updateConfigStruct` constant defines a data structure that combines the `UpdateConfigInstructionArgs` type with an additional `instructionDiscriminator` field. This field is an array of numbers that serves as a unique identifier for this particular type of instruction within the Solana blockchain.
 
-The module also exports a constant called "updateConfigInstructionDiscriminator", which is an array of numbers that represents the instruction discriminator for the update configuration instruction.
+The `UpdateConfigInstructionAccounts` type defines a set of accounts that are required to execute the update configuration instruction. These include the authority that is authorized to make changes to the protocol, the protocol account itself, and the configuration account that will be updated. The `anchorRemainingAccounts` field is optional and can be used to include additional accounts that may be required by the Solana blockchain.
 
-Finally, the module exports a function called "createUpdateConfigInstruction", which takes in the necessary accounts and arguments and returns a "web3.TransactionInstruction" object that can be used to execute the update configuration instruction.
+The `updateConfigInstructionDiscriminator` constant is simply an array of numbers that matches the `instructionDiscriminator` field in the `updateConfigStruct` constant.
 
-Overall, this module provides a way to update the configuration settings for a protocol using the Solana blockchain. It defines the necessary types and functions to create and execute the update configuration instruction. This module is likely used in conjunction with other modules and functions to create a larger program or application that utilizes the Convergence Program Library. 
+Finally, the `createUpdateConfigInstruction` function takes in the required accounts and arguments and returns a `TransactionInstruction` object that can be used to execute the update configuration instruction on the Solana blockchain.
 
-Example usage:
-
-```
-import { createUpdateConfigInstruction } from "convergence-program-library";
-
-const accounts = {
-  authority: authorityPublicKey,
-  protocol: protocolPublicKey,
-  config: configPublicKey,
-};
-
-const args = {
-  collateralForVariableSizeRfqCreation: new beet.COption(100),
-  collateralForFixedQuoteAmountRfqCreation: new beet.COption(200),
-  collateralMintDecimals: new beet.COption(6),
-  safetyPriceShiftFactor: new beet.COption(0.1),
-  overallSafetyFactor: new beet.COption(0.2),
-  acceptedOracleStaleness: new beet.COption(new beet.bignum(10)),
-  acceptedOracleConfidenceIntervalPortion: new beet.COption(0.5),
-};
-
-const instruction = createUpdateConfigInstruction(accounts, args, programId);
-```
+Overall, this code provides a set of types and functions that can be used to update the configuration of the Convergence Program Library protocol on the Solana blockchain. By allowing for flexible collateral amounts, safety factors, and oracle settings, this protocol can be customized to meet the needs of different options traders.
 ## Questions: 
  1. What external libraries or dependencies does this code rely on?
 - This code relies on two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
 
 2. What is the purpose of the UpdateConfigInstructionArgs type and what are its properties?
-- The UpdateConfigInstructionArgs type defines a set of optional properties that can be used to update the configuration of a protocol. These properties include collateral amounts, safety factors, and oracle settings.
+- The UpdateConfigInstructionArgs type defines a set of optional properties that can be used to configure a protocol. These properties include collateral amounts, safety factors, and oracle settings.
 
-3. What is the purpose of the createUpdateConfigInstruction function and what arguments does it take?
-- The createUpdateConfigInstruction function creates a Solana transaction instruction for updating the configuration of a protocol. It takes two arguments: an object containing the necessary accounts for the transaction, and an object containing the configuration updates to be made. An optional third argument can be used to specify the program ID.
+3. What is the createUpdateConfigInstruction function used for and what arguments does it take?
+- The createUpdateConfigInstruction function is used to create a transaction instruction for updating a protocol's configuration. It takes an object containing account information and an object containing configuration arguments, as well as an optional program ID.

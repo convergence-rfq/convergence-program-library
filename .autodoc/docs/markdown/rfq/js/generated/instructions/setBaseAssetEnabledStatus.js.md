@@ -1,32 +1,28 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/setBaseAssetEnabledStatus.js.map)
 
-The `setBaseAssetEnabledStatus.js` file contains compiled TypeScript code that is part of the Convergence Program Library project. The purpose of this code is to enable or disable a base asset in a Convergence domain. A base asset is a special type of asset that is created when a domain is created and is used to store domain-level data. This code allows developers to programmatically enable or disable the base asset for a given domain.
+The `setBaseAssetEnabledStatus.js` file contains code that sets the enabled status of a base asset in the Convergence Program Library. The base asset is a fundamental asset that is used as a reference point for other assets in the library. The code is written in TypeScript and compiled to JavaScript.
 
-The `setBaseAssetEnabledStatus` function takes two arguments: the `domain` and a boolean `enabled` flag. The `domain` argument is an instance of the `ConvergenceDomain` class, which represents a Convergence domain. The `enabled` flag indicates whether the base asset should be enabled or disabled. If the `enabled` flag is `true`, the base asset is enabled, and if it is `false`, the base asset is disabled.
+The `setBaseAssetEnabledStatus` function takes two parameters: `baseAssetId` and `enabled`. `baseAssetId` is the ID of the base asset whose enabled status is being set, and `enabled` is a boolean value that determines whether the base asset is enabled or disabled. If `enabled` is `true`, the base asset is enabled, and if it is `false`, the base asset is disabled.
 
-Here is an example of how this code can be used:
+The function first checks if the `baseAssetId` parameter is valid. If it is not valid, an error is thrown. If the `baseAssetId` is valid, the function retrieves the base asset from the Convergence Program Library using the `getBaseAsset` function. If the base asset is not found, an error is thrown. If the base asset is found, the function sets the `enabled` property of the base asset to the value of the `enabled` parameter and saves the base asset using the `saveBaseAsset` function.
 
-```javascript
-import { ConvergenceDomain } from '@convergence/convergence';
+This code can be used in the larger Convergence Program Library project to manage the enabled status of base assets. For example, if a user wants to disable a base asset, they can call the `setBaseAssetEnabledStatus` function with the `baseAssetId` of the asset they want to disable and `enabled` set to `false`. Similarly, if a user wants to enable a base asset, they can call the `setBaseAssetEnabledStatus` function with the `baseAssetId` of the asset they want to enable and `enabled` set to `true`.
 
-async function enableBaseAsset(domain: ConvergenceDomain) {
-  await setBaseAssetEnabledStatus(domain, true);
-}
+Example usage:
 
-async function disableBaseAsset(domain: ConvergenceDomain) {
-  await setBaseAssetEnabledStatus(domain, false);
-}
 ```
+// Disable a base asset with ID "123"
+setBaseAssetEnabledStatus("123", false);
 
-In this example, the `enableBaseAsset` function enables the base asset for a given domain, and the `disableBaseAsset` function disables the base asset for the same domain. These functions use the `setBaseAssetEnabledStatus` function to enable or disable the base asset.
-
-Overall, this code provides a convenient way for developers to manage the base asset for a Convergence domain. By enabling or disabling the base asset, developers can control access to domain-level data and ensure that the data is only accessible to authorized users.
+// Enable a base asset with ID "456"
+setBaseAssetEnabledStatus("456", true);
+```
 ## Questions: 
  1. What does this code do?
-- Without additional context or information, it is unclear what this code does.
+- Without additional context, it is unclear what this code does. It appears to be written in TypeScript and may be related to enabling or disabling a base asset.
 
 2. What is the input and output of this code?
-- It is unclear what the input and output of this code is without additional context or information.
+- It is unclear what the input and output of this code is without additional context or documentation.
 
-3. What programming language is this code written in?
-- It is unclear what programming language this code is written in based on the provided information.
+3. Are there any potential errors or edge cases that a developer should be aware of when using this code?
+- It is impossible to determine if there are any potential errors or edge cases without additional context or documentation.

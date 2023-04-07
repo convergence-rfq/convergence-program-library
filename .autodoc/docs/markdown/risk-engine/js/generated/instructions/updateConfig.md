@@ -1,39 +1,40 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/updateConfig.ts)
 
-This code defines an instruction for updating the configuration of a program called Convergence Program Library. The instruction takes in several arguments related to the configuration of the program, such as collateral amounts, safety factors, and oracle settings. It also defines the accounts required for the instruction to execute, including the authority, protocol, and config accounts.
+This code defines an instruction for updating the configuration of a program called Convergence Program Library. The instruction takes in several arguments related to the configuration and returns a transaction instruction that can be executed on the Solana blockchain.
 
-The code uses the solita package to generate the instruction, which is then serialized using the beet package. The instruction is created using the createUpdateConfigInstruction function, which takes in the required accounts and arguments and returns a TransactionInstruction object that can be used to execute the instruction.
+The code imports two packages, beet and web3, which are used to define the instruction arguments and accounts. The UpdateConfigInstructionArgs type defines the arguments that can be passed to the instruction, including collateral amounts, safety factors, and oracle parameters. The updateConfigStruct variable defines a FixableBeetArgsStruct object that serializes the arguments into a byte array that can be passed to the Solana blockchain.
 
-This instruction is part of a larger project that likely involves managing and executing financial transactions on the Solana blockchain. The ability to update the program's configuration is important for ensuring that it remains up-to-date and can handle changing market conditions. The use of packages like solita and beet suggests that the project is leveraging existing tools and libraries to simplify the development process. 
+The UpdateConfigInstructionAccounts type defines the accounts required for the instruction, including the authority, protocol, and config accounts. The createUpdateConfigInstruction function takes in these accounts and the instruction arguments and returns a transaction instruction that can be executed on the Solana blockchain.
 
-Example usage:
+Overall, this code provides a way to update the configuration of the Convergence Program Library program on the Solana blockchain. It can be used in conjunction with other instructions to create a complete program that can be executed by users on the blockchain. An example of using this instruction in a program might look like:
 
 ```
-const accounts = {
+const updateConfigAccounts = {
   authority: authorityPubkey,
   protocol: protocolPubkey,
   config: configPubkey,
-  anchorRemainingAccounts: remainingAccounts,
 };
 
-const args = {
-  collateralForVariableSizeRfqCreation: beet.some(beet.u64(100)),
-  collateralForFixedQuoteAmountRfqCreation: beet.some(beet.u64(200)),
-  collateralMintDecimals: beet.some(6),
-  safetyPriceShiftFactor: beet.some(0.5),
-  overallSafetyFactor: beet.some(0.8),
-  acceptedOracleStaleness: beet.some(beet.u64(10)),
-  acceptedOracleConfidenceIntervalPortion: beet.some(0.1),
+const updateConfigArgs = {
+  collateralForVariableSizeRfqCreation: new beet.COption(beet.bignum.fromNumber(100)),
+  collateralForFixedQuoteAmountRfqCreation: new beet.COption(beet.bignum.fromNumber(200)),
+  collateralMintDecimals: new beet.COption(6),
+  safetyPriceShiftFactor: new beet.COption(0.5),
+  overallSafetyFactor: new beet.COption(0.8),
+  acceptedOracleStaleness: new beet.COption(beet.bignum.fromNumber(10)),
+  acceptedOracleConfidenceIntervalPortion: new beet.COption(0.9),
 };
 
-const instruction = createUpdateConfigInstruction(accounts, args);
+const updateConfigIx = createUpdateConfigInstruction(updateConfigAccounts, updateConfigArgs);
+
+await web3.sendAndConfirmTransaction(connection, new web3.Transaction().add(updateConfigIx), [authority]);
 ```
 ## Questions: 
- 1. What is the purpose of this code and what does it do?
-- This code defines an instruction and accounts required for updating configuration in a program called Convergence Program Library. It also provides a function to create the instruction.
+ 1. What is the purpose of this code?
+- This code defines an instruction and accounts required for updating configuration in a program using the Convergence Program Library.
 
-2. What external packages or dependencies does this code rely on?
-- This code imports two external packages: "@convergence-rfq/beet" and "@solana/web3.js".
+2. What is the significance of the solita package and the metaplex-foundation/solita repository?
+- The solita package was used to generate this code, and the metaplex-foundation/solita repository contains the source code for the solita package.
 
-3. Can this code be edited directly or is there a recommended way to modify it?
-- The code explicitly states that it should not be edited directly and instead recommends rerunning the solita package to update it or writing a wrapper to add functionality.
+3. What is the expected input and output of the `createUpdateConfigInstruction` function?
+- The `createUpdateConfigInstruction` function takes in `accounts` and `args` as parameters and returns a `TransactionInstruction`. The `accounts` parameter is an object containing the required accounts for the instruction, and the `args` parameter is an object containing the arguments for the instruction.

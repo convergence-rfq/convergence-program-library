@@ -2,39 +2,19 @@
 
 This code defines an instruction and associated accounts for the Convergence Program Library project. Specifically, it provides functionality for unlocking RFQ (Request for Quote) collateral. 
 
-The `unlockRfqCollateralStruct` constant defines a `BeetArgsStruct` object that specifies the instruction discriminator as an array of 8 unsigned 8-bit integers. This is used to identify the instruction when it is executed on the Solana blockchain. 
+The `unlockRfqCollateralStruct` constant defines the structure of the instruction arguments, which consists of a single field `instructionDiscriminator` of type `number[]`. This field is used to differentiate this instruction from others that may be present in the program. 
 
-The `UnlockRfqCollateralInstructionAccounts` type defines the accounts required for the instruction to execute. These include the `protocol` account, which is read-only, and the `rfq` and `collateralInfo` accounts, which are writable. Additionally, there is an optional `anchorRemainingAccounts` property that can be used to specify any additional accounts required by the instruction. 
+The `UnlockRfqCollateralInstructionAccounts` type defines the accounts required by the instruction. These include the `protocol` account, which is read-only, and the `rfq` and `collateralInfo` accounts, which are writable. Additionally, there is an optional `anchorRemainingAccounts` field, which is an array of additional accounts that may be required by the instruction. 
 
-The `createUnlockRfqCollateralInstruction` function takes an `UnlockRfqCollateralInstructionAccounts` object and a `programId` as input, and returns a `TransactionInstruction` object that can be used to execute the instruction on the Solana blockchain. The function first serializes the instruction discriminator using the `unlockRfqCollateralStruct` object, and then creates an array of `AccountMeta` objects that includes the required accounts and any additional accounts specified in `anchorRemainingAccounts`. Finally, it returns a `TransactionInstruction` object that includes the program ID, account metadata, and serialized instruction discriminator. 
+The `createUnlockRfqCollateralInstruction` function creates a new `TransactionInstruction` object that can be used to invoke the `unlockRfqCollateral` instruction. It takes an `UnlockRfqCollateralInstructionAccounts` object as input, along with an optional `programId` parameter that specifies the ID of the program that contains the instruction. The function serializes the instruction arguments using the `unlockRfqCollateralStruct` constant, and constructs an array of `AccountMeta` objects that specify the accounts that will be accessed during the instruction. Finally, it returns a new `TransactionInstruction` object that can be included in a transaction to invoke the instruction. 
 
-This code is part of a larger project that likely includes other instructions and functionality related to RFQ collateral management. It is intended to be used by developers building on the Convergence Program Library to facilitate the creation and execution of RFQ collateral unlocking transactions on the Solana blockchain. 
-
-Example usage:
-
-```
-const accounts = {
-  protocol: new web3.PublicKey("..."),
-  rfq: new web3.PublicKey("..."),
-  collateralInfo: new web3.PublicKey("..."),
-  anchorRemainingAccounts: [
-    {
-      pubkey: new web3.PublicKey("..."),
-      isWritable: true,
-      isSigner: false,
-    },
-    // additional accounts as needed
-  ],
-};
-
-const instruction = createUnlockRfqCollateralInstruction(accounts);
-```
+Overall, this code provides a convenient way to create and invoke the `unlockRfqCollateral` instruction in the Convergence Program Library project. Developers can use this code as a building block to create more complex functionality that interacts with RFQ collateral. For example, they might create a function that unlocks collateral for a specific RFQ, or that checks the status of a collateral account.
 ## Questions: 
- 1. What is the purpose of this code and what does it do?
-   - This code defines an instruction and accounts required for unlocking RFQ collateral in a Solana program library called Convergence. It also provides a function to create the instruction.
+ 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
+- The code is part of the Convergence Program Library, but it is unclear what the library is for or what other functionality it provides.
 
-2. What is the significance of the `solita` package and why is it mentioned in the code comments?
-   - The `solita` package was used to generate this code, and the comments warn against editing the file directly. Instead, developers should rerun `solita` to update the code or write a wrapper to add functionality.
+2. What is the `unlockRfqCollateral` instruction and how is it used?
+- The code defines a `createUnlockRfqCollateralInstruction` function that takes in `UnlockRfqCollateralInstructionAccounts` and returns a `TransactionInstruction`. It is unclear what this instruction does or how it is used.
 
-3. What is the expected format and content of the `UnlockRfqCollateralInstructionAccounts` type?
-   - The `UnlockRfqCollateralInstructionAccounts` type is an object that specifies the required accounts for the `unlockRfqCollateral` instruction. It includes properties for `protocol`, `rfq`, and `collateralInfo` public keys, and an optional `anchorRemainingAccounts` array of `AccountMeta` objects.
+3. What is the `beet` package and why is it being used in this code?
+- The code imports the `beet` package, but it is unclear what this package is or why it is being used in this code.

@@ -1,28 +1,33 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/DefaultingParty.d.ts)
 
-The code above is a TypeScript module that exports an enum and a constant variable. It also imports a library called "@convergence-rfq/beet". 
+The code above is a TypeScript module that exports an enum and a constant variable. The enum is called `DefaultingParty` and it has three possible values: `Taker`, `Maker`, and `Both`. These values represent the defaulting party in a financial transaction. The `Taker` is the party that receives the asset, the `Maker` is the party that provides the asset, and the `Both` is used when both parties are responsible for the transaction.
 
-The enum is called "DefaultingParty" and it has three possible values: Taker, Maker, and Both. This enum is used to represent the defaulting party in a financial transaction. The Taker is the party that receives the asset, the Maker is the party that provides the asset, and Both means that either party can default.
+The constant variable is called `defaultingPartyBeet` and it is of type `beet.FixedSizeBeet<DefaultingParty, DefaultingParty>`. This variable is used to create a fixed-size binary encoding and decoding scheme for the `DefaultingParty` enum. The `beet` library is used to create this encoding scheme.
 
-The constant variable is called "defaultingPartyBeet" and it is of type "beet.FixedSizeBeet<DefaultingParty, DefaultingParty>". This variable is used to serialize and deserialize the DefaultingParty enum. The "@convergence-rfq/beet" library provides a way to encode and decode data in a compact binary format. The FixedSizeBeet class is used to define a fixed-size encoding for a specific data type. In this case, the DefaultingParty enum is encoded as a single byte.
+This module can be used in the larger Convergence Program Library project to handle financial transactions. The `DefaultingParty` enum can be used to specify the defaulting party in a transaction, and the `defaultingPartyBeet` constant can be used to encode and decode this value in a fixed-size binary format. This can be useful when transmitting financial data over a network or storing it in a database.
 
-This module can be used in the Convergence Program Library to handle defaulting parties in financial transactions. For example, if the library has a function that takes a DefaultingParty parameter, it can use the defaultingPartyBeet variable to encode and decode the parameter. Here's an example:
+Here is an example of how this module can be used:
 
 ```typescript
-import { DefaultingParty, defaultingPartyBeet } from "convergence-program-library";
+import { DefaultingParty, defaultingPartyBeet } from "@convergence-rfq/financial";
 
-function processTransaction(defaultingParty: DefaultingParty) {
-  const encoded = defaultingPartyBeet.encode(defaultingParty);
-  // send the encoded data over the network
-  // ...
-  // receive the encoded data from the network
-  const decoded = defaultingPartyBeet.decode(encoded);
-  // use the decoded data
-  // ...
-}
+const transaction = {
+  defaultingParty: DefaultingParty.Taker,
+  // other transaction data
+};
+
+// Encode the defaulting party value as a fixed-size binary string
+const encoded = defaultingPartyBeet.encode(transaction.defaultingParty);
+
+// Transmit the encoded data over a network or store it in a database
+
+// Decode the fixed-size binary string back into the DefaultingParty enum
+const decoded = defaultingPartyBeet.decode(encoded);
+
+console.log(decoded); // Output: DefaultingParty.Taker
 ```
 
-In this example, the processTransaction function takes a DefaultingParty parameter and uses the defaultingPartyBeet variable to encode and decode it. The encoded data can be sent over the network and decoded on the other side. This allows the library to communicate with other systems that use the same binary format.
+In this example, we create a `transaction` object with a `defaultingParty` property set to `DefaultingParty.Taker`. We then use the `defaultingPartyBeet` constant to encode this value as a fixed-size binary string. This string can then be transmitted over a network or stored in a database. Later, we can decode the string back into the `DefaultingParty` enum using the `defaultingPartyBeet` constant.
 ## Questions: 
  1. What is the purpose of the "@convergence-rfq/beet" import?
 - The "@convergence-rfq/beet" import is likely a library or module that provides functionality related to fixed-size data structures.

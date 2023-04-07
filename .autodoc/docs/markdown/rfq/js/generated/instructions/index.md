@@ -1,12 +1,26 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/index.ts)
 
-This code exports a series of modules from various files within the Convergence Program Library project. These modules likely contain functions and classes that are used throughout the larger project to perform various actions related to trading and settlement of financial instruments.
+This code exports a set of modules from various files within the Convergence Program Library project. Each module represents a specific functionality or action that can be performed within the larger project. 
 
-For example, the "addBaseAsset" module may contain a function that adds a new base asset to the system, while the "createRfq" module likely contains a function that creates a new request for quote (RFQ) for a particular instrument. The "settle" module may contain a function that settles a trade between two parties, while the "withdrawCollateral" module may contain a function that allows a user to withdraw their collateral from the system.
+For example, the "addBaseAsset" module likely adds a new base asset to the project, while "createRfq" likely creates a new request for quote. These modules can be imported and used within other files or components of the project to perform specific actions or implement certain features.
 
-By exporting these modules, other files within the project can import and use them as needed. For example, a file that handles user input for creating a new RFQ may import the "createRfq" module to actually create the RFQ object.
+By exporting these modules, the code allows for easy access and integration of these functionalities into the larger project. This can help streamline development and ensure consistency across the project.
 
-Overall, this code serves as a way to organize and modularize the various functions and classes needed for the Convergence Program Library project, making it easier to maintain and update the codebase over time.
+Here is an example of how one of these modules might be imported and used within another file:
+
+```
+import { createRfq } from "./createRfq";
+
+const newRfq = createRfq({
+  instrument: "BTC/USD",
+  quantity: 10,
+  price: 50000
+});
+
+console.log(newRfq); // outputs the newly created request for quote object
+```
+
+Overall, this code serves as a way to organize and modularize the various functionalities of the Convergence Program Library project, making it easier to develop and maintain.
 ## Questions: 
  1. What is the purpose of this code file?
 - This code file exports various functions from different modules within the Convergence Program Library.

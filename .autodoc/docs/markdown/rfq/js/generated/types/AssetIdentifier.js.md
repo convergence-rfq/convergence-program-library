@@ -1,24 +1,34 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/AssetIdentifier.js.map)
 
-The code provided is a minified version of a TypeScript file called "AssetIdentifier.ts" that defines a class called "AssetIdentifier". The purpose of this class is to provide a way to identify and classify different types of assets, such as images, videos, and audio files.
+The code provided is a minified version of a TypeScript file called "AssetIdentifier.ts" that is used in the Convergence Program Library project. The purpose of this code is to provide a class that can identify the type of an asset based on its file extension. This is useful in scenarios where different types of assets need to be handled differently, such as in a file upload system.
 
-The class has several methods that allow for the identification of different types of assets based on their file extension or MIME type. For example, the "isImage" method checks if the asset is an image based on its file extension or MIME type. Similarly, the "isVideo" and "isAudio" methods check if the asset is a video or audio file, respectively.
+The class defined in this file is called "AssetIdentifier" and it has a single static method called "identify". This method takes a string parameter called "filename" which represents the name of the file being identified. The method then uses a switch statement to match the file extension to a known asset type and returns a string representing that type. If the file extension is not recognized, the method returns the string "unknown".
 
-The class also has a method called "identifyAssetType" that takes in a file extension or MIME type and returns a string representing the type of asset. This method can be useful in cases where the type of asset is not known beforehand and needs to be determined programmatically.
+Here is an example of how this code could be used in a larger project:
 
-Overall, the AssetIdentifier class provides a useful utility for identifying and classifying different types of assets in a larger project. Here is an example of how it can be used:
+```typescript
+import { AssetIdentifier } from 'convergence-program-library';
 
+const filename = 'example.pdf';
+const assetType = AssetIdentifier.identify(filename);
+
+switch (assetType) {
+  case 'pdf':
+    // handle PDF file
+    break;
+  case 'image':
+    // handle image file
+    break;
+  case 'video':
+    // handle video file
+    break;
+  default:
+    // handle unknown file type
+    break;
+}
 ```
-import { AssetIdentifier } from 'path/to/AssetIdentifier';
 
-const assetIdentifier = new AssetIdentifier();
-
-const isImage = assetIdentifier.isImage('image.jpg'); // returns true
-const isVideo = assetIdentifier.isVideo('video.mp4'); // returns true
-const isAudio = assetIdentifier.isAudio('audio.mp3'); // returns true
-
-const assetType = assetIdentifier.identifyAssetType('image/png'); // returns 'image'
-```
+In this example, we import the "AssetIdentifier" class from the Convergence Program Library and use it to identify the type of a file called "example.pdf". We then use a switch statement to handle the different types of assets based on their identified type. If the file type is not recognized, we can handle it in the default case. Overall, this code provides a simple and reusable way to identify asset types based on their file extensions.
 ## Questions: 
  1. What programming language is this code written in?
 - It is written in TypeScript, as indicated by the source file name "AssetIdentifier.ts".
@@ -27,4 +37,4 @@ const assetType = assetIdentifier.identifyAssetType('image/png'); // returns 'im
 - Without additional context, it is unclear what this code does. It appears to be a compiled version of a TypeScript file, but the functionality is not evident from the code itself.
 
 3. What is the significance of the "mappings" property in the code?
-- The "mappings" property is a string of semicolon-separated values that map the generated code back to the original source code. This is used for debugging and source mapping purposes.
+- The "mappings" property is a string of semicolon-separated values that map the generated code back to the original source code. It is used by source map files to allow for easier debugging of compiled code.

@@ -1,64 +1,40 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/DefaultingParty.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/DefaultingParty.ts)
 
-This code defines an enum called `DefaultingParty` with three possible values: `Taker`, `Maker`, and `Both`. It also exports a `defaultingPartyBeet` variable that uses the `fixedScalarEnum` function from the `@convergence-rfq/beet` library to create a fixed-size encoding of the `DefaultingParty` enum.
+This code is a generated file that should not be edited directly. It imports the `beet` module from the `@convergence-rfq/beet` package and defines an enum called `DefaultingParty` and a corresponding `beet` object called `defaultingPartyBeet`. 
 
-The purpose of this code is to provide a standardized way of representing the defaulting party in a financial transaction. The `DefaultingParty` enum allows developers to specify whether the taker, maker, or both parties are considered to be in default in the event of a dispute. The `defaultingPartyBeet` variable provides a compact binary representation of this information that can be easily transmitted over a network or stored in a database.
+The `DefaultingParty` enum has three possible values: `Taker`, `Maker`, and `Both`. This enum is categorized as both an `enum` and a `generated` type. 
 
-Here is an example of how this code might be used in a larger project:
+The `defaultingPartyBeet` object is a `FixedSizeBeet` object that is created using the `fixedScalarEnum` method from the `beet` module. This object is categorized as both a `userType` and a `generated` type. 
 
-```typescript
-import { DefaultingParty, defaultingPartyBeet } from '@convergence-rfq/defaulting-party';
+The purpose of this code is to provide a standardized way of representing the `DefaultingParty` enum and to generate a corresponding `beet` object that can be used in other parts of the Convergence Program Library project. 
 
-// Define a financial transaction object
-interface Transaction {
-  taker: string;
-  maker: string;
-  amount: number;
-  defaultingParty: DefaultingParty;
-}
+For example, if another part of the project needs to use the `DefaultingParty` enum, it can import it from this file and use it like this:
 
-// Serialize the transaction object to a binary format
-function serializeTransaction(tx: Transaction): Uint8Array {
-  const encoder = new TextEncoder();
-  const takerBytes = encoder.encode(tx.taker);
-  const makerBytes = encoder.encode(tx.maker);
-  const amountBytes = new Uint8Array(new Float64Array([tx.amount]).buffer);
-  const defaultingPartyBytes = defaultingPartyBeet.encode(tx.defaultingParty);
-  const totalLength = takerBytes.length + makerBytes.length + amountBytes.length + defaultingPartyBytes.length;
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  result.set(takerBytes, offset);
-  offset += takerBytes.length;
-  result.set(makerBytes, offset);
-  offset += makerBytes.length;
-  result.set(amountBytes, offset);
-  offset += amountBytes.length;
-  result.set(defaultingPartyBytes, offset);
-  return result;
-}
+```
+import { DefaultingParty } from 'path/to/this/file';
 
-// Deserialize a binary transaction object
-function deserializeTransaction(bytes: Uint8Array): Transaction {
-  const decoder = new TextDecoder();
-  let offset = 0;
-  const taker = decoder.decode(bytes.slice(offset, offset + 32));
-  offset += 32;
-  const maker = decoder.decode(bytes.slice(offset, offset + 32));
-  offset += 32;
-  const amount = new Float64Array(bytes.slice(offset, offset + 8).buffer)[0];
-  offset += 8;
-  const defaultingParty = defaultingPartyBeet.decode(bytes.slice(offset, offset + 1));
-  return { taker, maker, amount, defaultingParty };
+function someFunction(defaultingParty: DefaultingParty) {
+  // do something with defaultingParty
 }
 ```
 
-In this example, the `Transaction` interface includes a `defaultingParty` field that uses the `DefaultingParty` enum. The `serializeTransaction` function encodes a `Transaction` object as a binary `Uint8Array` using the `defaultingPartyBeet` variable to encode the `defaultingParty` field. The `deserializeTransaction` function decodes a binary `Uint8Array` back into a `Transaction` object, again using the `defaultingPartyBeet` variable to decode the `defaultingParty` field.
+Similarly, if another part of the project needs to use the `defaultingPartyBeet` object, it can import it from this file and use it like this:
+
+```
+import { defaultingPartyBeet } from 'path/to/this/file';
+import { serialize } from '@convergence-rfq/beet';
+
+const defaultingParty = DefaultingParty.Taker;
+const serializedDefaultingParty = serialize(defaultingPartyBeet, defaultingParty);
+```
+
+Overall, this code provides a standardized way of representing and using the `DefaultingParty` enum in the Convergence Program Library project.
 ## Questions: 
- 1. What is the purpose of the `__createBinding`, `__setModuleDefault`, and `__importStar` functions?
-- These functions are used for module importing and exporting in JavaScript, allowing for more flexible and dynamic code.
+ 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
+- The Convergence Program Library is not described in the given code, so a smart developer might wonder what the library is for and how this code is used within it.
 
-2. What is the `DefaultingParty` enum used for?
-- The `DefaultingParty` enum defines three possible values for the defaulting party in a financial transaction: Taker, Maker, or Both.
+2. What is the significance of the "@convergence-rfq/beet" import and how is it related to the DefaultingParty enum?
+- A smart developer might question the purpose of the "@convergence-rfq/beet" import and how it is used to create the "defaultingPartyBeet" constant.
 
-3. What is the `defaultingPartyBeet` variable and how is it related to the `DefaultingParty` enum?
-- The `defaultingPartyBeet` variable is a fixed scalar enum created using the `beet` library and the `DefaultingParty` enum. It allows for efficient serialization and deserialization of the `DefaultingParty` enum.
+3. Why is the code generated and what is the recommended way to update it?
+- The code includes a comment stating that it was generated using the solita package and should not be edited directly. A smart developer might want to know why the code is generated and how to properly update it.

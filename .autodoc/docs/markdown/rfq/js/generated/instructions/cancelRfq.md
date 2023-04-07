@@ -1,18 +1,24 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/cancelRfq.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/cancelRfq.js)
 
-This code defines a set of instructions and accounts required to cancel an RFQ (Request for Quote) in the Convergence Program Library. The code is generated using the solita package and should not be edited directly. Instead, the solita package should be rerun to update the code or a wrapper can be written to add functionality.
+This code defines a function and exports two constants related to cancelling a Request for Quote (RFQ) instruction in the Convergence Program Library. 
 
-The code imports two packages, beet and web3, which are used to define the cancelRfqStruct and CancelRfqInstructionAccounts. The cancelRfqStruct is a BeetArgsStruct that defines the instructionDiscriminator, which is an array of 8 bytes used to identify the instruction. The CancelRfqInstructionAccounts is a type that defines the accounts required to cancel an RFQ, including the taker, protocol, and rfq accounts.
+The `createCancelRfqInstruction` function takes two arguments: `accounts` and `programId`. `accounts` is an object that contains the addresses of the accounts involved in the RFQ transaction, including the taker, protocol, and RFQ accounts. `programId` is a `PublicKey` object that represents the Solana program ID for the RFQ program. 
 
-The createCancelRfqInstruction function is used to create a CancelRfq instruction. It takes in the accounts required to cancel an RFQ and a programId as parameters. The function serializes the instructionDiscriminator using the cancelRfqStruct and creates an array of keys that includes the taker, protocol, and rfq accounts. If there are any remaining accounts, they are added to the keys array. Finally, a new TransactionInstruction is created with the programId, keys, and serialized data.
+The function first serializes the `cancelRfqStruct` object, which is an instance of the `BeetArgsStruct` class from the `@convergence-rfq/beet` library. This object contains an array of tuples, where each tuple contains a field name and a field type. In this case, the only field is `instructionDiscriminator`, which is a fixed-size array of 8 unsigned 8-bit integers (bytes). The `cancelRfqInstructionDiscriminator` constant is an array of 8 bytes that serves as a unique identifier for the cancel RFQ instruction. 
 
-This code is used in the larger Convergence Program Library to cancel RFQs. Developers can use the createCancelRfqInstruction function to create a CancelRfq instruction and pass in the required accounts. The resulting TransactionInstruction can then be used to cancel the RFQ.
+The function then creates an array of `keys` objects, which represent the accounts involved in the RFQ transaction. Each object has three properties: `pubkey`, which is the address of the account; `isWritable`, which indicates whether the account can be modified by the instruction; and `isSigner`, which indicates whether the account needs to sign the transaction. The `keys` array includes the taker, protocol, and RFQ accounts, as well as any additional accounts specified in the `anchorRemainingAccounts` property of the `accounts` object. 
+
+Finally, the function creates a new `TransactionInstruction` object from the `web3.js` library, which represents the cancel RFQ instruction. This object has three properties: `programId`, which is the Solana program ID for the RFQ program; `keys`, which is the array of account keys; and `data`, which is the serialized `cancelRfqStruct` object. The function returns this object. 
+
+The `cancelRfqStruct` and `cancelRfqInstructionDiscriminator` constants are also exported from the module. These can be used by other parts of the Convergence Program Library to create and identify cancel RFQ instructions. 
+
+Overall, this code provides a way to create a cancel RFQ instruction for the Convergence RFQ program on the Solana blockchain. This instruction can be used to cancel an existing RFQ transaction by specifying the addresses of the accounts involved in the transaction and the unique identifier for the cancel instruction.
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The code is part of the Convergence Program Library, but it is unclear what the library is for or what other functionality it provides.
+ 1. What is the purpose of this code?
+- This code exports a function called `createCancelRfqInstruction` that creates a Solana transaction instruction for cancelling an RFQ (Request for Quote) trade.
 
-2. What is the `beet` package and how is it used in this code?
-- The code imports the `beet` package, but it is unclear what it does or how it is used in the `cancelRfqStruct` object.
+2. What external dependencies does this code rely on?
+- This code relies on two external dependencies: `@convergence-rfq/beet` and `@solana/web3.js`.
 
-3. What is the expected input and output of the `createCancelRfqInstruction` function?
-- The function takes an object of `CancelRfqInstructionAccounts` as input and returns a `TransactionInstruction` object, but it is unclear what the expected format of the input object is or what the function does with it.
+3. What is the format of the cancelRfqStruct object?
+- The `cancelRfqStruct` object is an instance of the `BeetArgsStruct` class from the `@convergence-rfq/beet` library. It has one field called `instructionDiscriminator`, which is an array of 8 unsigned 8-bit integers.

@@ -1,34 +1,20 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/calculateCollateralForResponse.ts)
 
-This code is part of the Convergence Program Library and is generated using the solita package. It should not be edited directly, but instead, solita should be rerun to update it or a wrapper should be written to add functionality. The code imports two packages, beet and web3, and defines a struct and function related to the CalculateCollateralForResponse instruction.
+This code defines a set of instructions and accounts related to the "CalculateCollateralForResponse" functionality in the Convergence Program Library. The code is generated using the "solita" package and should not be edited directly. 
 
-The calculateCollateralForResponseStruct is a struct that defines the instructionDiscriminator field as a uniformFixedSizeArray of size 8. The struct is used to serialize and deserialize the instruction arguments for the CalculateCollateralForResponse instruction.
+The code imports two packages, "beet" and "web3", which are used to define the instruction structure and account types. The "beet" package is used to define the structure of the "CalculateCollateralForResponse" instruction arguments, while the "web3" package is used to define the type of the public keys used in the instruction accounts.
 
-The CalculateCollateralForResponseInstructionAccounts type is an object that defines the accounts required by the instruction. It includes rfq, response, and config public keys, and an optional anchorRemainingAccounts array of web3.AccountMeta objects.
+The "calculateCollateralForResponseStruct" variable defines the structure of the instruction arguments, which consists of a single field "instructionDiscriminator" of size 8 bytes. The "CalculateCollateralForResponseInstructionAccounts" type defines the accounts required for the instruction, which include "rfq", "response", and "config" public keys. The "anchorRemainingAccounts" field is optional and can be used to specify additional accounts required by the instruction.
 
-The createCalculateCollateralForResponseInstruction function creates a new CalculateCollateralForResponse instruction. It takes an accounts object and a programId as parameters and returns a new web3.TransactionInstruction object. The function serializes the instruction arguments using the calculateCollateralForResponseStruct and adds the required accounts to the keys array. If anchorRemainingAccounts is not null, it adds each account to the keys array as well.
+The "calculateCollateralForResponseInstructionDiscriminator" variable defines a unique identifier for the instruction, which is used to differentiate it from other instructions in the program. The "createCalculateCollateralForResponseInstruction" function creates a new instruction with the specified accounts and program ID. It serializes the instruction arguments using the "calculateCollateralForResponseStruct" structure and adds the required accounts to the "keys" array. If additional accounts are specified in the "anchorRemainingAccounts" field, they are also added to the "keys" array. Finally, the function returns a new "TransactionInstruction" object that can be used to execute the instruction.
 
-Overall, this code provides a way to create a CalculateCollateralForResponse instruction with the required accounts and arguments. It can be used as part of a larger project that involves interacting with the Solana blockchain and the Convergence Protocol. An example usage of this code might look like:
-
-```
-const accounts = {
-  rfq: new web3.PublicKey("..."),
-  response: new web3.PublicKey("..."),
-  config: new web3.PublicKey("..."),
-  anchorRemainingAccounts: [
-    { pubkey: new web3.PublicKey("..."), isWritable: true, isSigner: false },
-    { pubkey: new web3.PublicKey("..."), isWritable: false, isSigner: false }
-  ]
-};
-
-const instruction = createCalculateCollateralForResponseInstruction(accounts);
-```
+Overall, this code provides a standardized way to create and execute the "CalculateCollateralForResponse" instruction in the Convergence Program Library. It can be used by other parts of the library or by external applications that interact with the library.
 ## Questions: 
  1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The code is part of the Convergence Program Library and is used to create a specific instruction called "CalculateCollateralForResponse" for the library.
+- The code is part of the Convergence Program Library, but it is unclear what the library does or what problem it solves.
 
-2. What is the expected input and output of the "createCalculateCollateralForResponseInstruction" function?
-- The function takes in an object of accounts and a programId as parameters, and returns a TransactionInstruction object. The function is used to create an instruction for calculating collateral for a response.
+2. What is the `beet` package and how is it used in this code?
+- The code imports the `beet` package, but it is unclear what it does or how it is used in this specific code.
 
-3. What is the significance of the "instructionDiscriminator" and "calculateCollateralForResponseInstructionDiscriminator" variables?
-- The "instructionDiscriminator" is a property of the "calculateCollateralForResponseStruct" object and is used to specify the type of instruction being created. The "calculateCollateralForResponseInstructionDiscriminator" is an array of numbers that is used to identify the instruction when it is executed on the Solana blockchain.
+3. What is the expected input and output of the `createCalculateCollateralForResponseInstruction` function?
+- The function takes in an object of `CalculateCollateralForResponseInstructionAccounts` type and a `programId` as parameters, but it is unclear what the expected input and output of the function are and how it is used in practice.

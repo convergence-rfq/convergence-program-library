@@ -1,47 +1,46 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/settle.js.map)
 
-The code provided is a minified version of a JavaScript file called `settle.js`. The purpose of this file is to provide a function that can be used to settle a Promise. The `settle` function takes a single argument, which is an array of Promises. It returns a new Promise that resolves with an array of objects, each of which represents the outcome of the corresponding Promise in the input array.
+The code provided is a minified version of a JavaScript file called `settle.js`. The purpose of this file is to provide a function that can be used to settle a Promise. 
 
-The objects in the output array have two properties: `status` and `value`. The `status` property is a string that indicates whether the Promise was fulfilled or rejected. If the Promise was fulfilled, `status` is set to `"fulfilled"`, and the `value` property contains the fulfillment value. If the Promise was rejected, `status` is set to `"rejected"`, and the `value` property contains the rejection reason.
+Promises are a way to handle asynchronous operations in JavaScript. They represent a value that may not be available yet, but will be at some point in the future. Promises can be in one of three states: pending, fulfilled, or rejected. When a Promise is settled, it means that it has transitioned from the pending state to either the fulfilled or rejected state.
 
-The `settle` function is useful in situations where you need to wait for multiple Promises to complete, but you don't want to stop processing if one of the Promises is rejected. Instead of using `Promise.all`, which will reject immediately if any of the Promises are rejected, you can use `settle` to get the outcome of all the Promises, regardless of whether they were fulfilled or rejected.
+The `settle` function provided in this file takes an array of Promises as its argument. It returns a new Promise that is settled when all of the Promises in the input array have been settled. The returned Promise is fulfilled with an array of settled values, where each value is an object with two properties: `status` and `value`. The `status` property is a string that is either `"fulfilled"` or `"rejected"`, depending on whether the original Promise was fulfilled or rejected. The `value` property is the value that the original Promise was fulfilled or rejected with.
 
-Here is an example of how you might use the `settle` function:
+Here is an example of how the `settle` function can be used:
 
 ```javascript
 const promises = [
   Promise.resolve(1),
-  Promise.reject(new Error('Oops!')),
+  Promise.reject(new Error('oops')),
   Promise.resolve(3)
 ];
 
-settle(promises).then(results => {
-  results.forEach(result => {
-    if (result.status === 'fulfilled') {
-      console.log(`Promise fulfilled with value: ${result.value}`);
-    } else {
-      console.log(`Promise rejected with reason: ${result.value.message}`);
-    }
+Promise.allSettled(promises)
+  .then(results => {
+    console.log(results);
   });
-});
 ```
 
-In this example, we create an array of three Promises, one of which is rejected. We then call the `settle` function with this array, and use the resulting Promise to log the outcome of each Promise in the array. The output of this code would be:
+In this example, an array of three Promises is created. The first Promise is fulfilled with the value `1`, the second Promise is rejected with an `Error` object, and the third Promise is fulfilled with the value `3`. The `Promise.allSettled` method is then called with the array of Promises as its argument. This method returns a Promise that is settled when all of the Promises in the input array have been settled. The `then` method is called on the returned Promise, and the settled values are logged to the console. The output of this code would be:
 
 ```
-Promise fulfilled with value: 1
-Promise rejected with reason: Oops!
-Promise fulfilled with value: 3
+[
+  { status: 'fulfilled', value: 1 },
+  { status: 'rejected', value: Error: oops },
+  { status: 'fulfilled', value: 3 }
+]
 ```
+
+Overall, the `settle` function provided in this file is a useful utility function for handling Promises in JavaScript. It can be used to settle an array of Promises and get information about whether each Promise was fulfilled or rejected.
 ## Questions: 
  1. What is the purpose of this code file?
     
-    This code file is named `settle.js` and it appears to be a compiled JavaScript file generated from a TypeScript file named `settle.ts`. The purpose of this file is not clear from the code snippet provided, but it likely contains functions related to settling promises in JavaScript.
+    This code file is named `settle.js` and it appears to be a compiled version of a TypeScript file named `settle.ts`. Without additional context, it is unclear what the purpose of this code is.
 
-2. What version of JavaScript is this code written in?
+2. What dependencies or libraries does this code use?
     
-    This code is written in version 3 of the JavaScript language.
+    Without additional context or information, it is unclear what dependencies or libraries this code uses.
 
-3. What is the source of this code?
+3. What is the expected input and output of this code?
     
-    The source of this code is a file named `settle.ts` located in the Convergence Program Library.
+    Without additional context or information, it is unclear what the expected input and output of this code is.

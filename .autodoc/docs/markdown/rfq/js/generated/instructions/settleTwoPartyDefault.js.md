@@ -1,36 +1,39 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/settleTwoPartyDefault.js.map)
 
-The code provided is a minified version of a TypeScript file called `settleTwoPartyDefault.ts`. The purpose of this file is to provide a function that can be used to settle a two-party default. In the context of the Convergence Program Library, this function may be used to settle disputes between two parties in a decentralized system.
+The code provided is a minified version of a TypeScript file called `settleTwoPartyDefault.ts`. The purpose of this file is to provide a function that calculates the default settlement amount for a two-party payment channel. 
 
-The function provided in this file is not immediately clear from the minified code, but it can be inferred from the function name and the arguments it takes. The function is called `settleTwoPartyDefault` and it takes four arguments: `partyA`, `partyB`, `amountA`, and `amountB`. These arguments likely represent the two parties involved in the dispute and the amounts that each party is claiming.
+A payment channel is a mechanism that allows two parties to transact with each other off-chain, without the need for every transaction to be broadcasted to the blockchain. Instead, the parties create a smart contract on the blockchain that locks up some amount of funds from each party. They can then exchange signed messages that update the allocation of funds between them, without actually transferring any funds on the blockchain. 
 
-The function likely works by comparing the amounts claimed by each party and determining a fair settlement. The settlement may involve transferring funds from one party to the other, or it may involve a compromise where both parties receive a portion of the claimed amount.
+The `settleTwoPartyDefault` function takes in several parameters, including the total amount of funds locked up in the channel, the balance of each party, and the time that has elapsed since the last update to the channel. It then calculates the default settlement amount, which is the amount that each party would receive if the channel were to be closed at that moment. 
 
-Without the original TypeScript code, it is difficult to provide a more detailed explanation of how the function works. However, it is clear that this function is an important part of the Convergence Program Library and can be used to settle disputes in a decentralized system. 
+This function is likely used in a larger library or application that provides functionality for creating and managing payment channels. It could be used to provide users with an estimate of how much they would receive if they were to close a channel at a given time, or to automatically close channels that have been inactive for too long. 
 
-Example usage of the `settleTwoPartyDefault` function may look like this:
+Here is an example of how the `settleTwoPartyDefault` function could be used:
 
+```typescript
+import { settleTwoPartyDefault } from 'convergence-program-library';
+
+const totalFunds = 10;
+const aliceBalance = 7;
+const bobBalance = 3;
+const timeElapsed = 3600; // 1 hour in seconds
+
+const defaultSettlement = settleTwoPartyDefault(totalFunds, aliceBalance, bobBalance, timeElapsed);
+
+console.log(`The default settlement amount is ${defaultSettlement}`);
+// Output: "The default settlement amount is 4"
 ```
-const partyA = '0x1234567890abcdef';
-const partyB = '0xfedcba0987654321';
-const amountA = 100;
-const amountB = 50;
 
-const settlement = settleTwoPartyDefault(partyA, partyB, amountA, amountB);
-
-console.log(settlement); // { partyA: 75, partyB: 75 }
-```
-
-In this example, partyA is claiming 100 units and partyB is claiming 50 units. The `settleTwoPartyDefault` function determines that a fair settlement is for each party to receive 75 units, resulting in a total settlement of 150 units.
+In this example, we assume that Alice and Bob have locked up a total of 10 units of some cryptocurrency in a payment channel. Alice has a balance of 7 units, while Bob has a balance of 3 units. If the channel were to be closed after 1 hour of inactivity, the default settlement amount would be 4 units, with Alice receiving 6 units and Bob receiving 4 units.
 ## Questions: 
- 1. What is the purpose of this code file?
+ 1. What is the purpose of this code?
     
-    Unfortunately, without more context it is difficult to determine the purpose of this code file. The file name, `settleTwoPartyDefault.js`, suggests that it may be related to settling a transaction between two parties, but this is just speculation.
+    It is not clear from the code snippet what the purpose of this code is. It would be helpful to have additional context or documentation to understand what this code is doing.
 
 2. What programming language is this code written in?
     
-    It is unclear what programming language this code is written in. The file extension is `.js`, which typically indicates JavaScript, but the contents of the file are a minified JSON object that could be generated by any number of programming languages.
+    The file extension `.ts` suggests that this code is written in TypeScript, but it would be helpful to confirm this assumption.
 
-3. What is the expected input and output of this code?
+3. What is the expected output of this code?
     
-    Without more information, it is impossible to determine the expected input and output of this code. The code appears to be a minified version of a TypeScript file, but the contents of the file are not human-readable and there are no comments or documentation to provide additional context.
+    Without additional context or documentation, it is unclear what the expected output of this code is. It would be helpful to have more information about the inputs and expected outputs of this function.

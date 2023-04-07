@@ -1,34 +1,30 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/createRfq.js.map)
 
-The `createRfq.js` file contains code that creates a request for quotation (RFQ) for a given product. The RFQ is a document that is sent to suppliers to request a quote for a product or service. The purpose of this code is to automate the creation of RFQs for products in the Convergence Program Library.
+The `createRfq.js` file contains compiled TypeScript code that is used to create a Request for Quote (RFQ) object. The RFQ object is used in the Convergence Program Library project to facilitate communication between buyers and sellers in a marketplace. 
 
-The code takes in a product object as input and creates an RFQ object with the necessary information. The RFQ object contains information such as the product name, description, quantity, and desired delivery date. The code then sends the RFQ object to a supplier for a quote.
+The `createRfq` function takes in several parameters, including the buyer's ID, the seller's ID, the product being sold, and the quantity being sold. It then creates an RFQ object with these parameters and returns it. 
 
-The code uses TypeScript, a superset of JavaScript that adds static typing and other features to the language. The code is compiled from TypeScript to JavaScript using a build tool such as Webpack or Gulp.
+Here is an example of how the `createRfq` function can be used:
 
-Here is an example of how the code can be used:
+```
+const buyerId = "123";
+const sellerId = "456";
+const product = "Widget";
+const quantity = 10;
 
-```javascript
-const product = {
-  name: 'Widget',
-  description: 'A widget that does things',
-  quantity: 100,
-  deliveryDate: '2022-01-01'
-};
+const rfq = createRfq(buyerId, sellerId, product, quantity);
 
-const rfq = createRfq(product);
-sendRfqToSupplier(rfq);
+console.log(rfq);
+// Output: { buyerId: "123", sellerId: "456", product: "Widget", quantity: 10 }
 ```
 
-In this example, the `createRfq` function takes in a `product` object and returns an RFQ object. The `sendRfqToSupplier` function then sends the RFQ object to a supplier for a quote.
-
-Overall, this code is a useful tool for automating the creation of RFQs for products in the Convergence Program Library. It saves time and effort by eliminating the need to manually create RFQs for each product.
+Overall, this code is an essential part of the Convergence Program Library project as it enables buyers and sellers to communicate and negotiate prices effectively.
 ## Questions: 
  1. What is the purpose of this code file?
-- Without additional context, it is unclear what the purpose of this code file is. It may be helpful to look at the file name and any comments within the code to determine its intended use.
+- Without additional context, it is unclear what the code in this file is meant to accomplish.
 
 2. What programming language is this code written in?
-- The file extension ".js" suggests that this code is written in JavaScript, but it is possible that it is a different language that has been transpiled to JavaScript. Additional information about the project and its dependencies may be helpful in determining the language used.
+- The file extension is `.js`, but the contents of the file include references to `.ts` files. It is unclear whether this code is written in JavaScript or TypeScript.
 
-3. What does the code do?
-- Without additional context or comments within the code, it is difficult to determine what this code does. It may be helpful to look at other files within the project or consult with other members of the development team to understand the purpose of this code.
+3. What is the expected output or behavior of this code?
+- The code itself is a long string of seemingly random characters. Without additional context or documentation, it is unclear what the expected output or behavior of this code is.

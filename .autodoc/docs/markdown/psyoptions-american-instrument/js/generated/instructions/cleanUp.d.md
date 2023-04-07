@@ -1,37 +1,16 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/cleanUp.d.ts)
 
-This code is a part of the Convergence Program Library project and it imports two external libraries: "@convergence-rfq/beet" and "@solana/web3.js". The purpose of this code is to define and export a function called "createCleanUpInstruction" that creates a Solana transaction instruction for cleaning up a specific asset. 
+This code is a part of the Convergence Program Library project and it imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js". It also imports a custom type called "AssetIdentifierDuplicate" from a file located in the "../types" directory.
 
-The code defines two types: "CleanUpInstructionArgs" and "CleanUpInstructionAccounts". "CleanUpInstructionArgs" is an object that contains an "assetIdentifier" property of type "AssetIdentifierDuplicate". "CleanUpInstructionAccounts" is an object that contains several properties of type "web3.PublicKey" and two optional properties of type "web3.PublicKey[]" and "web3.AccountMeta[]". 
+The code defines a type called "CleanUpInstructionArgs" which has a single property called "assetIdentifier" of type "AssetIdentifierDuplicate". It also defines a constant called "cleanUpStruct" which is a "FixableBeetArgsStruct" from the "@convergence-rfq/beet" library. This struct extends the "CleanUpInstructionArgs" type and adds another property called "instructionDiscriminator" which is an array of numbers.
 
-The "createCleanUpInstruction" function takes two arguments: "accounts" of type "CleanUpInstructionAccounts" and "args" of type "CleanUpInstructionArgs". It also takes an optional third argument "programId" of type "web3.PublicKey". The function returns a Solana transaction instruction that can be used to clean up the specified asset. 
+The code also defines another type called "CleanUpInstructionAccounts" which has several properties, all of which are of type "web3.PublicKey". Some of these properties are optional and have a default value of "undefined". The purpose of this type is to define the accounts that will be used in the "createCleanUpInstruction" function.
 
-The "cleanUpStruct" and "cleanUpInstructionDiscriminator" are also defined in this code. "cleanUpStruct" is a beet.FixableBeetArgsStruct that extends "CleanUpInstructionArgs" and adds an "instructionDiscriminator" property of type "number[]". "cleanUpInstructionDiscriminator" is an array of numbers that is used as the instruction discriminator for the "createCleanUpInstruction" function. 
+The code also defines a constant called "cleanUpInstructionDiscriminator" which is an array of numbers. This constant is used in the "cleanUpStruct" definition.
 
-Overall, this code provides a way to create a Solana transaction instruction for cleaning up a specific asset. It can be used in the larger Convergence Program Library project to facilitate asset management and cleanup. 
+Finally, the code defines a function called "createCleanUpInstruction" which takes two arguments: "accounts" of type "CleanUpInstructionAccounts" and "args" of type "CleanUpInstructionArgs". This function returns a "web3.TransactionInstruction" object. The purpose of this function is to create a transaction instruction that can be used to clean up a previously created RFQ (Request for Quote) trade. The function takes in the necessary accounts and arguments and returns a transaction instruction that can be used to execute the clean up.
 
-Example usage:
-
-```
-import { createCleanUpInstruction } from "path/to/cleanUpInstruction";
-
-const accounts = {
-  protocol: new web3.PublicKey("..."),
-  rfq: new web3.PublicKey("..."),
-  response: new web3.PublicKey("..."),
-  firstToPrepare: new web3.PublicKey("..."),
-  escrow: new web3.PublicKey("..."),
-  backupReceiver: new web3.PublicKey("..."),
-  tokenProgram: new web3.PublicKey("..."),
-  anchorRemainingAccounts: [...]
-};
-
-const args = {
-  assetIdentifier: {...}
-};
-
-const instruction = createCleanUpInstruction(accounts, args);
-```
+Overall, this code defines types and functions that are used to create a transaction instruction for cleaning up a previously created RFQ trade. This code is likely a part of a larger project that involves creating and managing RFQ trades on the Solana blockchain.
 ## Questions: 
  1. What external libraries or dependencies does this code use?
 - This code imports two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
@@ -40,4 +19,4 @@ const instruction = createCleanUpInstruction(accounts, args);
 - CleanUpInstructionArgs is a type that defines the arguments needed for a clean-up instruction, including an asset identifier. CleanUpInstructionAccounts is a type that defines the accounts needed for a clean-up instruction, including various public keys.
 
 3. What is the createCleanUpInstruction function used for?
-- The createCleanUpInstruction function is used to create a clean-up instruction for a given set of accounts and arguments, and optionally a program ID.
+- The createCleanUpInstruction function is used to create a transaction instruction for a clean-up operation, using the provided accounts and arguments. It optionally takes a programId parameter to specify the Solana program ID.

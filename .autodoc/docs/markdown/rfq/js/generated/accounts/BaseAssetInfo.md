@@ -1,20 +1,22 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/accounts/BaseAssetInfo.js)
 
-This code defines a class called `BaseAssetInfo` and exports it along with two other variables: `baseAssetInfoDiscriminator` and `baseAssetInfoBeet`. 
+This code defines a class called `BaseAssetInfo` and exports it along with two other variables: `baseAssetInfoDiscriminator` and `baseAssetInfoBeet`. The `BaseAssetInfo` class has several methods and properties that allow for the creation, serialization, and deserialization of instances of the class. 
 
-`BaseAssetInfo` is a class that represents information about a base asset, which is a type of asset used in trading. The class has several properties, including `bump`, `index`, `enabled`, `riskCategory`, `priceOracle`, and `ticker`. These properties are used to store information about the base asset, such as its risk category and ticker symbol. 
+The `baseAssetInfoDiscriminator` variable is an array of 8 bytes that serves as a unique identifier for instances of the `BaseAssetInfo` class. The `baseAssetInfoBeet` variable is an instance of the `FixableBeetStruct` class from the `@convergence-rfq/beet` library. This instance defines the structure of the `BaseAssetInfo` class and provides methods for serializing and deserializing instances of the class.
 
-The class also has several methods, including `fromArgs`, `fromAccountInfo`, `fromAccountAddress`, `gpaBuilder`, `deserialize`, `serialize`, `byteSize`, and `getMinimumBalanceForRentExemption`. These methods are used to create, read, and write instances of the `BaseAssetInfo` class. For example, `fromArgs` is a static method that creates a new instance of `BaseAssetInfo` from a set of arguments, while `fromAccountInfo` is a static method that creates a new instance of `BaseAssetInfo` from an account info object. 
+The `BaseAssetInfo` class has a constructor that takes several arguments: `bump`, `index`, `enabled`, `riskCategory`, `priceOracle`, and `ticker`. These arguments are used to initialize properties of the class with the same names. The `fromArgs` method creates a new instance of the `BaseAssetInfo` class from an object with the same properties as the constructor arguments. The `fromAccountInfo` method deserializes an instance of the `BaseAssetInfo` class from a `Buffer` object. The `fromAccountAddress` method retrieves an account from a Solana connection and deserializes an instance of the `BaseAssetInfo` class from the account data. The `gpaBuilder` method creates a new instance of the `GpaBuilder` class from the `@convergence-rfq/beet-solana` library, which can be used to create Solana accounts that store instances of the `BaseAssetInfo` class.
 
-`baseAssetInfoDiscriminator` is an array of bytes that is used to identify the type of account that contains `BaseAssetInfo` data. `baseAssetInfoBeet` is an instance of the `FixableBeetStruct` class from the `@convergence-rfq/beet` library. This instance is used to serialize and deserialize instances of the `BaseAssetInfo` class. 
+The `serialize` method serializes an instance of the `BaseAssetInfo` class to a `Buffer` object. The `byteSize` method returns the size in bytes of an instance of the `BaseAssetInfo` class. The `getMinimumBalanceForRentExemption` method returns the minimum balance required to create a Solana account that stores an instance of the `BaseAssetInfo` class.
 
-Overall, this code provides a way to represent and manipulate information about base assets in a trading system. It is likely part of a larger project that includes other classes and functions for trading and managing assets.
+The `pretty` method returns an object with the same properties as an instance of the `BaseAssetInfo` class, but with some properties formatted for readability. 
+
+Overall, this code provides a way to create, serialize, and deserialize instances of the `BaseAssetInfo` class, which can be used to store information about a base asset in a financial application. The `baseAssetInfoBeet` variable defines the structure of the `BaseAssetInfo` class and provides methods for serialization and deserialization. The `BaseAssetInfo` class provides methods for creating instances of the class from different sources, as well as methods for serializing and deserializing instances of the class.
 ## Questions: 
- 1. What is the purpose of this code and what problem does it solve?
-- This code defines a class called `BaseAssetInfo` which represents information about a base asset. It provides methods for deserializing and serializing data, as well as getting the minimum balance required for rent exemption.
+ 1. What is the purpose of this code file?
+- This code file defines a class called `BaseAssetInfo` and related functions for serializing, deserializing, and retrieving instances of this class from Solana accounts.
 
 2. What external dependencies does this code have?
 - This code depends on several external packages, including `@convergence-rfq/beet`, `@solana/web3.js`, and `@convergence-rfq/beet-solana`.
 
-3. What is the structure of the `BaseAssetInfo` class and what methods does it provide?
-- The `BaseAssetInfo` class has several properties, including `bump`, `index`, `enabled`, `riskCategory`, `priceOracle`, and `ticker`. It provides methods for deserializing and serializing data, as well as getting the minimum balance required for rent exemption. It also has a `pretty` method for returning a formatted object with human-readable property names.
+3. What is the structure of the `BaseAssetInfo` class and what data does it contain?
+- The `BaseAssetInfo` class contains several properties, including `bump`, `index`, `enabled`, `riskCategory`, `priceOracle`, and `ticker`. It also has several static methods for creating instances of the class from different sources, as well as for serializing and deserializing instances.

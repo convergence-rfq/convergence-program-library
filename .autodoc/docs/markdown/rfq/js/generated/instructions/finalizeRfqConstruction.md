@@ -1,42 +1,33 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/finalizeRfqConstruction.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/finalizeRfqConstruction.ts)
 
-This code defines a function called `createFinalizeRfqConstructionInstruction` and two constants called `finalizeRfqConstructionStruct` and `finalizeRfqConstructionInstructionDiscriminator`. The purpose of this code is to create a transaction instruction for the Convergence Program Library that can be used to finalize an RFQ (Request for Quote) construction. 
+This code defines an instruction for the Convergence Program Library project called `FinalizeRfqConstruction`. The purpose of this instruction is to finalize the construction of a Request for Quote (RFQ) and create a corresponding instruction for the Solana blockchain. 
 
-The `finalizeRfqConstructionStruct` constant is an instance of the `BeetArgsStruct` class from the `@convergence-rfq/beet` package. It defines a structure for the arguments that will be passed to the instruction. The structure consists of a single field called `instructionDiscriminator`, which is an array of 8 unsigned 8-bit integers.
+The `finalizeRfqConstructionStruct` constant defines the structure of the instruction data, which includes an 8-byte instruction discriminator. The `FinalizeRfqConstructionInstructionAccounts` type defines the accounts required to execute the instruction, including the taker, protocol, RFQ, collateral info, collateral token, and risk engine accounts. 
 
-The `finalizeRfqConstructionInstructionDiscriminator` constant is an array of 8 unsigned 8-bit integers that serves as a unique identifier for the instruction.
+The `createFinalizeRfqConstructionInstruction` function creates a new instruction with the specified accounts and program ID. It serializes the instruction data using the `finalizeRfqConstructionStruct` constant and creates a new `TransactionInstruction` object with the specified accounts and data. 
 
-The `createFinalizeRfqConstructionInstruction` function takes two arguments: `accounts` and `programId`. The `accounts` argument is an object that contains various public keys for the accounts involved in the RFQ construction. The `programId` argument is a public key for the Convergence Program Library program.
+This instruction is part of a larger project that likely involves creating and executing RFQs on the Solana blockchain. It may be used in conjunction with other instructions and functions to create a complete RFQ workflow. 
 
-The function first serializes the `finalizeRfqConstructionStruct` argument into a byte array. It then creates an array of `keys` that contains the public keys for the accounts involved in the RFQ construction. Finally, it creates a new `TransactionInstruction` object from the `web3.js` package that contains the `programId`, `keys`, and `data` (serialized `finalizeRfqConstructionStruct` argument).
-
-This function can be used in the larger Convergence Program Library project to finalize an RFQ construction. An example usage of this function might look like:
+Example usage:
 
 ```
 const accounts = {
-  taker: new web3.PublicKey('...'),
-  protocol: new web3.PublicKey('...'),
-  rfq: new web3.PublicKey('...'),
-  collateralInfo: new web3.PublicKey('...'),
-  collateralToken: new web3.PublicKey('...'),
-  riskEngine: new web3.PublicKey('...'),
-  anchorRemainingAccounts: [
-    { pubkey: new web3.PublicKey('...'), isWritable: true, isSigner: false },
-    { pubkey: new web3.PublicKey('...'), isWritable: true, isSigner: false },
-    // ...
-  ],
+  taker: takerPublicKey,
+  protocol: protocolPublicKey,
+  rfq: rfqPublicKey,
+  collateralInfo: collateralInfoPublicKey,
+  collateralToken: collateralTokenPublicKey,
+  riskEngine: riskEnginePublicKey
 };
 
-const programId = new web3.PublicKey('...');
-
-const instruction = createFinalizeRfqConstructionInstruction(accounts, programId);
+const instruction = createFinalizeRfqConstructionInstruction(accounts);
 ```
 ## Questions: 
- 1. What is the purpose of this code?
-- This code defines a function `createFinalizeRfqConstructionInstruction` and exports two variables `finalizeRfqConstructionStruct` and `finalizeRfqConstructionInstructionDiscriminator`. It seems to be related to a program called Convergence RFQ.
+ 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
+- The code is part of the Convergence Program Library, but it is unclear what the library does or what problem it solves.
 
-2. What external libraries or dependencies does this code rely on?
-- This code relies on two external libraries: `@convergence-rfq/beet` and `@solana/web3.js`.
+2. What is the `finalizeRfqConstructionInstructionAccounts` type and what are its properties used for?
+- `finalizeRfqConstructionInstructionAccounts` is a type that defines the accounts required by the `finalizeRfqConstruction` instruction, including `taker`, `protocol`, `rfq`, `collateralInfo`, `collateralToken`, and `riskEngine`. These properties are used to specify the accounts that will be accessed while the instruction is processed.
 
-3. What is the expected input and output of the `createFinalizeRfqConstructionInstruction` function?
-- The `createFinalizeRfqConstructionInstruction` function takes in an `accounts` object and an optional `programId` and returns a `TransactionInstruction` object. The expected structure of the `accounts` object is not clear from this code snippet.
+3. What is the purpose of the `createFinalizeRfqConstructionInstruction` function and how is it used?
+- The `createFinalizeRfqConstructionInstruction` function creates a `FinalizeRfqConstruction` instruction with the specified accounts and program ID. It is used to generate the instruction that will be executed on the Solana blockchain.

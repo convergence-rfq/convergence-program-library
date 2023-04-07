@@ -1,43 +1,20 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/validateData.ts)
 
-This code defines a set of types, structs, and functions related to the `ValidateData` instruction in the Convergence Program Library. The `ValidateData` instruction is used to validate data related to a financial instrument, such as an option or a future, before it can be used in the Convergence Protocol. 
+This code defines an instruction for the Convergence Program Library called `ValidateData`. The purpose of this instruction is to validate data related to a financial instrument. The instruction takes in four arguments: `instrumentData`, `baseAssetIndex`, `instrumentDecimals`, and `instructionDiscriminator`. 
 
-The `ValidateDataInstructionArgs` type defines the arguments that are passed to the `ValidateData` instruction. These include the instrument data as a byte array, the index of the base asset, and the number of decimals in the instrument. 
+The `instrumentData` argument is a byte array that contains information about the financial instrument being validated. The `baseAssetIndex` argument is an optional index that specifies the base asset of the instrument. The `instrumentDecimals` argument is the number of decimal places used to represent the instrument. Finally, the `instructionDiscriminator` argument is a fixed-size array of 8 bytes that serves as a unique identifier for this instruction.
 
-The `validateDataStruct` struct defines the layout of the instruction data that will be passed to the Solana program. It includes the instruction discriminator, which is a unique identifier for the instruction, as well as the instrument data, base asset index, and number of decimals. 
+The code also defines a `ValidateDataInstructionAccounts` type that specifies the accounts required by the instruction. These accounts include the `protocol` account, the `americanMeta` account, the `mintInfo` account, and the `quoteMint` account. The `protocol` account is a signer account, while the other accounts are read-only.
 
-The `ValidateDataInstructionAccounts` type defines the accounts that are required by the `ValidateData` instruction. These include the protocol account, the American Meta account, the Mint Info account, and the Quote Mint account. 
+The `createValidateDataInstruction` function is used to create an instance of the `ValidateData` instruction. This function takes in two arguments: `accounts` and `args`. The `accounts` argument is an object that specifies the accounts required by the instruction. The `args` argument is an object that contains the arguments required by the instruction. The function returns a `TransactionInstruction` object that can be used to execute the instruction.
 
-The `createValidateDataInstruction` function is used to create a new `ValidateData` instruction. It takes the required accounts and instruction arguments as input, and returns a `TransactionInstruction` object that can be added to a Solana transaction. 
-
-Overall, this code provides a way to create and execute the `ValidateData` instruction in the Convergence Protocol. It is likely part of a larger set of code that implements the Convergence Protocol on the Solana blockchain. 
-
-Example usage:
-
-```
-import { createValidateDataInstruction } from "@convergence-rfq/validate-data";
-
-const accounts = {
-  protocol: new web3.PublicKey("..."),
-  americanMeta: new web3.PublicKey("..."),
-  mintInfo: new web3.PublicKey("..."),
-  quoteMint: new web3.PublicKey("..."),
-};
-
-const args = {
-  instrumentData: new Uint8Array([0x01, 0x02, 0x03]),
-  baseAssetIndex: { some: 123 },
-  instrumentDecimals: 8,
-};
-
-const instruction = createValidateDataInstruction(accounts, args);
-```
+Overall, this code provides a way to validate financial instrument data in the Convergence Program Library. It can be used in conjunction with other instructions to create a complete financial instrument trading system.
 ## Questions: 
- 1. What is the purpose of this code?
-- This code defines a function `createValidateDataInstruction` that creates a Solana transaction instruction for the `ValidateData` operation, along with related types and accounts.
+ 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
+- The code is part of the Convergence Program Library, but it is unclear what the library does or what problem it solves.
 
-2. What external packages does this code depend on?
-- This code depends on the `@convergence-rfq/beet` and `@solana/web3.js` packages.
+2. What is the `validateDataInstructionDiscriminator` array used for?
+- The `validateDataInstructionDiscriminator` array is used as part of the `createValidateDataInstruction` function to specify the instruction discriminator for the `ValidateData` instruction.
 
-3. Can this code be modified directly?
-- No, the code is generated using the `solita` package and should not be edited directly. Instead, the package should be rerun to update the code or a wrapper should be written to add functionality.
+3. What are the required accounts for the `ValidateData` instruction and how are they used?
+- The required accounts for the `ValidateData` instruction are `protocol`, `americanMeta`, `mintInfo`, and `quoteMint`. It is unclear how they are used without more context about the Convergence Program Library.

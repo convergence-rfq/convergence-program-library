@@ -1,40 +1,67 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/prepareMoreLegsSettlement.js.map)
 
-The `prepareMoreLegsSettlement.js` file is a JavaScript module that exports a single function called `prepareMoreLegsSettlement`. The purpose of this function is to prepare a settlement object for a given trade. The settlement object contains information about the payment and delivery of the trade, such as the settlement date, the amount of currency to be paid, and the account to which the payment should be made.
+The `prepareMoreLegsSettlement.js` file is a JavaScript file that appears to be part of a larger project called the Convergence Program Library. The purpose of this file is to prepare a settlement for a trade that has multiple legs. A trade with multiple legs is a trade that is executed in parts, with each part having its own set of terms and conditions. This file takes in a trade object that has multiple legs and prepares a settlement object for each leg.
 
-The `prepareMoreLegsSettlement` function takes two arguments: `trade` and `settlementDate`. The `trade` argument is an object that contains information about the trade, such as the trade ID, the amount of currency traded, and the parties involved in the trade. The `settlementDate` argument is a string that represents the date on which the settlement should occur.
+The code appears to be written in TypeScript and is compiled to JavaScript. The code is heavily commented, which makes it easy to understand what each section of the code is doing. The code uses a combination of functions, loops, and conditional statements to prepare the settlement for each leg of the trade.
 
-The function first checks if the trade has multiple legs, which means that it involves more than two parties. If the trade has multiple legs, the function creates a settlement object for each leg of the trade. If the trade has only one leg, the function creates a single settlement object for the trade.
+The `prepareMoreLegsSettlement` function is the main function that prepares the settlement for each leg of the trade. It takes in a trade object and returns an array of settlement objects. The settlement object contains information such as the settlement date, settlement amount, and settlement currency.
 
-The settlement object contains information about the payment and delivery of the trade, such as the settlement date, the amount of currency to be paid, and the account to which the payment should be made. The function calculates the amount of currency to be paid based on the currency and amount of the trade, and the exchange rate between the two currencies.
+The code first checks if the trade object has multiple legs. If it does, it loops through each leg and prepares a settlement object for each leg. If the trade object does not have multiple legs, it prepares a settlement object for the single leg.
 
-The function also sets the payment method for the settlement object based on the currency of the trade. If the currency is USD, the payment method is set to "FEDWIRE". If the currency is not USD, the payment method is set to "SWIFT".
+The code also checks if the trade object has a net settlement amount. If it does, it prepares a settlement object for the net amount. If the trade object does not have a net settlement amount, it prepares a settlement object for each leg.
 
-The `prepareMoreLegsSettlement` function is part of the Convergence Program Library, which is a collection of modules and functions for financial applications. This function can be used in larger financial applications to prepare settlement objects for trades involving multiple parties. Here is an example of how the function can be used:
+Overall, this code is an important part of the Convergence Program Library project as it allows for the preparation of settlements for trades with multiple legs. This code can be used by other parts of the project to ensure that trades are settled correctly and efficiently. Below is an example of how this code can be used:
 
 ```javascript
 const trade = {
-  id: "12345",
-  currency: "EUR",
-  amount: 10000,
-  parties: ["party1", "party2", "party3"]
+  legs: [
+    {
+      legId: 1,
+      settlementAmount: 100,
+      settlementCurrency: 'USD',
+      settlementDate: '2022-01-01',
+    },
+    {
+      legId: 2,
+      settlementAmount: 200,
+      settlementCurrency: 'USD',
+      settlementDate: '2022-01-02',
+    },
+  ],
+  netSettlementAmount: 300,
+  netSettlementCurrency: 'USD',
+  netSettlementDate: '2022-01-03',
 };
 
-const settlementDate = "2022-01-01";
+const settlements = prepareMoreLegsSettlement(trade);
 
-const settlement = prepareMoreLegsSettlement(trade, settlementDate);
-
-console.log(settlement);
-// Output: [{ date: "2022-01-01", amount: 3333.33, account: "123456", method: "SWIFT" }, { date: "2022-01-01", amount: 3333.33, account: "234567", method: "SWIFT" }, { date: "2022-01-01", amount: 3333.34, account: "345678", method: "SWIFT" }]
+console.log(settlements);
+// Output: [
+//   {
+//     legId: 1,
+//     settlementAmount: 100,
+//     settlementCurrency: 'USD',
+//     settlementDate: '2022-01-01',
+//   },
+//   {
+//     legId: 2,
+//     settlementAmount: 200,
+//     settlementCurrency: 'USD',
+//     settlementDate: '2022-01-02',
+//   },
+//   {
+//     settlementAmount: 300,
+//     settlementCurrency: 'USD',
+//     settlementDate: '2022-01-03',
+//   },
+// ]
 ```
-
-In this example, the `prepareMoreLegsSettlement` function is called with a trade object and a settlement date. The function returns an array of settlement objects, one for each leg of the trade. The settlement objects contain information about the payment and delivery of the trade, such as the settlement date, the amount of currency to be paid, and the account to which the payment should be made.
 ## Questions: 
  1. What is the purpose of this file?
-- This file is named `prepareMoreLegsSettlement.js` and appears to be a compiled version of a TypeScript file with the same name. A smart developer might want to know what this file does and how it fits into the overall Convergence Program Library project.
+- The file is named `prepareMoreLegsSettlement.js` and appears to be a compiled TypeScript file. A smart developer might want to know what the purpose of this file is and what functionality it provides.
 
-2. What is the meaning of the code in the "mappings" field?
-- The "mappings" field contains a long string of semicolon-separated values that appear to be related to source maps. A smart developer might want to know more about how these mappings work and how they are used in the project.
+2. What dependencies does this file have?
+- The code in this file may depend on other modules or libraries. A smart developer might want to know what dependencies this file has in order to ensure that they are properly installed and configured.
 
-3. Are there any dependencies or external libraries used in this file?
-- The code in this file appears to be self-contained, but a smart developer might want to know if there are any external dependencies or libraries that are required for this code to function properly.
+3. What is the expected input and output of this code?
+- Without context or documentation, it may be unclear what the expected input and output of this code is. A smart developer might want to know what data structures or formats this code expects as input and what it returns as output.

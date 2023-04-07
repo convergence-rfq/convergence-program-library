@@ -1,27 +1,21 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/FixedSize.ts)
 
-This code defines a set of types and functions related to a data enum called `FixedSize` that is used in the Convergence Program Library project. The `FixedSize` enum is defined as a union type that represents a Rust data enum. It includes a `__kind` property that allows for narrowing types in switch/if statements. Additionally, there are three type guards defined to narrow to a specific variant of the `FixedSize` enum: `isFixedSizeNone`, `isFixedSizeBaseAsset`, and `isFixedSizeQuoteAsset`.
+This code defines a set of types and functions related to a data enum called `FixedSize` that is used in the Convergence Program Library project. The `FixedSize` enum is defined as a union type that represents the different variants of the enum, which are defined in the `FixedSizeRecord` type. The `FixedSizeRecord` type is not meant to be used directly, but rather serves as a base for deriving the `FixedSize` type and the corresponding serializer and deserializer functions.
 
-The `FixedSizeRecord` type is used to derive the `FixedSize` type as well as the de/serializer. However, it is not meant to be referred to in code, and instead, the `FixedSize` type should be used instead. The `FixedSizeRecord` type is defined as an object with three properties: `None`, `BaseAsset`, and `QuoteAsset`. Each property is an object with a single property that is a `beet.bignum` type.
+The `FixedSize` enum includes a `__kind` property that allows for narrowing the type in switch and if statements. Additionally, the code defines three type guard functions (`isFixedSizeNone`, `isFixedSizeBaseAsset`, and `isFixedSizeQuoteAsset`) that can be used to narrow the type to a specific variant.
 
-The `fixedSizeBeet` function is defined as a `beet.dataEnum` function that takes an array of tuples. Each tuple represents a variant of the `FixedSize` enum and includes a string that represents the variant name and a `beet.BeetArgsStruct` object that defines the properties of the variant. The `beet.BeetArgsStruct` object takes an array of tuples that define the properties of the variant and a string that represents the type of the variant. The `fixedSizeBeet` function returns a `beet.FixableBeet` object that is used to serialize and deserialize the `FixedSize` enum.
+The `fixedSizeBeet` constant is a `FixableBeet` object that is created using the `dataEnum` function from the `beet` library. This object is used to serialize and deserialize instances of the `FixedSize` enum. It includes three variants (`None`, `BaseAsset`, and `QuoteAsset`) that correspond to the variants in the `FixedSize` enum. Each variant is defined using a `BeetArgsStruct` object that specifies the fields and types of the variant.
 
-Overall, this code defines the `FixedSize` enum and provides functions for narrowing types to specific variants of the enum. It also defines a `beet.dataEnum` function that is used to serialize and deserialize the `FixedSize` enum. This code is likely used in other parts of the Convergence Program Library project to represent and manipulate fixed-size data structures. Below is an example of how the `FixedSize` enum might be used:
-
-```
-import { FixedSize, isFixedSizeNone } from 'convergence-program-library';
-
-const data: FixedSize = { __kind: 'None', padding: 123 };
-if (isFixedSizeNone(data)) {
-  console.log(data.padding); // prints 123
-}
-```
+Overall, this code provides a way to define and work with a data enum in the Convergence Program Library project. The `FixedSize` enum can be used to represent fixed-size data structures in a type-safe way, and the `fixedSizeBeet` object provides a way to serialize and deserialize instances of this enum.
 ## Questions: 
  1. What is the purpose of the `FixedSizeRecord` type?
-- The `FixedSizeRecord` type is used to derive the `FixedSize` type as well as the de/serializer, but it should not be referred to in code. Instead, the `FixedSize` type should be used.
+   
+   The `FixedSizeRecord` type is used to derive the `FixedSize` type as well as the de/serializer. It represents a union of fixed-size data types defined in Rust.
 
 2. What is the purpose of the `fixedSizeBeet` constant?
-- The `fixedSizeBeet` constant is a `beet` data enum that defines the `FixedSizeRecord` variants and their corresponding `beet` serialization and deserialization functions.
+   
+   The `fixedSizeBeet` constant is a `beet` data enum that maps the `FixedSizeRecord` union to `beet` types. It is used to serialize and deserialize `FixedSize` data.
 
 3. What is the purpose of the `isFixedSize*` type guards?
-- The `isFixedSize*` type guards are used to narrow the `FixedSize` union type to a specific variant, based on the `__kind` property included in the type. This allows for more specific type checking in switch/if statements.
+   
+   The `isFixedSize*` type guards are used to narrow a `FixedSize` union type to a specific variant. They are useful for type checking and pattern matching in switch/if statements.

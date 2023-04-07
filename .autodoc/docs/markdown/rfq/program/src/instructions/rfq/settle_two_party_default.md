@@ -1,32 +1,40 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/rfq/settle_two_party_default.rs)
 
-The code defines a function `settle_both_party_default_collateral_instruction` that is used to settle a defaulted response in a two-party RFQ (Request for Quote) scenario. The function takes in a context struct `SettleTwoPartyDefaultAccounts` that contains various accounts and program data required to execute the settlement. The function first calls a `validate` function to ensure that the response is in a defaulted state and that collateral has been locked. If the validation passes, the function proceeds to transfer the locked collateral from the taker and maker accounts to the protocol account. Finally, the function unlocks the collateral and exits the response.
+The code defines a function called `settle_both_party_default_collateral_instruction` and a struct called `SettleTwoPartyDefaultAccounts`. The function takes in a context of type `SettleTwoPartyDefaultAccounts` and returns a `Result`. The struct defines a set of accounts that are required to execute the function. 
 
-The `SettleTwoPartyDefaultAccounts` struct contains the following accounts:
-- `protocol`: The account that stores the state of the protocol.
-- `rfq`: The account that stores the state of the RFQ.
-- `response`: The account that stores the state of the response.
-- `taker_collateral_info`: The account that stores the collateral information of the taker.
-- `maker_collateral_info`: The account that stores the collateral information of the maker.
-- `taker_collateral_tokens`: The account that stores the collateral tokens of the taker.
-- `maker_collateral_tokens`: The account that stores the collateral tokens of the maker.
-- `protocol_collateral_tokens`: The account that stores the collateral tokens of the protocol.
-- `token_program`: The SPL token program account.
+The purpose of this code is to settle a defaulted response for a two-party RFQ (Request for Quote) trade. In a two-party RFQ trade, the taker (buyer) and maker (seller) agree on a price and quantity for a trade. The taker locks some collateral tokens in a collateral account, and the maker locks some collateral tokens in a separate collateral account. If the maker fails to deliver the asset or the taker fails to pay for the asset, the response is considered defaulted. 
 
-The `validate` function checks that the response is in a defaulted state and that collateral has been locked. If the validation passes, the function returns `Ok(())`.
+The `SettleTwoPartyDefaultAccounts` struct defines the accounts required to settle a defaulted response. These accounts include the protocol account, the RFQ account, the response account, the taker and maker collateral accounts, and the token accounts for the collateral tokens. 
 
-The `settle_both_party_default_collateral_instruction` function first checks if the response is in a defaulted state. If not, it sets the response to a defaulted state and exits the response. The function then checks that both parties have defaulted. If so, it transfers the locked collateral from the taker and maker accounts to the protocol account using the `transfer_collateral_token` function. Finally, the function unlocks the collateral and exits the response using the `unlock_response_collateral` function.
+The `settle_both_party_default_collateral_instruction` function first validates that the response is in the defaulted state and that the required collateral is locked. If the response is not in the defaulted state, it sets the response to the defaulted state and exits the function. If the response is in the defaulted state, it checks that both parties have defaulted. 
 
-Overall, this code is used to settle a defaulted response in a two-party RFQ scenario. It ensures that collateral is transferred correctly and that the response is exited properly. This code is likely part of a larger project that involves RFQs and collateral management.
+The function then transfers the locked collateral tokens from the taker and maker collateral accounts to the protocol collateral account. Finally, it unlocks the collateral tokens and returns a `Result`.
+
+Here is an example of how this code might be used in the larger project:
+
+```rust
+let settle_accounts = SettleTwoPartyDefaultAccounts {
+    protocol: protocol_account,
+    rfq: Box::new(rfq_account),
+    response: Box::new(response_account),
+    taker_collateral_info: taker_collateral_account,
+    maker_collateral_info: maker_collateral_account,
+    taker_collateral_tokens: taker_collateral_token_account,
+    maker_collateral_tokens: maker_collateral_token_account,
+    protocol_collateral_tokens: protocol_collateral_token_account,
+    token_program: token_program_account.into(),
+};
+
+settle_both_party_default_collateral_instruction(settle_accounts)?;
+```
+
+This code creates a `SettleTwoPartyDefaultAccounts` struct with the required accounts and calls the `settle_both_party_default_collateral_instruction` function with the struct as an argument. If the function executes successfully, the defaulted response is settled and the collateral tokens are unlocked.
 ## Questions: 
- 1. What is the purpose of the `SettleTwoPartyDefaultAccounts` struct and what are its fields used for?
-   
-   The `SettleTwoPartyDefaultAccounts` struct is used to define the accounts required for the `settle_both_party_default_collateral_instruction` function. Its fields are used to specify the accounts that need to be accessed and mutated during the function execution, such as the `rfq`, `response`, and `protocol` accounts, as well as various collateral-related accounts.
+ 1. What is the purpose of the `SettleTwoPartyDefaultAccounts` struct and its associated `Accounts` derive macro?
+- The `SettleTwoPartyDefaultAccounts` struct and its associated `Accounts` derive macro define the accounts required for the `settle_both_party_default_collateral_instruction` function to execute, and provide a convenient way to access and validate those accounts within the function.
 
-2. What is the purpose of the `validate` function and what does it check for?
-   
-   The `validate` function is used to check if the `response` account is in the correct state and has locked collateral. Specifically, it checks if the `response` account is in the `Defaulted` state and has locked collateral, and returns an error if either of these conditions are not met.
+2. What is the purpose of the `validate` function?
+- The `validate` function checks that the response account is in the `Defaulted` state, and that collateral has been locked by the response account. If either of these conditions are not met, the function returns an error.
 
-3. What is the purpose of the `settle_both_party_default_collateral_instruction` function and what does it do?
-   
-   The `settle_both_party_default_collateral_instruction` function is used to settle a defaulted response by transferring locked collateral tokens from the taker and maker accounts to the protocol account, and then unlocking the collateral. It first calls the `validate` function to ensure that the response is in the correct state and has locked collateral, and then transfers the locked collateral tokens to the protocol account using the `transfer_collateral_token` function. Finally, it unlocks the collateral using the `unlock_response_collateral` function.
+3. What is the purpose of the `transfer_collateral_token` and `unlock_response_collateral` functions?
+- The `transfer_collateral_token` function transfers collateral tokens from a collateral account to the protocol's collateral account. The `unlock_response_collateral` function unlocks collateral that was previously locked by the response account, and returns it to the taker and maker accounts.

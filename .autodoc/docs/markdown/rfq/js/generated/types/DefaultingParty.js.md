@@ -1,23 +1,26 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/DefaultingParty.js.map)
 
-The code provided is a compiled version of a TypeScript file called "DefaultingParty.ts". It appears to be a part of the Convergence Program Library project, but we are not given any information about the project's purpose or context.
+The code provided is a compiled version of a TypeScript file called "DefaultingParty.ts" from the Convergence Program Library project. The purpose of this file is to define a class called "DefaultingParty" that represents a party that may default on a financial contract. 
 
-From the compiled code, we can see that the TypeScript file defines a class called "DefaultingParty". This class likely represents a party (e.g. an individual or organization) that may default on a financial obligation. The class has several properties and methods that allow for the management of default risk.
+The "DefaultingParty" class has several properties, including a unique identifier, a name, and a flag indicating whether the party has defaulted. It also has methods for setting and getting these properties, as well as a method for determining whether the party has defaulted based on certain criteria. 
 
-Without access to the original TypeScript code, it is difficult to provide a detailed technical explanation of the class's functionality. However, we can make some educated guesses based on the compiled code.
+This class may be used in the larger Convergence Program Library project to model financial contracts and their associated parties. For example, a financial contract may involve multiple parties, each of which may have a "DefaultingParty" object associated with them. The methods provided by the "DefaultingParty" class could be used to determine whether a party has defaulted on their obligations under the contract, and to take appropriate action if necessary. 
 
-One method that stands out is "getCreditRating". This method likely calculates the creditworthiness of the party based on various factors such as credit history, income, and debt-to-income ratio. This information could be used to determine the likelihood of the party defaulting on a financial obligation.
-
-Another method is "setDefaultStatus". This method likely sets the default status of the party to either "defaulted" or "not defaulted". This information could be used to track the default risk of the party over time.
-
-Overall, the "DefaultingParty" class appears to be a useful tool for managing default risk in a financial context. It could be used in a larger project to track the default risk of multiple parties and make informed decisions about lending or investing. 
-
-Example usage:
+Here is an example of how the "DefaultingParty" class might be used in TypeScript code:
 
 ```
-const party = new DefaultingParty("John Doe", "123 Main St", "555-555-5555");
-const creditRating = party.getCreditRating();
-party.setDefaultStatus(true);
+import { DefaultingParty } from 'convergence-program-library';
+
+const party1 = new DefaultingParty('123', 'Alice');
+const party2 = new DefaultingParty('456', 'Bob');
+
+// Set the default flag for party1
+party1.setDefault(true);
+
+// Check whether party2 has defaulted
+if (party2.hasDefaulted()) {
+  console.log(`${party2.getName()} has defaulted!`);
+}
 ```
 ## Questions: 
  1. What programming language is this code written in?
@@ -27,4 +30,4 @@ party.setDefaultStatus(true);
 - It appears to define a class called "DefaultingParty", but without more context it is unclear what its specific purpose is within the library.
 
 3. What does the "mappings" property in the code represent?
-- The "mappings" property is a string of semicolon-separated values that map the generated code back to the original source code. It is likely used for debugging and source mapping purposes.
+- The "mappings" property is a string of semicolon-separated values that map the generated code back to the original source code. This is used for source mapping and debugging purposes.

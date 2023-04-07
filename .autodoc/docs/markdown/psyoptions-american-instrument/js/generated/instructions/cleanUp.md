@@ -1,42 +1,47 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/cleanUp.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/cleanUp.js)
 
-This code defines a set of instructions and accounts required for a "CleanUp" operation in the Convergence Program Library project. The code is generated using the solita package and should not be edited directly. 
+This code defines two functions and exports them for use in other parts of the Convergence Program Library project. The functions are used to create a Solana transaction instruction for cleaning up an escrow account after a trade has been completed.
 
-The code imports several packages including "@solana/spl-token", "@convergence-rfq/beet", and "@solana/web3.js". It also defines a custom type called "AssetIdentifierDuplicate" and a corresponding type called "CleanUpInstructionArgs" that includes an asset identifier. 
+The `cleanUpStruct` variable defines the structure of the arguments that will be passed to the `createCleanUpInstruction` function. It is an instance of the `FixableBeetArgsStruct` class from the `@convergence-rfq/beet` package. The structure has two fields: `instructionDiscriminator` and `assetIdentifier`. The `instructionDiscriminator` field is a fixed-size array of 8 bytes that identifies the type of instruction being executed. The `assetIdentifier` field is an instance of the `assetIdentifierDuplicateBeet` structure from the `AssetIdentifierDuplicate_1` module.
 
-The "cleanUpStruct" variable defines a "FixableBeetArgsStruct" that includes the instruction discriminator and the asset identifier. The "CleanUpInstructionAccounts" type defines the accounts required for the clean-up operation, including the protocol, RFQ, response, firstToPrepare, escrow, and backupReceiver accounts. 
+The `cleanUpInstructionDiscriminator` variable is an array of 8 bytes that is used to identify the `cleanUp` instruction.
 
-The "createCleanUpInstruction" function creates a "CleanUp" instruction using the provided accounts and arguments. It serializes the instruction data and creates a transaction instruction using the provided program ID and account keys. 
+The `createCleanUpInstruction` function takes three arguments: `accounts`, `args`, and `programId`. `accounts` is an object that contains the Solana account information needed to execute the instruction. `args` is an object that contains the arguments needed to execute the instruction. `programId` is the public key of the Solana program that will execute the instruction.
 
-Overall, this code provides a way to perform a clean-up operation in the Convergence Program Library project using the specified accounts and arguments. It is likely part of a larger set of instructions and functions used in the project. 
+The function first serializes the `args` object using the `cleanUpStruct` structure. It then creates an array of `keys` that contains the Solana account information needed to execute the instruction. Finally, it creates a new `TransactionInstruction` object using the `programId`, `keys`, and serialized `args` data, and returns it.
 
-Example usage:
+This function can be used in the larger Convergence Program Library project to execute the `cleanUp` instruction on a Solana blockchain. An example usage of this function might look like:
 
 ```
 const accounts = {
-  protocol: new web3.PublicKey("..."),
-  rfq: new web3.PublicKey("..."),
-  response: new web3.PublicKey("..."),
-  firstToPrepare: new web3.PublicKey("..."),
-  escrow: new web3.PublicKey("..."),
-  backupReceiver: new web3.PublicKey("..."),
-  tokenProgram: splToken.TOKEN_PROGRAM_ID,
+  protocol: new web3.PublicKey('...'),
+  rfq: new web3.PublicKey('...'),
+  response: new web3.PublicKey('...'),
+  firstToPrepare: new web3.PublicKey('...'),
+  escrow: new web3.PublicKey('...'),
+  backupReceiver: new web3.PublicKey('...'),
+  tokenProgram: new web3.PublicKey('...'),
+  anchorRemainingAccounts: [
+    { pubkey: new web3.PublicKey('...'), isWritable: false, isSigner: false },
+    { pubkey: new web3.PublicKey('...'), isWritable: false, isSigner: false },
+    ...
+  ]
 };
 
 const args = {
-  assetIdentifier: {
-    ...,
-  },
+  assetIdentifier: { ... },
 };
 
-const instruction = createCleanUpInstruction(accounts, args);
+const programId = new web3.PublicKey('...');
+
+const instruction = createCleanUpInstruction(accounts, args, programId);
 ```
 ## Questions: 
- 1. What is the purpose of this code?
-- This code generates a CleanUp instruction for the Convergence Program Library using the solita package.
+ 1. What is the purpose of this code and what problem does it solve?
+   This code defines functions and structures related to cleaning up assets in a financial protocol. It creates a transaction instruction for cleaning up an asset and serializes the arguments for that instruction.
 
-2. What are the required accounts for the CleanUp instruction?
-- The required accounts for the CleanUp instruction are: protocol (signer), rfq, response, firstToPrepare (writable), escrow (writable), backupReceiver (writable), tokenProgram (optional), and anchorRemainingAccounts (optional).
+2. What external dependencies does this code have?
+   This code depends on several external libraries, including "@solana/spl-token", "@convergence-rfq/beet", and "@solana/web3.js". It also imports a custom type "AssetIdentifierDuplicate" from a local file.
 
-3. Can this code be edited?
-- No, this code should not be edited. Instead, solita should be rerun to update it or a wrapper should be written to add functionality.
+3. What is the expected input and output of the "createCleanUpInstruction" function?
+   The "createCleanUpInstruction" function takes in several account objects and an argument object, and returns a transaction instruction object. The expected input and output types are not explicitly defined in the code, but can be inferred from the function signature and usage.

@@ -1,24 +1,20 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/program/src/base_asset_extractor.rs)
 
-The code above is a Rust module that defines two functions used to extract base asset information from a vector of Leg structs. The module imports the HashSet struct from the standard Rust collections library, the Error enum from the crate's errors module, and the prelude module from the Anchor framework. It also imports the BaseAssetIndex, BaseAssetInfo, and Leg structs from the rfq::state module.
+The code above is a Rust module that defines two functions used to extract base asset information from a vector of Leg structs. The module imports the HashSet struct from the standard Rust collections library, as well as the Error struct from the Convergence Program Library's errors module, and the prelude module from the Anchor framework.
 
-The first function, extract_base_assets, takes a reference to a vector of Leg structs and a mutable reference to a slice of AccountInfo structs. It returns a Result containing a vector of BaseAssetInfo structs or an Error if there are not enough accounts to extract the base asset information. The function first creates a HashSet of BaseAssetIndex structs by iterating over the legs vector and mapping each Leg struct to its base_asset_index field. It then iterates over the HashSet and extracts the BaseAssetInfo for each BaseAssetIndex. It checks that the remaining_accounts slice contains enough accounts to extract the BaseAssetInfo and removes the BaseAssetIndex from the HashSet. Finally, it pushes the extracted BaseAssetInfo to the result vector and returns it.
+The first function, `extract_base_assets`, takes two arguments: a reference to a vector of Leg structs, and a mutable reference to a slice of AccountInfo structs. The function returns a Result containing a vector of BaseAssetInfo structs or an Error if there are not enough accounts to extract the base asset information. 
 
-The second function, extract_base_asset_info, takes a mutable reference to a slice of AccountInfo structs and returns a Result containing a BaseAssetInfo struct or an Error if there are no accounts to extract. The function first checks that the accounts slice is not empty and then extracts the first AccountInfo struct from the slice. It then creates an Account<BaseAssetInfo> struct from the AccountInfo struct using the try_from method and returns the inner BaseAssetInfo struct.
+The function first creates a HashSet of BaseAssetIndex structs by iterating over the legs vector and extracting the base asset index from each leg. It then enters a loop that runs for the length of the base_assets HashSet. In each iteration of the loop, the function calls the `extract_base_asset_info` function to extract the base asset information from the first account in the remaining_accounts slice. If the base asset index of the extracted information is not in the base_assets HashSet, the function returns an Error. Otherwise, the function removes the base asset index from the HashSet, adds the extracted base asset information to the result vector, and continues to the next iteration of the loop. Finally, the function returns the result vector.
 
-These functions are likely used in the larger project to extract base asset information from a vector of Leg structs for use in other parts of the program. For example, the extracted base asset information could be used to calculate prices or perform other financial calculations. Here is an example of how the extract_base_assets function might be used:
+The second function, `extract_base_asset_info`, takes a mutable reference to a slice of AccountInfo structs and returns a Result containing a BaseAssetInfo struct or an Error if the slice is empty. The function first checks that the slice is not empty and then extracts the first AccountInfo struct from the slice. It then attempts to parse the AccountInfo struct into an Account<BaseAssetInfo> struct using the try_from method. If the parsing is successful, the function returns the inner BaseAssetInfo struct. Otherwise, the function returns an Error.
 
-```
-let legs: Vec<Leg> = vec![...];
-let accounts: &[AccountInfo] = &[...];
-let base_assets = extract_base_assets(&legs, &mut accounts)?;
-```
+Overall, these functions are used to extract base asset information from a vector of Leg structs, which is likely used in a larger program to perform some sort of financial calculation or analysis. The `extract_base_assets` function is the main entry point for this functionality, while the `extract_base_asset_info` function is a helper function that extracts the base asset information from a single account.
 ## Questions: 
  1. What is the purpose of the `extract_base_assets` function?
-- The `extract_base_assets` function takes a vector of `Leg` structs and a mutable reference to a slice of `AccountInfo` structs, and returns a vector of `BaseAssetInfo` structs. It extracts the base assets from the legs and returns their information.
+- The `extract_base_assets` function takes a vector of `Leg` objects and a mutable reference to a slice of `AccountInfo` objects, and returns a vector of `BaseAssetInfo` objects. It extracts the base assets from the legs and matches them with the corresponding accounts.
 
 2. What is the role of the `BaseAssetIndex` and `BaseAssetInfo` structs?
-- The `BaseAssetIndex` struct represents the index of a base asset, while the `BaseAssetInfo` struct contains information about a base asset, such as its mint and vault accounts.
+- The `BaseAssetIndex` struct represents the index of a base asset, while the `BaseAssetInfo` struct represents the information associated with a base asset. They are used to match the base assets with the corresponding accounts.
 
 3. What is the purpose of the `extract_base_asset_info` function?
-- The `extract_base_asset_info` function takes a mutable reference to a slice of `AccountInfo` structs and returns a `BaseAssetInfo` struct. It extracts the information about a base asset from the first account in the slice and returns it, while also updating the slice to exclude the first account.
+- The `extract_base_asset_info` function takes a mutable reference to a slice of `AccountInfo` objects and returns a `BaseAssetInfo` object. It extracts the base asset information from the first account in the slice and returns it, while also updating the slice to exclude the first account.

@@ -1,34 +1,40 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/initializeProtocol.js.map)
 
-The `initializeProtocol.js` file is responsible for initializing the Convergence Protocol. The Convergence Protocol is a real-time collaboration protocol that enables multiple users to work together on a shared document or application. The protocol is used in the Convergence Program Library project to enable real-time collaboration between users.
+The `initializeProtocol.js` file is responsible for initializing the Convergence Protocol. The Convergence Protocol is a real-time collaboration protocol that enables multiple users to work together on a shared document or application. This file is a critical part of the Convergence Program Library, as it sets up the protocol and allows users to collaborate in real-time.
 
-The `initializeProtocol.js` file contains a single function called `initializeProtocol`. This function takes a single argument, which is an object that contains configuration options for the Convergence Protocol. The function initializes the Convergence Protocol with the provided configuration options and returns a Promise that resolves when the protocol is ready to use.
+The code in this file is written in TypeScript and compiled to JavaScript. It defines a single function, `initializeProtocol`, which takes a configuration object as an argument. The configuration object specifies various options for the Convergence Protocol, such as the URL of the server to connect to, the user ID of the current user, and the authentication token to use.
 
-The configuration options for the Convergence Protocol include the URL of the Convergence server, the user ID of the current user, and the authentication token for the current user. These options are used to authenticate the user with the Convergence server and establish a connection to the server.
+The `initializeProtocol` function sets up the Convergence Protocol by creating a new `ConvergenceDomain` object and connecting it to the specified server. It then authenticates the user using the provided authentication token and sets up various event listeners to handle changes to the shared document or application.
 
-Here is an example of how the `initializeProtocol` function can be used:
+Here is an example of how to use the `initializeProtocol` function:
 
 ```javascript
+import { initializeProtocol } from 'convergence';
+
 const config = {
-  url: "https://convergence.example.com",
-  userId: "user123",
-  authToken: "abc123"
+  serverUrl: 'https://my.convergence.server',
+  userId: 'myUserId',
+  authToken: 'myAuthToken'
 };
 
-initializeProtocol(config).then(() => {
-  console.log("Convergence Protocol initialized");
-});
+initializeProtocol(config)
+  .then((domain) => {
+    // The Convergence Protocol is now initialized and connected to the server.
+    // You can now use the `domain` object to interact with the shared document or application.
+  })
+  .catch((error) => {
+    // An error occurred while initializing the Convergence Protocol.
+    console.error(error);
+  });
 ```
 
-In this example, the `initializeProtocol` function is called with a configuration object that specifies the URL of the Convergence server, the user ID of the current user, and the authentication token for the current user. Once the protocol is initialized, the `then` method is called on the returned Promise to log a message indicating that the protocol has been initialized.
-
-Overall, the `initializeProtocol.js` file plays a critical role in the Convergence Program Library project by enabling real-time collaboration between users. The `initializeProtocol` function is used to authenticate users with the Convergence server and establish a connection to the server, which allows users to collaborate in real-time on shared documents and applications.
+Overall, the `initializeProtocol.js` file is a crucial part of the Convergence Program Library, as it sets up the Convergence Protocol and enables real-time collaboration between multiple users.
 ## Questions: 
  1. What is the purpose of this file?
-- This file is called `initializeProtocol.js` and it likely contains code that initializes a protocol for the Convergence Program Library.
+- This file is called `initializeProtocol.js` and it initializes a protocol for the Convergence Program Library.
 
 2. What programming language is this code written in?
 - The file extension is `.js`, which typically indicates that the code is written in JavaScript.
 
 3. What is the expected output or behavior of this code?
-- Without additional context or documentation, it is unclear what the expected output or behavior of this code is.
+- Without additional context or information, it is unclear what the expected output or behavior of this code is.

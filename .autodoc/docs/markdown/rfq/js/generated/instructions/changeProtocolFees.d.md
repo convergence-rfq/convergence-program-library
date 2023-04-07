@@ -1,37 +1,36 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/changeProtocolFees.d.ts)
 
-This code is a module that provides functionality for changing protocol fees in a larger project called Convergence Program Library. The module imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js", which are used to define types and create transactions on the Solana blockchain.
+This code is a part of a larger project called Convergence Program Library and it is used to create a transaction instruction for changing protocol fees. The code imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js", which are used to define the necessary data structures and functions for creating the instruction.
 
-The module exports two types, "ChangeProtocolFeesInstructionArgs" and "ChangeProtocolFeesInstructionAccounts", which are used to define the arguments and accounts needed to execute the "createChangeProtocolFeesInstruction" function. This function takes in the accounts and arguments, along with an optional programId, and returns a transaction instruction that can be used to change the protocol fees.
+The main purpose of this code is to define the data structures and functions necessary for creating a transaction instruction that can be used to change the protocol fees for a given authority and protocol. The instruction takes in two arguments, settleFees and defaultFees, which are both optional and of type FeeParameters. The instruction also takes in two accounts, authority and protocol, which are of type web3.PublicKey. Additionally, the instruction can take in an optional array of remaining accounts, anchorRemainingAccounts, which is also of type web3.AccountMeta.
 
-The "changeProtocolFeesStruct" and "changeProtocolFeesInstructionDiscriminator" constants are also exported, which are used to define the structure and discriminator of the instruction. These constants are used internally by the "createChangeProtocolFeesInstruction" function to create the instruction.
+The code defines two data structures, ChangeProtocolFeesInstructionArgs and ChangeProtocolFeesInstructionAccounts, which are used to define the arguments and accounts for the instruction. The code also defines a constant, changeProtocolFeesInstructionDiscriminator, which is used to identify the instruction in the transaction.
 
-Overall, this module provides a way to change the protocol fees in the Convergence Program Library project. It does so by defining the necessary types and constants, and providing a function to create a transaction instruction that can be executed on the Solana blockchain. Here is an example of how this module might be used:
+The code also defines a function, createChangeProtocolFeesInstruction, which takes in the necessary accounts and arguments for the instruction and returns a web3.TransactionInstruction object. This object can then be used to create a transaction that can be sent to the Solana blockchain to change the protocol fees.
+
+Here is an example of how this code can be used:
 
 ```
-import { createChangeProtocolFeesInstruction } from "convergence-program-library";
+import { createChangeProtocolFeesInstruction } from "path/to/file";
 
-const accounts = {
-  authority: new web3.PublicKey("..."),
-  protocol: new web3.PublicKey("..."),
-  anchorRemainingAccounts: [new web3.AccountMeta(...)]
-};
-
-const args = {
-  settleFees: { ... },
-  defaultFees: { ... }
-};
-
+const authority = new web3.PublicKey("authority public key");
+const protocol = new web3.PublicKey("protocol public key");
+const settleFees = { fee1: 100, fee2: 200 };
+const defaultFees = { fee1: 50, fee2: 100 };
+const args = { settleFees, defaultFees };
+const accounts = { authority, protocol };
 const instruction = createChangeProtocolFeesInstruction(accounts, args);
 
-// Use the instruction to execute the transaction on the Solana blockchain
+// Use the instruction to create a transaction and send it to the Solana blockchain
 ```
+
+Overall, this code provides a useful tool for changing protocol fees in the Convergence Program Library project.
 ## Questions: 
  1. What external libraries or dependencies does this code rely on?
 - This code relies on two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
 
-2. What is the purpose of the "ChangeProtocolFeesInstructionArgs" type and what does it contain?
-- The "ChangeProtocolFeesInstructionArgs" type is a TypeScript interface that defines the arguments for a function that changes protocol fees. It contains two properties: "settleFees" and "defaultFees", both of which are optional and of type "COption<FeeParameters>".
+2. What is the purpose of the "ChangeProtocolFeesInstructionArgs" type and its properties?
+- The "ChangeProtocolFeesInstructionArgs" type defines the arguments needed for the "createChangeProtocolFeesInstruction" function, including "settleFees" and "defaultFees" properties of type "beet.COption<FeeParameters>".
 
-3. What is the purpose of the "createChangeProtocolFeesInstruction" function and what arguments does it take?
-- The "createChangeProtocolFeesInstruction" function is a TypeScript function that creates a Solana transaction instruction for changing protocol fees. It takes three arguments: "accounts" of type "ChangeProtocolFeesInstructionAccounts", "args" of type "ChangeProtocolFeesInstructionArgs", and an optional "programId" of type "web3.PublicKey".
+3. What is the purpose of the "createChangeProtocolFeesInstruction" function and how is it used?
+- The "createChangeProtocolFeesInstruction" function creates a Solana transaction instruction for changing protocol fees, using the provided accounts and arguments. It can be called with the necessary parameters and an optional program ID to generate the instruction.

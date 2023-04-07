@@ -6,19 +6,21 @@ This configuration file is important for the Convergence Program Library project
 
 Here is an example of how this configuration file might be used in the larger project:
 
-Suppose that the Convergence Program Library has a TypeScript file called `main.ts` that imports code from the `generated` and `idl` directories. The `tsconfig.json` file would ensure that the TypeScript compiler knows to include those directories in the compilation process. The developer could then run the TypeScript compiler with the following command:
+Suppose that the Convergence Program Library has a TypeScript file called `main.ts` that imports code from the `generated` and `idl` directories. The `tsconfig.json` file would ensure that the TypeScript compiler knows to include those directories in the compilation process. To compile the TypeScript code, a developer would run the following command in the terminal:
 
 ```
 tsc main.ts
 ```
 
-This would compile the `main.ts` file and any files it imports from the `generated` and `idl` directories. The resulting JavaScript files could then be used in the Convergence Program Library.
+This would compile the `main.ts` file and any files it imports from the `generated` and `idl` directories, using the settings specified in the `tsconfig.json` file. The resulting JavaScript code could then be run in a web browser or other JavaScript environment.
+
+Overall, this configuration file is a crucial part of the Convergence Program Library project, as it ensures that the TypeScript code is compiled correctly and can be used in a variety of environments.
 ## Questions: 
- 1. What is the purpose of the `tsconfig.build.json` file that this code is extending from?
-- The `tsconfig.build.json` file likely contains configuration options for building the project, and this file is inheriting those options.
+ 1. What is the purpose of the `tsconfig.build.json` file that this code is extending?
+- The `tsconfig.build.json` file likely contains configuration options for building the project, and this file is extending those options.
 
-2. What is the significance of setting the `rootDir` compiler option to `.`?
-- Setting `rootDir` to `.` likely means that the root directory for the project is the current directory.
+2. What is the significance of the `"rootDir": "."` option in the `compilerOptions` object?
+- The `"rootDir": "."` option specifies that the root directory for the TypeScript compiler should be the current directory.
 
-3. What is the purpose of the `include` property and what directories are being included?
-- The `include` property specifies which directories should be included in the compilation process. In this case, the `generated` and `idl` directories are being included.
+3. What directories are being included in the compilation process?
+- The `include` array specifies that the `./generated` and `./idl` directories should be included in the compilation process.

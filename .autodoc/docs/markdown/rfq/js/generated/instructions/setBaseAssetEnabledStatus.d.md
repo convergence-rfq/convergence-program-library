@@ -1,34 +1,29 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/setBaseAssetEnabledStatus.d.ts)
 
-This code defines a set of TypeScript interfaces and functions related to creating and executing a Solana transaction instruction for setting the enabled status of a base asset in the Convergence Program Library. 
+This code exports several types and functions related to setting the enabled status of a base asset in the Convergence Program Library. The purpose of this code is to provide a way for users to enable or disable a specific base asset within the Convergence Protocol. 
 
-The `import` statements at the beginning of the code import two external libraries: `@convergence-rfq/beet` and `@solana/web3.js`. The former is likely a library for encoding and decoding binary data structures, while the latter is a library for interacting with the Solana blockchain. 
+The `SetBaseAssetEnabledStatusInstructionArgs` type defines an object with a single property `enabledStatusToSet`, which is a boolean value indicating whether the base asset should be enabled or disabled. 
 
-The `SetBaseAssetEnabledStatusInstructionArgs` interface defines an object with a single boolean property `enabledStatusToSet`, which represents the desired enabled status of the base asset. 
+The `setBaseAssetEnabledStatusStruct` constant is a `BeetArgsStruct` object that extends the `SetBaseAssetEnabledStatusInstructionArgs` type with an additional property `instructionDiscriminator`, which is an array of numbers used to identify the specific instruction being executed. 
 
-The `setBaseAssetEnabledStatusStruct` constant is an instance of the `BeetArgsStruct` class from the `@convergence-rfq/beet` library. It defines a binary data structure that can be used to encode and decode the `SetBaseAssetEnabledStatusInstructionArgs` object. The `instructionDiscriminator` property is an array of numbers that serves as a unique identifier for this particular instruction. 
+The `SetBaseAssetEnabledStatusInstructionAccounts` type defines an object with several properties representing the accounts required to execute the instruction. These include the `authority` account, which is the account authorized to execute the instruction, the `protocol` account, which is the Convergence Protocol account, the `baseAsset` account, which is the account representing the base asset being enabled or disabled, and an optional `anchorRemainingAccounts` array, which can be used to include additional accounts required by the instruction. 
 
-The `SetBaseAssetEnabledStatusInstructionAccounts` interface defines an object with several properties representing the Solana accounts involved in the transaction. These include the authority account, the protocol account, the base asset account, and an optional array of additional accounts (`anchorRemainingAccounts`). 
+The `setBaseAssetEnabledStatusInstructionDiscriminator` constant is an array of numbers used to identify the specific instruction being executed. 
 
-The `setBaseAssetEnabledStatusInstructionDiscriminator` constant is an array of numbers that serves as a unique identifier for this particular instruction. 
+The `createSetBaseAssetEnabledStatusInstruction` function takes two arguments: `accounts` and `args`, which are objects of type `SetBaseAssetEnabledStatusInstructionAccounts` and `SetBaseAssetEnabledStatusInstructionArgs`, respectively. The function also takes an optional `programId` argument, which is a `PublicKey` object representing the program ID of the Convergence Protocol. The function returns a `TransactionInstruction` object that can be used to execute the instruction. 
 
-The `createSetBaseAssetEnabledStatusInstruction` function takes in two arguments: an object of type `SetBaseAssetEnabledStatusInstructionAccounts` and an object of type `SetBaseAssetEnabledStatusInstructionArgs`. It returns a Solana transaction instruction that can be included in a larger transaction. The `programId` argument is an optional parameter that specifies the Solana program ID associated with this instruction. 
-
-Overall, this code provides a way to create and execute a Solana transaction instruction for setting the enabled status of a base asset in the Convergence Program Library. It relies on external libraries for binary encoding and decoding and for interacting with the Solana blockchain. Developers using this code would need to provide the necessary account information and program ID to create a valid transaction. 
+Overall, this code provides a way for users to enable or disable specific base assets within the Convergence Protocol. This functionality is important for managing the assets available for trading on the platform and ensuring that only valid and reliable assets are used. The code can be used in conjunction with other parts of the Convergence Program Library to build a complete trading platform. 
 
 Example usage:
 
 ```
-import { createSetBaseAssetEnabledStatusInstruction } from "path/to/setBaseAssetEnabledStatus";
+import { createSetBaseAssetEnabledStatusInstruction } from "@convergence-rfq/beet";
+import { PublicKey } from "@solana/web3.js";
 
 const accounts = {
-  authority: new web3.PublicKey("..."),
-  protocol: new web3.PublicKey("..."),
-  baseAsset: new web3.PublicKey("..."),
-  anchorRemainingAccounts: [
-    { pubkey: new web3.PublicKey("..."), isWritable: true, isSigner: false },
-    { pubkey: new web3.PublicKey("..."), isWritable: false, isSigner: false },
-  ],
+  authority: new PublicKey("..."),
+  protocol: new PublicKey("..."),
+  baseAsset: new PublicKey("..."),
 };
 
 const args = {
@@ -37,14 +32,14 @@ const args = {
 
 const instruction = createSetBaseAssetEnabledStatusInstruction(accounts, args);
 
-// Use the instruction in a larger Solana transaction
+// Use the instruction to execute the enable/disable operation
 ```
 ## Questions: 
  1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The Convergence Program Library's purpose is not clear from this code alone. This code defines a function for creating a transaction instruction related to setting the enabled status of a base asset, using the BeetArgsStruct and web3.js libraries.
+- The Convergence Program Library's purpose is not clear from this code alone, but this code defines a function for creating a transaction instruction to set the enabled status of a base asset in the library.
 
-2. What is the expected input and output of the createSetBaseAssetEnabledStatusInstruction function?
-- The createSetBaseAssetEnabledStatusInstruction function takes in two arguments: an object containing various account public keys and an object containing a boolean value for the enabled status to set. It returns a web3.js TransactionInstruction object.
- 
-3. What is the significance of the instructionDiscriminator property in the setBaseAssetEnabledStatusStruct definition?
-- The instructionDiscriminator property is included in the setBaseAssetEnabledStatusStruct definition to differentiate this instruction from other instructions that may be defined in the same program. It is a unique identifier that helps the program distinguish between different types of instructions.
+2. What is the relationship between the "@convergence-rfq/beet" and "@solana/web3.js" packages?
+- It is not clear from this code alone what the relationship is between these two packages, but they are both imported and used in this code.
+
+3. What is the expected input and output of the "createSetBaseAssetEnabledStatusInstruction" function?
+- The expected input of the function is an object containing accounts and arguments, and an optional program ID. The expected output is a transaction instruction.

@@ -1,22 +1,22 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/interfaces/instrument.rs)
 
-This code file contains several functions that are used to interact with external smart contracts (called "instruments") in the Convergence Program Library project. These functions are used to validate data, prepare for settlement, settle, revert preparation, and clean up after settlement. 
+This code file contains several functions that are used to interact with external smart contracts, called instruments, in the Convergence Program Library project. These functions are used to validate data related to a financial instrument, prepare for settlement, settle, revert preparation, and clean up after settlement. 
 
-The `validate_leg_instrument_data` function takes a `Leg` object, which contains information about an asset, and validates the data associated with the asset's instrument. The function serializes the data and calls the instrument's `validate_data` method. 
+The `validate_leg_instrument_data` function takes a `Leg` object, which contains information about a financial instrument, and validates the data using an external instrument smart contract. The function serializes the data and calls the external contract using the `call_instrument` function. 
 
 The `validate_quote_instrument_data` function is similar to `validate_leg_instrument_data`, but it takes a `QuoteAsset` object instead of a `Leg` object. 
 
-The `prepare_to_settle` function prepares for settlement of an asset by calling the instrument's `prepare_to_settle` method. It takes an `AssetIdentifier` object, which identifies the asset to be settled, and an `AuthoritySide` object, which specifies which side of the trade is being settled. 
+The `prepare_to_settle` function prepares for settlement of a financial instrument by calling an external instrument smart contract. It takes an `AssetIdentifier` object, which identifies the asset to be settled, and an `AuthoritySide` object, which specifies which side of the trade is being settled. The function calls the external contract using the `call_instrument` function. 
 
-The `settle` function settles an asset by calling the instrument's `settle` method. It takes an `AssetIdentifier` object, which identifies the asset to be settled. 
+The `settle` function settles a financial instrument by calling an external instrument smart contract. It takes an `AssetIdentifier` object, which identifies the asset to be settled, and calls the external contract using the `call_instrument` function. 
 
-The `revert_preparation` function reverts the preparation for settlement of an asset by calling the instrument's `revert_preparation` method. It takes an `AssetIdentifier` object, which identifies the asset to be reverted, and an `AuthoritySide` object, which specifies which side of the trade is being reverted. 
+The `revert_preparation` function reverts preparation for settlement of a financial instrument by calling an external instrument smart contract. It takes an `AssetIdentifier` object, which identifies the asset for which preparation is being reverted, and an `AuthoritySide` object, which specifies which side of the trade is being reverted. The function calls the external contract using the `call_instrument` function. 
 
-The `clean_up` function cleans up after settlement of an asset by calling the instrument's `clean_up` method. It takes an `AssetIdentifier` object, which identifies the asset to be cleaned up. 
+The `clean_up` function cleans up after settlement of a financial instrument by calling an external instrument smart contract. It takes an `AssetIdentifier` object, which identifies the asset for which cleanup is being performed, and calls the external contract using the `call_instrument` function. 
 
-All of these functions call the `call_instrument` function, which is a helper function that takes care of calling the instrument's methods. It takes the serialized data, the instrument's program ID, the number of accounts required by the instrument's method, and the remaining accounts. It then constructs an instruction and invokes it using the `invoke_signed` function. 
+The `call_instrument` function is a helper function that is used by the other functions to call external instrument smart contracts. It takes the serialized data to be passed to the contract, the protocol state account, the instrument program key, the number of accounts to be passed to the contract, and optional `Rfq` and `Response` accounts. The function constructs the account metas and instruction needed to call the external contract using the `invoke_signed` function. 
 
-Overall, these functions provide a way to interact with external smart contracts in the Convergence Program Library project. They allow for the validation, preparation, settlement, reversion, and cleanup of assets.
+Overall, these functions provide a way to interact with external instrument smart contracts in the Convergence Program Library project. They allow for validation of instrument data, preparation for settlement, settlement, reversion of preparation, and cleanup after settlement.
 ## Questions: 
  1. What is the purpose of this code file?
 - This code file contains functions for validating instrument data, preparing to settle, settling, reverting preparation, and cleaning up. These functions are used in the Convergence Program Library.
@@ -25,4 +25,4 @@ Overall, these functions provide a way to interact with external smart contracts
 - This code file uses the `anchor_lang` and `solana_program` crates.
 
 3. What is the purpose of the `call_instrument` function?
-- The `call_instrument` function is used to invoke an external program with the given data and accounts. It takes in the data, the protocol account, the instrument key, the number of accounts, the RFQ and response accounts (if any), and the remaining accounts iterator. It then constructs an instruction and invokes it using `invoke_signed`.
+- The `call_instrument` function is used to call an instrument program with the given data and accounts. It takes in the instrument program's key, the number of accounts to use, and optional RFQ and response accounts.

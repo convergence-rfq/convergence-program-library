@@ -1,44 +1,45 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/setInstrumentType.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/setInstrumentType.js)
 
-This code is a generated module that provides functionality for creating a Solana program instruction to set the instrument type for a given protocol. The module imports the web3.js library, which is a JavaScript library for interacting with the Solana blockchain, as well as two other libraries from the Convergence Program Library: "@convergence-rfq/beet" and "@convergence-rfq/beet-solana". 
+This code defines a function and exports two constants related to setting the instrument type for a financial instrument. The function, `createSetInstrumentTypeInstruction`, takes in three arguments: `accounts`, `args`, and `programId`. It returns a `TransactionInstruction` object that can be used to set the instrument type for a financial instrument. 
 
-The module defines a type called "SetInstrumentTypeInstructionArgs", which is an object that contains two properties: "instrumentProgram", which is a public key for the instrument program, and "instrumentType", which is an optional instrument type. The module also defines a struct called "setInstrumentTypeStruct", which is a BeetArgsStruct that serializes the "SetInstrumentTypeInstructionArgs" object into a byte array. 
+The `accounts` argument is an object that contains the following properties: `authority`, `protocol`, `config`, and `anchorRemainingAccounts`. `authority` is the account that has the authority to set the instrument type. `protocol` is the account of the protocol that the financial instrument belongs to. `config` is the account that stores the configuration for the financial instrument. `anchorRemainingAccounts` is an optional array of additional accounts that are required for the transaction.
 
-Additionally, the module defines a type called "SetInstrumentTypeInstructionAccounts", which is an object that contains three properties: "authority", which is a public key for the authority account; "protocol", which is a public key for the protocol account; and "config", which is a public key for the config account. The module also defines an array called "setInstrumentTypeInstructionDiscriminator", which is used as a unique identifier for the instruction. 
+The `args` argument is an object that contains the following properties: `instructionDiscriminator`, `instrumentProgram`, and `instrumentType`. `instructionDiscriminator` is a fixed-size array of 8 bytes that identifies the instruction. `instrumentProgram` is the public key of the program that manages the financial instrument. `instrumentType` is the type of the financial instrument.
 
-Finally, the module exports a function called "createSetInstrumentTypeInstruction", which takes two arguments: "accounts", which is an object of type "SetInstrumentTypeInstructionAccounts", and "args", which is an object of type "SetInstrumentTypeInstructionArgs". The function returns a Solana transaction instruction that sets the instrument type for a given protocol. 
+The `programId` argument is the public key of the program that manages the financial instruments.
 
-This module is likely used in the larger Convergence Program Library project to provide a standardized way of setting the instrument type for different protocols on the Solana blockchain. Developers can use this module to create a Solana transaction instruction that sets the instrument type for a given protocol, which can then be executed on the blockchain. 
+The function first serializes the `args` object using the `setInstrumentTypeStruct` constant, which is a `FixableBeetArgsStruct` object that defines the structure of the arguments. It then creates an array of `keys` that are required for the transaction. The `keys` array contains the `authority`, `protocol`, and `config` accounts, and any additional accounts specified in `anchorRemainingAccounts`. 
 
-Example usage:
+Finally, the function creates a `TransactionInstruction` object using the `programId`, `keys`, and serialized `args` data. The `TransactionInstruction` object can be used to set the instrument type for a financial instrument.
+
+The two exported constants, `setInstrumentTypeStruct` and `setInstrumentTypeInstructionDiscriminator`, are used internally by the `createSetInstrumentTypeInstruction` function. `setInstrumentTypeStruct` is a `FixableBeetArgsStruct` object that defines the structure of the arguments for setting the instrument type. `setInstrumentTypeInstructionDiscriminator` is a fixed-size array of 8 bytes that identifies the instruction. 
+
+Overall, this code provides a way to set the instrument type for a financial instrument managed by a program. It is likely part of a larger project that manages financial instruments on a blockchain. An example usage of this code might look like:
 
 ```
-import { createSetInstrumentTypeInstruction } from "convergence-program-library";
-
 const accounts = {
-  authority: new web3.PublicKey("..."),
-  protocol: new web3.PublicKey("..."),
-  config: new web3.PublicKey("..."),
+  authority: authorityAccount.publicKey,
+  protocol: protocolAccount.publicKey,
+  config: configAccount.publicKey,
+  anchorRemainingAccounts: [additionalAccount1, additionalAccount2],
 };
 
 const args = {
-  instrumentProgram: new web3.PublicKey("..."),
-  instrumentType: {
-    tag: "SomeInstrumentType",
-    value: {
-      ...,
-    },
-  },
+  instructionDiscriminator: setInstrumentTypeInstructionDiscriminator,
+  instrumentProgram: instrumentProgramPublicKey,
+  instrumentType: instrumentType,
 };
 
-const instruction = createSetInstrumentTypeInstruction(accounts, args);
+const instruction = createSetInstrumentTypeInstruction(accounts, args, programId);
+
+// Use the instruction to set the instrument type for a financial instrument
 ```
 ## Questions: 
- 1. What is the purpose of this code and what does it do?
-- This code generates a Solana program instruction for setting an instrument type, using the Convergence Program Library and the Solita package.
+ 1. What is the purpose of this code and what problem does it solve? 
+- This code defines a function that creates a Solana transaction instruction for setting an instrument type, using the Convergence Program Library and the BEET and BEET-Solana libraries. It solves the problem of creating a standardized way to set instrument types in a Solana program.
 
-2. What are the required accounts for the `createSetInstrumentTypeInstruction` function?
-- The required accounts are the authority, protocol, and config accounts, with the option to include additional anchorRemainingAccounts.
+2. What are the dependencies of this code and how are they imported? 
+- This code depends on the "@solana/web3.js", "@convergence-rfq/beet", "@convergence-rfq/beet-solana", and "../types/InstrumentType" libraries, which are imported using the "__importStar" and "require" functions.
 
-3. What is the format of the `SetInstrumentTypeInstructionArgs` type and what does it contain?
-- The `SetInstrumentTypeInstructionArgs` type contains two properties: `instrumentProgram`, which is a public key, and `instrumentType`, which is a `beet.COption` of `InstrumentType`.
+3. What is the expected input and output of the "createSetInstrumentTypeInstruction" function? 
+- The "createSetInstrumentTypeInstruction" function expects three arguments: an object containing various account public keys, an object containing the instrument type data, and an optional program ID. It returns a Solana transaction instruction object.

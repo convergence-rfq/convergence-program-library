@@ -4,28 +4,44 @@ This code is a TypeScript module that exports two constants, `PROGRAM_ADDRESS` a
 
 The `PROGRAM_ADDRESS` constant is a string that represents the address of the Convergence Program Library on the Solana blockchain. The `PROGRAM_ID` constant is a `PublicKey` object that represents the same address as a public key.
 
-Other modules in the same directory are re-exported using the `__exportStar` function, which allows them to be accessed from this module without having to import them directly. These modules include `errors`, `instructions`, and `types`, which likely contain additional functionality related to the Convergence Program Library.
+Other modules in the same directory are re-exported using the `__exportStar` function, which allows them to be accessed from this module as if they were defined here. These modules include `errors`, `instructions`, and `types`, which likely contain additional functionality related to the Convergence Program Library.
 
-This module can be used by other parts of the Convergence Program Library to access the program address and ID, as well as any functionality provided by the re-exported modules. For example, a module that interacts with the Convergence Program Library on the Solana blockchain might import this module to obtain the program ID and then use it to send transactions to the program.
+This module can be used by other parts of the Convergence Program Library to access the program address and ID, as well as any functionality provided by the re-exported modules. For example, a module that interacts with the Convergence Program Library on the Solana blockchain might import this module to get the program ID and then use it to create transactions or query the program's state.
 
-Example usage:
+Here is an example of how this module might be used:
 
-```
-import { PROGRAM_ID } from 'path/to/index';
+```typescript
+import { PROGRAM_ID } from 'convergence-program-library';
 
-// Use PROGRAM_ID to send a transaction to the Convergence Program Library
+// Use the program ID to create a new transaction
 const transaction = new Transaction().add(
   SystemProgram.transfer({
-    fromPubkey: payer.publicKey,
-    toPubkey: recipient.publicKey,
+    fromPubkey: myPublicKey,
+    toPubkey: recipientPublicKey,
     lamports: 100,
   })
 );
-transaction.feePayer = payer.publicKey;
-transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-transaction.sign(payer, recipient);
-await connection.sendTransaction(transaction, [payer, recipient], { skipPreflight: true, commitment: 'singleGossip' });
+transaction.feePayer = myPublicKey;
+transaction.recentBlockhash = blockhash;
+
+// Sign and send the transaction
+const signature = await sendAndConfirmTransaction(
+  connection,
+  transaction,
+  [myKeypair],
+  { commitment: 'singleGossip' }
+);
+
+// Call a function in the Convergence Program Library
+const result = await program.rpc.myFunction(myArgs, {
+  accounts: {
+    myAccount: myPublicKey,
+  },
+  signers: [myKeypair],
+});
 ```
+
+In this example, `PROGRAM_ID` is used to specify the program ID when calling a function in the Convergence Program Library. The `rpc` property is likely defined in one of the re-exported modules and provides a way to call functions on the program using the Solana Web3.js library.
 ## Questions: 
  1. What is the purpose of this code and what does it do?
    This code exports various modules related to errors, instructions, and types, and defines a program address and ID using the Solana web3.js library.
@@ -34,4 +50,4 @@ await connection.sendTransaction(transaction, [payer, recipient], { skipPrefligh
    The `use strict` statement enables strict mode in JavaScript, which enforces stricter syntax rules and prevents certain actions that could lead to errors.
 
 3. What is the purpose of the `__createBinding` and `__exportStar` functions defined at the beginning of the code?
-   These functions are used to create bindings between modules and export them as a single module. `__createBinding` is used to create a binding between a module and an object, while `__exportStar` is used to export all non-default exports from a module.
+   These functions are used to create bindings between modules and export them as a single module. `__createBinding` is used to create a binding for a specific key in a module, while `__exportStar` is used to export all non-default exports from a module.

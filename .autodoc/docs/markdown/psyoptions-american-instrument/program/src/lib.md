@@ -1,28 +1,28 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/program/src/lib.rs)
 
-The `psyoptions_american_instrument` module contains the implementation of the PsyOptions American Instrument program. This program provides functionality for validating, settling, and cleaning up American-style options contracts.
+The `psyoptions_american_instrument` module contains a set of functions that implement the logic for settling American-style options contracts on the Solana blockchain. The module is part of the Convergence Program Library project.
 
-The module defines several methods that can be called by clients of the program. These methods include `validate_data`, `prepare_to_settle`, `settle`, `revert_preparation`, and `clean_up`. Each of these methods takes a `Context` object and some additional arguments, and returns a `Result` indicating whether the operation was successful.
+The module defines a program with the same name, `psyoptions_american_instrument`, which is used to deploy the smart contract to the Solana blockchain. The program contains several functions that can be called by users to interact with the smart contract.
 
-The `validate_data` method is used to validate the data associated with an American-style options contract. It takes as input the instrument data, base asset index, and instrument decimals, and checks that the data is valid. If the data is valid, the method returns `Ok(())`.
+The `validate_data` function is used to validate the data passed to the smart contract when creating a new options contract. The function checks that the data is of the correct size and that it matches the expected values for the options contract. The function also checks that the decimals amount matches the expected value.
 
-The `prepare_to_settle` method is used to prepare an American-style options contract for settlement. It takes as input the asset identifier and authority side, and transfers the necessary tokens to the escrow account. If the transfer is successful, the method returns `Ok(())`.
+The `prepare_to_settle` function is used to prepare an options contract for settlement. The function checks that the caller's token account and the options contract's mint address match the expected values. If the caller is the asset sender, the function transfers the required amount of tokens to the escrow account.
 
-The `settle` method is used to settle an American-style options contract. It takes as input the asset identifier, and transfers the tokens from the escrow account to the receiver token account. If the transfer is successful, the method returns `Ok(())`.
+The `settle` function is used to settle an options contract. The function checks that the receiver's token account is associated with the escrow account and then transfers the tokens from the escrow account to the receiver's account.
 
-The `revert_preparation` method is used to revert the preparation of an American-style options contract. It takes as input the asset identifier and authority side, and transfers the tokens from the escrow account back to the caller's token account. If the transfer is successful, the method returns `Ok(())`.
+The `revert_preparation` function is used to revert the preparation of an options contract for settlement. The function checks that the caller's token account and the options contract's mint address match the expected values. If the caller is the asset receiver, the function transfers the required amount of tokens from the escrow account to the caller's account.
 
-The `clean_up` method is used to clean up an American-style options contract. It takes as input the asset identifier, and transfers the tokens from the escrow account to the backup receiver account. If the transfer is successful, the method closes the escrow account and returns `Ok(())`.
+The `clean_up` function is used to clean up an options contract after settlement. The function checks that the backup receiver's token account is associated with the escrow account and that the caller is the first to prepare the options contract for settlement. The function then transfers the remaining tokens from the escrow account to the backup receiver's account and closes the escrow account.
 
-The module also defines two helper functions, `transfer_from_an_escrow` and `close_escrow_account`, which are used by the `prepare_to_settle` and `clean_up` methods to transfer tokens and close the escrow account, respectively.
+The module also defines several helper functions, including `transfer_from_an_escrow` and `close_escrow_account`, which are used to transfer tokens from the escrow account and close the escrow account, respectively.
 
-Overall, the `psyoptions_american_instrument` module provides a set of methods for validating, settling, and cleaning up American-style options contracts. These methods can be used by clients of the program to manage their options contracts.
+Overall, the `psyoptions_american_instrument` module provides the logic for settling American-style options contracts on the Solana blockchain. The module can be used as part of a larger project to create a decentralized options trading platform on Solana.
 ## Questions: 
- 1. What is the purpose of this code and what problem does it solve?
-- This code is part of the Convergence Program Library and provides functionality for settling American options contracts. It solves the problem of facilitating the transfer of assets between parties involved in an options contract.
+ 1. What is the purpose of this code?
+- This code is part of the Convergence Program Library and implements a program for settling American options on the PsyOptions platform.
 
 2. What external dependencies does this code have?
-- This code depends on the `anchor_lang` and `anchor_spl` crates, as well as the `rfq` and `errors` modules defined within the project.
+- This code depends on the `anchor_lang`, `anchor_spl`, and `serde` crates, as well as the `rfq` and `errors` modules defined in the same directory.
 
-3. What are the main functions provided by this code and how are they used?
-- This code provides several functions for validating and settling American options contracts, including `validate_data`, `prepare_to_settle`, `settle`, `revert_preparation`, and `clean_up`. These functions are called with various input parameters and interact with the Solana blockchain to transfer assets and update account states.
+3. What are the main functions provided by this code?
+- This code provides functions for validating option data, preparing to settle an option, settling an option, reverting preparation for an option, and cleaning up after an option has been settled.

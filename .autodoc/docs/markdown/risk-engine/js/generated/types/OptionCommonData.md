@@ -1,49 +1,53 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/types/OptionCommonData.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/types/OptionCommonData.js)
 
-This code defines a TypeScript type called `OptionCommonData` and exports an instance of a `BeetArgsStruct` class called `optionCommonDataBeet`. The `OptionCommonData` type is an object with the following properties:
+This code defines a module called `OptionCommonData` that exports an instance of a `BeetArgsStruct` object called `optionCommonDataBeet`. The purpose of this module is to provide a standardized format for storing common data related to options trading. 
 
-- `optionType`: an `OptionType` enum value
-- `underlyingAmountPerContract`: a `bignum` (big integer) representing the amount of the underlying asset per contract
-- `underlyingAmoundPerContractDecimals`: a number representing the number of decimal places for the `underlyingAmountPerContract` value
-- `strikePrice`: a `bignum` representing the strike price of the option
-- `strikePriceDecimals`: a number representing the number of decimal places for the `strikePrice` value
-- `expirationTimestamp`: a `bignum` representing the expiration timestamp of the option
+The `BeetArgsStruct` object is defined in the `@convergence-rfq/beet` package, which is imported at the top of the file. This object is essentially a schema for defining the structure of data that can be serialized and deserialized using the BEET (Binary Encoding and Evolution Tool) protocol. The `optionCommonDataBeet` instance of this object defines the following fields:
 
-The `optionCommonDataBeet` instance is created using the `BeetArgsStruct` class from the `@convergence-rfq/beet` package. This instance is used to serialize and deserialize `OptionCommonData` objects to and from binary data.
+- `optionType`: an instance of the `OptionType` object, which is defined in another module imported at the top of the file. This field specifies the type of option being traded (e.g. call or put).
+- `underlyingAmountPerContract`: an unsigned 64-bit integer representing the amount of the underlying asset (e.g. stock) per contract.
+- `underlyingAmountPerContractDecimals`: an unsigned 8-bit integer representing the number of decimal places in the `underlyingAmountPerContract` field.
+- `strikePrice`: an unsigned 64-bit integer representing the strike price of the option.
+- `strikePriceDecimals`: an unsigned 8-bit integer representing the number of decimal places in the `strikePrice` field.
+- `expirationTimestamp`: a signed 64-bit integer representing the expiration time of the option.
 
-This code is likely part of a larger project related to options trading or financial derivatives. The `OptionCommonData` type represents common data that is shared between different types of options, such as call options and put options. The `optionCommonDataBeet` instance provides a standardized way to encode and decode this data for use in smart contracts or other applications.
+By defining this standardized format for option data, the `OptionCommonData` module can be used throughout the larger project to ensure consistency and interoperability between different components that deal with options trading. For example, other modules might use this format to store and exchange option data, or to validate user input when creating or modifying options. 
 
-Here is an example of how this code might be used:
+Here is an example of how the `optionCommonDataBeet` object might be used to serialize and deserialize option data:
 
-```typescript
-import { optionCommonDataBeet, OptionCommonData } from "convergence-program-library";
-
-// Create an OptionCommonData object
-const optionData: OptionCommonData = {
-  optionType: OptionType.Call,
-  underlyingAmountPerContract: new beet.bignum(1000),
-  underlyingAmoundPerContractDecimals: 6,
-  strikePrice: new beet.bignum(500),
+```javascript
+const optionData = {
+  optionType: OptionType.CALL,
+  underlyingAmountPerContract: 1000n,
+  underlyingAmountPerContractDecimals: 2,
+  strikePrice: 5000n,
   strikePriceDecimals: 2,
-  expirationTimestamp: new beet.bignum(1640995200), // January 1, 2022
+  expirationTimestamp: 1640995200000n // January 1, 2022
 };
 
-// Serialize the object to binary data
-const binaryData: Uint8Array = optionCommonDataBeet.toBytes(optionData);
+// Serialize the option data using the optionCommonDataBeet schema
+const serializedData = exports.optionCommonDataBeet.serialize(optionData);
 
-// Deserialize the binary data back to an object
-const deserializedData: OptionCommonData = optionCommonDataBeet.fromBytes(binaryData);
+// Deserialize the serialized data back into an object using the same schema
+const deserializedData = exports.optionCommonDataBeet.deserialize(serializedData);
 
-// Use the deserialized object
-console.log(deserializedData.optionType); // Output: OptionType.Call
-console.log(deserializedData.strikePrice.toString()); // Output: 500
+console.log(deserializedData);
+// Output: 
+// {
+//   optionType: OptionType.CALL,
+//   underlyingAmountPerContract: 1000n,
+//   underlyingAmountPerContractDecimals: 2,
+//   strikePrice: 5000n,
+//   strikePriceDecimals: 2,
+//   expirationTimestamp: 1640995200000n
+// }
 ```
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The Convergence Program Library is not described in the given code, so a smart developer might wonder what the overall purpose of the library is and how this code fits into it.
+ 1. What is the purpose of this code file?
+- This code file defines an object called `optionCommonDataBeet` which contains data related to options trading.
 
-2. What is the significance of the `beet` package and how is it being used in this code?
-- The `beet` package is imported and used in this code, so a smart developer might want to know what it does and how it is being used to better understand the code.
+2. What is the role of the `beet` module in this code?
+- The `beet` module is used to define the structure of the `optionCommonDataBeet` object, including the types and names of its properties.
 
-3. What is the expected format and range of values for the `OptionCommonData` type?
-- The `OptionCommonData` type is defined in this code, so a smart developer might want to know what the expected format and range of values are for each of its properties to ensure proper usage.
+3. What is the significance of the `OptionType_1` import?
+- The `OptionType_1` import is used to define the type of the `optionType` property in the `optionCommonDataBeet` object. It is likely defined in another file within the Convergence Program Library project.

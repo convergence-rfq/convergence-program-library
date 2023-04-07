@@ -1,36 +1,24 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/calculateCollateralForConfirmation.ts)
 
-This code defines an instruction for the Convergence Program Library project called `calculateCollateralForConfirmation`. The instruction takes in three accounts: `rfq`, `response`, and `config`, and optionally additional accounts specified in `anchorRemainingAccounts`. The purpose of this instruction is to calculate the collateral required for a given RFQ (Request for Quote) response. 
+This code defines a function and related data structures for creating a Solana program instruction called "CalculateCollateralForConfirmation". The purpose of this instruction is to calculate the collateral required for a given RFQ (Request for Quote) response. 
 
-The `createCalculateCollateralForConfirmationInstruction` function takes in the required accounts and returns a `TransactionInstruction` object that can be used to execute the instruction on the Solana blockchain. The function serializes the instruction data using the `calculateCollateralForConfirmationStruct` object, which defines the structure of the instruction data. 
+The code imports two external libraries: "@convergence-rfq/beet" and "@solana/web3.js". The former is used to define a data structure for the instruction arguments, while the latter is used to create the Solana transaction instruction.
 
-The `calculateCollateralForConfirmationStruct` object is a `BeetArgsStruct` that defines the structure of the instruction data. It takes in a single field `instructionDiscriminator`, which is an array of 8 bytes that serves as a unique identifier for this instruction. 
+The main function defined in this code is "createCalculateCollateralForConfirmationInstruction". This function takes an object of type "CalculateCollateralForConfirmationInstructionAccounts" as input, which specifies the Solana accounts that will be accessed during the instruction processing. The function then creates a Solana transaction instruction using the specified program ID, accounts, and instruction data.
 
-The code also defines a `CalculateCollateralForConfirmationInstructionAccounts` type that specifies the required accounts for this instruction. This type is used to ensure that the correct accounts are passed to the `createCalculateCollateralForConfirmationInstruction` function. 
+The instruction data is defined using the "calculateCollateralForConfirmationStruct" data structure, which specifies a single argument called "instructionDiscriminator". This argument is an array of 8 unsigned 8-bit integers, and is used to uniquely identify the instruction.
 
-Overall, this code provides a way to calculate the collateral required for a given RFQ response in the Convergence Program Library project. It is designed to be used in conjunction with other instructions and functions in the project to facilitate trading on the Solana blockchain. 
+The code also defines a constant called "calculateCollateralForConfirmationInstructionDiscriminator", which is an array of 8 unsigned 8-bit integers that serves as the instruction discriminator. This constant is used in the instruction data when creating the Solana transaction instruction.
 
-Example usage:
+Finally, the code defines a type called "CalculateCollateralForConfirmationInstructionAccounts", which specifies the Solana accounts required by the instruction. These accounts include "rfq", "response", and "config", which are all of type "web3.PublicKey". Additionally, there is an optional property called "anchorRemainingAccounts", which is an array of "web3.AccountMeta" objects that can be used to specify additional accounts required by the instruction.
 
-```
-const accounts = {
-  rfq: new web3.PublicKey("..."),
-  response: new web3.PublicKey("..."),
-  config: new web3.PublicKey("..."),
-  anchorRemainingAccounts: [
-    { pubkey: new web3.PublicKey("..."), isWritable: true, isSigner: false },
-    { pubkey: new web3.PublicKey("..."), isWritable: false, isSigner: false },
-  ],
-};
-
-const instruction = createCalculateCollateralForConfirmationInstruction(accounts);
-```
+Overall, this code provides a way to create a Solana program instruction for calculating collateral required for an RFQ response. This instruction can be used as part of a larger project that involves RFQs and collateral management.
 ## Questions: 
  1. What is the purpose of the Convergence Program Library and how does this code fit into it?
 - The code is part of the Convergence Program Library, but it is unclear what the library is for or what other functionality it provides.
 
-2. What is the `calculateCollateralForConfirmation` instruction and how is it used?
-- The code defines a struct and function for creating a `calculateCollateralForConfirmation` instruction, but it is unclear what this instruction does or how it fits into the larger project.
+2. What is the `calculateCollateralForConfirmationStruct` and what does it do?
+- `calculateCollateralForConfirmationStruct` is a data structure that takes in an array of 8 bytes and serializes it. It is not clear what this data structure is used for or how it fits into the larger project.
 
-3. What is the relationship between the `beet` and `web3` packages being imported?
-- The code imports both the `beet` and `web3` packages, but it is unclear how they are related or what functionality they provide within the context of this code or the larger project.
+3. What is the purpose of the `createCalculateCollateralForConfirmationInstruction` function and how is it used?
+- The `createCalculateCollateralForConfirmationInstruction` function creates an instruction for calculating collateral for confirmation. It takes in an object of accounts and a program ID, and returns a transaction instruction. It is not clear how this instruction is used or what the larger context of this functionality is within the project.

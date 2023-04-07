@@ -1,43 +1,24 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/spot-instrument/js/generated/instructions/prepareToSettle.ts)
 
-This code defines an instruction and associated accounts for the Convergence Program Library's PrepareToSettle functionality. The instruction is used to prepare for the settlement of an RFQ (Request for Quote) trade on the Solana blockchain. 
+This code defines a set of types, structs, and functions related to the PrepareToSettle instruction in a Solana smart contract program. The purpose of this instruction is to prepare for the settlement of a trade between two parties. 
 
-The code imports several packages, including `@solana/spl-token`, `@convergence-rfq/beet`, and `@solana/web3.js`. It also imports two custom types, `AssetIdentifierDuplicate` and `AuthoritySideDuplicate`, which are used as arguments for the `PrepareToSettleInstructionArgs` type. 
+The code imports several packages, including `@solana/spl-token`, `@convergence-rfq/beet`, and `@solana/web3.js`. These packages provide functionality for interacting with Solana's token program, defining and serializing data structures, and communicating with the Solana blockchain.
 
-The `prepareToSettleStruct` constant defines the structure of the instruction, including the `instructionDiscriminator`, `assetIdentifier`, and `side`. The `instructionDiscriminator` is a unique identifier for the instruction, and the `assetIdentifier` and `side` are used to identify the assets and parties involved in the trade. 
+The `PrepareToSettleInstructionArgs` type defines the arguments required for the `prepareToSettle` instruction. These arguments include an `AssetIdentifierDuplicate` and an `AuthoritySideDuplicate`. These types are defined in separate files and imported into this code.
 
-The `PrepareToSettleInstructionAccounts` type defines the accounts required for the instruction to execute. These include the `protocol`, `rfq`, `response`, `caller`, `callerTokens`, `mint`, and `escrow` accounts. The `systemProgram`, `tokenProgram`, and `rent` accounts are optional, and the `anchorRemainingAccounts` array can be used to include additional accounts if necessary. 
+The `prepareToSettleStruct` struct defines the data structure for the `prepareToSettle` instruction. It includes an 8-byte instruction discriminator, the `AssetIdentifierDuplicate`, and the `AuthoritySideDuplicate`. This struct is defined using the `FixableBeetArgsStruct` class from the `@convergence-rfq/beet` package.
 
-The `createPrepareToSettleInstruction` function creates a new `PrepareToSettle` instruction with the provided accounts and arguments. It serializes the instruction data using the `prepareToSettleStruct` constant and creates a new `TransactionInstruction` object with the program ID, keys, and data. 
+The `PrepareToSettleInstructionAccounts` type defines the accounts required for the `prepareToSettle` instruction. These accounts include a `protocol` account, an RFQ account, a response account, a caller account, a caller tokens account, a mint account, and an escrow account. Optional accounts include a system program account, a token program account, and a rent account. 
 
-Overall, this code provides the necessary functionality to prepare for the settlement of an RFQ trade on the Solana blockchain. It can be used as part of a larger project to facilitate RFQ trading and settlement. 
+The `createPrepareToSettleInstruction` function creates a `TransactionInstruction` object for the `prepareToSettle` instruction. It takes in the required accounts and arguments, as well as an optional program ID. It serializes the arguments using the `prepareToSettleStruct` struct and creates an array of `AccountMeta` objects for the required accounts. It then returns a `TransactionInstruction` object that can be used to execute the `prepareToSettle` instruction on the Solana blockchain.
 
-Example usage:
-
-```
-const instructionArgs = {
-  assetIdentifier: { ... },
-  side: { ... },
-};
-
-const instructionAccounts = {
-  protocol: ...,
-  rfq: ...,
-  response: ...,
-  caller: ...,
-  callerTokens: ...,
-  mint: ...,
-  escrow: ...,
-};
-
-const instruction = createPrepareToSettleInstruction(instructionAccounts, instructionArgs);
-```
+Overall, this code provides the necessary types, structs, and functions for preparing to settle a trade in a Solana smart contract program. It can be used in conjunction with other code in the Convergence Program Library to build a decentralized exchange or other trading platform on the Solana blockchain.
 ## Questions: 
  1. What is the purpose of this code?
-- This code defines a PrepareToSettle instruction and its associated accounts for use in a Solana program.
+- This code defines a function `createPrepareToSettleInstruction` that creates a Solana transaction instruction for the PrepareToSettle operation, along with related types and accounts.
 
-2. What packages and libraries are being imported?
-- The code imports packages for Solana web3, SPL tokens, and a custom package called "@convergence-rfq/beet".
+2. What external packages does this code depend on?
+- This code depends on `@solana/spl-token`, `@convergence-rfq/beet`, and `@solana/web3.js`.
 
-3. What is the source of this code and can it be edited?
-- The code was generated using the "solita" package and should not be edited directly. Instead, the recommendation is to rerun "solita" to update the code or write a wrapper to add functionality.
+3. What is the significance of the `instructionDiscriminator` field in `PrepareToSettleInstructionArgs`?
+- The `instructionDiscriminator` field is a unique identifier for the PrepareToSettle instruction, used to differentiate it from other instructions in the program.

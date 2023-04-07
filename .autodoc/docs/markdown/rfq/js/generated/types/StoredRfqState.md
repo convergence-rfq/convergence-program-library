@@ -1,44 +1,37 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/StoredRfqState.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/StoredRfqState.ts)
 
-This code defines an enum called `StoredRfqState` and exports it along with a `storedRfqStateBeet` variable. The `StoredRfqState` enum has three possible values: `Constructed`, `Active`, and `Canceled`. The `storedRfqStateBeet` variable is defined using a function from the `@convergence-rfq/beet` library called `fixedScalarEnum`, which creates a fixed-length byte array representation of the `StoredRfqState` enum.
+This code is a generated file that should not be edited directly. It imports the `beet` module from the `@convergence-rfq/beet` package and defines an enum called `StoredRfqState` and a constant called `storedRfqStateBeet`.
 
-This code is likely part of a larger project that involves storing and transmitting data related to RFQs (requests for quotes) in a binary format. The `StoredRfqState` enum is likely used to represent the current state of an RFQ, and the `storedRfqStateBeet` variable is likely used to convert this state into a fixed-length byte array that can be transmitted over a network or stored in a database.
+The `StoredRfqState` enum has three possible values: `Constructed`, `Active`, and `Canceled`. This enum is categorized under `enums` and `generated`.
 
-Here is an example of how this code might be used in a larger project:
+The `storedRfqStateBeet` constant is a `FixedSizeBeet` object that is created using the `fixedScalarEnum` method from the `beet` module. This method takes the `StoredRfqState` enum as its argument and returns a `FixedSizeBeet` object that can be used to serialize and deserialize instances of the `StoredRfqState` enum. This constant is categorized under `userTypes` and `generated`.
 
-```javascript
-const { storedRfqStateBeet, StoredRfqState } = require('@convergence-rfq/stored-rfq-state');
+This code is likely part of a larger project that uses the `beet` module to serialize and deserialize data. The `StoredRfqState` enum and `storedRfqStateBeet` constant may be used to represent the state of a Request for Quote (RFQ) object in the project. The `StoredRfqState` enum defines the possible states that an RFQ object can be in, and the `storedRfqStateBeet` constant provides a way to serialize and deserialize these states.
 
-// Create an RFQ object with an initial state of "Constructed"
-const rfq = {
-  id: 123,
-  state: StoredRfqState.Constructed
-};
+Example usage of `StoredRfqState` enum:
 
-// Convert the RFQ state to a byte array using storedRfqStateBeet
-const stateBytes = storedRfqStateBeet.encode(rfq.state);
+```
+import { StoredRfqState } from 'convergence-program-library';
 
-// Send the RFQ and its state over a network
-sendRfqOverNetwork(rfq.id, stateBytes);
-
-// Later, receive the RFQ and its state over a network
-const receivedRfqId = receiveRfqOverNetwork();
-const receivedStateBytes = receiveStateBytesOverNetwork();
-
-// Decode the received state bytes back into a StoredRfqState enum
-const receivedState = storedRfqStateBeet.decode(receivedStateBytes);
-
-// Update the RFQ object with the received state
-rfq.state = receivedState;
+const rfqState = StoredRfqState.Active;
+console.log(rfqState); // Output: Active
 ```
 
-Overall, this code provides a way to represent and transmit the state of an RFQ in a binary format, which could be useful in a variety of financial or trading applications.
+Example usage of `storedRfqStateBeet` constant:
+
+```
+import { storedRfqStateBeet } from 'convergence-program-library';
+
+const serializedState = storedRfqStateBeet.serialize(StoredRfqState.Active);
+console.log(serializedState); // Output: Uint8Array [ 1 ]
+
+const deserializedState = storedRfqStateBeet.deserialize(serializedState);
+console.log(deserializedState); // Output: Active
+```
 ## Questions: 
- 1. What is the purpose of the `beet` module being imported?
-- The `beet` module is being imported to define a fixed scalar enum for the `StoredRfqState` object.
-
-2. What is the `StoredRfqState` object and what are its possible values?
-- The `StoredRfqState` object is an enum with three possible values: `Constructed`, `Active`, and `Canceled`.
-
-3. What is the purpose of the `storedRfqStateBeet` variable?
-- The `storedRfqStateBeet` variable is used to define a fixed scalar enum for the `StoredRfqState` object using the `beet` module.
+ 1. What is the purpose of the `solita` package and why is it being used in this code?
+   - The `solita` package was used to generate this code, and it should not be edited directly. Instead, the package should be rerun to update the code or a wrapper should be written to add functionality.
+2. What is the `@convergence-rfq/beet` package and why is it being imported?
+   - The `@convergence-rfq/beet` package is being imported to define a fixed-size Beet for the `StoredRfqState` enum.
+3. What is the purpose of the `StoredRfqState` enum and how is it being used in this code?
+   - The `StoredRfqState` enum is being used to define the possible states of a stored RFQ. It is being converted into a fixed-size Beet using the `storedRfqStateBeet` constant.

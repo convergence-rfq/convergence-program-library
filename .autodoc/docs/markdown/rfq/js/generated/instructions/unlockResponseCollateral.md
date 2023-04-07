@@ -1,12 +1,12 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/unlockResponseCollateral.ts)
 
-This code defines an instruction and associated accounts for the Convergence Program Library project. The instruction is called `unlockResponseCollateral` and is used to unlock collateral held in response to a request for quote (RFQ) on the Convergence platform. The instruction is created using the `createUnlockResponseCollateralInstruction` function, which takes an object of `UnlockResponseCollateralInstructionAccounts` as an argument. This object specifies the accounts required for the instruction to execute, including the protocol account, RFQ account, response account, collateral info accounts, collateral token accounts, and the token program account. 
+This code defines an instruction and associated accounts for the Convergence Program Library project. The instruction is called `unlockResponseCollateral` and is used to unlock collateral held in response to a request for quote (RFQ) on the Convergence platform. The instruction is generated using the `solita` package and should not be edited directly. Instead, the package should be rerun to update the instruction or a wrapper should be written to add functionality.
 
-The `unlockResponseCollateralStruct` defines the structure of the instruction data, which includes an 8-byte instruction discriminator. The `unlockResponseCollateralInstructionDiscriminator` is a constant array of 8 bytes that is used to identify the instruction. 
+The instruction takes in a set of accounts that will be accessed during processing. These accounts include the protocol account, RFQ account, response account, taker collateral info account, maker collateral info account, taker collateral tokens account, maker collateral tokens account, and protocol collateral tokens account. Additionally, the instruction can take in a token program account and an array of remaining accounts that are specific to the Anchor wallet.
 
-The purpose of this code is to provide a standardized way to unlock collateral held in response to an RFQ on the Convergence platform. This instruction can be used by other parts of the Convergence Program Library project to facilitate the trading of various assets on the platform. 
+The `createUnlockResponseCollateralInstruction` function is used to create the instruction. It takes in the accounts as an argument and returns a `TransactionInstruction` object that can be used to execute the instruction on the Solana blockchain. The function serializes the instruction data using the `unlockResponseCollateralStruct` object and creates an array of `AccountMeta` objects that specify the accounts that will be accessed during processing. The function also takes in a program ID, which is set to the Convergence program ID by default.
 
-Example usage of this instruction might look like:
+Overall, this code provides a way to unlock collateral held in response to an RFQ on the Convergence platform. It is part of a larger project that likely includes other instructions and functionality for trading on the Solana blockchain. Below is an example of how the `createUnlockResponseCollateralInstruction` function might be used:
 
 ```
 const accounts = {
@@ -19,19 +19,17 @@ const accounts = {
   makerCollateralTokens: makerCollateralTokensAccount,
   protocolCollateralTokens: protocolCollateralTokensAccount,
   tokenProgram: tokenProgramAccount,
-  anchorRemainingAccounts: remainingAccounts,
+  anchorRemainingAccounts: anchorRemainingAccountsArray
 };
 
 const instruction = createUnlockResponseCollateralInstruction(accounts);
 ```
-
-In this example, the `accounts` object contains all of the required accounts for the instruction to execute. The `createUnlockResponseCollateralInstruction` function is called with this object as an argument to create the instruction. This instruction can then be included in a transaction and sent to the Solana blockchain for execution.
 ## Questions: 
  1. What is the purpose of this code?
-- This code defines an instruction and accounts required for unlocking response collateral in a Convergence Program Library.
+   This code defines an instruction and associated accounts for unlocking response collateral in a Convergence RFQ trade.
 
-2. What external packages are being imported and used in this code?
-- This code imports and uses "@solana/spl-token", "@convergence-rfq/beet", and "@solana/web3.js".
+2. What external packages does this code depend on?
+   This code depends on the "@solana/spl-token", "@convergence-rfq/beet", and "@solana/web3.js" packages.
 
-3. What is the significance of the "instructionDiscriminator" and "unlockResponseCollateralInstructionDiscriminator" variables?
-- "instructionDiscriminator" is a field in the "unlockResponseCollateralStruct" that is used to identify the instruction type. "unlockResponseCollateralInstructionDiscriminator" is an array of bytes that is used to uniquely identify the instruction when creating a new instruction.
+3. Can this code be edited directly?
+   No, this code was generated using the solita package and should not be edited directly. Instead, the solita package should be rerun to update the code or a wrapper should be written to add functionality.

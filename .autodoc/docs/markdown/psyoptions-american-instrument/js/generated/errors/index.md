@@ -1,18 +1,20 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/errors/index.ts)
 
-This code defines a set of custom error classes and provides functions to create instances of these errors based on error codes or names. The purpose of this code is to provide a standardized set of errors that can be used throughout the Convergence Program Library project.
+This code defines a set of custom error classes that can be used in the Convergence Program Library project. Each error class extends the built-in `Error` class and has a unique error code and name. The error codes and names are stored in two separate lookup tables (`createErrorFromCodeLookup` and `createErrorFromNameLookup`) that map to functions that create instances of the corresponding error classes.
 
-The code defines a set of error classes that extend the built-in `Error` class. Each error class has a unique error code and name, as well as a constructor that sets the error message. For example, the `InvalidDataSizeError` class has an error code of `0x1770`, a name of `"InvalidDataSize"`, and a message of `"Invalid data size"`. These error classes can be used to throw custom errors in the Convergence Program Library project.
+The purpose of this code is to provide a standardized set of error classes that can be used throughout the Convergence Program Library project. By using custom error classes with unique error codes and names, it becomes easier to identify and handle specific errors that may occur during program execution.
 
-The code also defines two maps, `createErrorFromCodeLookup` and `createErrorFromNameLookup`, which map error codes and names to functions that create instances of the corresponding error classes. These maps are used by the `errorFromCode` and `errorFromName` functions, which take an error code or name as an argument and return an instance of the corresponding error class. For example, calling `errorFromCode(0x1770)` would return an instance of the `InvalidDataSizeError` class.
+For example, if a function in the Convergence Program Library project encounters an error related to an invalid data size, it can throw an instance of the `InvalidDataSizeError` class with the error code `0x1770`. This error can then be caught and handled in a standardized way by other parts of the program that are designed to handle this specific error.
 
-Overall, this code provides a standardized set of custom errors that can be used throughout the Convergence Program Library project. By using these custom errors, developers can provide more detailed error messages and improve the overall user experience of the project.
+The `errorFromCode` and `errorFromName` functions provide a way to look up custom error classes based on their error code or name, respectively. These functions can be used to catch and handle errors in a more generic way, without having to know the specific error class that was thrown.
+
+Overall, this code provides a useful set of tools for handling errors in a standardized way throughout the Convergence Program Library project.
 ## Questions: 
  1. What is the purpose of this code?
-- This code defines custom error classes and functions for handling errors in the Convergence Program Library.
+- This code defines a set of custom error classes and functions for resolving errors based on error codes or names.
 
 2. Why are there maps for error creation based on code and name?
-- The maps allow for easy lookup and creation of the appropriate error class based on either the error code or name.
+- The maps allow for easy lookup and creation of the appropriate error class based on either an error code or name.
 
 3. Can the error classes be extended or customized?
 - Yes, the error classes can be extended or customized by writing a wrapper function to add additional functionality. However, the file itself should not be edited as it is generated using the solita package.

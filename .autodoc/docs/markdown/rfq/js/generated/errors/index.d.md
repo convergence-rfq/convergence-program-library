@@ -1,29 +1,34 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/errors/index.d.ts)
 
-This file contains a collection of custom error classes that can be used throughout the Convergence Program Library project. Each error class extends the built-in Error class and includes a code property that can be used to identify the specific error type. 
+This file contains a collection of custom error classes that can be used throughout the Convergence Program Library project. Each error class extends the built-in Error class and includes a code property that can be used to identify the specific error that occurred. 
 
-For example, the NotAProtocolAuthorityError class represents an error that occurs when a user attempts to perform an action that requires protocol authority, but the user is not authorized. This error has a code of 0. To use this error in the project, a developer can simply import the class and throw an instance of it when the error condition is met:
+For example, the NotAProtocolAuthorityError class can be used to indicate that a given account is not a protocol authority. This error has a code of 0. Similarly, the InvalidValueForAFeeError class can be used to indicate that an invalid value was provided for a fee. This error has a code of 2.
+
+The errorFromCode and errorFromName functions can be used to retrieve an error instance based on its code or name, respectively. These functions return an instance of the corresponding error class or null if no matching error is found.
+
+Overall, this file provides a standardized way to handle errors throughout the Convergence Program Library project by defining a set of custom error classes with consistent properties and behavior. Developers can use these classes to throw and catch errors in a more structured and predictable way. 
+
+Example usage:
 
 ```
-import { NotAProtocolAuthorityError } from 'convergence-program-library';
-
-function performAction() {
-  if (!userHasProtocolAuthority()) {
-    throw new NotAProtocolAuthorityError();
+try {
+  // some code that may throw an error
+} catch (error) {
+  if (error instanceof NotAProtocolAuthorityError) {
+    // handle NotAProtocolAuthorityError
+  } else if (error instanceof InvalidValueForAFeeError) {
+    // handle InvalidValueForAFeeError
+  } else {
+    // handle other errors
   }
-  // perform action
 }
 ```
-
-The errorFromCode and errorFromName functions can be used to retrieve an error instance based on its code or name, respectively. These functions return a MaybeErrorWithCode type, which can be an instance of one of the custom error classes or null/undefined if no matching error is found.
-
-Overall, this file provides a standardized way to handle and communicate errors throughout the Convergence Program Library project. By using custom error classes with unique codes, developers can easily identify and handle specific error conditions in their code.
 ## Questions: 
  1. What is the purpose of this code file?
-- This code file defines a set of custom error classes for the Convergence Program Library.
+- This code file contains a set of classes and functions that define various custom error types for the Convergence Program Library.
 
 2. What is the significance of the `code` property in each error class?
-- Each error class has a `code` property that is a number. This code can be used to identify the specific error that occurred.
+- The `code` property is a number that uniquely identifies each error type. It is used by the `errorFromCode` and `errorFromName` functions to retrieve the corresponding error object.
 
-3. Are there any helper functions provided in this file?
-- Yes, there are two helper functions provided: `errorFromCode` and `errorFromName`. These functions can be used to retrieve an error instance based on its code or name, respectively.
+3. How can a developer use the `errorFromCode` and `errorFromName` functions?
+- The `errorFromCode` function takes a `code` parameter and returns the corresponding error object, or `null` if no matching error is found. The `errorFromName` function takes a `name` parameter and returns the corresponding error object, or `null` if no matching error is found. These functions can be used to handle errors in a more granular way than just catching generic `Error` objects.

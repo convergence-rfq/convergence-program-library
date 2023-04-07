@@ -2,39 +2,35 @@
 
 The code above is a TypeScript module that exports a type and a constant variable. The type is called `BaseAssetIndex` and it is an object with a single property called `value` of type `number`. The purpose of this type is to define the structure of an asset index that is used as a base for other types of assets.
 
-The constant variable is called `baseAssetIndexBeet` and it is of type `beet.BeetArgsStruct<BaseAssetIndex>`. This variable is created using the `beet` library from the `@convergence-rfq/beet` package. The `beet` library is a utility library that provides a way to define and validate structured data using TypeScript interfaces.
+The constant variable is called `baseAssetIndexBeet` and it is of type `beet.BeetArgsStruct<BaseAssetIndex>`. This variable is initialized with a value that is provided by the `@convergence-rfq/beet` library. The `beet` library is a utility library that provides a set of functions and types for working with binary encoded data. In this case, the `BeetArgsStruct` type is used to define the structure of the binary encoded data that represents the `BaseAssetIndex` type.
 
-The `baseAssetIndexBeet` variable is used to define a structured data schema for the `BaseAssetIndex` type. This schema can be used to validate and serialize/deserialize data that conforms to the `BaseAssetIndex` type. This is useful when working with data that needs to be transmitted over a network or stored in a database.
+The purpose of this module is to provide a standardized way of representing a base asset index that can be used across different parts of the Convergence Program Library project. By defining the structure of the `BaseAssetIndex` type and using the `beet` library to encode and decode it, the project can ensure that all parts of the system that deal with asset indexes are using the same format.
 
-In the larger project, this module can be used to define and validate asset indexes that are used as a base for other types of assets. For example, if the project has different types of assets such as stocks, bonds, and commodities, each of these assets can have an asset index that conforms to the `BaseAssetIndex` type. The `beet` library can be used to define and validate the structured data for each of these asset indexes.
-
-Here is an example of how the `baseAssetIndexBeet` variable can be used to validate and serialize/deserialize data:
+Here is an example of how this module might be used in another part of the Convergence Program Library project:
 
 ```typescript
-import { baseAssetIndexBeet, BaseAssetIndex } from "convergence-program-library";
+import { BaseAssetIndex, baseAssetIndexBeet } from "@convergence-program-library/base-asset-index";
 
-// Define a valid BaseAssetIndex object
-const validBaseAssetIndex: BaseAssetIndex = { value: 100 };
+// Create a new asset index
+const index: BaseAssetIndex = { value: 100 };
 
-// Serialize the object to a string
-const serialized = baseAssetIndexBeet.serialize(validBaseAssetIndex);
+// Encode the asset index using the baseAssetIndexBeet constant
+const encodedIndex = baseAssetIndexBeet.encode(index);
 
-// Deserialize the string back to an object
-const deserialized = baseAssetIndexBeet.deserialize(serialized);
+// Decode the asset index using the baseAssetIndexBeet constant
+const decodedIndex = baseAssetIndexBeet.decode(encodedIndex);
 
-// Validate that the deserialized object conforms to the BaseAssetIndex type
-if (baseAssetIndexBeet.validate(deserialized)) {
-  console.log("Deserialized object is valid");
-} else {
-  console.log("Deserialized object is invalid");
-}
+// The decodedIndex should be equal to the original index
+console.log(decodedIndex); // { value: 100 }
 ```
+
+In this example, we import the `BaseAssetIndex` type and the `baseAssetIndexBeet` constant from the module. We then create a new asset index object and encode it using the `baseAssetIndexBeet` constant. Finally, we decode the encoded index using the same constant and verify that the decoded index is equal to the original index. This example demonstrates how the module can be used to ensure that all parts of the system are using the same format for asset indexes.
 ## Questions: 
- 1. What is the purpose of the `@convergence-rfq/beet` library being imported?
-- The `@convergence-rfq/beet` library is being imported to provide a type definition for the `BaseAssetIndex` type.
+ 1. What is the purpose of the `@convergence-rfq/beet` library and how is it being used in this code?
+- The `@convergence-rfq/beet` library is being imported and used to define the `BaseAssetIndex` type and create a `beet.BeetArgsStruct` object for it.
 
-2. What is the `BaseAssetIndex` type used for?
-- The `BaseAssetIndex` type is used to define an object with a single property `value` of type `number`.
+2. What is the `BaseAssetIndex` type and what does it represent?
+- The `BaseAssetIndex` type is a TypeScript interface that defines an object with a single `value` property of type `number`. It likely represents some sort of index or value associated with a financial asset.
 
-3. What is the purpose of the `baseAssetIndexBeet` constant?
-- The `baseAssetIndexBeet` constant is a type definition for a `BeetArgsStruct` that takes in a `BaseAssetIndex` object as an argument. It is likely used in other parts of the Convergence Program Library to ensure type safety.
+3. How is the `baseAssetIndexBeet` object being used in the rest of the Convergence Program Library project?
+- Without further context, it's difficult to say exactly how the `baseAssetIndexBeet` object is being used in the project. However, it is likely being used to define or manipulate some sort of financial asset data.

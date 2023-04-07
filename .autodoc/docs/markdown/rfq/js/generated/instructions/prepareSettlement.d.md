@@ -1,24 +1,20 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/prepareSettlement.d.ts)
 
-This code is a module that exports several types and functions related to preparing a settlement instruction for a financial transaction. The module imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js", which are likely dependencies of the larger project.
+This code is a module that exports functions and types related to preparing a settlement instruction for the Convergence Program Library project. The module imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js", which are used to define types and create transactions on the Solana blockchain.
 
-The main type exported by this module is "PrepareSettlementInstructionArgs", which is an object with two properties: "side" and "legAmountToPrepare". "side" is an enum value from the "AuthoritySide" type, which is imported from another module. "legAmountToPrepare" is a number representing the amount of currency to prepare for settlement.
+The main function exported by this module is "createPrepareSettlementInstruction", which takes two arguments: "accounts" and "args". "accounts" is an object that contains several public keys for accounts involved in the settlement, including the caller, protocol, RFQ, and response accounts. It also has an optional field for additional accounts related to the anchor. "args" is an object that contains two fields: "side" and "legAmountToPrepare". "side" is an enum that specifies whether the authority side is the buyer or seller, and "legAmountToPrepare" is the amount of the leg to prepare for settlement.
 
-The module also exports a "prepareSettlementStruct" constant, which is a "BeetArgsStruct" object from the "@convergence-rfq/beet" library. This object combines the "PrepareSettlementInstructionArgs" type with an additional property "instructionDiscriminator", which is an array of numbers. This constant is likely used to define the structure of the data that will be passed to the "createPrepareSettlementInstruction" function.
+The function "createPrepareSettlementInstruction" uses the imported libraries to create a transaction instruction for preparing the settlement. It first creates a new transaction instruction using the Solana web3 library, passing in the program ID for the Convergence Program Library project. It then populates the instruction with the necessary accounts and arguments, including the caller, protocol, RFQ, and response accounts, as well as the side and leg amount to prepare.
 
-The module also exports a "PrepareSettlementInstructionAccounts" type, which is an object with several properties representing public keys for various accounts involved in the transaction. This type also includes an optional property "anchorRemainingAccounts", which is an array of "AccountMeta" objects from the "@solana/web3.js" library. These objects likely provide additional metadata about the accounts involved in the transaction.
+The module also exports several types that are used in the preparation of the settlement instruction. "PrepareSettlementInstructionArgs" is a type that defines the fields of the "args" object passed to "createPrepareSettlementInstruction". "PrepareSettlementInstructionAccounts" is a type that defines the fields of the "accounts" object passed to "createPrepareSettlementInstruction". "prepareSettlementStruct" is a type that defines the structure of the arguments passed to the Beet library for preparing the settlement. Finally, "prepareSettlementInstructionDiscriminator" is an array of numbers that specifies the discriminator for the settlement instruction.
 
-The module exports a "prepareSettlementInstructionDiscriminator" constant, which is an array of numbers. This constant is likely used to identify the type of instruction being created.
-
-Finally, the module exports a "createPrepareSettlementInstruction" function, which takes two arguments: "accounts" and "args". "accounts" is an object of type "PrepareSettlementInstructionAccounts", and "args" is an object of type "PrepareSettlementInstructionArgs". The function returns a "TransactionInstruction" object from the "@solana/web3.js" library. This function likely creates a transaction instruction for preparing a settlement for a financial transaction, using the data provided in the "accounts" and "args" objects.
-
-Overall, this module provides a set of types and functions for preparing a settlement instruction for a financial transaction. These types and functions are likely used in other parts of the larger project to facilitate financial transactions.
+Overall, this module provides a way to prepare a settlement instruction for the Convergence Program Library project using the Solana blockchain. It defines the necessary types and functions for creating the instruction and populating it with the required accounts and arguments.
 ## Questions: 
  1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The Convergence Program Library is not described in the given code, so a smart developer might want to know more about the overall project and how this code contributes to it.
+- The Convergence Program Library is not described in the given code, so a smart developer might want to know what the overall purpose of the library is and how this specific code contributes to it.
 
 2. What is the expected input and output of the `createPrepareSettlementInstruction` function?
-- A smart developer might want to know more about the expected format and data types of the `accounts` and `args` parameters, as well as the expected return value of the function.
+- The function takes in two arguments, `accounts` and `args`, but it is not clear what the expected format of these arguments should be. A smart developer might want to know what the expected input and output of this function is.
 
-3. What is the significance of the `prepareSettlementStruct` and `prepareSettlementInstructionDiscriminator` variables?
-- A smart developer might want to know more about how these variables are used within the code and what their purpose is in the context of the Convergence Program Library.
+3. What is the significance of the `prepareSettlementInstructionDiscriminator` variable?
+- The purpose of this variable is not immediately clear from the code, so a smart developer might want to know what its significance is and how it is used within the program.

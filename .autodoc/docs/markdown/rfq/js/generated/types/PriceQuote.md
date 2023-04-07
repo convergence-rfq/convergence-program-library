@@ -1,39 +1,27 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/PriceQuote.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/PriceQuote.ts)
 
-This code defines two functions and exports them as part of the Convergence Program Library. The first function, `isPriceQuoteAbsolutePrice`, takes in a parameter `x` and returns a boolean value indicating whether `x` is an object of type `AbsolutePrice`. The second function, `priceQuoteBeet`, defines a data structure called `PriceQuoteRecord` using the `beet` library and exports it. 
+This code defines types and functions related to price quotes in the Convergence Program Library project. It imports the `beet` module from the `@convergence-rfq/beet` package, which provides serialization and deserialization functionality for Rust data types in TypeScript.
 
-The `beet` library is a serialization and deserialization library for JavaScript that allows for the creation of data structures that can be easily encoded and decoded. In this case, the `priceQuoteBeet` function defines a `PriceQuoteRecord` data structure that has a single field called `AbsolutePrice`. The `AbsolutePrice` field is itself a data structure that contains a single field called `amountBps`, which is a 128-bit integer. 
+The `PriceQuoteRecord` type is defined as an object with a single property `AbsolutePrice`, which has an `amountBps` field of type `bignum` from the `beet` module. This type is used to derive the `PriceQuote` type and its serializer/deserializer, but it is marked as private and should not be used directly in user code.
 
-This code is likely used in the larger Convergence Program Library project to define and manipulate price quotes for financial instruments. The `isPriceQuoteAbsolutePrice` function can be used to check whether a given price quote is of type `AbsolutePrice`, while the `priceQuoteBeet` function defines the `AbsolutePrice` data structure that can be used to create and manipulate price quotes. 
+The `PriceQuote` type is a union type representing the `PriceQuoteRecord` data enum defined in Rust. It includes a `__kind` property that allows for narrowing types in switch/if statements. Additionally, `isPriceQuoteAbsolutePrice` is a type guard function that checks if a given `PriceQuote` object is of the `AbsolutePrice` variant.
 
-Here is an example of how these functions might be used:
+The `priceQuoteBeet` constant is a `FixableBeet` object that uses the `dataEnum` function from the `beet` module to define the `PriceQuote` data enum. It has a single variant `AbsolutePrice` that takes an `amountBps` field of type `i128` from the `beet` module.
+
+Overall, this code provides a way to define and serialize/deserialize price quotes in the Convergence Program Library project using Rust data enums and the `beet` module. It can be used to represent and manipulate different types of price quotes in the project, such as absolute prices, and to ensure type safety in the process. For example, a user could create a `PriceQuote` object representing an absolute price and check its type using the `isPriceQuoteAbsolutePrice` function:
 
 ```
-const { isPriceQuoteAbsolutePrice, priceQuoteBeet } = require('@convergence-rfq/price-quote');
-
-const myPriceQuote = {
-  __kind: 'AbsolutePrice',
-  amountBps: 1000000000000000000000000000000000n // 1,000,000,000,000,000,000,000,000,000,000
-};
-
-console.log(isPriceQuoteAbsolutePrice(myPriceQuote)); // true
-
-const encodedPriceQuote = priceQuoteBeet.AbsolutePrice.encode(myPriceQuote);
-console.log(encodedPriceQuote); // Uint8Array(16) [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 232, 122, 0 ]
-
-const decodedPriceQuote = priceQuoteBeet.AbsolutePrice.decode(encodedPriceQuote);
-console.log(decodedPriceQuote); // { __kind: 'AbsolutePrice', amountBps: 1000000000000000000000000000000000n }
-``` 
-
-In this example, we first import the `isPriceQuoteAbsolutePrice` and `priceQuoteBeet` functions from the `@convergence-rfq/price-quote` module. We then define a `myPriceQuote` object that is of type `AbsolutePrice` and has an `amountBps` field of 1,000,000,000,000,000,000,000,000,000,000. We use the `isPriceQuoteAbsolutePrice` function to check whether `myPriceQuote` is of type `AbsolutePrice`, which returns `true`. 
-
-We then use the `priceQuoteBeet.AbsolutePrice.encode` function to encode `myPriceQuote` as a `Uint8Array` of bytes, which we log to the console. Finally, we use the `priceQuoteBeet.AbsolutePrice.decode` function to decode the encoded `Uint8Array` back into a JavaScript object, which we also log to the console.
+const myPriceQuote: PriceQuote = { __kind: "AbsolutePrice", amountBps: beet.bignum.from(100) };
+if (isPriceQuoteAbsolutePrice(myPriceQuote)) {
+  console.log("This is an absolute price quote!");
+}
+```
 ## Questions: 
- 1. What is the purpose of this code?
-   This code defines two functions and exports them along with a data structure called `priceQuoteBeet`. It also imports a module called `beet` from `@convergence-rfq/beet`.
+ 1. What is the purpose of the `PriceQuoteRecord` type?
+- The `PriceQuoteRecord` type is used to derive the `PriceQuote` type as well as the de/serializer, but it should not be referred to in code. Instead, the `PriceQuote` type should be used.
 
-2. What is the `isPriceQuoteAbsolutePrice` function checking for?
-   The `isPriceQuoteAbsolutePrice` function takes an argument `x` and checks if its `__kind` property is equal to `'AbsolutePrice'`.
+2. What is the purpose of the `isPriceQuoteAbsolutePrice` function?
+- The `isPriceQuoteAbsolutePrice` function is a type guard that allows narrowing to a specific variant of the `PriceQuote` union type, specifically the `AbsolutePrice` variant.
 
-3. What is the `priceQuoteBeet` data structure?
-   `priceQuoteBeet` is a data structure defined using the `beet.dataEnum` function. It has one property called `AbsolutePrice` which is an instance of `beet.BeetArgsStruct` with one field called `amountBps`.
+3. What is the purpose of the `priceQuoteBeet` constant?
+- The `priceQuoteBeet` constant is a fixable `beet` object that defines the `PriceQuote` data enum, including its variants and corresponding data structures.

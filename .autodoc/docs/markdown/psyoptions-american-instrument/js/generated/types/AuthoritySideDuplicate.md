@@ -1,16 +1,40 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/types/AuthoritySideDuplicate.ts)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/types/AuthoritySideDuplicate.js)
 
-This code is a generated file that imports the `beet` module from the `@convergence-rfq/beet` package and defines an enum called `AuthoritySideDuplicate` and a constant called `authoritySideDuplicateBeet`. 
+This code defines an enum called `AuthoritySideDuplicate` with two possible values: `Taker` and `Maker`. It also exports a function called `authoritySideDuplicateBeet` which uses the `@convergence-rfq/beet` library to create a fixed scalar enum from the `AuthoritySideDuplicate` enum. 
 
-The `AuthoritySideDuplicate` enum has two values: `Taker` and `Maker`. This enum is categorized under `enums` and `generated`. It is likely used to represent the different sides of an authority in some part of the Convergence Program Library project.
+The purpose of this code is to provide a way to represent the authority side of a trade in the Convergence Program Library project. The `AuthoritySideDuplicate` enum is likely used in other parts of the project to specify whether a trade was initiated by a taker or a maker. The `authoritySideDuplicateBeet` function is used to serialize and deserialize this enum in a fixed format, which is important for ensuring consistency across different parts of the project.
 
-The `authoritySideDuplicateBeet` constant is a `FixedSizeBeet` object that is created using the `fixedScalarEnum` method from the `beet` module. This method takes the `AuthoritySideDuplicate` enum as its argument and returns a `FixedSizeBeet` object that can be used to serialize and deserialize values of this enum. This constant is categorized under `userTypes` and `generated`. It is likely used to serialize and deserialize `AuthoritySideDuplicate` values in some part of the Convergence Program Library project.
+Here is an example of how this code might be used in the larger project:
 
-Overall, this code defines an enum and a constant that are likely used to represent and serialize/deserialize values related to the authority side in some part of the Convergence Program Library project. Since this is a generated file, it is recommended to not edit it directly and instead rerun the `solita` package to update it or write a wrapper to add functionality.
+```typescript
+import { authoritySideDuplicateBeet, AuthoritySideDuplicate } from '@convergence-rfq/AuthoritySideDuplicate';
+
+// Create a new trade with the taker as the authority side
+const trade = {
+  authoritySide: AuthoritySideDuplicate.Taker,
+  // other trade properties...
+};
+
+// Serialize the trade to a fixed format using the authoritySideDuplicateBeet function
+const serializedTrade = {
+  authoritySide: authoritySideDuplicateBeet.serialize(trade.authoritySide),
+  // other serialized trade properties...
+};
+
+// Deserialize the trade from the fixed format
+const deserializedTrade = {
+  authoritySide: authoritySideDuplicateBeet.deserialize(serializedTrade.authoritySide),
+  // other deserialized trade properties...
+};
+```
+
+In this example, we create a new trade object with the taker as the authority side. We then serialize the trade to a fixed format using the `authoritySideDuplicateBeet` function, and deserialize it back to its original format. This ensures that the authority side is represented consistently across different parts of the project.
 ## Questions: 
- 1. What is the purpose of the `solita` package and why is it being used in this code?
-   - The `solita` package was used to generate this code and should not be edited directly. Instead, it should be rerun to update it or a wrapper should be written to add functionality.
-2. What is the `@convergence-rfq/beet` package and why is it being imported?
-   - The `@convergence-rfq/beet` package is being imported to define a fixed-size Beet for the `AuthoritySideDuplicate` enum.
-3. What is the `AuthoritySideDuplicate` enum and what are its possible values?
-   - The `AuthoritySideDuplicate` enum is defined in the `enums` category and has two possible values: `Taker` and `Maker`.
+ 1. What is the purpose of this code file?
+- This code file defines an enum called `AuthoritySideDuplicate` and exports it along with a fixed scalar enum called `authoritySideDuplicateBeet`.
+
+2. What is the `@convergence-rfq/beet` module used for?
+- The `@convergence-rfq/beet` module is imported and used to create the `authoritySideDuplicateBeet` fixed scalar enum.
+
+3. What is the difference between `__createBinding` and `__setModuleDefault`?
+- `__createBinding` is used to create a binding between an object and a module, while `__setModuleDefault` is used to set the default export of a module.

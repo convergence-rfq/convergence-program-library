@@ -1,46 +1,44 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/settle.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/instructions/settle.ts)
 
-This code defines two functions and exports them for use in other parts of the Convergence Program Library project. The functions are `settleStruct` and `createSettleInstruction`. 
+This code defines an instruction for the Convergence Program Library project called "Settle". The purpose of this instruction is to settle a trade between two parties by transferring assets from an escrow account to a receiver's token account. 
 
-`settleStruct` is a `FixableBeetArgsStruct` object that defines the structure of the arguments required for the `createSettleInstruction` function. It takes an array of two elements: `instructionDiscriminator` and `assetIdentifier`. `instructionDiscriminator` is a fixed-size array of 8 unsigned 8-bit integers, and `assetIdentifier` is an object of type `AssetIdentifierDuplicate`. 
+The code imports several packages, including "@solana/spl-token", "@convergence-rfq/beet", and "@solana/web3.js". These packages provide functionality for working with Solana tokens, creating and serializing data structures, and interacting with the Solana blockchain.
 
-`createSettleInstruction` is a function that takes three arguments: `accounts`, `args`, and `programId`. It creates a transaction instruction for settling a trade on the Convergence protocol. The function first serializes the `args` object using the `settleStruct` structure and adds the `instructionDiscriminator` to the serialized data. It then creates an array of `keys` that are required for the transaction, including the protocol account, RFQ account, response account, escrow account, receiver token account, and token program account. If there are any additional accounts required, they are added to the `keys` array. Finally, the function creates a new `TransactionInstruction` object with the `programId`, `keys`, and serialized `data`, and returns it.
+The code defines a type called "SettleInstructionArgs", which includes a property called "assetIdentifier" of type "AssetIdentifierDuplicate". It also defines a data structure called "settleStruct", which is a "FixableBeetArgsStruct" that includes the "instructionDiscriminator" and "assetIdentifier" properties. 
 
-This code is used to settle trades on the Convergence protocol. The `settleStruct` object defines the structure of the arguments required for the `createSettleInstruction` function, and the `createSettleInstruction` function creates a transaction instruction for settling a trade. This code can be used in other parts of the Convergence Program Library project to facilitate trade settlement. 
+The code also defines a type called "SettleInstructionAccounts", which includes several properties representing the accounts required for the "Settle" instruction to execute. These properties include "protocol", "rfq", "response", "escrow", "receiverTokenAccount", "tokenProgram", and "anchorRemainingAccounts". 
 
-Example usage of `createSettleInstruction`:
+Finally, the code defines a function called "createSettleInstruction", which takes in the required accounts and instruction arguments and returns a new "TransactionInstruction" object. This object includes the program ID, keys representing the required accounts, and serialized data representing the instruction arguments. 
+
+Overall, this code provides the necessary functionality for settling trades within the Convergence Program Library project. Developers can use this code to create and execute "Settle" instructions within their applications. 
+
+Example usage:
 
 ```
-const accounts = {
-  protocol: protocolAccount.publicKey,
-  rfq: rfqAccount.publicKey,
-  response: responseAccount.publicKey,
-  escrow: escrowAccount.publicKey,
-  receiverTokenAccount: receiverTokenAccount.publicKey,
-  tokenProgram: TOKEN_PROGRAM_ID,
-  anchorRemainingAccounts: [additionalAccount1, additionalAccount2],
-};
-
-const args = {
+const settleArgs = {
   assetIdentifier: {
     assetType: 1,
-    assetClass: 2,
-    assetCode: 'ABC',
-    maturityDate: 1234567890,
-    strikePrice: 100,
-    optionType: 1,
-    underlyingAsset: 'XYZ',
+    assetIndex: 12345,
   },
 };
 
-const instruction = createSettleInstruction(accounts, args);
+const settleAccounts = {
+  protocol: protocolPubkey,
+  rfq: rfqPubkey,
+  response: responsePubkey,
+  escrow: escrowPubkey,
+  receiverTokenAccount: receiverTokenAccountPubkey,
+  tokenProgram: tokenProgramPubkey,
+};
+
+const settleInstruction = createSettleInstruction(settleAccounts, settleArgs);
 ```
 ## Questions: 
  1. What is the purpose of this code and what problem does it solve?
-- This code is part of the Convergence Program Library and provides a function to create a settle instruction for a protocol. It likely solves the problem of settling trades or transactions within the protocol.
+- This code generates a `Settle` instruction for a program and provides the necessary accounts and arguments. It is part of the Convergence Program Library and is used for settling trades.
 
-2. What external dependencies does this code have?
-- This code has dependencies on the "@solana/spl-token", "@convergence-rfq/beet", and "@solana/web3.js" packages.
+2. What dependencies does this code have?
+- This code imports several packages including `@solana/spl-token`, `@convergence-rfq/beet`, and `@solana/web3.js`.
 
-3. What is the expected input and output of the createSettleInstruction function?
-- The createSettleInstruction function expects an object containing various accounts and arguments, and returns a web3 TransactionInstruction object. The specific format of the input object and the expected output are not fully clear from this code alone and would require further documentation or context.
+3. What is the process for updating this code?
+- The code was generated using the `solita` package and should not be edited directly. Instead, the developer should rerun `solita` to update the code or write a wrapper to add functionality.

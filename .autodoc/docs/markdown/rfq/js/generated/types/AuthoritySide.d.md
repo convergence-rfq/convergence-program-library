@@ -1,42 +1,34 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/AuthoritySide.d.ts)
 
-The code above is a TypeScript module that exports an enum and a constant variable. The enum is called `AuthoritySide` and has two possible values: `Taker` and `Maker`. These values are assigned the numeric values of 0 and 1, respectively. The purpose of this enum is to represent the two sides of an authority in a financial transaction. 
+The code above is a TypeScript module that exports an enum and a constant variable. The enum is called `AuthoritySide` and has two possible values: `Taker` and `Maker`. These values are assigned the numeric values of 0 and 1, respectively. The purpose of this enum is to represent the two sides of an authority in a trading system. 
 
 The constant variable is called `authoritySideBeet` and is of type `beet.FixedSizeBeet<AuthoritySide, AuthoritySide>`. This variable is created using the `@convergence-rfq/beet` library, which is a library for encoding and decoding binary data. The `FixedSizeBeet` class is used to create a fixed-size binary encoding for the `AuthoritySide` enum. 
 
-This code is likely used in the larger Convergence Program Library project to encode and decode financial transaction data. The `AuthoritySide` enum is used to represent the two sides of an authority in a transaction, and the `authoritySideBeet` constant is used to encode and decode this data in a fixed-size binary format. 
+This code is likely used in the larger Convergence Program Library project to encode and decode authority side data in a trading system. For example, if a user wants to specify that they are a taker in a trade, they can use the `Taker` value from the `AuthoritySide` enum. This value can then be encoded using the `authoritySideBeet` constant and sent over the network as binary data. On the receiving end, the binary data can be decoded using the `authoritySideBeet` constant to get the original `AuthoritySide` value. 
 
 Here is an example of how this code might be used in a larger project:
 
 ```typescript
 import { AuthoritySide, authoritySideBeet } from "convergence-program-library";
 
-// Create a new transaction with a taker authority
-const transaction = {
-  authority: AuthoritySide.Taker,
-  // other transaction data...
-};
+// Encode an AuthoritySide value as binary data
+const takerBinary = authoritySideBeet.encode(AuthoritySide.Taker);
 
-// Encode the transaction data as a binary buffer
-const encodedData = authoritySideBeet.encode(transaction.authority);
+// Send the binary data over the network...
 
-// Send the encoded data over the network...
+// Decode the binary data back into an AuthoritySide value
+const decodedTaker = authoritySideBeet.decode(takerBinary);
 
-// Decode the received data back into a transaction object
-const receivedData = // received binary data...
-const decodedTransaction = {
-  authority: authoritySideBeet.decode(receivedData),
-  // other transaction data...
-};
-``` 
+console.log(decodedTaker); // Output: AuthoritySide.Taker
+```
 
-In this example, the `AuthoritySide` enum is used to represent the authority side of a financial transaction. The `authoritySideBeet` constant is used to encode and decode this data in a fixed-size binary format. The encoded data can then be sent over the network and decoded back into a transaction object on the receiving end.
+Overall, this code provides a simple and efficient way to encode and decode authority side data in a trading system using binary data.
 ## Questions: 
- 1. What is the purpose of the `@convergence-rfq/beet` import?
-- The `@convergence-rfq/beet` import is likely used to access a library or module that provides functionality related to fixed-size data structures.
+ 1. What is the purpose of the `@convergence-rfq/beet` library and how is it being used in this code?
+- The `@convergence-rfq/beet` library is being imported and used to create a fixed size beet for the `AuthoritySide` enum.
 
-2. What is the `AuthoritySide` enum used for?
-- The `AuthoritySide` enum is used to define two possible values (`Taker` and `Maker`) that represent different sides of an authority in the Convergence Program Library.
+2. What is the `AuthoritySide` enum used for and how does it relate to the rest of the Convergence Program Library?
+- The `AuthoritySide` enum is used to define two sides, Taker and Maker, and is likely used in other parts of the Convergence Program Library to determine which side is performing an action.
 
-3. How is the `authoritySideBeet` variable used in the Convergence Program Library?
-- The `authoritySideBeet` variable is likely used to create a fixed-size data structure that represents the authority side in the Convergence Program Library. This data structure may be used in various parts of the library to store and manipulate authority side information.
+3. How is the `authoritySideBeet` variable being used in the Convergence Program Library?
+- The `authoritySideBeet` variable is likely being used to store and manipulate instances of the `AuthoritySide` enum in a fixed size format.

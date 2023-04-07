@@ -1,32 +1,38 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/types/InstrumentType.ts)
 
-This code is a generated file that should not be edited directly. It imports the `beet` module from the `@convergence-rfq/beet` package and defines an enum called `InstrumentType` with four possible values: `Spot`, `Option`, `TermFuture`, and `PerpFuture`. It also exports a `beet.FixedSizeBeet` object called `instrumentTypeBeet` that is used to serialize and deserialize instances of the `InstrumentType` enum.
+This code is a generated file that defines an enum called `InstrumentType` and a corresponding `beet` object called `instrumentTypeBeet`. The purpose of this code is to provide a standardized way of representing different types of financial instruments within the Convergence Program Library project.
 
-The purpose of this code is to provide a standardized way of representing instrument types within the Convergence Program Library. By defining an enum and a corresponding `beet.FixedSizeBeet` object, the library can ensure that all instrument types are represented consistently across different parts of the codebase. This can help prevent errors and make it easier to maintain and extend the library over time.
+The `InstrumentType` enum defines four different types of financial instruments: Spot, Option, TermFuture, and PerpFuture. These types are used throughout the Convergence Program Library project to differentiate between different types of financial contracts and to provide a common language for developers working on the project.
 
-Here is an example of how this code might be used in the larger project:
+The `instrumentTypeBeet` object is a `beet` fixed scalar enum that maps the `InstrumentType` enum to a fixed-size `beet` object. This `beet` object can be used to serialize and deserialize `InstrumentType` values in a standardized way, making it easier to store and transmit financial instrument data within the Convergence Program Library project.
+
+Here is an example of how this code might be used within the larger Convergence Program Library project:
 
 ```typescript
-import { InstrumentType, instrumentTypeBeet } from 'convergence-program-library';
+import { InstrumentType, instrumentTypeBeet } from '@convergence-rfq/instrument';
 
-// Create an instance of the InstrumentType enum
-const instrument = InstrumentType.Option;
+// Define a financial instrument object
+const instrument = {
+  type: InstrumentType.Option,
+  strikePrice: 100,
+  expirationDate: new Date('2022-01-01'),
+};
 
-// Serialize the enum using the instrumentTypeBeet object
-const serialized = instrumentTypeBeet.toBuffer(instrument);
+// Serialize the instrument object using the instrumentTypeBeet object
+const serializedInstrument = instrumentTypeBeet.serialize(instrument.type);
 
-// Deserialize the enum from the serialized buffer
-const deserialized = instrumentTypeBeet.fromBuffer(serialized);
+// Deserialize the serialized instrument using the instrumentTypeBeet object
+const deserializedInstrument = instrumentTypeBeet.deserialize(serializedInstrument);
 
-// Check that the deserialized value matches the original value
-console.log(deserialized === instrument); // true
+// The deserialized instrument should be equal to the original instrument object
+console.log(deserializedInstrument === instrument); // true
 ```
 
-In this example, we import the `InstrumentType` enum and `instrumentTypeBeet` object from the Convergence Program Library. We then create an instance of the `InstrumentType` enum and serialize it using the `instrumentTypeBeet` object. Finally, we deserialize the serialized buffer and check that the deserialized value matches the original value. This demonstrates how the `instrumentTypeBeet` object can be used to serialize and deserialize instances of the `InstrumentType` enum in a consistent and reliable way.
+Overall, this code provides a standardized way of representing financial instrument types within the Convergence Program Library project, making it easier for developers to work with financial data and ensuring consistency across the project.
 ## Questions: 
  1. What is the purpose of the solita package and why is it being used in this code?
-   - The solita package was used to generate this code, and it should not be edited directly. Instead, developers should rerun solita to update it or write a wrapper to add functionality.
-2. What is the "@convergence-rfq/beet" package and how is it being used in this code?
-   - The "@convergence-rfq/beet" package is being imported and used to create a fixed-size Beet for the InstrumentType enum.
+   - The solita package was used to generate this code and should not be edited directly. Instead, it should be rerun to update it or a wrapper should be written to add functionality.
+2. What is the "@convergence-rfq/beet" package and why is it being imported?
+   - The "@convergence-rfq/beet" package is being imported to define a fixed-size Beet for the InstrumentType enum.
 3. What is the purpose of the InstrumentType enum and how is it being used in this code?
-   - The InstrumentType enum is defining different types of financial instruments, and it is being used to create a fixed-size Beet using the beet package.
+   - The InstrumentType enum defines different types of financial instruments and is being used to create a fixed-size Beet using the beet.fixedScalarEnum() method.

@@ -1,40 +1,40 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/Side.ts)
 
-This code is a generated file that imports the `beet` module from the `@convergence-rfq/beet` package and defines an enum called `Side` and a constant called `sideBeet`. 
+This code is a generated file that imports the "beet" package from "@convergence-rfq/beet" and defines an enum called "Side" with two values: "Bid" and "Ask". It also defines a constant called "sideBeet" which is a fixed size beet (a type of data structure) that represents the "Side" enum.
 
-The `Side` enum has two values, `Bid` and `Ask`, which are used to represent the two sides of a financial transaction. This enum is categorized as both an `enum` and `generated`.
+The purpose of this code is to provide a standardized way of representing the "Side" of a trade in the Convergence Program Library. The "Side" enum is used to indicate whether a trade is a bid or an ask, and the "sideBeet" constant provides a way to serialize and deserialize this information in a fixed size format.
 
-The `sideBeet` constant is defined using the `fixedScalarEnum` method from the `beet` module. This method takes the `Side` enum as an argument and returns a `FixedSizeBeet` object that can be used to encode and decode values of the `Side` type. This constant is categorized as both a `userType` and `generated`.
+This code is likely used in other parts of the Convergence Program Library to represent trades and orders. For example, a trade object might have a "side" property that is set to either "Bid" or "Ask", and this property would be serialized using the "sideBeet" constant.
 
-This code is likely part of a larger project that involves financial transactions and encoding/decoding data related to those transactions. The `beet` module provides functionality for encoding and decoding data in a compact binary format, which can be useful for optimizing performance in applications that deal with large amounts of data. The `Side` enum and `sideBeet` constant are likely used throughout the project to represent and manipulate the two sides of financial transactions. 
+Here is an example of how this code might be used:
 
-Example usage of the `Side` enum:
+```typescript
+import { Side, sideBeet } from "convergence-program-library";
 
-```
-import { Side } from 'convergence-program-library';
+// Create a trade object
+const trade = {
+  side: Side.Bid,
+  price: 100,
+  quantity: 10,
+};
 
-const bid = Side.Bid;
-const ask = Side.Ask;
+// Serialize the trade object using sideBeet
+const serializedTrade = sideBeet.encode(trade.side);
 
-console.log(bid); // Output: Bid
-console.log(ask); // Output: Ask
-```
+// Deserialize the trade object using sideBeet
+const deserializedTrade = {
+  ...trade,
+  side: sideBeet.decode(serializedTrade),
+};
+``` 
 
-Example usage of the `sideBeet` constant:
-
-```
-import { sideBeet } from 'convergence-program-library';
-
-const encodedBid = sideBeet.encode(Side.Bid);
-const decodedAsk = sideBeet.decode(encodedAsk);
-
-console.log(encodedBid); // Output: Uint8Array [ 0 ]
-console.log(decodedAsk); // Output: Ask
-```
+In this example, we create a trade object with a "side" property set to "Bid". We then use the "sideBeet" constant to serialize the "side" property into a fixed size format. Finally, we deserialize the "side" property back into its original value using the "decode" method provided by "sideBeet".
 ## Questions: 
- 1. What is the purpose of the `solita` package and why is it being used in this code?
-   - The `solita` package was used to generate this code and should not be edited directly. Instead, it should be rerun to update it or a wrapper should be written to add functionality.
-2. What is the `@convergence-rfq/beet` package and why is it being imported?
-   - The `@convergence-rfq/beet` package is being imported to define a fixed size beet for the `Side` enum.
-3. What is the `Side` enum and how is it being used in this code?
-   - The `Side` enum is being used to define the bid and ask sides in the `sideBeet` constant, which is a fixed size beet of type `Side`.
+ 1. What is the purpose of the `beet` package being imported?
+- The `beet` package is being used to create a fixed size binary encoding and decoding schema for the `Side` enum.
+
+2. Why is the `Side` enum being categorized as both `enums` and `generated`?
+- The `enums` category is likely used to indicate that this is an enum type, while the `generated` category may indicate that this enum was generated automatically using a tool or script.
+
+3. What is the purpose of the `sideBeet` constant?
+- The `sideBeet` constant is a fixed size binary encoding and decoding schema for the `Side` enum, created using the `beet` package.

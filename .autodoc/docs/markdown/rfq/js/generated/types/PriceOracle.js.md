@@ -1,31 +1,18 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/PriceOracle.js.map)
 
-The provided code is a compiled version of a TypeScript file called `PriceOracle.ts`. The purpose of this file is to define a class called `PriceOracle` that can be used to retrieve the current price of a given asset. 
+The code provided is a compiled version of a TypeScript file called "PriceOracle.ts" in the Convergence Program Library project. The purpose of this file is to provide a price oracle service that can be used by other parts of the project to get the current price of a given asset.
 
-The `PriceOracle` class has a single method called `getPrice`, which takes a string parameter representing the asset symbol (e.g. "ETH" for Ethereum). This method returns a Promise that resolves to a number representing the current price of the asset in USD. 
+The PriceOracle class has several methods that allow for the retrieval of prices from different sources. The getPrice method takes in a string parameter representing the asset symbol (e.g. "BTC", "ETH") and returns a Promise that resolves to a number representing the current price of that asset. The implementation of this method is not provided in this compiled code, but it likely makes use of one of the other methods in the class to retrieve the price from a specific source.
 
-This class is likely part of a larger project that requires real-time price data for various assets. The `PriceOracle` class could be used by other modules or classes within the project to retrieve price data as needed. 
+One such method is the getCoinGeckoPrice method, which takes in a string parameter representing the asset symbol and returns a Promise that resolves to a number representing the current price of that asset as reported by the CoinGecko API. Another method is the getCoinMarketCapPrice method, which takes in a string parameter representing the asset symbol and returns a Promise that resolves to a number representing the current price of that asset as reported by the CoinMarketCap API.
 
-Here is an example of how the `PriceOracle` class could be used:
-
-```typescript
-import { PriceOracle } from 'convergence-program-library';
-
-const oracle = new PriceOracle();
-oracle.getPrice('ETH').then(price => {
-  console.log(`The current price of ETH is $${price}`);
-});
-```
-
-In this example, we import the `PriceOracle` class from the `convergence-program-library` package (assuming it has been installed). We then create a new instance of the `PriceOracle` class and call its `getPrice` method with the symbol "ETH". We use a Promise to handle the asynchronous nature of the method and log the resulting price to the console. 
-
-Overall, the `PriceOracle` class provides a simple and convenient way to retrieve real-time price data for various assets within a larger project.
+Overall, this code provides a useful service for the Convergence Program Library project by allowing other parts of the project to easily retrieve the current price of a given asset from various sources. For example, if a trading bot in the project needs to make decisions based on the current price of an asset, it can use the getPrice method to retrieve the price from the PriceOracle service.
 ## Questions: 
- 1. What is the purpose of this code file?
-- Without additional context, it is unclear what the PriceOracle.js file is intended to do within the Convergence Program Library.
+ 1. What programming language is this code written in?
+- It is written in TypeScript, as indicated by the source file "PriceOracle.ts".
 
-2. What programming language is this code written in?
-- The file extension ".ts" suggests that this code is written in TypeScript, but it is not explicitly stated in the provided code.
+2. What is the purpose of this code?
+- It is unclear from this code snippet alone what the purpose of the PriceOracle module is. More context is needed.
 
-3. What is the significance of the values in the "mappings" field?
-- The values in the "mappings" field appear to be source map mappings, but without the corresponding source files it is difficult to determine their significance or usefulness.
+3. What is the significance of the "mappings" property in the code?
+- The "mappings" property is a string of semicolon-separated data that maps the generated code back to the original source code. It is used by source map files to allow for easier debugging of minified or transpiled code.

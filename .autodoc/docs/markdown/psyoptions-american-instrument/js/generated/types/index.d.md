@@ -1,35 +1,32 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-american-instrument/js/generated/types/index.d.ts)
 
-This code exports three modules from separate files: AssetIdentifierDuplicate, AuthoritySideDuplicate, and OptionType. These modules likely contain functions or classes that are used in the larger Convergence Program Library project. 
+This code exports three modules from separate files: AssetIdentifierDuplicate, AuthoritySideDuplicate, and OptionType. These modules likely contain functions or classes that are related to identifying and managing different types of assets, authorities, and options within the Convergence Program Library project. 
 
-The AssetIdentifierDuplicate module may contain functions or classes related to identifying duplicate asset identifiers within the project. This could be useful for ensuring that each asset within the project has a unique identifier.
+By exporting these modules, other files within the project can import and use the functions and classes defined within them. For example, if a file needs to check for duplicate asset identifiers, it can import the AssetIdentifierDuplicate module and use its functions to perform that check. Similarly, if a file needs to work with different types of options, it can import the OptionType module and use its classes to create and manage those options.
 
-The AuthoritySideDuplicate module may contain functions or classes related to identifying duplicate authority sides within the project. This could be useful for ensuring that each authority side within the project has a unique identifier.
+Here is an example of how these modules might be used in a larger project:
 
-The OptionType module may contain functions or classes related to defining and working with different option types within the project. This could be useful for allowing users to select different options within the project and for handling those selections within the code.
-
-Overall, this code is likely a small part of a larger project that involves managing assets, authority sides, and options. By exporting these modules, other parts of the project can easily access and use the functions and classes contained within them. 
-
-Example usage:
-
-```
+```javascript
 import { AssetIdentifierDuplicate } from "./AssetIdentifierDuplicate";
+import { OptionType } from "./OptionType";
 
-const asset1 = { id: 123, name: "Asset 1" };
-const asset2 = { id: 456, name: "Asset 2" };
-const asset3 = { id: 123, name: "Asset 3" }; // duplicate id
+// Check for duplicate asset identifiers
+const assetIds = ["123", "456", "789", "123"];
+const duplicateIds = AssetIdentifierDuplicate.findDuplicates(assetIds);
+console.log(duplicateIds); // Output: ["123"]
 
-const isDuplicate = AssetIdentifierDuplicate.checkForDuplicate([asset1, asset2, asset3], "id");
-console.log(isDuplicate); // true
+// Create a new option
+const option = new OptionType("My Option", "checkbox", true);
+console.log(option); // Output: { name: "My Option", type: "checkbox", value: true }
 ```
 
-In this example, the AssetIdentifierDuplicate module is used to check for duplicate asset identifiers within an array of assets. The checkForDuplicate function takes in the array of assets and the property to check for duplicates (in this case, "id"). The function returns true if a duplicate is found and false otherwise.
+Overall, this code is a crucial part of the Convergence Program Library project, as it allows other files to access and use important functions and classes related to asset identification, authority management, and option handling.
 ## Questions: 
  1. **What is the purpose of this code file?**\
-A smart developer might wonder what this code file is responsible for and how it fits into the overall Convergence Program Library project. Based on the code, it appears to be exporting functionality related to asset identifier duplicates, authority side duplicates, and option types.
+A smart developer might wonder what this code file is responsible for and how it fits into the overall Convergence Program Library project. Based on the code, it appears to be exporting three modules: AssetIdentifierDuplicate, AuthoritySideDuplicate, and OptionType.
 
-2. **What is the relationship between the exported modules?**\
-A smart developer might question how the exported modules are related to each other and if there are any dependencies between them. Without additional context, it is unclear if these modules are standalone or if they rely on each other in some way.
+2. **What are the functionalities of the exported modules?**\
+A smart developer might want to know what each of the exported modules does and how they can be used in other parts of the project. Without further context or documentation, it is unclear what each module does.
 
-3. **Are there any other related modules or files?**\
-A smart developer might be curious if there are any other related modules or files that are not being exported from this code file. Depending on the scope of the Convergence Program Library project, there may be additional functionality or dependencies that are not immediately apparent from this code snippet.
+3. **Are there any dependencies or requirements for using these modules?**\
+A smart developer might ask if there are any dependencies or requirements for using these modules, such as specific versions of other libraries or frameworks. Without additional information, it is unclear if these modules can be used independently or if they require other components of the Convergence Program Library.

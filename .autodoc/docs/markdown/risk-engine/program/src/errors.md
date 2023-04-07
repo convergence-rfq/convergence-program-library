@@ -1,38 +1,27 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/program/src/errors.rs)
 
-This code defines an error enum called `Error` using the `#[error_code]` macro from the `anchor_lang` crate. The purpose of this enum is to provide a set of error codes that can be used throughout the Convergence Program Library project to handle various error scenarios that may arise during program execution.
+This code defines an enum called `Error` that is used to represent various error conditions that may occur during the execution of the Convergence Program Library. Each variant of the enum represents a specific error condition and includes a message that describes the error.
 
-Each variant of the `Error` enum represents a specific error scenario and includes a message that describes the error. For example, the `MathOverflow` variant represents an error that occurs when an overflow occurs during calculations, and the `NotEnoughAccounts` variant represents an error that occurs when there are not enough accounts for collateral calculations.
+The `#[error_code]` attribute is used to generate code that maps each variant of the enum to a unique error code. This allows the library to return a specific error code when an error occurs, which can be used to identify the error and take appropriate action.
 
-These error codes can be used in conjunction with the `ProgramError` type from the `anchor_lang` crate to provide detailed error messages to users of the Convergence Program Library. For example, if a function encounters an error scenario represented by the `MathOverflow` variant, it can return a `ProgramError` with the `Error::MathOverflow` variant as its payload.
+For example, if the `MathOverflow` error occurs, the library may return an error code of `1001`. The caller of the library can then check the error code and take appropriate action, such as retrying the operation or displaying an error message to the user.
 
-Here's an example of how this code might be used in a larger program:
+This code is an important part of the Convergence Program Library as it provides a standardized way to handle errors that may occur during the execution of the library. By using a consistent set of error codes and messages, the library can provide a more user-friendly experience and make it easier for developers to integrate the library into their own projects.
+
+Here is an example of how the `Error` enum may be used in the larger project:
 
 ```rust
-use anchor_lang::prelude::*;
-use my_program::Error;
-
-#[program]
-mod my_program {
-    use super::*;
-
-    #[access_control(Admin)]
-    pub fn do_something(ctx: Context<AdminContext>) -> ProgramResult {
-        // Perform some calculations that may result in an error
-        let result = perform_calculations()?;
-
-        // If an error occurs, return a ProgramError with the appropriate error code
-        if result.is_err() {
-            return Err(ProgramError::Custom(Error::MathOverflow.into()));
-        }
-
-        // Otherwise, continue with program execution
-        Ok(())
+fn calculate_price() -> Result<f64, u32> {
+    // perform some calculations
+    if overflow_occurred {
+        return Err(Error::MathOverflow as u32);
     }
+    // perform more calculations
+    Ok(price)
 }
 ```
 
-In this example, the `do_something` function performs some calculations that may result in an error. If an error occurs, it returns a `ProgramError` with the `Error::MathOverflow` variant as its payload. This allows the caller of the function to receive a detailed error message indicating that an overflow occurred during calculations.
+In this example, the `calculate_price` function performs some calculations and returns a result. If an overflow occurs during the calculations, the function returns an error with the `MathOverflow` error code. The caller of the function can then check the error code and take appropriate action.
 ## Questions: 
  1. What is the purpose of this code?
 - This code defines an enum called `Error` with various error messages for the Convergence Program Library.
@@ -40,5 +29,5 @@ In this example, the `do_something` function performs some calculations that may
 2. What is the `#[error_code]` attribute used for?
 - The `#[error_code]` attribute is used to mark the `Error` enum as an error code enum, which allows it to be used with the `anchor_lang` crate's error handling system.
 
-3. How are these error messages used in the Convergence Program Library?
-- These error messages are likely used to provide more informative error messages to users of the Convergence Program Library when errors occur during calculations or other operations.
+3. How might a developer use this code in their project?
+- A developer might use this code by importing the `Error` enum and using it to handle errors that occur within their code when interacting with the Convergence Program Library.

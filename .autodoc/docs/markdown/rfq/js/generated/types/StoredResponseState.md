@@ -1,43 +1,41 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/StoredResponseState.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/StoredResponseState.ts)
 
-This code defines an enum called `StoredResponseState` and exports it along with a `storedResponseStateBeet` variable. The `StoredResponseState` enum has seven possible values, each representing a different state that a stored response can be in. These states include `Active`, `Canceled`, `WaitingForLastLook`, `SettlingPreparations`, `ReadyForSettling`, `Settled`, and `Defaulted`. 
+This code is a generated file that should not be edited directly. It imports the `beet` package from the `@convergence-rfq` library and defines an enum called `StoredResponseState`. This enum has several possible values, including `Active`, `Canceled`, `Settled`, and others. 
 
-The `storedResponseStateBeet` variable is defined using a function from the `@convergence-rfq/beet` library called `fixedScalarEnum`. This function takes an enum and returns a `BeetScalar` object that can be used to serialize and deserialize the enum. This suggests that the `StoredResponseState` enum is used in some sort of data serialization or deserialization process within the larger Convergence Program Library project.
+The purpose of this code is to provide a standardized set of response states that can be used throughout the Convergence Program Library project. By defining this enum and exporting it, other parts of the project can import it and use it to ensure consistency in the way response states are handled. 
 
-Here is an example of how the `StoredResponseState` enum and `storedResponseStateBeet` variable might be used in code:
+Additionally, the code defines a `storedResponseStateBeet` constant that uses the `beet` package to create a fixed-size binary encoding of the `StoredResponseState` enum. This encoding can be used to efficiently store and transmit response state information. 
 
+Here is an example of how this code might be used in the larger project:
+
+```typescript
+import { StoredResponseState, storedResponseStateBeet } from 'convergence-program-library';
+
+// Define a function that takes a response state and returns its binary encoding
+function encodeResponseState(state: StoredResponseState): Uint8Array {
+  return storedResponseStateBeet.encode(state);
+}
+
+// Define a function that takes a binary encoding and returns the corresponding response state
+function decodeResponseState(bytes: Uint8Array): StoredResponseState {
+  return storedResponseStateBeet.decode(bytes);
+}
+
+// Use the functions to encode and decode response states
+const state = StoredResponseState.Active;
+const encoded = encodeResponseState(state);
+const decoded = decodeResponseState(encoded);
+
+console.log(state); // Active
+console.log(encoded); // Uint8Array [ 0 ]
+console.log(decoded); // Active
 ```
-import { storedResponseStateBeet, StoredResponseState } from '@convergence-rfq/stored-response-state';
 
-// Create a new stored response object
-const storedResponse = {
-  id: 123,
-  state: StoredResponseState.Active,
-  // other properties...
-};
-
-// Serialize the stored response object using the storedResponseStateBeet scalar
-const serialized = {
-  id: storedResponse.id,
-  state: storedResponseStateBeet.serialize(storedResponse.state),
-  // other properties...
-};
-
-// Deserialize the stored response object using the storedResponseStateBeet scalar
-const deserialized = {
-  id: serialized.id,
-  state: storedResponseStateBeet.deserialize(serialized.state),
-  // other properties...
-};
-```
-
-In this example, the `StoredResponseState` enum is used to represent the state of a stored response object. The `storedResponseStateBeet` scalar is used to serialize and deserialize the `state` property of the stored response object. This allows the stored response object to be easily stored and retrieved from a database or other data store.
+In this example, we import the `StoredResponseState` enum and `storedResponseStateBeet` constant from the `convergence-program-library` package. We then define two functions that use `storedResponseStateBeet` to encode and decode response states. Finally, we use these functions to encode an example response state, log the encoded bytes, and decode the bytes back into the original response state.
 ## Questions: 
- 1. What is the purpose of the `beet` module being imported?
-- The `beet` module is being used to create a fixed scalar enum for the `StoredResponseState` enum.
-
-2. What is the significance of the `StoredResponseState` enum?
-- The `StoredResponseState` enum defines different states that a stored response can be in, such as "Active", "Canceled", "Settled", etc.
-
-3. What is the purpose of the `storedResponseStateBeet` variable?
-- The `storedResponseStateBeet` variable is the fixed scalar enum created using the `beet` module for the `StoredResponseState` enum.
+ 1. What is the purpose of the `StoredResponseState` enum?
+   - The `StoredResponseState` enum is used to represent different states of a stored response.
+2. What is the `storedResponseStateBeet` constant and how is it used?
+   - `storedResponseStateBeet` is a fixed size Beet object that is generated from the `StoredResponseState` enum using the `beet.fixedScalarEnum` method. It is likely used to serialize and deserialize the `StoredResponseState` enum.
+3. What is the `solita` package and why is it used in this code?
+   - The `solita` package is used to generate this code and should not be edited directly. It is likely used to automate the generation of code for the Convergence Program Library.

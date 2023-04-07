@@ -1,28 +1,28 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/idl/risk_engine.json)
 
-The code provided is a JSON file that defines the instructions, accounts, types, and errors for a program called "risk_engine". The program is part of the Convergence Program Library project and is used to calculate collateral requirements for various financial instruments. 
+The code provided is a JSON file that defines the instructions, accounts, types, and errors for a program called "risk_engine". This program is part of the Convergence Program Library project and is used to manage risk for various financial instruments, including spot, option, term future, and perp future.
 
-The "initializeConfig" instruction initializes the configuration for the risk engine. It takes in several arguments, including the collateral required for creating variable and fixed quote amount RFQs, the number of decimals for the collateral mint, and various safety factors. 
+The "initializeConfig" instruction initializes the configuration for the risk engine. It takes several arguments, including collateral amounts, safety factors, and oracle parameters. This instruction is used to set the initial configuration for the risk engine.
 
-The "setRiskCategoriesInfo" instruction sets the risk category information for the risk engine. It takes in an array of "RiskCategoryChange" structs, which contain the index of the risk category to change and the new value for that category. 
+The "setRiskCategoriesInfo" instruction sets the risk categories information for the risk engine. It takes a list of changes to the risk categories, which include interest rates, volatility, and scenarios. This instruction is used to update the risk categories information for the risk engine.
 
-The "updateConfig" instruction updates the configuration for the risk engine. It takes in optional arguments for the same parameters as "initializeConfig", allowing for the configuration to be updated without having to reinitialize it. 
+The "updateConfig" instruction updates the configuration for the risk engine. It takes optional arguments for collateral amounts, safety factors, and oracle parameters. This instruction is used to update the configuration for the risk engine.
 
-The "setInstrumentType" instruction sets the instrument type for a given program. It takes in a public key for the instrument program and an optional "InstrumentType" enum value. 
+The "setInstrumentType" instruction sets the instrument type for an instrument. It takes a public key for the instrument program and an optional instrument type. This instruction is used to set the instrument type for an instrument.
 
-The "calculateCollateralForRfq", "calculateCollateralForResponse", and "calculateCollateralForConfirmation" instructions calculate the collateral required for various stages of an RFQ (request for quote) process. They take in the RFQ and response accounts, as well as the configuration account, and return the required collateral amount. 
+The "calculateCollateralForRfq", "calculateCollateralForResponse", and "calculateCollateralForConfirmation" instructions calculate the collateral required for an RFQ, response, and confirmation, respectively. They take the RFQ, response, and configuration accounts as arguments and return the required collateral amount. These instructions are used to calculate the collateral required for various stages of an RFQ.
 
-The program also defines several custom types, including "RiskCategoryInfo", "Scenario", "OptionCommonData", "FutureCommonData", "InstrumentType", and "OptionType". These types are used throughout the program to define various parameters and data structures. 
+The program defines several types, including RiskCategoryChange, InstrumentInfo, RiskCategoryInfo, Scenario, OptionCommonData, FutureCommonData, InstrumentType, and OptionType. These types are used to define the data structures used by the program.
 
-Finally, the program defines several error codes that can be returned if certain conditions are not met during collateral calculations or other operations. These error codes include "MathOverflow", "NotEnoughAccounts", "StaleOracle", and others. 
+The program also defines several errors, including MathOverflow, MathInvalidConversion, NotEnoughAccounts, StaleOracle, OracleConfidenceOutOfRange, InvalidBaseAssetInfo, InvalidOracle, RiskOutOfBounds, MissingPriceForABaseAsset, NotAProtocolAuthority, MissingInstrument, CannotRemoveInstrument, CannotChangeInstrument, and CannotAddInstrument. These errors are used to handle various error conditions that may occur during the execution of the program.
 
-Overall, the "risk_engine" program is a key component of the Convergence Program Library project, providing the necessary calculations for collateral requirements in a variety of financial instruments.
+Overall, the "risk_engine" program is a key component of the Convergence Program Library project and is used to manage risk for various financial instruments. It provides a set of instructions for initializing the configuration, updating the risk categories information and configuration, setting the instrument type, and calculating the collateral required for various stages of an RFQ.
 ## Questions: 
  1. What is the purpose of this code and what problem does it solve?
-- This code is a risk engine for a financial instrument trading platform. It calculates collateral requirements for various types of trades based on risk factors and market conditions.
+- This code is a risk engine program library that calculates collateral for various financial instruments. It solves the problem of determining the appropriate amount of collateral required for different types of financial transactions.
 
-2. What are the different types of financial instruments supported by this code?
-- The code supports spot trades, options, term futures, and perpetual futures.
+2. What are the different types of financial instruments that this code supports?
+- This code supports spot, option, term future, and perpetual future instruments.
 
-3. What are the possible errors that can be encountered while using this code?
-- Possible errors include math overflow, invalid conversions, stale or out-of-range oracle data, missing or mismatched instrument or base asset information, and failed sanity checks.
+3. What are the potential errors that can occur while using this code and how are they handled?
+- There are several potential errors that can occur, such as math overflow, stale oracle, and missing instrument. These errors are handled by specific error codes and messages that can be used to identify and resolve the issue.

@@ -1,20 +1,16 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/revertSettlementPreparation.d.ts)
 
-This code is a module that exports functions and types related to a specific instruction for the Convergence Program Library. The instruction is called `RevertSettlementPreparationInstruction` and is used to revert the preparation of a settlement on the Convergence platform.
+This code imports two external libraries, "@convergence-rfq/beet" and "@solana/web3.js", and an enum type "AuthoritySide" from a local file "types/AuthoritySide". It also defines two custom types, "RevertSettlementPreparationInstructionArgs" and "RevertSettlementPreparationInstructionAccounts", and two constants, "revertSettlementPreparationStruct" and "revertSettlementPreparationInstructionDiscriminator", as well as a function "createRevertSettlementPreparationInstruction".
 
-The module imports two external libraries: `@convergence-rfq/beet` and `@solana/web3.js`. These libraries are used to define types and structures for the instruction and to interact with the Solana blockchain.
+The purpose of this code is to provide functionality for creating a transaction instruction for reverting a settlement preparation. The "RevertSettlementPreparationInstructionArgs" type specifies the arguments needed for this instruction, which include the "side" of the authority making the request. The "RevertSettlementPreparationInstructionAccounts" type specifies the accounts needed for this instruction, including the protocol, RFQ, and response accounts, as well as an optional array of additional accounts. The "revertSettlementPreparationStruct" constant defines the structure of the arguments for this instruction, including the instruction discriminator. The "revertSettlementPreparationInstructionDiscriminator" constant specifies the instruction discriminator value. Finally, the "createRevertSettlementPreparationInstruction" function takes in the necessary accounts and arguments and returns a transaction instruction.
 
-The module exports several types and functions related to the `RevertSettlementPreparationInstruction`. The `RevertSettlementPreparationInstructionArgs` type defines the arguments that can be passed to the instruction, which in this case is just the `side` of the authority. The `RevertSettlementPreparationInstructionAccounts` type defines the accounts that are required to execute the instruction, including the protocol, RFQ, and response accounts. The `createRevertSettlementPreparationInstruction` function is used to create a transaction instruction that can be sent to the Solana blockchain to execute the instruction.
-
-The `revertSettlementPreparationStruct` and `revertSettlementPreparationInstructionDiscriminator` constants are used to define the structure and discriminator for the instruction. These are required for the instruction to be properly executed on the Solana blockchain.
-
-Overall, this module is a small but important part of the Convergence Program Library. It provides the necessary types and functions to execute the `RevertSettlementPreparationInstruction`, which is a key feature of the Convergence platform. Developers using the Convergence Program Library can import this module and use the `createRevertSettlementPreparationInstruction` function to execute the instruction on the Solana blockchain.
+This code is likely used as part of a larger project that involves settling trades or transactions on the Solana blockchain. The ability to revert a settlement preparation may be necessary in certain circumstances, such as if an error occurred during the preparation process or if the preparation was no longer needed. This code provides a standardized way to create the necessary transaction instruction for reverting a settlement preparation, which can be used by other parts of the project that need this functionality. For example, a trade settlement module may use this code to handle the case where a settlement preparation needs to be reverted.
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The Convergence Program Library is not described in the given code, so a smart developer might want to know what the overall purpose of the library is and how this specific code contributes to it.
+ 1. What external libraries or dependencies does this code rely on?
+- This code relies on two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
 
-2. What is the expected behavior of the `createRevertSettlementPreparationInstruction` function?
-- A smart developer might want to know what this function does and how it should be used, including what arguments it expects and what it returns.
+2. What is the purpose of the AuthoritySide and RevertSettlementPreparationInstructionArgs types?
+- The AuthoritySide type is likely used to specify which side of a trade has authority to perform certain actions. The RevertSettlementPreparationInstructionArgs type is used as an argument for a function that creates a transaction instruction.
 
-3. What is the significance of the `instructionDiscriminator` field in `revertSettlementPreparationStruct`?
-- A smart developer might want to know why this field is included in the struct and what its purpose is within the larger context of the code and the Convergence Program Library.
+3. What is the expected output of the createRevertSettlementPreparationInstruction function?
+- The expected output of the createRevertSettlementPreparationInstruction function is a web3 TransactionInstruction object, which likely contains information about a transaction to be executed on the Solana blockchain.

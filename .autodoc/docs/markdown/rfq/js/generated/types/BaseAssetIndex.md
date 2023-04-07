@@ -1,29 +1,22 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/types/BaseAssetIndex.ts)
 
-This code is a generated module that exports a type and a constant. The type is called `BaseAssetIndex` and it is an object with a single property called `value` of type `number`. The constant is called `baseAssetIndexBeet` and it is an instance of the `BeetArgsStruct` class from the `@convergence-rfq/beet` package. 
+This code is a generated module that exports a type and a constant. The type is called `BaseAssetIndex` and is defined as an object with a single property `value` of type `number`. The constant is called `baseAssetIndexBeet` and is an instance of the `BeetArgsStruct` class from the `@convergence-rfq/beet` package. 
 
-The purpose of this module is to provide a standardized representation of a base asset index for use in the larger Convergence Program Library project. The `BaseAssetIndex` type defines the structure of the index object, while the `baseAssetIndexBeet` constant provides a way to serialize and deserialize the index object using the `BeetArgsStruct` class. 
+The purpose of this module is to provide a standardized representation of a base asset index for use in the larger Convergence Program Library project. The `BaseAssetIndex` type defines the shape of the data that represents a base asset index, while the `baseAssetIndexBeet` constant provides a way to serialize and deserialize this data using the `BeetArgsStruct` class. 
 
-Developers using this module can import the `BaseAssetIndex` type and use it to define variables and function parameters that require a base asset index. They can also use the `baseAssetIndexBeet` constant to convert a base asset index object to a byte array for storage or transmission, and to convert a byte array back to a base asset index object for use in their code. 
+The `BeetArgsStruct` class takes two arguments: an array of tuples that define the structure of the data, and a string that gives the struct a name. In this case, the array contains a single tuple with the property name `value` and the type `beet.u16`, which represents an unsigned 16-bit integer. The string `"BaseAssetIndex"` is used as the name of the struct. 
 
-Here is an example of how a developer might use this module:
+This module can be used by other modules in the Convergence Program Library project that need to work with base asset indexes. For example, a module that represents a trading pair might use the `BaseAssetIndex` type to store information about the base asset of the pair, and the `baseAssetIndexBeet` constant to serialize and deserialize that information when communicating with other parts of the system. 
+
+Example usage:
 
 ```typescript
-import { BaseAssetIndex, baseAssetIndexBeet } from 'convergence-program-library';
+import { BaseAssetIndex, baseAssetIndexBeet } from "convergence-program-library";
 
-// Define a variable of type BaseAssetIndex
 const index: BaseAssetIndex = { value: 42 };
-
-// Convert the index object to a byte array
-const bytes = baseAssetIndexBeet.toBytes(index);
-
-// Convert the byte array back to an index object
-const decodedIndex = baseAssetIndexBeet.fromBytes(bytes);
-
-console.log(decodedIndex); // { value: 42 }
+const serialized = baseAssetIndexBeet.serialize(index); // returns a Buffer
+const deserialized = baseAssetIndexBeet.deserialize(serialized); // returns { value: 42 }
 ```
-
-Overall, this module provides a simple and standardized way to work with base asset indexes in the Convergence Program Library project.
 ## Questions: 
  1. What is the purpose of the Convergence Program Library and how does this code fit into it?
 - The Convergence Program Library is not described in the given code, so a smart developer might wonder what the overall purpose of the library is and how this specific code contributes to it.

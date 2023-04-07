@@ -1,44 +1,50 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/withdrawCollateral.d.ts)
 
-This code exports several types and functions related to withdrawing collateral from a protocol. It is part of the Convergence Program Library project and uses the Beet and Solana Web3.js libraries.
+This code defines a set of TypeScript interfaces and functions related to withdrawing collateral from a protocol. It is part of the Convergence Program Library project and uses two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
 
-The `WithdrawCollateralInstructionArgs` type defines an object with a single property `amount`, which is a `bignum` (a large integer). This represents the amount of collateral to be withdrawn.
+The main interface defined in this code is `WithdrawCollateralInstructionArgs`, which specifies the arguments needed to withdraw collateral from a protocol. It has a single field, `amount`, which is a `bignum` (a large integer) representing the amount of collateral to withdraw.
 
-The `withdrawCollateralStruct` constant is a `BeetArgsStruct` object that extends the `WithdrawCollateralInstructionArgs` type with an additional property `instructionDiscriminator`, which is an array of numbers. This is used to differentiate this instruction from others in the same program.
+The `WithdrawCollateralInstructionAccounts` interface specifies the accounts needed to execute the withdrawal. It includes several `web3.PublicKey` objects representing the user's account, the protocol's account, and various token accounts. It also includes optional fields for the token program and additional accounts needed by the Anchor framework.
 
-The `WithdrawCollateralInstructionAccounts` type defines an object with several properties representing the accounts involved in the withdrawal process. These include the user's public key, the user's token account, the protocol's public key, the collateral information account, the collateral token account, and optionally the token program's public key and any additional accounts required by the Anchor protocol.
+The `withdrawCollateralStruct` constant is a `beet.BeetArgsStruct` object that combines the `WithdrawCollateralInstructionArgs` interface with an additional field, `instructionDiscriminator`, which is an array of numbers used to identify the instruction within a transaction.
 
-The `withdrawCollateralInstructionDiscriminator` constant is an array of numbers used to identify this instruction in the program.
+The `withdrawCollateralInstructionDiscriminator` constant is simply an array of numbers used to identify the instruction within a transaction.
 
-The `createWithdrawCollateralInstruction` function takes two arguments: an object of type `WithdrawCollateralInstructionAccounts` and an object of type `WithdrawCollateralInstructionArgs`. It returns a `TransactionInstruction` object that can be used to execute the withdrawal.
+Finally, the `createWithdrawCollateralInstruction` function takes in the necessary accounts and arguments and returns a `web3.TransactionInstruction` object that can be used to execute the withdrawal.
 
-Overall, this code provides a way to withdraw collateral from a protocol using the Solana blockchain. It defines the necessary types and functions to create a transaction instruction for this purpose. This code can be used in the larger Convergence Program Library project to facilitate collateral management and trading on the Solana blockchain. An example usage of this code might look like:
+Overall, this code provides a standardized way to withdraw collateral from a protocol using the Solana blockchain. It can be used by other parts of the Convergence Program Library project to facilitate collateral management and trading. Here is an example of how this code might be used:
 
 ```
+import { createWithdrawCollateralInstruction } from "convergence-program-library";
+
+// Define the necessary accounts
 const accounts = {
   user: userPublicKey,
-  userTokens: userTokenPublicKey,
+  userTokens: userTokensPublicKey,
   protocol: protocolPublicKey,
   collateralInfo: collateralInfoPublicKey,
   collateralToken: collateralTokenPublicKey,
   tokenProgram: tokenProgramPublicKey,
-  anchorRemainingAccounts: additionalAccounts
+  anchorRemainingAccounts: remainingAccounts,
 };
 
+// Define the withdrawal arguments
 const args = {
-  amount: beet.bignum(1000)
+  amount: new beet.bignum(1000000000),
 };
 
+// Create the transaction instruction
 const instruction = createWithdrawCollateralInstruction(accounts, args, programId);
 
-// Use the instruction to execute the withdrawal
+// Sign and send the transaction
+...
 ```
 ## Questions: 
  1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- The Convergence Program Library is not described in the given code, so a smart developer might want to know what the overall purpose of the library is and how this specific code contributes to it.
+- The Convergence Program Library is not described in the given code, so a smart developer might wonder what the overall purpose of the library is and how this specific code relates to it.
 
-2. What is the expected behavior of the `createWithdrawCollateralInstruction` function?
-- A smart developer might want to know what this function does, what arguments it expects, and what it returns.
+2. What is the expected input and output of the `createWithdrawCollateralInstruction` function?
+- A smart developer might want to know what arguments are required for the `createWithdrawCollateralInstruction` function and what it returns.
 
 3. What is the significance of the `instructionDiscriminator` field in `withdrawCollateralStruct`?
-- A smart developer might want to know why this field is included in the `WithdrawCollateralInstructionArgs` type and what its purpose is in the context of the `withdrawCollateralStruct`.
+- A smart developer might be curious about the purpose of the `instructionDiscriminator` field in `withdrawCollateralStruct` and how it is used in the broader context of the Convergence Program Library.

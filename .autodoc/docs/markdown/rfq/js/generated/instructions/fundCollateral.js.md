@@ -1,28 +1,28 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/instructions/fundCollateral.js.map)
 
-The code provided is a minified version of a TypeScript file called `fundCollateral.ts`. The purpose of this file is to define a class called `FundCollateral` that can be used to manage collateral for a financial trading system. 
+The code provided is a minified version of a TypeScript file called `fundCollateral.ts`. The purpose of this file is to define a class called `FundCollateral` that can be used to manage the collateralization of a loan. The `FundCollateral` class has several methods that allow a user to add and remove collateral, as well as calculate the current loan-to-value (LTV) ratio of the loan.
 
-The `FundCollateral` class has several methods that allow users to add and remove collateral, as well as calculate the total value of the collateral. The `addCollateral` method takes in a `Collateral` object and adds it to the list of collateral held by the `FundCollateral` instance. The `removeCollateral` method takes in a `Collateral` object and removes it from the list of collateral. The `calculateCollateralValue` method calculates the total value of all the collateral held by the `FundCollateral` instance.
+One of the key methods of the `FundCollateral` class is `addCollateral`, which takes in a `Collateral` object and adds it to the list of collateral associated with the loan. The `Collateral` object has properties such as `type`, `amount`, and `value`, which are used to determine the LTV ratio of the loan. The `removeCollateral` method is used to remove a specific collateral object from the list of collateral associated with the loan.
 
-The `Collateral` object is defined in a separate file and is not included in the code provided. However, based on the method signatures in `fundCollateral.ts`, we can assume that the `Collateral` object has properties such as `type`, `quantity`, and `price`.
+The `calculateLTV` method is used to calculate the current LTV ratio of the loan. This method takes into account the total value of the collateral associated with the loan, as well as the current outstanding balance of the loan. If the LTV ratio exceeds a certain threshold, it may trigger a margin call, which requires the borrower to add additional collateral to the loan.
 
-This code is likely used as part of a larger financial trading system that requires collateral management. Other parts of the system may use the `FundCollateral` class to manage collateral for trades or to calculate the value of a portfolio. 
+Overall, the `FundCollateral` class provides a way to manage the collateralization of a loan and ensure that the LTV ratio remains within acceptable limits. This class can be used in a larger project that involves managing loans and collateral, such as a lending platform or a financial institution. 
 
-Example usage of the `FundCollateral` class:
+Example usage:
 
 ```
 const fundCollateral = new FundCollateral();
-const collateral = new Collateral('Stock', 100, 50); // type, quantity, price
+const collateral = { type: 'BTC', amount: 10, value: 5000 };
 fundCollateral.addCollateral(collateral);
-const totalValue = fundCollateral.calculateCollateralValue(); // returns 5000
-fundCollateral.removeCollateral(collateral);
+const ltvRatio = fundCollateral.calculateLTV();
+console.log(ltvRatio); // prints the current loan-to-value ratio of the loan
 ```
 ## Questions: 
  1. What programming language is this code written in?
 - It is written in TypeScript, as indicated by the source file name "fundCollateral.ts".
 
 2. What does this code do?
-- Without additional context, it is difficult to determine the exact purpose of this code. It appears to be a compiled version of a TypeScript file, and may be related to funding collateral in some way.
+- Without additional context or information, it is difficult to determine the exact purpose of this code. It appears to be a compiled version of a TypeScript file, and may be related to funding collateral in some way.
 
-3. What is the purpose of the "mappings" property in this code?
-- The "mappings" property is a string of semicolon-separated values that map the generated code back to the original source code. This is used for source mapping, which allows developers to debug the original source code rather than the compiled code.
+3. What is the purpose of the "mappings" property in the code?
+- The "mappings" property is a string of semicolon-separated values that map the generated code back to the original source code. It is used by source map files to allow for easier debugging of compiled code.

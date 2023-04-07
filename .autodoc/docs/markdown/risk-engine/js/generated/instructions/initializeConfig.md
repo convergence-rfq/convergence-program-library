@@ -1,22 +1,41 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/risk-engine/js/generated/instructions/initializeConfig.js)
 
-This code defines two exports and a function for creating a transaction instruction. The two exports are `initializeConfigStruct` and `initializeConfigInstructionDiscriminator`. `initializeConfigStruct` is an instance of the `BeetArgsStruct` class from the `@convergence-rfq/beet` package. It defines a structure for the arguments required to initialize a configuration. The structure includes the following fields: `instructionDiscriminator`, `collateralForVariableSizeRfqCreation`, `collateralForFixedQuoteAmountRfqCreation`, `collateralMintDecimals`, `safetyPriceShiftFactor`, `overallSafetyFactor`, `acceptedOracleStaleness`, and `acceptedOracleConfidenceIntervalPortion`. 
+This code defines two exports and a function for creating a transaction instruction. The purpose of this code is to initialize the configuration for a program on the Solana blockchain. 
 
-`initializeConfigInstructionDiscriminator` is an array of 8 unsigned 8-bit integers that serves as a unique identifier for the instruction. 
+The `initializeConfigStruct` export defines a struct using the `BeetArgsStruct` class from the `@convergence-rfq/beet` package. This struct contains the configuration parameters for the program. The `initializeConfigInstructionDiscriminator` export is an array of bytes that serves as a unique identifier for the instruction. 
 
-The `createInitializeConfigInstruction` function takes three arguments: `accounts`, `args`, and `programId`. It creates a new transaction instruction for initializing a configuration. The `accounts` argument is an object that contains the following fields: `signer`, `config`, `systemProgram`, and `anchorRemainingAccounts`. `signer` is a public key for the account that will sign the transaction. `config` is a public key for the configuration account. `systemProgram` is an optional public key for the system program. `anchorRemainingAccounts` is an optional array of additional accounts to include in the transaction. 
+The `createInitializeConfigInstruction` function takes in three arguments: `accounts`, `args`, and `programId`. `accounts` is an object that contains the accounts required for the transaction. `args` is an object that contains the configuration parameters for the program. `programId` is the public key of the program on the Solana blockchain. 
 
-The `args` argument is an object that contains the arguments required to initialize the configuration. It should match the structure defined by `initializeConfigStruct`. 
+The function first serializes the `args` object using the `initializeConfigStruct` struct and adds the `initializeConfigInstructionDiscriminator` to the serialized data. It then creates an array of keys that includes the signer account, the config account, and the system program account. If there are any additional accounts required, they are added to the array. Finally, the function creates a new transaction instruction using the `web3.TransactionInstruction` class from the `@solana/web3.js` package and returns it. 
 
-The `programId` argument is a public key for the program that will execute the instruction. If not provided, it defaults to a specific public key. 
+This code can be used in the larger project to initialize the configuration for a program on the Solana blockchain. Developers can import the `createInitializeConfigInstruction` function and use it to create a transaction instruction that sets the configuration parameters for their program. For example:
 
-Overall, this code provides a way to create a transaction instruction for initializing a configuration. It defines the structure of the required arguments and creates a unique identifier for the instruction. The `createInitializeConfigInstruction` function takes care of creating the transaction instruction itself, including specifying the program ID and including any necessary accounts. This code is likely part of a larger project that involves configuring some sort of system or application.
+```
+const accounts = {
+  signer: signerAccount.publicKey,
+  config: configAccount.publicKey,
+  systemProgram: web3.SystemProgram.programId,
+  anchorRemainingAccounts: [additionalAccount1, additionalAccount2]
+};
+
+const args = {
+  collateralForVariableSizeRfqCreation: 1000000000,
+  collateralForFixedQuoteAmountRfqCreation: 1000000000,
+  collateralMintDecimals: 6,
+  safetyPriceShiftFactor: 0.05,
+  overallSafetyFactor: 0.1,
+  acceptedOracleStaleness: 600,
+  acceptedOracleConfidenceIntervalPortion: 0.1
+};
+
+const instruction = createInitializeConfigInstruction(accounts, args);
+``` 
+
+This code creates an `instruction` object that can be used to initialize the configuration for a program on the Solana blockchain.
 ## Questions: 
- 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
-- This code appears to be a module for initializing configuration settings for some aspect of the Convergence Program Library, but more information is needed to understand the overall purpose of the library.
-
-2. What is the significance of the `beet` and `web3` imports?
-- The `beet` import appears to be a custom library for defining and serializing structured data, while the `web3` import is a popular library for interacting with the Ethereum blockchain. It is unclear how these libraries are being used in this specific module.
-
-3. What are the expected inputs and outputs of the `createInitializeConfigInstruction` function?
-- The function appears to take in an `accounts` object and an `args` object, and returns a `TransactionInstruction` object. More information is needed to understand the expected format and contents of these inputs and outputs.
+ 1. What is the purpose of this code and what problem does it solve?
+- This code defines functions and structures related to initializing configuration for a program called Convergence Program Library, which likely deals with creating and managing financial instruments.
+2. What external dependencies does this code have?
+- This code depends on two external libraries: "@convergence-rfq/beet" and "@solana/web3.js".
+3. What is the expected input and output of the "createInitializeConfigInstruction" function?
+- The "createInitializeConfigInstruction" function takes in an object containing various accounts and arguments, and returns a transaction instruction object. The purpose of this instruction is likely to initialize the configuration of the Convergence Program Library.

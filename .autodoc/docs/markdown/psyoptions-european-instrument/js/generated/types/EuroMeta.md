@@ -1,45 +1,16 @@
 [View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/psyoptions-european-instrument/js/generated/types/EuroMeta.ts)
 
-This code defines a TypeScript type called EuroMeta, which represents metadata for a financial instrument called a Euro option. The EuroMeta type includes various properties such as the public keys of various Solana accounts, decimals for underlying and stable assets, and strike price. 
+The code is a TypeScript module that defines a type and an instance of a BeetArgsStruct for a EuroMeta object. The EuroMeta type is an interface that defines the structure of an object that contains various properties related to a Euro-based financial instrument. These properties include public keys for various mints, pools, and oracles, as well as numerical values for decimals, strike price, and expiration. The EuroMeta object is used to represent a financial instrument that can be traded on the Solana blockchain.
 
-The code also imports the web3.js library and two modules from the Convergence Program Library: beet and beetSolana. The beet module provides a set of TypeScript types and functions for working with binary-encoded data structures, while beetSolana provides additional types and functions specific to Solana blockchain.
+The BeetArgsStruct is a class that is used to define a structured data type for use with the Beet library. The constructor for the BeetArgsStruct takes two arguments: an array of tuples that define the structure of the data type, and a string that gives the data type a name. In this case, the array of tuples defines the structure of the EuroMeta object, and the name of the data type is "EuroMeta". The resulting instance of the BeetArgsStruct is exported as euroMetaBeet.
 
-The code then exports a new instance of the beet.BeetArgsStruct class, which is used to define a structured binary data format for the EuroMeta type. This instance is named euroMetaBeet and is initialized with an array of tuples, each representing a property of the EuroMeta type and its corresponding binary encoding format. 
-
-This code is likely used in the larger Convergence Program Library project to define and encode Euro option metadata for use in smart contracts on the Solana blockchain. Developers can use the euroMetaBeet instance to encode Euro option metadata in a structured binary format that can be easily passed between Solana smart contracts and other applications. For example, a developer could use the euroMetaBeet instance to encode Euro option metadata and then pass it as an argument to a Solana smart contract function that creates a new Euro option. 
-
-Here is an example of how the euroMetaBeet instance could be used to encode Euro option metadata:
-
-```
-const euroMeta: EuroMeta = {
-  underlyingMint: new web3.PublicKey("..."),
-  underlyingDecimals: 6,
-  underlyingAmountPerContract: new beet.bignum(1000000),
-  stableMint: new web3.PublicKey("..."),
-  stableDecimals: 6,
-  stablePool: new web3.PublicKey("..."),
-  oracle: new web3.PublicKey("..."),
-  strikePrice: new beet.bignum(100000000),
-  priceDecimals: 8,
-  callOptionMint: new web3.PublicKey("..."),
-  callWriterMint: new web3.PublicKey("..."),
-  putOptionMint: new web3.PublicKey("..."),
-  putWriterMint: new web3.PublicKey("..."),
-  underlyingPool: new web3.PublicKey("..."),
-  expiration: new beet.bignum(1640995200),
-  bumpSeed: 0,
-  expirationData: new web3.PublicKey("..."),
-  oracleProviderId: 0,
-};
-
-const encodedEuroMeta = euroMetaBeet.encode(euroMeta);
-``` 
-
-In this example, a new EuroMeta object is created with various properties set to appropriate values. The euroMetaBeet instance is then used to encode this object into a structured binary format, which is stored in the encodedEuroMeta variable. This encoded data can then be passed to a Solana smart contract function that expects Euro option metadata in this format.
+This code is part of the Convergence Program Library project, which is a collection of TypeScript modules that provide tools and utilities for building decentralized finance (DeFi) applications on the Solana blockchain. The EuroMeta object and the BeetArgsStruct instance are likely used in other modules within the library to represent and manipulate Euro-based financial instruments. For example, a module that implements a trading platform for Euro-based options contracts might use the EuroMeta object to represent the contract specifications, and the BeetArgsStruct instance to validate and serialize the contract data.
 ## Questions: 
  1. What is the purpose of this code?
-   - This code defines a TypeScript type called `EuroMeta` and exports an instance of a `BeetArgsStruct` called `euroMetaBeet` that uses `EuroMeta` as its generic type parameter. It also imports various packages including `@solana/web3.js` and `@convergence-rfq/beet`.
-2. Why is there a warning not to edit the file?
-   - The code was generated using the `solita` package, so editing the file directly is discouraged. Instead, developers should rerun `solita` to update the file or write a wrapper to add functionality.
-3. What is the purpose of the `EuroMeta` type and `euroMetaBeet` instance?
-   - The `EuroMeta` type defines a structure for storing various public keys, decimals, and other data related to a Euro stablecoin. The `euroMetaBeet` instance is a `BeetArgsStruct` that uses `EuroMeta` as its generic type parameter and defines the expected structure of the data that will be passed to it.
+   - This code defines a TypeScript type called `EuroMeta` and exports an instance of `beet.BeetArgsStruct` called `euroMetaBeet` that uses `EuroMeta` as its generic type parameter. It also imports various modules from `@solana/web3.js` and `@convergence-rfq/beet-solana`.
+   
+2. What is the `EuroMeta` type and what fields does it have?
+   - `EuroMeta` is a TypeScript type that represents metadata for a Euro-style option contract. It has fields for various Solana public keys, decimals, and other data related to the contract.
+   
+3. What is the purpose of the `beet` and `beetSolana` modules?
+   - The `beet` module provides various utility functions and types for working with binary-encoded data in TypeScript. The `beetSolana` module provides Solana-specific implementations of some of these types and functions.

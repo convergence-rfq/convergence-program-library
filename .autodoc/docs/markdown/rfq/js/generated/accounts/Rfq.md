@@ -1,20 +1,73 @@
-[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/accounts/Rfq.js)
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/js/generated/accounts/Rfq.ts)
 
-This code defines a class called `Rfq` which represents a Request for Quote (RFQ) in the Convergence Program Library project. An RFQ is a type of financial transaction where a buyer requests a quote from a seller for a specific quantity of an asset at a specified price. The `Rfq` class contains properties that describe the details of the RFQ, such as the taker (buyer), order type, fixed size, quote asset, creation timestamp, active window, settling window, expected legs size, expected legs hash, state, non-response taker collateral locked, total taker collateral locked, total responses, cleared responses, confirmed responses, and legs.
+This code defines a class called `Rfq` which represents an account on the Solana blockchain. The purpose of this account is to store data related to a Request for Quote (RFQ) order. The `Rfq` class has properties that correspond to the various pieces of information needed to define an RFQ order, such as the taker's public key, the order type, the size of the order, the quote asset, and so on. 
 
-The `Rfq` class has several methods for creating, serializing, and deserializing RFQs. The `fromArgs` method creates an `Rfq` instance from an object containing the RFQ details. The `fromAccountInfo` method creates an `Rfq` instance from a `AccountInfo` object, which contains the data for an account on the Solana blockchain. The `fromAccountAddress` method retrieves the `AccountInfo` object from the Solana blockchain using the account address and creates an `Rfq` instance from it. The `serialize` method serializes an `Rfq` instance into a byte array, and the `deserialize` method deserializes a byte array into an `Rfq` instance.
+The `Rfq` class has several methods that allow for the serialization and deserialization of the account data, as well as the retrieval of the account data from the blockchain. These methods include `serialize()`, `deserialize()`, `fromAccountInfo()`, and `fromAccountAddress()`. 
 
-The `Rfq` class also has several static methods for working with RFQs. The `byteSize` method returns the size of an `Rfq` instance in bytes. The `getMinimumBalanceForRentExemption` method returns the minimum balance required to create an `Rfq` account on the Solana blockchain. The `gpaBuilder` method returns a `GpaBuilder` instance, which is used to create a Solana program account for an `Rfq`.
+The `Rfq` class also has a static method called `gpaBuilder()` which returns a config builder that can be used to fetch accounts matching certain filters. 
 
-The code also imports several modules from the Convergence Program Library project, including `@solana/web3.js`, `@convergence-rfq/beet`, and `@convergence-rfq/beet-solana`. These modules provide functionality for working with the Solana blockchain and for serializing and deserializing data structures.
+The purpose of this code is to provide a standardized way of representing RFQ orders on the Solana blockchain. By defining a class with well-defined properties and methods, developers can easily create, manipulate, and retrieve RFQ orders without having to worry about the underlying details of the blockchain. 
 
-Overall, this code defines the `Rfq` class, which represents an RFQ in the Convergence Program Library project, and provides methods for creating, serializing, and deserializing RFQs, as well as for working with RFQs on the Solana blockchain.
+Here is an example of how the `Rfq` class might be used in a larger project:
+
+```typescript
+import * as web3 from "@solana/web3.js";
+import { Rfq, RfqArgs } from "./path/to/Rfq";
+
+// create a new RFQ order
+const args: RfqArgs = {
+  taker: new web3.PublicKey("..."),
+  orderType: OrderType.Bid,
+  fixedSize: new FixedSize(100),
+  quoteAsset: QuoteAsset.Usdc,
+  creationTimestamp: new beet.bignum(123456789),
+  activeWindow: 100,
+  settlingWindow: 200,
+  expectedLegsSize: 2,
+  expectedLegsHash: [1, 2, 3, ..., 32],
+  state: StoredRfqState.Open,
+  nonResponseTakerCollateralLocked: new beet.bignum(1000),
+  totalTakerCollateralLocked: new beet.bignum(2000),
+  totalResponses: 0,
+  clearedResponses: 0,
+  confirmedResponses: 0,
+  legs: [
+    new Leg({
+      asset: Asset.Usdc,
+      size: new FixedSize(50),
+      price: new beet.bignum(100),
+      side: Side.Bid,
+    }),
+    new Leg({
+      asset: Asset.Sol,
+      size: new FixedSize(10),
+      price: new beet.bignum(200),
+      side: Side.Ask,
+    }),
+  ],
+};
+
+const rfq = Rfq.fromArgs(args);
+
+// serialize the RFQ order
+const [buf, offset] = rfq.serialize();
+
+// deserialize the RFQ order
+const [rfq2, offset2] = Rfq.deserialize(buf);
+
+// retrieve the RFQ order from the blockchain
+const connection = new web3.Connection("https://api.mainnet-beta.solana.com");
+const address = new web3.PublicKey("...");
+const rfq3 = await Rfq.fromAccountAddress(connection, address);
+``` 
+
+In this example, we create a new RFQ order by defining its various properties in an object called `args`. We then create a new `Rfq` instance using the `fromArgs()` method. We can then serialize and deserialize the `Rfq` instance using the `serialize()` and `deserialize()` methods, respectively. Finally, we retrieve the `Rfq` instance from the blockchain using the `fromAccountAddress()` method.
 ## Questions: 
- 1. What is the purpose of this code and what problem does it solve?
-- This code defines a class called `Rfq` which represents a Request for Quote (RFQ) for a financial instrument. It provides methods for creating, serializing, and deserializing RFQs, as well as retrieving them from a Solana blockchain.
+ 1. What is the purpose of the Convergence Program Library and how does this code fit into it?
+- The purpose of the Convergence Program Library is not clear from this code alone, but it appears to be a library for working with Solana blockchain data. This code defines a class called `Rfq` that represents a specific type of account on the Solana blockchain.
 
-2. What external dependencies does this code have?
-- This code depends on the `@solana/web3.js` library for interacting with the Solana blockchain, as well as the `@convergence-rfq/beet` and `@convergence-rfq/beet-solana` libraries for serializing and deserializing data.
+2. What are the inputs and outputs of the `Rfq` class methods?
+- The `Rfq` class has several methods for creating, serializing, and deserializing instances of the class. These methods take various arguments and return tuples of data or instances of the `Rfq` class.
 
-3. What is the structure of an RFQ object and what information does it contain?
-- An RFQ object contains information about the taker (the party requesting the quote), the order type (buy or sell), the fixed size of the order, the quote asset (the asset being traded), the creation timestamp, the active and settling windows (time periods during which the quote is valid), the expected size and hash of the legs (the individual components of the trade), the state of the RFQ, the amount of collateral locked by the taker, and the legs themselves.
+3. What is the purpose of the `beet` and `beetSolana` packages imported at the top of the file?
+- The `beet` and `beetSolana` packages appear to be used for defining and working with binary-encoded data structures. They are used in this code to define the structure of the `Rfq` account and to serialize and deserialize instances of the `Rfq` class.

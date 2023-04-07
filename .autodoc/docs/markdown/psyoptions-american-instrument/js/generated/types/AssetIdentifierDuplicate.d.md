@@ -2,33 +2,21 @@
 
 This code defines several types and functions related to asset identifier duplicates in the Convergence Program Library project. 
 
-The `AssetIdentifierDuplicateRecord` type is defined as an object with two properties: `Leg` and `Quote`. The `Leg` property is an object with a single property `legIndex` of type `number`, while the `Quote` property is of type `void`. 
+The `AssetIdentifierDuplicateRecord` type is defined as an object with a `Leg` property that contains a `legIndex` number, and a `Quote` property that is void. 
 
-The `AssetIdentifierDuplicate` type is defined using the `DataEnumKeyAsKind` utility from the `@convergence-rfq/beet` library. This type represents a discriminated union of the `AssetIdentifierDuplicateRecord` type, where the discriminant is the name of the property (`Leg` or `Quote`). 
+The `AssetIdentifierDuplicate` type is defined using the `DataEnumKeyAsKind` utility from the `@convergence-rfq/beet` library. This type represents a discriminated union of the `AssetIdentifierDuplicateRecord` object keys, where the keys are used as the discriminants. 
 
-Two functions are defined to check if a given value of type `AssetIdentifierDuplicate` is of a specific variant: `isAssetIdentifierDuplicateLeg` and `isAssetIdentifierDuplicateQuote`. These functions use type guards to narrow the type of the input value to the corresponding variant. 
+The `isAssetIdentifierDuplicateLeg` function is a type guard that takes an `AssetIdentifierDuplicate` object and returns a boolean indicating whether it is a `Leg` object. This function checks that the `__kind` property of the object is `"Leg"`, and that the object has a `legIndex` property. 
 
-Finally, the `assetIdentifierDuplicateBeet` constant is defined as a `FixableBeet` from the `@convergence-rfq/beet` library. This is a utility that allows for easy serialization and deserialization of the `AssetIdentifierDuplicate` type. 
+The `isAssetIdentifierDuplicateQuote` function is a type guard that takes an `AssetIdentifierDuplicate` object and returns a boolean indicating whether it is a `Quote` object. This function checks that the `__kind` property of the object is `"Quote"`, and that the object is void. 
 
-Overall, this code provides a way to represent and manipulate asset identifier duplicates in a type-safe manner. It can be used in other parts of the Convergence Program Library project to ensure that asset identifier duplicates are handled correctly. 
+The `assetIdentifierDuplicateBeet` constant is defined as a `FixableBeet` object from the `@convergence-rfq/beet` library. This object is used to serialize and deserialize `AssetIdentifierDuplicate` objects. 
 
-Example usage:
-
-```typescript
-import { AssetIdentifierDuplicate, isAssetIdentifierDuplicateLeg } from "convergence-program-library";
-
-const duplicate: AssetIdentifierDuplicate = { __kind: "Leg", legIndex: 0 };
-
-if (isAssetIdentifierDuplicateLeg(duplicate)) {
-  console.log(`Duplicate is a leg with index ${duplicate.legIndex}`);
-} else {
-  console.log("Duplicate is not a leg");
-}
-```
+Overall, this code provides a way to define and work with asset identifier duplicates in the Convergence Program Library project. The `AssetIdentifierDuplicate` type can be used to represent different types of duplicates, and the `isAssetIdentifierDuplicateLeg` and `isAssetIdentifierDuplicateQuote` functions can be used to check the type of a given object. The `assetIdentifierDuplicateBeet` object can be used to serialize and deserialize `AssetIdentifierDuplicate` objects.
 ## Questions: 
  1. What is the purpose of the `AssetIdentifierDuplicateRecord` type?
-   - The `AssetIdentifierDuplicateRecord` type defines the shape of an object that represents a duplicate asset identifier, specifically for a leg and without a quote.
+   - The `AssetIdentifierDuplicateRecord` type defines the structure of an object that represents a duplicate asset identifier, specifically for a leg with a given index and no quote.
 2. What is the `beet` module and how is it used in this code?
-   - The `beet` module is imported and used to define the `AssetIdentifierDuplicate` type as a `DataEnumKeyAsKind` of the `AssetIdentifierDuplicateRecord` type. It is also used to define the `assetIdentifierDuplicateBeet` constant as a `FixableBeet` with the `AssetIdentifierDuplicate` type.
-3. What do the `isAssetIdentifierDuplicateLeg` and `isAssetIdentifierDuplicateQuote` functions do?
-   - The `isAssetIdentifierDuplicateLeg` and `isAssetIdentifierDuplicateQuote` functions are type guard functions that check if a given object is of type `{ __kind: "Leg" }` or `{ __kind: "Quote" }`, respectively, and return a boolean value.
+   - The `beet` module is imported and used to define the `AssetIdentifierDuplicate` type as a data enum key. It is also used to create a `FixableBeet` instance for `AssetIdentifierDuplicate`.
+3. What is the purpose of the `isAssetIdentifierDuplicateLeg` and `isAssetIdentifierDuplicateQuote` functions?
+   - The `isAssetIdentifierDuplicateLeg` and `isAssetIdentifierDuplicateQuote` functions are type guard functions that check if a given object is of type `Leg` or `Quote`, respectively, within the `AssetIdentifierDuplicate` type.

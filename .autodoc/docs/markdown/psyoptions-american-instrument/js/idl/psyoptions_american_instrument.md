@@ -2,13 +2,21 @@
 
 This code is a JSON file that defines a set of instructions and types for a program called `psyoptions_american_instrument`. The program appears to be related to options trading, specifically American-style options. 
 
-The file defines several instructions, each with a name, a set of accounts, and a set of arguments. The instructions include `validateData`, `prepareToSettle`, `settle`, `revertPreparation`, and `cleanUp`. The purpose of each instruction is not entirely clear from the code alone, but it seems that they are related to the process of settling options trades. 
+The file defines several instructions, each with a name, a set of accounts, and a set of arguments. The instructions are `validateData`, `prepareToSettle`, `settle`, `revertPreparation`, and `cleanUp`. 
 
-The file also defines several custom types, including `AuthoritySideDuplicate`, `OptionType`, and `AssetIdentifierDuplicate`. These types are used in the instruction arguments to specify the type of data being passed. 
+The `validateData` instruction takes in instrument data, a base asset index, and instrument decimals as arguments, and several accounts including a protocol account and user-provided accounts. It is likely that this instruction is used to validate the data provided by the user before proceeding with the options trade. 
 
-Overall, this code appears to be a small part of a larger program related to options trading. It defines a set of instructions and types that are likely used in the larger program to facilitate the settlement of American-style options trades. Without more context, it is difficult to say exactly how this code fits into the larger project or how it is used. 
+The `prepareToSettle` instruction takes in an asset identifier and a side as arguments, and several accounts including a protocol account, an RFQ account, a response account, a caller account, a caller token account, a mint account, an escrow account, and several system accounts. This instruction appears to be related to preparing for the settlement of an options trade. 
 
-Example usage of this code might involve passing data to the `validateData` instruction to ensure that the data being used in an options trade is valid. The `prepareToSettle` instruction might be used to prepare for the settlement of a trade, while `settle` might be used to actually settle the trade. The `revertPreparation` and `cleanUp` instructions might be used to undo or clean up after a trade that was not settled.
+The `settle` instruction takes in an asset identifier as an argument, and several accounts including a protocol account, an RFQ account, a response account, an escrow account, a receiver token account, and a token program account. This instruction appears to be related to settling an options trade. 
+
+The `revertPreparation` instruction takes in an asset identifier and a side as arguments, and several accounts including a protocol account, an RFQ account, a response account, an escrow account, a tokens account, and a token program account. This instruction appears to be related to reverting the preparation for an options trade settlement. 
+
+The `cleanUp` instruction takes in an asset identifier as an argument, and several accounts including a protocol account, an RFQ account, a response account, a first to prepare account, an escrow account, a backup receiver account, and a token program account. This instruction appears to be related to cleaning up after an options trade settlement. 
+
+The file also defines several types, including `AuthoritySideDuplicate`, `OptionType`, and `AssetIdentifierDuplicate`. These types appear to be related to the options trading functionality of the program. 
+
+Overall, this code appears to be a set of instructions and types for a program that facilitates American-style options trading. The instructions are related to validating data, preparing for settlement, settling trades, reverting preparation, and cleaning up after settlement. The types are related to the options trading functionality of the program.
 ## Questions: 
  1. What is the purpose of this code and what problem does it solve?
 - The code appears to be part of a program library called Convergence, but without additional context it is unclear what specific problem it solves.
