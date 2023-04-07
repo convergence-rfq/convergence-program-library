@@ -32,7 +32,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     maker = context.maker.publicKey;
   });
 
-  it.only("Create buy RFQ for 1 option", async () => {
+  it("Create buy RFQ for 1 option", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker);
     await options.mintPsyOptions(context.maker, new anchor.BN(1));
 

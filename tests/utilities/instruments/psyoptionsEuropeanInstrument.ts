@@ -83,23 +83,9 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
       ])
     );
   }
-  serializeInstrumentDataForQuote(): Buffer {
-    const mint = this.getOptionMint().publicKey.toBytes();
-    const meta = this.optionFacade.metaKey.toBytes();
-    const underlyingAmountPerContract = this.optionFacade.meta.underlyingAmountPerContract.toBuffer("le", 8);
-    const strikePrice = this.optionFacade.meta.strikePrice.toBuffer("le", 8);
-    const expirationTimestamp = this.optionFacade.meta.expiration.toBuffer("le", 8);
 
-    return Buffer.from(
-      new Uint8Array([
-        this.optionType == OptionType.CALL ? 0 : 1,
-        ...underlyingAmountPerContract,
-        ...strikePrice,
-        ...expirationTimestamp,
-        ...mint,
-        ...meta,
-      ])
-    );
+  serializeInstrumentDataForQuote(): Buffer {
+    throw Error("Does not support being in quote!");
   }
 
   getProgramId(): PublicKey {

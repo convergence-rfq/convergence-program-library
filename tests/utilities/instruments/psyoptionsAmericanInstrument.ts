@@ -83,6 +83,11 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
       ])
     );
   }
+
+  serializeInstrumentDataForQuote(): Buffer {
+    throw Error("Does not support being in quote!");
+  }
+
   getProgramId(): PublicKey {
     return getAmericanOptionsInstrumentProgram().programId;
   }
