@@ -1,12 +1,12 @@
 [package]
-name = "hxro-instrument"
+name = "hxro-print-trade-provider"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "hxro_instrument"
+name = "hxro_print_trade_provider"
 
 [dependencies]
 anchor-lang = { version = "0.27.0", features = ["init-if-needed"] }

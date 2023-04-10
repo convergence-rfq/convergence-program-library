@@ -1,0 +1,13 @@
+{
+  "pubkey": "Aomi2MHGCQkJ5soH9gtT1yWz3n4KpK9MCFpRrxaS7MWN",
+  "account": {
+    "lamports": 946560,
+    "data": [
+      "AAAAAAAAAAA=",
+      "base64"
+    ],
+    "owner": "5AZioCPiC7uZ4zRmkKSg5nsb2A98RhmW89a1pMwiDoeT",
+    "executable": false,
+    "rentEpoch": 0
+  }
+}

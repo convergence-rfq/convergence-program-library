@@ -42,9 +42,14 @@ export function withTokenDecimals(value: number) {
   return new BN(bignumber.toString());
 }
 
-export function executeInParallel(...fns: (() => Promise<any>)[]) {
-  return Promise.all(fns.map((x) => x()));
+type InferredOutputs<T> = Promise<{ [K in keyof T]: T[K] extends () => Promise<infer R> ? R : never }>;
+export async function executeInParallel<T extends Array<() => Promise<any>>>(...fns: T): Promise<InferredOutputs<T>> {
+  return Promise.all(fns.map((x) => x())) as unknown as InferredOutputs<T>;
 }
+
+// export function executeInParallel(...fns: (() => Promise<any>)[]) {
+//   return Promise.all(fns.map((x) => x()));
+// }
 
 /**
  * Runs a promise in parallel with wait promise, awaiting both of them.

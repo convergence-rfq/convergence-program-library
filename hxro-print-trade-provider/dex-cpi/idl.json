@@ -3,33 +3,38 @@
   "name": "dex",
   "constants": [
     {
-      "name": "MAX_PRODUCTS_PER_TRADE",
-      "type": "u8",
-      "value": "6"
-    },
-    {
       "name": "NAME_LEN",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "16"
     },
     {
       "name": "MAX_OUTRIGHTS",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "128"
     },
     {
       "name": "MAX_PRODUCTS",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "256"
     },
     {
       "name": "HEALTH_BUFFER_LEN",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "32"
     },
     {
       "name": "MAX_TRADER_POSITIONS",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "16"
     },
     {
@@ -39,17 +44,23 @@
     },
     {
       "name": "MAX_OPEN_ORDERS",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "1024"
     },
     {
       "name": "ANCHOR_DISCRIMINANT_LEN",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "8"
     },
     {
       "name": "SENTINEL",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "0"
     },
     {
@@ -64,12 +75,16 @@
     },
     {
       "name": "MAX_COMBOS",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "128"
     },
     {
       "name": "MAX_LEGS",
-      "type": "u64",
+      "type": {
+        "defined": "u64"
+      },
       "value": "4"
     },
     {
@@ -94,6 +109,198 @@
     }
   ],
   "instructions": [
+    {
+      "name": "initializeMarketProductGroup",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "marketProductGroup",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marketProductGroupVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeCollector",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeModelProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeModelConfigurationAcct",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "riskModelConfigurationAcct",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "riskEngineProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sysvarRent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeOutputRegister",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "riskOutputRegister",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "stakingFeeCollector",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": "InitializeMarketProductGroupParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateMarketProductGroup",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "marketProductGroup",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeCollector",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "stakingFeeCollector",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": "UpdateMarketProductGroupParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateVarianceCache",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "traderRiskGroup",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marketProductGroup",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "riskEngineProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "riskModelConfigurationAcct",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "riskOutputRegister",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "traderRiskStateAcct",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "riskAndFeeSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "covarianceMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "correlationMatrix",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "markPrices",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
     {
       "name": "initializeMarketProduct",
       "accounts": [
@@ -128,7 +335,7 @@
       ]
     },
     {
-      "name": "removeMarketProduct",
+      "name": "deactivateMarketProduct",
       "accounts": [
         {
           "name": "authority",
@@ -179,6 +386,27 @@
       "args": []
     },
     {
+      "name": "removeMarketProduct",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "marketProductGroup",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "product",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initializePrintTrade",
       "accounts": [
         {
@@ -207,6 +435,11 @@
           "isSigner": false
         },
         {
+          "name": "product",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "printTrade",
           "isMut": true,
           "isSigner": false
@@ -214,56 +447,6 @@
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "operatorOwner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "feeModelProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "feeModelConfigurationAcct",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "feeOutputRegister",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "riskEngineProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "riskModelConfigurationAcct",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "riskOutputRegister",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "riskAndFeeSigner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "creatorTraderFeeStateAcct",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "creatorTraderRiskStateAcct",
-          "isMut": true,
           "isSigner": false
         }
       ],
@@ -305,6 +488,11 @@
           "isSigner": false
         },
         {
+          "name": "product",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "printTrade",
           "isMut": true,
           "isSigner": false
@@ -350,11 +538,6 @@
           "isSigner": false
         },
         {
-          "name": "clock",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "creatorTraderFeeStateAcct",
           "isMut": true,
           "isSigner": false
@@ -372,11 +555,6 @@
         {
           "name": "counterpartyTraderRiskStateAcct",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "operatorOwner",
-          "isMut": false,
           "isSigner": false
         }
       ],
@@ -500,7 +678,7 @@
         },
         {
           "name": "feeModelConfigurationAcct",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -536,6 +714,21 @@
         {
           "name": "riskAndFeeSigner",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "covarianceMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "correlationMatrix",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "markPrices",
+          "isMut": true,
           "isSigner": false
         }
       ],
@@ -593,7 +786,7 @@
         },
         {
           "name": "feeModelConfigurationAcct",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -619,6 +812,21 @@
         {
           "name": "riskAndFeeSigner",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sAcct",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rAcct",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "markPrices",
+          "isMut": true,
           "isSigner": false
         }
       ],
@@ -682,11 +890,6 @@
         {
           "name": "asks",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
           "isSigner": false
         },
         {
@@ -833,6 +1036,26 @@
         {
           "name": "riskSigner",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "capitalLimits",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "covarianceMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "correlationMatrix",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "markPrices",
+          "isMut": true,
           "isSigner": false
         }
       ],
@@ -1013,7 +1236,7 @@
         },
         {
           "name": "orderbook",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1117,6 +1340,292 @@
   ],
   "accounts": [
     {
+      "name": "PaddedMarketProductGroup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tag",
+            "type": {
+              "defined": "AccountTag"
+            }
+          },
+          {
+            "name": "padding0",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "successor",
+            "type": "publicKey"
+          },
+          {
+            "name": "vaultMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "collectedFees",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "feeCollector",
+            "type": "publicKey"
+          },
+          {
+            "name": "decimals",
+            "type": "u64"
+          },
+          {
+            "name": "riskEngineProgramId",
+            "type": "publicKey"
+          },
+          {
+            "name": "feeModelProgramId",
+            "type": "publicKey"
+          },
+          {
+            "name": "feeModelConfigurationAcct",
+            "type": "publicKey"
+          },
+          {
+            "name": "riskModelConfigurationAcct",
+            "type": "publicKey"
+          },
+          {
+            "name": "activeFlagsProducts",
+            "type": {
+              "defined": "Bitset"
+            }
+          },
+          {
+            "name": "ewmaWindows",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "marketProducts",
+            "type": {
+              "defined": "PaddedProductArray"
+            }
+          },
+          {
+            "name": "vaultBump",
+            "type": "u16"
+          },
+          {
+            "name": "riskAndFeeBump",
+            "type": "u16"
+          },
+          {
+            "name": "findFeesDiscriminantLen",
+            "type": "u16"
+          },
+          {
+            "name": "validateAccountDiscriminantLen",
+            "type": "u16"
+          },
+          {
+            "name": "findFeesDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "validateAccountHealthDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "validateAccountLiquidationDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "createRiskStateAccountDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "maxMakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "minMakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "maxTakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "minTakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "feeOutputRegister",
+            "type": "publicKey"
+          },
+          {
+            "name": "riskOutputRegister",
+            "type": "publicKey"
+          },
+          {
+            "name": "sequenceNumber",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaddedTraderRiskGroup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tag",
+            "type": {
+              "defined": "AccountTag"
+            }
+          },
+          {
+            "name": "padding0",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "marketProductGroup",
+            "type": "publicKey"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "activeProducts",
+            "type": {
+              "array": [
+                "u8",
+                128
+              ]
+            }
+          },
+          {
+            "name": "totalDeposited",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "totalWithdrawn",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "cashBalance",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "pendingCashBalance",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "pendingFees",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "validUntil",
+            "type": "u64"
+          },
+          {
+            "name": "makerFeeBps",
+            "type": "i32"
+          },
+          {
+            "name": "takerFeeBps",
+            "type": "i32"
+          },
+          {
+            "name": "traderPositions",
+            "type": {
+              "array": [
+                {
+                  "defined": "PaddedTraderPosition"
+                },
+                16
+              ]
+            }
+          },
+          {
+            "name": "riskStateAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "feeStateAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "clientOrderId",
+            "type": "u128"
+          },
+          {
+            "name": "openOrders",
+            "type": {
+              "defined": "PaddedOpenOrders"
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "ProductArray",
       "type": {
         "kind": "struct",
@@ -1141,10 +1650,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "isInitialized",
-            "type": "bool"
-          },
-          {
             "name": "creator",
             "type": "publicKey"
           },
@@ -1157,18 +1662,13 @@
             "type": "publicKey"
           },
           {
-            "name": "numProducts",
-            "type": "u64"
+            "name": "product",
+            "type": "publicKey"
           },
           {
-            "name": "products",
+            "name": "size",
             "type": {
-              "array": [
-                {
-                  "defined": "PrintTradeProduct"
-                },
-                6
-              ]
+              "defined": "Fractional"
             }
           },
           {
@@ -1182,30 +1682,6 @@
             "type": {
               "defined": "Side"
             }
-          },
-          {
-            "name": "operator",
-            "type": "publicKey"
-          },
-          {
-            "name": "operatorCreatorFeeProportion",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "operatorCounterpartyFeeProportion",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "isOperatorSigner",
-            "type": "bool"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
           }
         ]
       }
@@ -1284,7 +1760,7 @@
           },
           {
             "name": "validUntil",
-            "type": "i64"
+            "type": "u64"
           },
           {
             "name": "makerFeeBps",
@@ -1329,121 +1805,32 @@
   ],
   "types": [
     {
-      "name": "PrintTradeProductIndex",
+      "name": "Side",
       "type": {
-        "kind": "struct",
-        "fields": [
+        "kind": "enum",
+        "variants": [
           {
-            "name": "productIndex",
-            "type": "u64"
+            "name": "Bid"
           },
           {
-            "name": "size",
-            "type": {
-              "defined": "Fractional"
-            }
+            "name": "Ask"
           }
         ]
       }
     },
     {
-      "name": "InitializePrintTradeParams",
+      "name": "SelfTradeBehavior",
       "type": {
-        "kind": "struct",
-        "fields": [
+        "kind": "enum",
+        "variants": [
           {
-            "name": "numProducts",
-            "type": "u64"
+            "name": "DecrementTake"
           },
           {
-            "name": "products",
-            "type": {
-              "array": [
-                {
-                  "defined": "PrintTradeProductIndex"
-                },
-                6
-              ]
-            }
+            "name": "CancelProvide"
           },
           {
-            "name": "price",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
-          },
-          {
-            "name": "operatorCreatorFeeProportion",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "operatorCounterpartyFeeProportion",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "isOperatorSigner",
-            "type": "bool"
-          },
-          {
-            "name": "isCollateralLocked",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SignPrintTradeParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "numProducts",
-            "type": "u64"
-          },
-          {
-            "name": "products",
-            "type": {
-              "array": [
-                {
-                  "defined": "PrintTradeProductIndex"
-                },
-                6
-              ]
-            }
-          },
-          {
-            "name": "price",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
-          },
-          {
-            "name": "operatorCreatorFeeProportion",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "operatorCounterpartyFeeProportion",
-            "type": {
-              "defined": "Fractional"
-            }
+            "name": "AbortTransaction"
           }
         ]
       }
@@ -1479,60 +1866,13 @@
       }
     },
     {
-      "name": "Fractional",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "m",
-            "type": "i64"
-          },
-          {
-            "name": "exp",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Side",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Bid"
-          },
-          {
-            "name": "Ask"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SelfTradeBehavior",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "DecrementTake"
-          },
-          {
-            "name": "CancelProvide"
-          },
-          {
-            "name": "AbortTransaction"
-          }
-        ]
-      }
-    },
-    {
       "name": "TraderFees",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "validUntil",
-            "type": "i64"
+            "type": "u64"
           },
           {
             "name": "makerFeeBps",
@@ -1575,6 +1915,181 @@
           {
             "name": "product",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaddedMarketProductGroup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tag",
+            "type": {
+              "defined": "AccountTag"
+            }
+          },
+          {
+            "name": "padding0",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "successor",
+            "type": "publicKey"
+          },
+          {
+            "name": "vaultMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "collectedFees",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "feeCollector",
+            "type": "publicKey"
+          },
+          {
+            "name": "decimals",
+            "type": "u64"
+          },
+          {
+            "name": "riskEngineProgramId",
+            "type": "publicKey"
+          },
+          {
+            "name": "feeModelProgramId",
+            "type": "publicKey"
+          },
+          {
+            "name": "feeModelConfigurationAcct",
+            "type": "publicKey"
+          },
+          {
+            "name": "riskModelConfigurationAcct",
+            "type": "publicKey"
+          },
+          {
+            "name": "activeFlagsProducts",
+            "type": {
+              "defined": "Bitset"
+            }
+          },
+          {
+            "name": "ewmaWindows",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "marketProducts",
+            "type": {
+              "defined": "PaddedProductArray"
+            }
+          },
+          {
+            "name": "vaultBump",
+            "type": "u16"
+          },
+          {
+            "name": "riskAndFeeBump",
+            "type": "u16"
+          },
+          {
+            "name": "findFeesDiscriminantLen",
+            "type": "u16"
+          },
+          {
+            "name": "validateAccountDiscriminantLen",
+            "type": "u16"
+          },
+          {
+            "name": "findFeesDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "validateAccountHealthDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "validateAccountLiquidationDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "createRiskStateAccountDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "maxMakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "minMakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "maxTakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "minTakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "feeOutputRegister",
+            "type": "publicKey"
+          },
+          {
+            "name": "riskOutputRegister",
+            "type": "publicKey"
+          },
+          {
+            "name": "sequenceNumber",
+            "type": "u128"
           }
         ]
       }
@@ -1638,6 +2153,25 @@
       }
     },
     {
+      "name": "PaddedProductArray",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "array",
+            "type": {
+              "array": [
+                {
+                  "defined": "PaddedProduct"
+                },
+                256
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "OpenOrdersMetadata",
       "type": {
         "kind": "struct",
@@ -1661,6 +2195,44 @@
           {
             "name": "numOpenOrders",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaddedOpenOrders",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "freeListHead",
+            "type": "u64"
+          },
+          {
+            "name": "totalOpenOrders",
+            "type": "u64"
+          },
+          {
+            "name": "products",
+            "type": {
+              "array": [
+                {
+                  "defined": "OpenOrdersMetadata"
+                },
+                256
+              ]
+            }
+          },
+          {
+            "name": "orders",
+            "type": {
+              "array": [
+                {
+                  "defined": "OpenOrdersNode"
+                },
+                1024
+              ]
+            }
           }
         ]
       }
@@ -1713,8 +2285,12 @@
             "type": "u128"
           },
           {
+            "name": "qty",
+            "type": "u64"
+          },
+          {
             "name": "clientId",
-            "type": "u128"
+            "type": "u64"
           },
           {
             "name": "prev",
@@ -1723,6 +2299,78 @@
           {
             "name": "next",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaddedOutright",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "metadata",
+            "type": {
+              "defined": "ProductMetadata"
+            }
+          },
+          {
+            "name": "numQueueEvents",
+            "type": "u64"
+          },
+          {
+            "name": "productStatus",
+            "type": {
+              "defined": "ProductStatus"
+            }
+          },
+          {
+            "name": "padding0",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "dust",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "cumFundingPerShare",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "cumSocialLossPerShare",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "openLongInterest",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "openShortInterest",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u64",
+                14
+              ]
+            }
           }
         ]
       }
@@ -1848,18 +2496,39 @@
       }
     },
     {
-      "name": "ProductStatus",
+      "name": "PaddedCombo",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "Uninitialized"
+            "name": "metadata",
+            "type": {
+              "defined": "ProductMetadata"
+            }
           },
           {
-            "name": "Initialized"
+            "name": "numLegs",
+            "type": "u64"
           },
           {
-            "name": "Expired"
+            "name": "legs",
+            "type": {
+              "array": [
+                {
+                  "defined": "Leg"
+                },
+                4
+              ]
+            }
+          },
+          {
+            "name": "padding0",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
           }
         ]
       }
@@ -1934,58 +2603,6 @@
       }
     },
     {
-      "name": "HealthStatus",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Healthy"
-          },
-          {
-            "name": "Unhealthy"
-          },
-          {
-            "name": "Liquidatable"
-          },
-          {
-            "name": "NotLiquidatable"
-          }
-        ]
-      }
-    },
-    {
-      "name": "ActionStatus",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Approved"
-          },
-          {
-            "name": "NotApproved"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SocialLoss",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "productIndex",
-            "type": "u64"
-          },
-          {
-            "name": "amount",
-            "type": {
-              "defined": "Fractional"
-            }
-          }
-        ]
-      }
-    },
-    {
       "name": "LiquidationInfo",
       "type": {
         "kind": "struct",
@@ -2024,6 +2641,791 @@
                 16
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SocialLoss",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "productIndex",
+            "type": "u64"
+          },
+          {
+            "name": "amount",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "OrderInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "totalOrderQty",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "matchedOrderQty",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "orderSide",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "isCombo",
+            "type": "bool"
+          },
+          {
+            "name": "productIndex",
+            "type": "u64"
+          },
+          {
+            "name": "operationType",
+            "type": {
+              "defined": "OperationType"
+            }
+          },
+          {
+            "name": "oldAskQtyInBook",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "oldBidQtyInBook",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaddedTraderRiskGroup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tag",
+            "type": {
+              "defined": "AccountTag"
+            }
+          },
+          {
+            "name": "padding0",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "marketProductGroup",
+            "type": "publicKey"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "activeProducts",
+            "type": {
+              "array": [
+                "u8",
+                128
+              ]
+            }
+          },
+          {
+            "name": "totalDeposited",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "totalWithdrawn",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "cashBalance",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "pendingCashBalance",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "pendingFees",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "validUntil",
+            "type": "u64"
+          },
+          {
+            "name": "makerFeeBps",
+            "type": "i32"
+          },
+          {
+            "name": "takerFeeBps",
+            "type": "i32"
+          },
+          {
+            "name": "traderPositions",
+            "type": {
+              "array": [
+                {
+                  "defined": "PaddedTraderPosition"
+                },
+                16
+              ]
+            }
+          },
+          {
+            "name": "riskStateAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "feeStateAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "clientOrderId",
+            "type": "u128"
+          },
+          {
+            "name": "openOrders",
+            "type": {
+              "defined": "PaddedOpenOrders"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaddedTraderPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tag",
+            "type": {
+              "defined": "AccountTag"
+            }
+          },
+          {
+            "name": "padding0",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "productKey",
+            "type": "publicKey"
+          },
+          {
+            "name": "position",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "pendingPosition",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "productIndex",
+            "type": "u64"
+          },
+          {
+            "name": "lastCumFundingSnapshot",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "lastSocialLossSnapshot",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TraderPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tag",
+            "type": {
+              "defined": "AccountTag"
+            }
+          },
+          {
+            "name": "productKey",
+            "type": "publicKey"
+          },
+          {
+            "name": "position",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "pendingPosition",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "productIndex",
+            "type": "u64"
+          },
+          {
+            "name": "lastCumFundingSnapshot",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "lastSocialLossSnapshot",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bitset",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "inner",
+            "type": {
+              "array": [
+                "u128",
+                2
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Fractional",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "m",
+            "type": "i64"
+          },
+          {
+            "name": "exp",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateMarketProductGroupParams",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "InitializePrintTradeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "productIndex",
+            "type": "u64"
+          },
+          {
+            "name": "size",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "price",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "operatorCreatorFeeProportion",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "operatorCounterpartyFeeProportion",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SignPrintTradeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "productIndex",
+            "type": "u64"
+          },
+          {
+            "name": "size",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "price",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "operatorCreatorFeeProportion",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "operatorCounterpartyFeeProportion",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeMarketProductGroupParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "validateAccountDiscriminantLen",
+            "type": "u64"
+          },
+          {
+            "name": "findFeesDiscriminantLen",
+            "type": "u64"
+          },
+          {
+            "name": "validateAccountHealthDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "validateAccountLiquidationDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "createRiskStateAccountDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "findFeesDiscriminant",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "maxMakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "minMakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "maxTakerFeeBps",
+            "type": "i16"
+          },
+          {
+            "name": "minTakerFeeBps",
+            "type": "i16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeMarketProductParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "tickSize",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "baseDecimals",
+            "type": "u64"
+          },
+          {
+            "name": "priceOffset",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "NewOrderParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "side",
+            "type": {
+              "defined": "Side"
+            }
+          },
+          {
+            "name": "maxBaseQty",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "orderType",
+            "type": {
+              "defined": "OrderType"
+            }
+          },
+          {
+            "name": "selfTradeBehavior",
+            "type": {
+              "defined": "SelfTradeBehavior"
+            }
+          },
+          {
+            "name": "matchLimit",
+            "type": "u64"
+          },
+          {
+            "name": "limitPrice",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConsumeOrderbookEventsParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "maxIterations",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CancelOrderParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "orderId",
+            "type": "u128"
+          },
+          {
+            "name": "noErr",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DepositFundsParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "quantity",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawFundsParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "quantity",
+            "type": {
+              "defined": "Fractional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateProductFundingParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "expired",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeComboParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "tickSize",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "priceOffset",
+            "type": {
+              "defined": "Fractional"
+            }
+          },
+          {
+            "name": "baseDecimals",
+            "type": "u64"
+          },
+          {
+            "name": "ratios",
+            "type": {
+              "vec": "i8"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClearExpiredOrderbookParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "numOrdersToCancel",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DomainOrProgramError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "DexErr",
+            "fields": [
+              {
+                "defined": "DexError"
+              }
+            ]
+          },
+          {
+            "name": "UtilErr",
+            "fields": [
+              {
+                "defined": "UtilError"
+              }
+            ]
+          },
+          {
+            "name": "Other",
+            "fields": [
+              {
+                "name": "code",
+                "type": "u32"
+              },
+              {
+                "name": "msg",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "UtilError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "AccountAlreadyInitialized"
+          },
+          {
+            "name": "AccountUninitialized"
+          },
+          {
+            "name": "DuplicateProductKey"
+          },
+          {
+            "name": "PublicKeyMismatch"
+          },
+          {
+            "name": "AssertionError"
+          },
+          {
+            "name": "InvalidMintAuthority"
+          },
+          {
+            "name": "IncorrectOwner"
+          },
+          {
+            "name": "PublicKeysShouldBeUnique"
+          },
+          {
+            "name": "NotRentExempt"
+          },
+          {
+            "name": "NumericalOverflow"
+          },
+          {
+            "name": "RoundError"
+          },
+          {
+            "name": "DivisionbyZero"
+          },
+          {
+            "name": "InvalidReturnValue"
+          },
+          {
+            "name": "SqrtRootError"
+          },
+          {
+            "name": "ZeroPriceError"
+          },
+          {
+            "name": "ZeroQuantityError"
+          },
+          {
+            "name": "SerializeError"
+          },
+          {
+            "name": "DeserializeError"
+          },
+          {
+            "name": "InvalidBitsetIndex"
           }
         ]
       }
@@ -2163,81 +3565,6 @@
       }
     },
     {
-      "name": "OrderInfo",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "totalOrderQty",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "matchedOrderQty",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "orderSide",
-            "type": {
-              "defined": "Side"
-            }
-          },
-          {
-            "name": "isCombo",
-            "type": "bool"
-          },
-          {
-            "name": "productIndex",
-            "type": "u64"
-          },
-          {
-            "name": "operationType",
-            "type": {
-              "defined": "OperationType"
-            }
-          },
-          {
-            "name": "oldAskQtyInBook",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "oldBidQtyInBook",
-            "type": {
-              "defined": "Fractional"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "OperationType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "NewOrder"
-          },
-          {
-            "name": "CancelOrder"
-          },
-          {
-            "name": "CheckHealth"
-          },
-          {
-            "name": "PositionTransfer"
-          },
-          {
-            "name": "ConsumeEvents"
-          }
-        ]
-      }
-    },
-    {
       "name": "AccountTag",
       "type": {
         "kind": "enum",
@@ -2270,174 +3597,21 @@
       }
     },
     {
-      "name": "TraderPosition",
+      "name": "ProductStatus",
       "type": {
-        "kind": "struct",
-        "fields": [
+        "kind": "enum",
+        "variants": [
           {
-            "name": "tag",
-            "type": {
-              "defined": "AccountTag"
-            }
+            "name": "Uninitialized"
           },
           {
-            "name": "productKey",
-            "type": "publicKey"
+            "name": "Initialized"
           },
           {
-            "name": "position",
-            "type": {
-              "defined": "Fractional"
-            }
+            "name": "Expired"
           },
           {
-            "name": "pendingPosition",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "productIndex",
-            "type": "u64"
-          },
-          {
-            "name": "lastCumFundingSnapshot",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "lastSocialLossSnapshot",
-            "type": {
-              "defined": "Fractional"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "Bitset",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "inner",
-            "type": {
-              "array": [
-                "u128",
-                2
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "InitializeMarketProductGroupParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "name",
-            "type": {
-              "array": [
-                "u8",
-                16
-              ]
-            }
-          },
-          {
-            "name": "validateAccountDiscriminantLen",
-            "type": "u64"
-          },
-          {
-            "name": "findFeesDiscriminantLen",
-            "type": "u64"
-          },
-          {
-            "name": "validateAccountHealthDiscriminant",
-            "type": {
-              "array": [
-                "u8",
-                8
-              ]
-            }
-          },
-          {
-            "name": "validateAccountLiquidationDiscriminant",
-            "type": {
-              "array": [
-                "u8",
-                8
-              ]
-            }
-          },
-          {
-            "name": "createRiskStateAccountDiscriminant",
-            "type": {
-              "array": [
-                "u8",
-                8
-              ]
-            }
-          },
-          {
-            "name": "findFeesDiscriminant",
-            "type": {
-              "array": [
-                "u8",
-                8
-              ]
-            }
-          },
-          {
-            "name": "maxMakerFeeBps",
-            "type": "i16"
-          },
-          {
-            "name": "minMakerFeeBps",
-            "type": "i16"
-          },
-          {
-            "name": "maxTakerFeeBps",
-            "type": "i16"
-          },
-          {
-            "name": "minTakerFeeBps",
-            "type": "i16"
-          }
-        ]
-      }
-    },
-    {
-      "name": "InitializeMarketProductParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "name",
-            "type": {
-              "array": [
-                "u8",
-                16
-              ]
-            }
-          },
-          {
-            "name": "tickSize",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "baseDecimals",
-            "type": "u64"
-          },
-          {
-            "name": "priceOffset",
-            "type": {
-              "defined": "Fractional"
-            }
+            "name": "Expiring"
           }
         ]
       }
@@ -2463,264 +3637,47 @@
       }
     },
     {
-      "name": "NewOrderParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
-          },
-          {
-            "name": "maxBaseQty",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "orderType",
-            "type": {
-              "defined": "OrderType"
-            }
-          },
-          {
-            "name": "selfTradeBehavior",
-            "type": {
-              "defined": "SelfTradeBehavior"
-            }
-          },
-          {
-            "name": "matchLimit",
-            "type": "u64"
-          },
-          {
-            "name": "limitPrice",
-            "type": {
-              "defined": "Fractional"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "ConsumeOrderbookEventsParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxIterations",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "CancelOrderParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "orderId",
-            "type": "u128"
-          }
-        ]
-      }
-    },
-    {
-      "name": "DepositFundsParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "quantity",
-            "type": {
-              "defined": "Fractional"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "WithdrawFundsParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "quantity",
-            "type": {
-              "defined": "Fractional"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "UpdateProductFundingParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "expired",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "InitializeComboParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "name",
-            "type": {
-              "array": [
-                "u8",
-                16
-              ]
-            }
-          },
-          {
-            "name": "tickSize",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "priceOffset",
-            "type": {
-              "defined": "Fractional"
-            }
-          },
-          {
-            "name": "baseDecimals",
-            "type": "u64"
-          },
-          {
-            "name": "ratios",
-            "type": {
-              "vec": "i8"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "ClearExpiredOrderbookParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "numOrdersToCancel",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "UtilError",
+      "name": "PaddedProduct",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "AccountAlreadyInitialized"
-          },
-          {
-            "name": "AccountUninitialized"
-          },
-          {
-            "name": "DuplicateProductKey"
-          },
-          {
-            "name": "PublicKeyMismatch"
-          },
-          {
-            "name": "AssertionError"
-          },
-          {
-            "name": "InvalidMintAuthority"
-          },
-          {
-            "name": "IncorrectOwner"
-          },
-          {
-            "name": "PublicKeysShouldBeUnique"
-          },
-          {
-            "name": "NotRentExempt"
-          },
-          {
-            "name": "NumericalOverflow"
-          },
-          {
-            "name": "RoundError"
-          },
-          {
-            "name": "DivisionbyZero"
-          },
-          {
-            "name": "InvalidReturnValue"
-          },
-          {
-            "name": "SqrtRootError"
-          },
-          {
-            "name": "ZeroPriceError"
-          },
-          {
-            "name": "ZeroQuantityError"
-          },
-          {
-            "name": "SerializeError"
-          },
-          {
-            "name": "DeserializeError"
-          },
-          {
-            "name": "InvalidBitsetIndex"
-          }
-        ]
-      }
-    },
-    {
-      "name": "DomainOrProgramError",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "DexErr",
+            "name": "Outright",
             "fields": [
               {
-                "defined": "DexError"
-              }
-            ]
-          },
-          {
-            "name": "UtilErr",
-            "fields": [
-              {
-                "defined": "UtilError"
-              }
-            ]
-          },
-          {
-            "name": "Other",
-            "fields": [
-              {
-                "name": "code",
-                "type": "u32"
+                "name": "padding0",
+                "type": {
+                  "array": [
+                    "u8",
+                    7
+                  ]
+                }
               },
               {
-                "name": "msg",
-                "type": "string"
+                "name": "outright",
+                "type": {
+                  "defined": "PaddedOutright"
+                }
+              }
+            ]
+          },
+          {
+            "name": "Combo",
+            "fields": [
+              {
+                "name": "padding0",
+                "type": {
+                  "array": [
+                    "u8",
+                    7
+                  ]
+                }
+              },
+              {
+                "name": "combo",
+                "type": {
+                  "defined": "PaddedCombo"
+                }
               }
             ]
           }
@@ -2758,6 +3715,29 @@
       }
     },
     {
+      "name": "OperationType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "NewOrder"
+          },
+          {
+            "name": "CancelOrder"
+          },
+          {
+            "name": "CheckHealth"
+          },
+          {
+            "name": "PositionTransfer"
+          },
+          {
+            "name": "ConsumeEvents"
+          }
+        ]
+      }
+    },
+    {
       "name": "HealthResult",
       "type": {
         "kind": "enum",
@@ -2788,19 +3768,35 @@
       }
     },
     {
-      "name": "PrintTradeProduct",
+      "name": "HealthStatus",
       "type": {
-        "kind": "struct",
-        "fields": [
+        "kind": "enum",
+        "variants": [
           {
-            "name": "productKey",
-            "type": "publicKey"
+            "name": "Healthy"
           },
           {
-            "name": "size",
-            "type": {
-              "defined": "Fractional"
-            }
+            "name": "Unhealthy"
+          },
+          {
+            "name": "Liquidatable"
+          },
+          {
+            "name": "NotLiquidatable"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ActionStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Approved"
+          },
+          {
+            "name": "NotApproved"
           }
         ]
       }

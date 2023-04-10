@@ -5,7 +5,7 @@ members = [
     "spot-instrument/program",
     "psyoptions-american-instrument/program",
     "psyoptions-european-instrument/program",
-    "hxro-instrument/program",
+    "hxro-print-trade-provider/program",
 ]
 
 [profile.release]
