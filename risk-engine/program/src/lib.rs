@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use rfq::state::{
-    AuthoritySide, FixedSize, Leg, OrderType, ProtocolState, Quote, Response, Rfq, Side,
+    AuthoritySide, FixedSize, Leg, OrderType, ProtocolState, Quote, Response, Rfq, QuoteSide, SettlementTypeMetadata
 };
 
 use base_asset_extractor::extract_base_assets;
@@ -8,7 +8,7 @@ use errors::Error;
 use price_extractor::extract_prices;
 use risk_calculator::{CalculationCase, RiskCalculator};
 use scenarios::ScenarioSelector;
-use state::{Config, InstrumentInfo, InstrumentType, RiskCategoryInfo};
+use state::{Config, StoredInstrumentType, InstrumentType, RiskCategoryInfo};
 use utils::{convert_fixed_point_to_f64, get_leg_amount_f64};
 
 pub mod base_asset_extractor;
@@ -124,63 +124,17 @@ pub mod risk_engine {
 
     pub fn set_instrument_type(
         ctx: Context<SetInstrumentTypeAccounts>,
-        instrument_program: Pubkey,
-        instrument_type: Option<InstrumentType>,
+        instrument_index: u8,
+        instrument_type: StoredInstrumentType,
     ) -> Result<()> {
         let SetInstrumentTypeAccounts {
             protocol, config, ..
         } = ctx.accounts;
         let mut config = config.load_mut()?;
 
-        let types_list = &mut config.instrument_types;
-        let index_in_list = types_list
-            .iter()
-            .position(|x| x.program == instrument_program);
-        let exists_in_protocol = protocol
-            .instruments
-            .iter()
-            .any(|x| x.program_key == instrument_program);
+        require!((instrument_index as usize) < protocol.instruments.len(), Error::MissingInstrumentIndex);
 
-        if let Some(instrument_type) = instrument_type {
-            let instrument_info = InstrumentInfo {
-                program: instrument_program,
-                r#type: instrument_type,
-                padding: [0; 7],
-            };
-
-            if let Some(index_in_list) = index_in_list {
-                require!(exists_in_protocol, Error::CannotChangeInstrument);
-
-                types_list[index_in_list] = instrument_info;
-                msg!(
-                    "{} instrument type is changed to {:?}",
-                    instrument_program,
-                    instrument_type
-                );
-            } else {
-                let empty_element_index = types_list.iter().position(|x| !x.is_initialized());
-
-                require!(
-                    exists_in_protocol && empty_element_index.is_some(),
-                    Error::CannotAddInstrument
-                );
-
-                types_list[empty_element_index.unwrap()] = instrument_info;
-                msg!(
-                    "{} instrument type is set to {:?}",
-                    instrument_program,
-                    instrument_type
-                );
-            }
-        } else {
-            require!(
-                index_in_list.is_some() && !exists_in_protocol,
-                Error::CannotRemoveInstrument
-            );
-
-            types_list[index_in_list.unwrap()] = Default::default();
-            msg!("{} instrument type is removed", instrument_program);
-        }
+        config.instrument_types[instrument_index as usize] = instrument_type;
 
         Ok(())
     }
@@ -213,12 +167,12 @@ pub mod risk_engine {
                 };
 
                 match rfq.order_type {
-                    OrderType::Buy => risk_calculator.calculate_risk(side_to_case(Side::Ask))?,
-                    OrderType::Sell => risk_calculator.calculate_risk(side_to_case(Side::Bid))?,
+                    OrderType::Buy => risk_calculator.calculate_risk(side_to_case(QuoteSide::Ask))?,
+                    OrderType::Sell => risk_calculator.calculate_risk(side_to_case(QuoteSide::Bid))?,
                     OrderType::TwoWay => risk_calculator
                         .calculate_risk_for_several_cases([
-                            side_to_case(Side::Bid),
-                            side_to_case(Side::Ask),
+                            side_to_case(QuoteSide::Bid),
+                            side_to_case(QuoteSide::Ask),
                         ])?
                         .into_iter()
                         .max()
@@ -267,14 +221,14 @@ pub mod risk_engine {
         let collateral = match (response.bid, response.ask) {
             (Some(bid_quote), Some(ask_quote)) => risk_calculator
                 .calculate_risk_for_several_cases([
-                    get_case(bid_quote, Side::Bid),
-                    get_case(ask_quote, Side::Ask),
+                    get_case(bid_quote, QuoteSide::Bid),
+                    get_case(ask_quote, QuoteSide::Ask),
                 ])?
                 .into_iter()
                 .max()
                 .unwrap(),
-            (Some(quote), None) => risk_calculator.calculate_risk(get_case(quote, Side::Bid))?,
-            (None, Some(quote)) => risk_calculator.calculate_risk(get_case(quote, Side::Ask))?,
+            (Some(quote), None) => risk_calculator.calculate_risk(get_case(quote, QuoteSide::Bid))?,
+            (None, Some(quote)) => risk_calculator.calculate_risk(get_case(quote, QuoteSide::Ask))?,
             _ => unreachable!(),
         };
 
@@ -342,7 +296,7 @@ fn construct_risk_calculator<'a>(
 ) -> Result<RiskCalculator<'a>> {
     let base_assets = extract_base_assets(&rfq.legs, remaining_accounts)?;
     let prices = extract_prices(&base_assets, remaining_accounts, config)?;
-    let instrument_types = config.get_instrument_types_map();
+
     let current_timestamp = Clock::get()?.unix_timestamp;
     let scenarios_selector = ScenarioSelector {
         config,
@@ -352,10 +306,10 @@ fn construct_risk_calculator<'a>(
         .legs
         .iter()
         .map(|leg| -> Result<LegWithMetadata> {
-            let instrument_type = instrument_types
-                .get(&leg.instrument_program)
-                .ok_or_else(|| error!(Error::MissingInstrument))?
-                .clone();
+            let instrument_type = match leg.settlement_type_metadata {
+                SettlementTypeMetadata::Instrument { instrument_index } => config.instrument_types[instrument_index as usize].try_into()?,
+                SettlementTypeMetadata::PrintTrade { instrument_type } => instrument_type.try_into()?,
+            };
 
             Ok(LegWithMetadata {
                 leg: &leg,

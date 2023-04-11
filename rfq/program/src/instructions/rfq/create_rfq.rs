@@ -55,8 +55,11 @@ fn validate_quote<'a, 'info: 'a>(
     is_settled_as_print_trade: bool,
 ) -> Result<()> {
     if !is_settled_as_print_trade {
-        let instrument_parameters =
-            protocol.get_instrument_parameters(quote_asset.instrument_program)?;
+        let instrument_index = quote_asset
+            .settlement_type_metadata
+            .get_instrument_index()
+            .unwrap();
+        let instrument_parameters = protocol.get_instrument_parameters(instrument_index)?;
 
         require!(
             instrument_parameters.can_be_used_as_quote,

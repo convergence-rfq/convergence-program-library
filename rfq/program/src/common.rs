@@ -8,8 +8,8 @@ use crate::{
     interfaces::instrument::validate_leg_instrument_data,
     seeds::COLLATERAL_SEED,
     state::{
-        AuthoritySide, BaseAssetInfo, CollateralInfo, Leg, ProtocolState, Response, Rfq,
-        StoredResponseState,
+        rfq::SettlementTypeMetadata, AuthoritySide, BaseAssetInfo, CollateralInfo, Leg,
+        ProtocolState, Response, Rfq, StoredResponseState,
     },
 };
 
@@ -93,6 +93,20 @@ pub fn validate_legs<'a, 'info: 'a>(
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
     is_settled_as_print_trade: bool,
 ) -> Result<()> {
+    validate_legs_base_asset(legs, remaining_accounts)?;
+    validate_legs_settlement_type(legs, is_settled_as_print_trade)?;
+
+    if !is_settled_as_print_trade {
+        validate_instrument_legs(legs, protocol, remaining_accounts)?;
+    }
+
+    Ok(())
+}
+
+fn validate_legs_base_asset<'a, 'info: 'a>(
+    legs: &[Leg],
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
     for leg in legs.iter() {
         let base_asset_account = remaining_accounts
             .next()
@@ -105,15 +119,48 @@ pub fn validate_legs<'a, 'info: 'a>(
         require!(base_asset.enabled, ProtocolError::BaseAssetIsDisabled);
     }
 
-    if !is_settled_as_print_trade {
-        for leg in legs.iter() {
-            let instrument = protocol.get_instrument_parameters(leg.instrument_program)?;
-            require!(instrument.enabled, ProtocolError::InstrumentIsDisabled);
-        }
+    Ok(())
+}
 
-        for leg in legs.iter() {
-            validate_leg_instrument_data(leg, protocol, remaining_accounts)?;
+fn validate_legs_settlement_type(legs: &[Leg], is_settled_as_print_trade: bool) -> Result<()> {
+    for leg in legs.iter() {
+        if is_settled_as_print_trade {
+            require!(
+                matches!(
+                    leg.settlement_type_metadata,
+                    SettlementTypeMetadata::PrintTrade { instrument_type: _ }
+                ),
+                ProtocolError::LegSettlementInfoDoesNotMatchRfqType
+            );
+        } else {
+            require!(
+                matches!(
+                    leg.settlement_type_metadata,
+                    SettlementTypeMetadata::Instrument {
+                        instrument_index: _
+                    }
+                ),
+                ProtocolError::LegSettlementInfoDoesNotMatchRfqType
+            );
         }
+    }
+
+    Ok(())
+}
+
+fn validate_instrument_legs<'a, 'info: 'a>(
+    legs: &[Leg],
+    protocol: &Account<'info, ProtocolState>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
+    for leg in legs.iter() {
+        let instrument_index = leg.settlement_type_metadata.get_instrument_index().unwrap();
+        let instrument = protocol.get_instrument_parameters(instrument_index)?;
+        require!(instrument.enabled, ProtocolError::InstrumentIsDisabled);
+    }
+
+    for leg in legs.iter() {
+        validate_leg_instrument_data(leg, protocol, remaining_accounts)?;
     }
 
     Ok(())

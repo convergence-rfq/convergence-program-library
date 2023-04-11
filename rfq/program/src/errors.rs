@@ -120,4 +120,6 @@ pub enum ProtocolError {
     InstrumentIsDisabled,
     #[msg("Can't create an rfq using a disabled base asset")]
     BaseAssetIsDisabled,
+    #[msg("Leg settlement type info does not match rfq type`")]
+    LegSettlementInfoDoesNotMatchRfqType,
 }

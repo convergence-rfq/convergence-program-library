@@ -1,9 +1,10 @@
-use std::{collections::HashMap, mem};
+use std::mem;
 
 use anchor_lang::prelude::*;
 use bytemuck::{Pod, Zeroable};
 use rfq::state::RiskCategory;
 
+use crate::errors::Error;
 use crate::utils::convert_fixed_point_to_f64;
 
 #[account(zero_copy)]
@@ -16,7 +17,8 @@ pub struct Config {
     pub accepted_oracle_staleness: u64,
     pub accepted_oracle_confidence_interval_portion: f64,
     pub risk_categories_info: [RiskCategoryInfo; 8], // 8 - mem::variant_count::<RiskCategory>
-    pub instrument_types: [InstrumentInfo; 50], // Embed ProtocolState::MAX_INSTRUMENTS to work around anchor idl generation issue
+    pub instrument_types: [StoredInstrumentType; 50], // Embed ProtocolState::MAX_INSTRUMENTS to work around anchor idl generation issue
+    pub padding: [u8; 6],
 }
 
 impl Config {
@@ -26,27 +28,6 @@ impl Config {
 
     pub fn get_risk_info(&self, risk_category: RiskCategory) -> RiskCategoryInfo {
         self.risk_categories_info[risk_category as usize]
-    }
-
-    pub fn get_instrument_types_map(&self) -> HashMap<Pubkey, InstrumentType> {
-        self.instrument_types
-            .iter()
-            .map(|x| (x.program, x.r#type))
-            .collect()
-    }
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Zeroable, Pod)]
-#[repr(C)]
-pub struct InstrumentInfo {
-    pub program: Pubkey,
-    pub r#type: InstrumentType,
-    pub padding: [u8; 7], // pad to 8 bytes of Config layout
-}
-
-impl InstrumentInfo {
-    pub fn is_initialized(&self) -> bool {
-        self.program != Pubkey::default()
     }
 }
 
@@ -98,19 +79,50 @@ impl Scenario {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
-pub enum InstrumentType {
-    Spot = 0,
-    Option,
-    TermFuture,
-    PerpFuture,
+pub enum StoredInstrumentType {
+    Missing = 0,
+    Spot = 1,
+    Option = 2,
+    TermFuture = 3,
+    PerpFuture = 4,
 }
 
-unsafe impl Zeroable for InstrumentType {} // Allows 0 value, so it's okay
-unsafe impl Pod for InstrumentType {} // Does not allow for all bit patterns, but it is okay in our case as only the program can set this byte
-
-impl Default for InstrumentType {
+impl Default for StoredInstrumentType {
     fn default() -> Self {
-        Self::Spot
+        Self::Missing
+    }
+}
+
+unsafe impl Zeroable for StoredInstrumentType {} // Allows 0 value, so it's okay
+unsafe impl Pod for StoredInstrumentType {} // Does not allow for all bit patterns, but it is okay in our case as only the program can set this byte
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
+pub enum InstrumentType {
+    Spot = 1,
+    Option = 2,
+    TermFuture = 3,
+    PerpFuture = 4,
+}
+
+impl TryFrom<u8> for InstrumentType {
+    type Error = Error;
+
+    fn try_from(value: u8) -> std::result::Result<Self, Self::Error> {
+        match value {
+            v if v == InstrumentType::Spot as u8 => Ok(InstrumentType::Spot),
+            v if v == InstrumentType::Option as u8 => Ok(InstrumentType::Option),
+            v if v == InstrumentType::TermFuture as u8 => Ok(InstrumentType::TermFuture),
+            v if v == InstrumentType::PerpFuture as u8 => Ok(InstrumentType::PerpFuture),
+            _ => Err(Error::FailedToExtractInstrumentType),
+        }
+    }
+}
+
+impl TryFrom<StoredInstrumentType> for InstrumentType {
+    type Error = Error;
+
+    fn try_from(value: StoredInstrumentType) -> std::result::Result<Self, Self::Error> {
+        InstrumentType::try_from(value as u8)
     }
 }
 

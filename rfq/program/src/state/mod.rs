@@ -4,7 +4,8 @@ pub mod response;
 pub mod rfq;
 
 pub use self::rfq::{
-    AssetIdentifier, FixedSize, Leg, OrderType, QuoteAsset, Rfq, RfqState, Side, StoredRfqState,
+    AssetIdentifier, FixedSize, Leg, LegSide, OrderType, QuoteAsset, Rfq, RfqState,
+    SettlementTypeMetadata, StoredRfqState,
 };
 pub use collateral::CollateralInfo;
 pub use protocol::{
@@ -12,6 +13,6 @@ pub use protocol::{
     PrintTradeProvider, ProtocolState, RiskCategory,
 };
 pub use response::{
-    AuthoritySide, Confirmation, DefaultingParty, Quote, Response, ResponseState,
+    AuthoritySide, Confirmation, DefaultingParty, Quote, QuoteSide, Response, ResponseState,
     StoredResponseState,
 };

@@ -6,8 +6,8 @@ use anchor_spl::associated_token::get_associated_token_address;
 use crate::errors::ProtocolError;
 
 use super::{
-    rfq::{FixedSize, Rfq, Side},
-    AssetIdentifier,
+    rfq::{FixedSize, Rfq},
+    AssetIdentifier, LegSide,
 };
 
 #[account]
@@ -98,7 +98,7 @@ impl Response {
         let leg = &rfq.legs[leg_index as usize];
         let leg_multiplier_bps = self.calculate_confirmed_legs_multiplier_bps(rfq);
 
-        let result_with_more_decimals = leg.instrument_amount as u128 * leg_multiplier_bps as u128;
+        let result_with_more_decimals = leg.amount as u128 * leg_multiplier_bps as u128;
 
         let decimals_factor = Quote::LEG_MULTIPLIER_FACTOR;
         let mut result = result_with_more_decimals / decimals_factor;
@@ -220,10 +220,10 @@ impl Response {
         // leg assets receiver for a bid leg and with the ask response from maker is a taker
         let mut receiver = AuthoritySide::Taker;
 
-        if let Side::Ask = leg.side {
+        if let LegSide::Negative = leg.side {
             receiver = receiver.inverse();
         }
-        if let Side::Bid = confirmation.side {
+        if let QuoteSide::Bid = confirmation.side {
             receiver = receiver.inverse();
         }
 
@@ -238,7 +238,7 @@ impl Response {
         // quote assets receiver for the ask response from maker is a maker
         let mut receiver = AuthoritySide::Maker;
 
-        if let Side::Bid = confirmation.side {
+        if let QuoteSide::Bid = confirmation.side {
             receiver = receiver.inverse();
         }
 
@@ -253,8 +253,8 @@ impl Response {
         match self.confirmed {
             Some(confirmation) => {
                 let mut quote = match confirmation.side {
-                    Side::Bid => self.bid,
-                    Side::Ask => self.ask,
+                    QuoteSide::Bid => self.bid,
+                    QuoteSide::Ask => self.ask,
                 }
                 .unwrap()
                 .clone();
@@ -384,6 +384,12 @@ pub enum AuthoritySide {
     Maker,
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+pub enum QuoteSide {
+    Bid,
+    Ask,
+}
+
 impl AuthoritySide {
     pub fn inverse(self) -> Self {
         match self {
@@ -455,6 +461,6 @@ impl PriceQuote {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct Confirmation {
-    pub side: Side,
+    pub side: QuoteSide,
     pub override_leg_multiplier_bps: Option<u64>,
 }

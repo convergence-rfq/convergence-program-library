@@ -1,8 +1,8 @@
-use rfq::state::{Leg, Side};
+use rfq::state::{Leg, LegSide};
 
 pub fn get_leg_amount_f64(leg: &Leg) -> f64 {
-    let mut result = convert_fixed_point_to_f64(leg.instrument_amount, leg.instrument_decimals);
-    if let Side::Bid = leg.side {
+    let mut result = convert_fixed_point_to_f64(leg.amount, leg.amount_decimals);
+    if let LegSide::Positive = leg.side {
         result = -result;
     }
 

@@ -36,10 +36,9 @@ impl ProtocolState {
             + Self::MAX_PRINT_TRADE_PROVIDERS * mem::size_of::<PrintTradeProvider>()
     }
 
-    pub fn get_instrument_parameters(&self, instrument_key: Pubkey) -> Result<&Instrument> {
+    pub fn get_instrument_parameters(&self, instrument_index: u8) -> Result<&Instrument> {
         self.instruments
-            .iter()
-            .find(|x| x.program_key == instrument_key)
+            .get(instrument_index as usize)
             .ok_or_else(|| error!(ProtocolError::NotAWhitelistedInstrument))
     }
 

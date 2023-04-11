@@ -73,34 +73,54 @@ impl Rfq {
 
     pub fn get_asset_instrument_data(&self, asset_identifier: AssetIdentifier) -> &Vec<u8> {
         match asset_identifier {
-            AssetIdentifier::Leg { leg_index } => &self.legs[leg_index as usize].instrument_data,
-            AssetIdentifier::Quote => &self.quote_asset.instrument_data,
+            AssetIdentifier::Leg { leg_index } => &self.legs[leg_index as usize].data,
+            AssetIdentifier::Quote => &self.quote_asset.data,
         }
     }
 
-    pub fn get_asset_instrument_program(&self, asset_identifier: AssetIdentifier) -> Pubkey {
+    pub fn get_asset_instrument_index(&self, asset_identifier: AssetIdentifier) -> Option<u8> {
         match asset_identifier {
-            AssetIdentifier::Leg { leg_index } => self.legs[leg_index as usize].instrument_program,
-            AssetIdentifier::Quote => self.quote_asset.instrument_program,
+            AssetIdentifier::Leg { leg_index } => self.legs[leg_index as usize]
+                .settlement_type_metadata
+                .get_instrument_index(),
+            AssetIdentifier::Quote => self
+                .quote_asset
+                .settlement_type_metadata
+                .get_instrument_index(),
         }
     }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct QuoteAsset {
-    pub instrument_program: Pubkey,
-    pub instrument_data: Vec<u8>,
-    pub instrument_decimals: u8,
+    pub settlement_type_metadata: SettlementTypeMetadata,
+    pub data: Vec<u8>,
+    pub decimals: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct Leg {
-    pub instrument_program: Pubkey,
+    pub settlement_type_metadata: SettlementTypeMetadata,
     pub base_asset_index: BaseAssetIndex,
-    pub instrument_data: Vec<u8>,
-    pub instrument_amount: u64,
-    pub instrument_decimals: u8,
-    pub side: Side,
+    pub data: Vec<u8>,
+    pub amount: u64,
+    pub amount_decimals: u8,
+    pub side: LegSide,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum SettlementTypeMetadata {
+    Instrument { instrument_index: u8 },
+    PrintTrade { instrument_type: u8 }, // keeping it opaque, as it's related to the risk engine logic
+}
+
+impl SettlementTypeMetadata {
+    pub fn get_instrument_index(&self) -> Option<u8> {
+        match self {
+            SettlementTypeMetadata::Instrument { instrument_index } => Some(*instrument_index),
+            SettlementTypeMetadata::PrintTrade { instrument_type: _ } => None,
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -115,6 +135,12 @@ pub enum OrderType {
     Buy,
     Sell,
     TwoWay,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+pub enum LegSide {
+    Positive,
+    Negative,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -147,12 +173,6 @@ impl RfqState {
             Ok(())
         }
     }
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
-pub enum Side {
-    Bid,
-    Ask,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

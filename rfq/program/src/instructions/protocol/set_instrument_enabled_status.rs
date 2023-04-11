@@ -1,4 +1,8 @@
-use crate::{errors::ProtocolError, seeds::PROTOCOL_SEED, state::ProtocolState};
+use crate::{
+    errors::ProtocolError,
+    seeds::PROTOCOL_SEED,
+    state::{Instrument, ProtocolState},
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -9,15 +13,9 @@ pub struct SetInstrumentEnabledStatusAccounts<'info> {
     pub protocol: Account<'info, ProtocolState>,
 }
 
-fn validate(
-    ctx: &Context<SetInstrumentEnabledStatusAccounts>,
-    instrument_key: Pubkey,
-    enabled_status_to_set: bool,
-) -> Result<()> {
-    let SetInstrumentEnabledStatusAccounts { protocol, .. } = &ctx.accounts;
-
+fn validate(instrument: &Instrument, enabled_status_to_set: bool) -> Result<()> {
     require!(
-        protocol.get_instrument_parameters(instrument_key)?.enabled != enabled_status_to_set,
+        instrument.enabled != enabled_status_to_set,
         ProtocolError::AlreadyHasAStatusToSet
     );
 
@@ -29,9 +27,10 @@ pub fn set_instrument_enabled_status_instruction(
     instrument_key: Pubkey,
     enabled_status_to_set: bool,
 ) -> Result<()> {
-    validate(&ctx, instrument_key, enabled_status_to_set)?;
-
     let SetInstrumentEnabledStatusAccounts { protocol, .. } = ctx.accounts;
+    let instrument = protocol.get_instrument_parameters_mut(instrument_key)?;
+
+    validate(instrument, enabled_status_to_set)?;
 
     protocol
         .get_instrument_parameters_mut(instrument_key)?

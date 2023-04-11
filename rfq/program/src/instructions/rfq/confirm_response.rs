@@ -3,8 +3,8 @@ use crate::{
     interfaces::risk_engine::calculate_required_collateral_for_confirmation,
     seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     state::{
-        CollateralInfo, Confirmation, ProtocolState, Quote, Response, ResponseState, Rfq, RfqState,
-        Side, StoredResponseState,
+        CollateralInfo, Confirmation, ProtocolState, Quote, QuoteSide, Response, ResponseState,
+        Rfq, RfqState, StoredResponseState,
     },
 };
 use anchor_lang::prelude::*;
@@ -39,7 +39,7 @@ pub struct ConfirmResponseAccounts<'info> {
 
 fn validate(
     ctx: &Context<ConfirmResponseAccounts>,
-    side: Side,
+    side: QuoteSide,
     override_leg_multiplier_bps: Option<u64>,
 ) -> Result<()> {
     let ConfirmResponseAccounts { rfq, response, .. } = &ctx.accounts;
@@ -53,8 +53,8 @@ fn validate(
         .assert_state_in([ResponseState::Active])?;
 
     match side {
-        Side::Bid => require!(response.bid.is_some(), ProtocolError::ConfirmedSideMissing),
-        Side::Ask => require!(response.ask.is_some(), ProtocolError::ConfirmedSideMissing),
+        QuoteSide::Bid => require!(response.bid.is_some(), ProtocolError::ConfirmedSideMissing),
+        QuoteSide::Ask => require!(response.ask.is_some(), ProtocolError::ConfirmedSideMissing),
     }
 
     if rfq.is_fixed_size() {
@@ -67,8 +67,8 @@ fn validate(
     // make sure new leg multiplier is not bigger than provided
     if let Some(override_leg_multiplier_bps) = override_leg_multiplier_bps {
         let quote = match side {
-            Side::Bid => response.bid.unwrap(),
-            Side::Ask => response.ask.unwrap(),
+            QuoteSide::Bid => response.bid.unwrap(),
+            QuoteSide::Ask => response.ask.unwrap(),
         };
 
         match quote {
@@ -90,7 +90,7 @@ fn validate(
 
 pub fn confirm_response_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, ConfirmResponseAccounts<'info>>,
-    side: Side,
+    side: QuoteSide,
     override_leg_multiplier_bps: Option<u64>,
 ) -> Result<()> {
     validate(&ctx, side, override_leg_multiplier_bps)?;

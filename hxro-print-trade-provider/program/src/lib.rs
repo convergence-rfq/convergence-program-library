@@ -41,10 +41,10 @@ pub mod hxro_print_trade_provider {
         );
 
         for leg in ctx.accounts.rfq.legs.clone() {
-            helpers::validate_leg_data(&ctx, &leg.instrument_data)?;
+            helpers::validate_leg_data(&ctx, &leg.data)?;
         }
 
-        helpers::validate_quote_data(&ctx, &ctx.accounts.rfq.quote_asset.instrument_data)?;
+        helpers::validate_quote_data(&ctx, &ctx.accounts.rfq.quote_asset.data)?;
 
         Ok(())
     }
