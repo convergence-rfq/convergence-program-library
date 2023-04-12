@@ -1,0 +1,16 @@
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/rfq/finalize_rfq_construction.rs)
+
+The code defines an instruction and associated accounts for finalizing the construction of a Request for Quote (RFQ) in the Convergence Program Library. The purpose of this instruction is to validate the RFQ and lock the required collateral for the taker (the party requesting the quote) before the RFQ is broadcast to potential makers (the parties providing the quote).
+
+The `FinalizeRfqConstructionAccounts` struct defines the accounts required for this instruction. These include the taker's account, the protocol state account, the RFQ account, the collateral info account, the collateral token account, and the risk engine account. The `validate` function checks that the RFQ is in the correct state, has at least one leg, and that the serialized legs match the expected size and hash. If validation passes, the `finalize_rfq_construction_instruction` function calculates the required collateral for the RFQ using the `calculate_required_collateral_for_rfq` function from the risk engine interface. It then locks the required collateral in the collateral info account and updates the RFQ state and collateral fields.
+
+This instruction is likely used in the larger project to ensure that RFQs are properly constructed and that the taker has sufficient collateral to cover the potential trades resulting from the RFQ. By locking the required collateral before broadcasting the RFQ, the taker can ensure that makers will only respond if they are willing and able to execute the trade. This helps to reduce the risk of failed trades and ensures that the taker has sufficient collateral to cover any resulting losses.
+## Questions: 
+ 1. What is the purpose of this code and what problem does it solve?
+- This code is part of the Convergence Program Library and provides functionality for finalizing the construction of a request for quote (RFQ) by locking collateral. It solves the problem of ensuring that the taker has sufficient collateral to execute the RFQ.
+
+2. What are the constraints on the accounts used in this code?
+- The `taker` account must match the `rfq.taker` account, the `risk_engine` account must match the `protocol.risk_engine` account, and the `collateral_info` and `collateral_token` accounts must be derived from the `COLLATERAL_SEED` and `COLLATERAL_TOKEN_SEED` seeds respectively, using the `taker.key()` as an additional seed. These constraints are enforced using the `constraint` and `seeds` attributes on the `Accounts` struct.
+
+3. What is the purpose of the `validate` function and what checks does it perform?
+- The `validate` function performs several checks to ensure that the RFQ is in a valid state for finalization. It checks that the RFQ state is `Constructed`, that the RFQ has at least one leg, that the serialized legs size matches the expected size, and that the hash of the serialized legs matches the expected hash. If any of these checks fail, a `ProtocolError` is returned.

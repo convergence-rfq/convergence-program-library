@@ -90,6 +90,7 @@ fn validate_recent_timestamp(recent_timestamp: u64) -> Result<()> {
     require!(
         recent_timestamp <= current_timestamp
             && (current_timestamp - recent_timestamp) < RECENT_TIMESTAMP_VALIDITY,
+        // TODO: Could rename
         ProtocolError::InvalidRecentBlockhash
     );
 
