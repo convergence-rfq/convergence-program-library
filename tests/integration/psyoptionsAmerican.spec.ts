@@ -10,7 +10,7 @@ import {
 } from "../utilities/helpers";
 import * as anchor from "@project-serum/anchor";
 import { Context, getContext } from "../utilities/wrappers";
-import { AuthoritySide, Quote, Side, OrderType } from "../utilities/types";
+import { AuthoritySide, Quote, OrderType, QuoteSide, LegSide } from "../utilities/types";
 import {
   PsyoptionsAmericanInstrumentClass,
   AmericanPsyoptions,
@@ -46,7 +46,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: Side.Bid,
+          side: LegSide.Positive,
         }),
       ],
     });
@@ -58,7 +58,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     });
 
     // Taker confirms to buy 1 option
-    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1) });
     await response.prepareEscrowSettlement(AuthoritySide.Taker);
     await response.prepareEscrowSettlement(AuthoritySide.Maker);
 
@@ -90,7 +90,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: Side.Bid,
+          side: LegSide.Positive,
         }),
       ],
     });
@@ -99,7 +99,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     const response = await rfq.respond({
       bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(2)),
     });
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
+    await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(2) });
 
     // taker confirms to sell 2 options
 
@@ -141,7 +141,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: Side.Bid,
+          side: LegSide.Positive,
         }),
       ],
       orderType: OrderType.TwoWay,
@@ -154,7 +154,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       });
 
       // taker confirms to sell 2 options
-      await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
+      await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(2) });
       const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.callMint], [taker]);
       await response.prepareEscrowSettlement(AuthoritySide.Taker);
 
@@ -181,7 +181,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: Side.Bid,
+          side: LegSide.Positive,
         }),
       ],
       orderType: OrderType.TwoWay,
@@ -194,7 +194,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       });
 
       // taker confirms to sell 2 options
-      await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
+      await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(2) });
       const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote"], [maker]);
       await response.prepareEscrowSettlement(AuthoritySide.Maker);
       await tokenMeasurer.expectChange([{ token: "quote", user: maker, delta: withTokenDecimals(new BN(-90)) }]);
@@ -221,7 +221,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: Side.Bid,
+          side: LegSide.Positive,
         }),
       ],
     });
@@ -233,7 +233,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     });
 
     // Taker confirms to sell 0.4 option
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(0.4) });
+    await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(0.4) });
     await response.prepareEscrowSettlement(AuthoritySide.Taker);
     await response.prepareEscrowSettlement(AuthoritySide.Maker);
 
@@ -260,7 +260,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: Side.Bid,
+          side: LegSide.Positive,
         }),
       ],
     });
@@ -272,7 +272,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     });
 
     // Taker confirms to buy 1.4 option
-    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1.4) });
+    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1.4) });
     await response.prepareEscrowSettlement(AuthoritySide.Taker);
     await response.prepareEscrowSettlement(AuthoritySide.Maker);
 

@@ -1,6 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { OrderType, Side, toRiskCategoryInfo, toScenario } from "./types";
+import { LegSide, OrderType, toRiskCategoryInfo, toScenario } from "./types";
 
 export const PROTOCOL_SEED = "protocol";
 export const COLLATERAL_SEED = "collateral_info";
@@ -11,7 +11,7 @@ export const QUOTE_ESCROW_SEED = "quote_escrow";
 export const BASE_ASSET_INFO_SEED = "base_asset";
 export const MINT_INFO_SEED = "mint_info";
 
-export const EMPTY_LEG_SIZE = 32 + 2 + 4 + 8 + 1 + 1;
+export const EMPTY_LEG_SIZE = 2 + 2 + 4 + 8 + 1 + 1;
 
 export const LEG_MULTIPLIER_DECIMALS = 9;
 export const ABSOLUTE_PRICE_DECIMALS = 9;
@@ -25,7 +25,7 @@ export const DEFAULT_SETTLE_FEES = { taker: 0.02, maker: 0.01 };
 export const DEFAULT_DEFAULT_FEES = { taker: 0.1, maker: 0.5 };
 export const DEFAULT_ORDER_TYPE = OrderType.TwoWay;
 export const DEFAULT_INSTRUMENT_AMOUNT = new BN(1_000_000_000);
-export const DEFAULT_INSTRUMENT_SIDE = Side.Bid;
+export const DEFAULT_LEG_SIDE = LegSide.Positive;
 export const DEFAULT_PRICE = new BN(100).mul(new BN(10).pow(new BN(ABSOLUTE_PRICE_DECIMALS)));
 export const DEFAULT_LEG_MULTIPLIER = new BN(1).mul(new BN(10).pow(new BN(LEG_MULTIPLIER_DECIMALS)));
 export const DEFAULT_ACTIVE_WINDOW = 10;

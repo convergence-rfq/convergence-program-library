@@ -126,6 +126,16 @@ impl TryFrom<StoredInstrumentType> for InstrumentType {
     }
 }
 
+impl From<InstrumentType> for StoredInstrumentType {
+    fn from(value: InstrumentType) -> Self {
+        match value {
+            InstrumentType::Spot => StoredInstrumentType::Spot,
+            InstrumentType::Option => StoredInstrumentType::Option,
+            InstrumentType::TermFuture => StoredInstrumentType::TermFuture,
+            InstrumentType::PerpFuture => StoredInstrumentType::PerpFuture,
+        }
+    }
+}
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct OptionCommonData {
     pub option_type: OptionType,

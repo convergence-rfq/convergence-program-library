@@ -14,10 +14,10 @@ import {
   sleep,
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
-import { AuthoritySide, FixedSize, OrderType, Quote, Side } from "../utilities/types";
+import { AuthoritySide, FixedSize, LegSide, OrderType, Quote, QuoteSide } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 
-describe("RFQ escrow settlement using spot integration tests", () => {
+describe.only("RFQ escrow settlement using spot integration tests", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
@@ -73,7 +73,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
 
     // create a two way RFQ specifying 1 bitcoin as a leg
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: Side.Bid })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Positive })],
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
     const response = await rfq.respond({
@@ -81,7 +81,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
     });
     // taker confirms to buy 1 bitcoin
-    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1) });
     await response.prepareEscrowSettlement(AuthoritySide.Taker);
     await response.prepareEscrowSettlement(AuthoritySide.Maker);
     // taker should receive 1 bitcoins, maker should receive 22k$
@@ -102,7 +102,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
 
     // create a two way RFQ specifying 1 bitcoin ask as a leg
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: Side.Ask })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Negative })],
     });
     // response with agreeing to sell 5 bitcoins for 22k$ or buy 2 for 20000$
     const response = await rfq.respond({
@@ -110,7 +110,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(-20_000)), toLegMultiplier(2)),
     });
     // taker confirms to sell 1.5 bitcoin
-    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1.5) });
+    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1.5) });
     await response.prepareEscrowSettlement(AuthoritySide.Taker);
     await response.prepareEscrowSettlement(AuthoritySide.Maker);
     // taker should receive 30k$, maker should receive 1.5 bitcoin
@@ -130,11 +130,11 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     // create a sell RFQ specifying 5 bitcoin bid and 1000 sol ask
     const rfq = await context.createRfq({
       legs: [
-        SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: Side.Bid }),
+        SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Positive }),
         SpotInstrument.createForLeg(context, {
           mint: context.additionalAssetToken,
           amount: withTokenDecimals(1000),
-          side: Side.Ask,
+          side: LegSide.Negative,
         }),
       ],
       orderType: OrderType.Sell,
@@ -149,7 +149,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     });
 
     // taker confirms first response, but only half of it
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(0.25) });
+    await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(0.25) });
     const firstMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
       ["asset", "quote", "additionalAsset"],
@@ -171,7 +171,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await response.cleanUp();
 
     // taker confirms second response
-    await secondResponse.confirm({ side: Side.Bid });
+    await secondResponse.confirm({ side: QuoteSide.Bid });
     const secondMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
       ["asset", "quote", "additionalAsset"],
@@ -196,7 +196,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create fixed leg size buy RFQ, respond and settle response", async () => {
     // create a buy RFQ specifying 15 bitcoin as a leg(5 in leg with multiplier of 3)
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: Side.Bid })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Positive })],
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(3)),
       orderType: OrderType.Buy,
     });
@@ -205,7 +205,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       ask: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(103_333))),
     });
 
-    await response.confirm({ side: Side.Ask });
+    await response.confirm({ side: QuoteSide.Ask });
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
     await response.prepareEscrowSettlement(AuthoritySide.Taker);
     await response.prepareEscrowSettlement(AuthoritySide.Maker);
@@ -224,7 +224,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create fixed quote size sell RFQ, respond and settle response", async () => {
     // create a sell RFQ specifying 0.5 bitcoin in leg and fixed quote of 38.5k$
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(0.5), side: Side.Bid })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(0.5), side: LegSide.Positive })],
       fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(38_500)),
       orderType: OrderType.Sell,
     });
@@ -233,7 +233,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       bid: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(11_000))),
     });
 
-    await response.confirm({ side: Side.Bid });
+    await response.confirm({ side: QuoteSide.Bid });
     let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
     await response.prepareEscrowSettlement(AuthoritySide.Taker);
     await response.prepareEscrowSettlement(AuthoritySide.Maker);
@@ -296,7 +296,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     const rfq = await context.createRfq({
       legs: [
         SpotInstrument.createForLeg(context, { mint: context.assetToken }),
-        SpotInstrument.createForLeg(context, { mint: context.additionalAssetToken, side: Side.Ask }),
+        SpotInstrument.createForLeg(context, { mint: context.additionalAssetToken, side: LegSide.Negative }),
       ],
       activeWindow: 2,
       settlingWindow: 1,
@@ -350,7 +350,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     const rfq = await context.createRfq({
       legs: [
         SpotInstrument.createForLeg(context, { mint: context.assetToken }),
-        SpotInstrument.createForLeg(context, { mint: context.additionalAssetToken, side: Side.Ask }),
+        SpotInstrument.createForLeg(context, { mint: context.additionalAssetToken, side: LegSide.Negative }),
       ],
       activeWindow: 2,
       settlingWindow: 1,
@@ -399,7 +399,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     const rfq = await context.createRfq({
       legs: [
         SpotInstrument.createForLeg(context, { mint: context.assetToken }),
-        SpotInstrument.createForLeg(context, { mint: context.additionalAssetToken, side: Side.Ask }),
+        SpotInstrument.createForLeg(context, { mint: context.additionalAssetToken, side: LegSide.Negative }),
       ],
       activeWindow: 2,
       settlingWindow: 1,

@@ -1,10 +1,10 @@
 import { Program, web3, BN, workspace } from "@project-serum/anchor";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
-import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
+import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AssetIdentifier, AuthoritySide, InstrumentType, Side } from "../types";
+import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { PsyoptionsEuropeanInstrument as PsyoptionsEuropeanInstrumentIdl } from "../../../target/types/psyoptions_european_instrument";
 import { executeInParallel, withTokenDecimals } from "../helpers";
@@ -30,6 +30,8 @@ export function getEuroOptionsInstrumentProgram(): Program<PsyoptionsEuropeanIns
 }
 
 export class PsyoptionsEuropeanInstrument implements Instrument {
+  static instrumentIndex = 1;
+
   constructor(private context: Context, private optionFacade: EuroOptionsFacade, private optionType: OptionType) {}
 
   static create(
@@ -38,10 +40,10 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     optionType: OptionType,
     {
       amount = DEFAULT_INSTRUMENT_AMOUNT,
-      side = DEFAULT_INSTRUMENT_SIDE,
+      side = DEFAULT_LEG_SIDE,
     }: {
       amount?: BN;
-      side?: Side;
+      side?: LegSide;
     } = {}
   ): InstrumentController {
     const instrument = new PsyoptionsEuropeanInstrument(context, optionFacade, optionType);
@@ -53,12 +55,16 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     );
   }
 
+  getInstrumentIndex(): number {
+    return PsyoptionsEuropeanInstrument.instrumentIndex;
+  }
+
   static async addInstrument(context: Context) {
     await context.addInstrument(getEuroOptionsInstrumentProgram().programId, false, 2, 7, 3, 3, 4);
   }
 
   static async setRiskEngineInstrumentType(context: Context) {
-    await context.riskEngine.setInstrumentType(getEuroOptionsInstrumentProgram().programId, InstrumentType.Option);
+    await context.riskEngine.setInstrumentType(this.instrumentIndex, InstrumentType.Option);
   }
 
   serializeInstrumentData(): Buffer {

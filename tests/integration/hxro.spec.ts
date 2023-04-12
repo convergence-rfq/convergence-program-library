@@ -32,7 +32,7 @@ describe("RFQ HXRO instrument integration tests", () => {
     );
   });
 
-  it.only("HXRO direct calls work", async () => {
+  it("HXRO direct calls work", async () => {
     const manifest = await dexterity.getManifest(
       context.provider.connection.rpcEndpoint,
       true,

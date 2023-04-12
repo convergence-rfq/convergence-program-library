@@ -1,7 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { AccountMeta, PublicKey } from "@solana/web3.js";
 import { getBaseAssetPda } from "./pdas";
-import { AssetIdentifier } from "./types";
+import { AssetIdentifier, LegSide } from "./types";
 import { Response, Rfq } from "./wrappers";
 
 export interface InstrumentData {
@@ -15,6 +15,7 @@ export interface Instrument {
   serializeInstrumentData(): Buffer;
   serializeInstrumentDataForQuote(): Buffer;
   getProgramId(): PublicKey;
+  getInstrumentIndex(): number;
   getValidationAccounts(): Promise<AccountMeta[]>;
   getPrepareSettlementAccounts(
     side: { taker: {} } | { maker: {} },
@@ -40,7 +41,7 @@ export interface Instrument {
 export class InstrumentController {
   constructor(
     protected instrument: Instrument,
-    protected legInfo: { amount: BN; side: { bid: {} } | { ask: {} }; baseAssetIndex: number } | null,
+    protected legInfo: { amount: BN; side: LegSide; baseAssetIndex: number } | null,
     protected decimals: number
   ) {}
 
@@ -58,11 +59,11 @@ export class InstrumentController {
     }
 
     return {
-      instrumentProgram: this.instrument.getProgramId(),
+      settlementTypeMetadata: { instrument: { instrumentIndex: this.instrument.getInstrumentIndex() } },
       baseAssetIndex: { value: this.legInfo.baseAssetIndex },
-      instrumentData: this.instrument.serializeInstrumentData(),
-      instrumentAmount: new BN(this.legInfo.amount),
-      instrumentDecimals: this.decimals,
+      data: this.instrument.serializeInstrumentData(),
+      amount: new BN(this.legInfo.amount),
+      amountDecimals: this.decimals,
       side: this.legInfo.side,
     };
   }
@@ -73,9 +74,9 @@ export class InstrumentController {
     }
 
     return {
-      instrumentProgram: this.instrument.getProgramId(),
-      instrumentData: this.instrument.serializeInstrumentDataForQuote(),
-      instrumentDecimals: this.decimals,
+      settlementTypeMetadata: { instrument: { instrumentIndex: this.instrument.getInstrumentIndex() } },
+      data: this.instrument.serializeInstrumentDataForQuote(),
+      decimals: this.decimals,
     };
   }
 

@@ -8,7 +8,7 @@ use errors::Error;
 use price_extractor::extract_prices;
 use risk_calculator::{CalculationCase, RiskCalculator};
 use scenarios::ScenarioSelector;
-use state::{Config, StoredInstrumentType, InstrumentType, RiskCategoryInfo};
+use state::{Config, InstrumentType, RiskCategoryInfo};
 use utils::{convert_fixed_point_to_f64, get_leg_amount_f64};
 
 pub mod base_asset_extractor;
@@ -125,7 +125,7 @@ pub mod risk_engine {
     pub fn set_instrument_type(
         ctx: Context<SetInstrumentTypeAccounts>,
         instrument_index: u8,
-        instrument_type: StoredInstrumentType,
+        instrument_type: InstrumentType,
     ) -> Result<()> {
         let SetInstrumentTypeAccounts {
             protocol, config, ..
@@ -134,7 +134,7 @@ pub mod risk_engine {
 
         require!((instrument_index as usize) < protocol.instruments.len(), Error::MissingInstrumentIndex);
 
-        config.instrument_types[instrument_index as usize] = instrument_type;
+        config.instrument_types[instrument_index as usize] = instrument_type.into();
 
         Ok(())
     }

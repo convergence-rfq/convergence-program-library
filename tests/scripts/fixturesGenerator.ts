@@ -98,20 +98,14 @@ async function main() {
   );
 
   await context.initializeProtocol();
+  // static instrument index values are taken from position in this sequence
+  await SpotInstrument.addInstrument(context);
+  await PsyoptionsEuropeanInstrument.addInstrument(context);
+  await PsyoptionsAmericanInstrumentClass.addInstrument(context);
 
   await executeInParallel(
     async () => {
       await context.riskEngine.initializeDefaultConfig();
-    },
-    // add instruments
-    async () => {
-      await SpotInstrument.addInstrument(context);
-    },
-    async () => {
-      await PsyoptionsEuropeanInstrument.addInstrument(context);
-    },
-    async () => {
-      await PsyoptionsAmericanInstrumentClass.addInstrument(context);
     },
     // initialize and fund collateral accounts
     async () => {

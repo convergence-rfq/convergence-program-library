@@ -56,7 +56,6 @@ import {
 import {
   AuthoritySide,
   Quote,
-  Side,
   FixedSize,
   RiskCategory,
   riskCategoryToObject,
@@ -66,6 +65,7 @@ import {
   OrderType,
   FeeParams,
   toPriceOracle,
+  QuoteSide,
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
@@ -421,7 +421,7 @@ export class Context {
         legData,
         null,
         orderType,
-        quote.toQuoteData(),
+        quote.toQuoteData() as any,
         fixedSize as any,
         activeWindow,
         settlingWindow,
@@ -572,14 +572,9 @@ export class RiskEngine {
       .rpc();
   }
 
-  async setInstrumentType(program: PublicKey, instrumentType: InstrumentType | null) {
-    let idlInstrumentType = null;
-    if (instrumentType !== null) {
-      idlInstrumentType = instrumentTypeToObject(instrumentType);
-    }
-
+  async setInstrumentType(instrumentIndex: number, instrumentType: InstrumentType) {
     await this.program.methods
-      .setInstrumentType(program, idlInstrumentType)
+      .setInstrumentType(instrumentIndex, instrumentTypeToObject(instrumentType))
       .accounts({
         authority: this.context.dao.publicKey,
         protocol: this.context.protocolPda,
@@ -912,14 +907,14 @@ export class Response {
   }
 
   async confirm({
-    side = Side.Bid,
+    side = QuoteSide.Bid,
     legMultiplierBps = null,
   }: {
-    side?: Side;
+    side?: QuoteSide;
     legMultiplierBps?: BN | null;
   } = {}) {
     await this.context.program.methods
-      .confirmResponse(side ?? Side.Bid, legMultiplierBps)
+      .confirmResponse(side ?? QuoteSide.Bid, legMultiplierBps)
       .accounts({
         taker: this.context.taker.publicKey,
         protocol: this.context.protocolPda,

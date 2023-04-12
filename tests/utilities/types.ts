@@ -9,11 +9,18 @@ export const OrderType = {
   TwoWay: { twoWay: {} },
 };
 
-export type Side = { bid: {} } | { ask: {} };
+export type QuoteSide = { bid: {} } | { ask: {} };
 
-export const Side = {
+export const QuoteSide = {
   Bid: { bid: {} },
   Ask: { ask: {} },
+};
+
+export type LegSide = { positive: {} } | { negative: {} };
+
+export const LegSide = {
+  Positive: { positive: {} },
+  Negative: { negative: {} },
 };
 
 export type AuthoritySide = { taker: {} } | { maker: {} };

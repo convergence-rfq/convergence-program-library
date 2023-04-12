@@ -1,10 +1,10 @@
 import { BN, Program, workspace } from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
-import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
+import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AssetIdentifier, AuthoritySide, InstrumentType, Side } from "../types";
+import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { SpotInstrument as SpotInstrumentIdl } from "../../../target/types/spot_instrument";
 
@@ -18,6 +18,8 @@ export function getSpotInstrumentProgram(): Program<SpotInstrumentIdl> {
 }
 
 export class SpotInstrument implements Instrument {
+  static instrumentIndex = 0;
+
   constructor(private context: Context, private mint: Mint) {}
 
   static createForLeg(
@@ -25,11 +27,11 @@ export class SpotInstrument implements Instrument {
     {
       mint = context.assetToken,
       amount = DEFAULT_INSTRUMENT_AMOUNT,
-      side = DEFAULT_INSTRUMENT_SIDE,
+      side = DEFAULT_LEG_SIDE,
     }: {
       mint?: Mint;
       amount?: BN;
-      side?: Side;
+      side?: LegSide;
     } = {}
   ): InstrumentController {
     const annotatedMint: Mint = mint;
@@ -52,7 +54,11 @@ export class SpotInstrument implements Instrument {
   }
 
   static async setRiskEngineInstrumentType(context: Context) {
-    await context.riskEngine.setInstrumentType(getSpotInstrumentProgram().programId, InstrumentType.Spot);
+    await context.riskEngine.setInstrumentType(this.instrumentIndex, InstrumentType.Spot);
+  }
+
+  getInstrumentIndex(): number {
+    return SpotInstrument.instrumentIndex;
   }
 
   serializeInstrumentData(): Buffer {

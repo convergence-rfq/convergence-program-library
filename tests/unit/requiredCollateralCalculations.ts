@@ -14,7 +14,7 @@ import {
 } from "../utilities/helpers";
 import { EuroOptionsFacade, PsyoptionsEuropeanInstrument } from "../utilities/instruments/psyoptionsEuropeanInstrument";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
-import { FixedSize, OrderType, Quote, Side } from "../utilities/types";
+import { FixedSize, LegSide, OrderType, Quote, QuoteSide } from "../utilities/types";
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Required collateral calculation and lock", () => {
@@ -62,7 +62,7 @@ describe("Required collateral calculation and lock", () => {
         SpotInstrument.createForLeg(context, {
           mint: context.assetToken,
           amount: withTokenDecimals(1),
-          side: Side.Bid,
+          side: LegSide.Positive,
         }),
       ],
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
@@ -79,7 +79,7 @@ describe("Required collateral calculation and lock", () => {
         SpotInstrument.createForLeg(context, {
           mint: context.additionalAssetToken,
           amount: withTokenDecimals(20),
-          side: Side.Bid,
+          side: LegSide.Positive,
         }),
       ],
       fixedSize: FixedSize.None,
@@ -99,12 +99,12 @@ describe("Required collateral calculation and lock", () => {
         SpotInstrument.createForLeg(context, {
           mint: context.assetToken,
           amount: withTokenDecimals(1),
-          side: Side.Bid,
+          side: LegSide.Positive,
         }),
         SpotInstrument.createForLeg(context, {
           mint: context.additionalAssetToken,
           amount: withTokenDecimals(200),
-          side: Side.Ask,
+          side: LegSide.Negative,
         }),
       ],
       fixedSize: FixedSize.None,
@@ -115,7 +115,7 @@ describe("Required collateral calculation and lock", () => {
 
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     // confirm multiplier leg multiplier of 1
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(1) });
     let expectedCollateral = withTokenDecimals(1122);
     await measurer.expectChange([
       {
@@ -138,7 +138,12 @@ describe("Required collateral calculation and lock", () => {
 
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
     const rfq = await context.createRfq({
-      legs: [PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, { amount: 10000, side: Side.Bid })], // 1 contract with 4 decimals
+      legs: [
+        PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, {
+          amount: 10000,
+          side: LegSide.Positive,
+        }),
+      ], // 1 contract with 4 decimals
       fixedSize: FixedSize.None,
     });
     const response = await rfq.respond({ bid: Quote.getStandard(withTokenDecimals(200), toLegMultiplier(3)) });
