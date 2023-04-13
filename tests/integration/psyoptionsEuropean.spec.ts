@@ -2,8 +2,6 @@ import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
   attachImprovedLogDisplay,
-  calculateLegsHash,
-  calculateLegsSize,
   runInParallelWithWait,
   toAbsolutePrice,
   TokenChangeMeasurer,
@@ -46,7 +44,7 @@ describe("Psyoptions European instrument integration tests", () => {
     );
 
     // create a two way RFQ specifying 1 option call as a leg
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, {
           amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
@@ -83,7 +81,7 @@ describe("Psyoptions European instrument integration tests", () => {
 
   it("Create two-way RFQ with one euro option leg, respond but maker defaults on settlement", async () => {
     // create a two way RFQ specifying 1 option put as a leg
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
@@ -147,10 +145,9 @@ describe("Psyoptions European instrument integration tests", () => {
         side: LegSide.Positive,
       })
     );
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [legs[0]],
-      legsSize: calculateLegsSize(legs),
-      legsHash: calculateLegsHash(legs, context.program),
+      allLegs: legs,
       finalize: false,
     });
     await rfq.addLegs([...legs.slice(1, 3)], false);

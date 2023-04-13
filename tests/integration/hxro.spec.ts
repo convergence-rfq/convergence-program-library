@@ -1,8 +1,16 @@
-import { Wallet, BN } from "@project-serum/anchor";
-import { PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
+import { BN } from "@project-serum/anchor";
+import { SystemProgram } from "@solana/web3.js";
 import { Context, getContext } from "../utilities/wrappers";
-import { attachImprovedLogDisplay, executeInParallel } from "../utilities/helpers";
+import { attachImprovedLogDisplay } from "../utilities/helpers";
 import dexterity from "@hxronetwork/dexterity-ts";
+import {
+  HxroPrintTradeProvider,
+  HxroProxy,
+  mpgPubkey,
+  productKey,
+} from "../utilities/printTradeProviders/hxroPrintTradeProvider";
+import { AuthoritySide, LegSide } from "../utilities/types";
+import { BITCOIN_BASE_ASSET_INDEX } from "../utilities/constants";
 
 describe("RFQ HXRO instrument integration tests", () => {
   beforeEach(function () {
@@ -10,44 +18,15 @@ describe("RFQ HXRO instrument integration tests", () => {
   });
 
   let context: Context;
-  let trgTakerKey: PublicKey;
-  let trgMakerKey: PublicKey;
-  let trgDaoKey: PublicKey;
-
-  const productKey = new PublicKey("2Ez9E5xTbSH9zJjcHrwH71TAh85XXh2jd7sA5w7HkW2A");
-  const mpgPubkey = new PublicKey("7Z1XJ8cRvVDYDDziL8kZW6W2SbFRoZhzmpeAEBoxwXxa");
+  let hxroProxy: HxroProxy;
 
   before(async () => {
     context = await getContext();
-
-    const createTrg = async (keypair: Keypair) => {
-      const manifest = await dexterity.getManifest(context.provider.connection.rpcEndpoint, true, new Wallet(keypair));
-      return await manifest.createTrg(mpgPubkey);
-    };
-
-    [trgTakerKey, trgMakerKey, trgDaoKey] = await executeInParallel(
-      () => createTrg(context.taker),
-      () => createTrg(context.maker),
-      () => createTrg(context.dao)
-    );
+    hxroProxy = await HxroProxy.create(context);
   });
 
   it("HXRO direct calls work", async () => {
-    const manifest = await dexterity.getManifest(
-      context.provider.connection.rpcEndpoint,
-      true,
-      new Wallet(context.dao)
-    );
-    const dexProgram = manifest.fields.dexProgram;
-    const [mpg, trgTaker, trgMaker] = await executeInParallel(
-      () => manifest.getMPG(mpgPubkey),
-      () => manifest.getTRG(trgTakerKey),
-      () => manifest.getTRG(trgMakerKey)
-    );
-    const [printTrade] = PublicKey.findProgramAddressSync(
-      [Buffer.from("print_trade"), productKey.toBuffer(), trgTakerKey.toBuffer(), trgMakerKey.toBuffer()],
-      dexProgram.programId
-    );
+    const { manifest, dexProgram, printTrade, mpg, trgTaker, trgMaker, trgDao } = hxroProxy.hxroContext;
 
     // {
     //   const trgTaker2 = await manifestTaker.getTRG(trgTakerKey);
@@ -67,9 +46,9 @@ describe("RFQ HXRO instrument integration tests", () => {
       })
       .accounts({
         user: context.taker.publicKey,
-        creator: trgTakerKey,
-        counterparty: trgMakerKey,
-        operator: trgDaoKey,
+        creator: trgTaker.publicKey,
+        counterparty: trgMaker.publicKey,
+        operator: trgDao.publicKey,
         marketProductGroup: mpgPubkey,
         product: productKey,
         printTrade,
@@ -94,9 +73,9 @@ describe("RFQ HXRO instrument integration tests", () => {
       })
       .accounts({
         user: context.maker.publicKey,
-        creator: trgTakerKey,
-        counterparty: trgMakerKey,
-        operator: trgDaoKey,
+        creator: trgTaker.publicKey,
+        counterparty: trgMaker.publicKey,
+        operator: trgDao.publicKey,
         marketProductGroup: mpgPubkey,
         product: productKey,
         printTrade,
@@ -142,20 +121,14 @@ describe("RFQ HXRO instrument integration tests", () => {
   });
 
   it("HXRO through a print trade provider works", async () => {
-    const manifest = await dexterity.getManifest(
-      context.provider.connection.rpcEndpoint,
-      true,
-      new Wallet(context.dao)
-    );
-    const dexProgram = manifest.fields.dexProgram;
-    const [mpg, trgTaker, trgMaker] = await executeInParallel(
-      () => manifest.getMPG(mpgPubkey),
-      () => manifest.getTRGsOfOwner(context.taker.publicKey, mpgPubkey),
-      () => manifest.getTRGsOfOwner(context.maker.publicKey, mpgPubkey)
-    );
-    const [printTrade] = PublicKey.findProgramAddressSync(
-      [Buffer.from("print_trade"), productKey.toBuffer(), trgTakerKey.toBuffer(), trgMakerKey.toBuffer()],
-      dexProgram.programId
-    );
+    const rfq = await context.createPrintTradeRfq({
+      printTradeProvider: new HxroPrintTradeProvider(context, hxroProxy, [
+        { amount: 1_000, amountDecimals: 3, baseAssetIndex: BITCOIN_BASE_ASSET_INDEX, side: LegSide.Positive },
+      ]),
+    });
+    const response = await rfq.respond();
+    await response.confirm();
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker);
+    await response.executePrintTradeSettlement(AuthoritySide.Maker);
   });
 });

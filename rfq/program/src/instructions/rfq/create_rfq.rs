@@ -1,7 +1,7 @@
 use std::mem;
 
 use crate::{
-    common::validate_legs as common_validate_legs,
+    common::{validate_legs as common_validate_legs, validate_settlement_type_metadata},
     errors::ProtocolError,
     interfaces::instrument::validate_quote_instrument_data,
     seeds::{PROTOCOL_SEED, RFQ_SEED},
@@ -54,6 +54,11 @@ fn validate_quote<'a, 'info: 'a>(
     quote_asset: &QuoteAsset,
     is_settled_as_print_trade: bool,
 ) -> Result<()> {
+    validate_settlement_type_metadata(
+        &quote_asset.settlement_type_metadata,
+        is_settled_as_print_trade,
+    )?;
+
     if !is_settled_as_print_trade {
         let instrument_index = quote_asset
             .settlement_type_metadata

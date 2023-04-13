@@ -1,7 +1,7 @@
 import { BN, Program, workspace } from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
-import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
+import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
 import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
@@ -26,7 +26,7 @@ export class SpotInstrument implements Instrument {
     context: Context,
     {
       mint = context.assetToken,
-      amount = DEFAULT_INSTRUMENT_AMOUNT,
+      amount = DEFAULT_LEG_AMOUNT,
       side = DEFAULT_LEG_SIDE,
     }: {
       mint?: Mint;

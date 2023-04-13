@@ -14,21 +14,20 @@ import {
   RISK_ENGINE_CONFIG_SEED,
 } from "./constants";
 import { toLittleEndian } from "./helpers";
-import { AssetIdentifier, assetIdentifierToSeedBytes, FixedSize, OrderType } from "./types";
+import { AssetIdentifier, assetIdentifierToSeedBytes, FixedSize, OrderType, QuoteData } from "./types";
 import { sha256 } from "@noble/hashes/sha256";
-import { InstrumentController } from "./instrument";
 
-export async function getProtocolPda(programId: PublicKey) {
-  const [pda] = await PublicKey.findProgramAddress([Buffer.from(PROTOCOL_SEED)], programId);
+export function getProtocolPda(programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync([Buffer.from(PROTOCOL_SEED)], programId);
   return pda;
 }
 
-export async function getRfqPda(
+export function getRfqPda(
   taker: PublicKey,
   legsHash: Uint8Array,
   printTradeProvider: PublicKey | null,
   orderType: OrderType,
-  quoteAsset: InstrumentController,
+  quoteData: QuoteData,
   fixedSize: FixedSize,
   activeWindow: number,
   settlingWindow: number,
@@ -36,10 +35,10 @@ export async function getRfqPda(
   program: Program<RfqIdl>
 ) {
   const orderTypeBuffer = program.coder.types.encode("OrderType", orderType);
-  const quoteAssetDataSerialized = program.coder.types.encode("QuoteAsset", quoteAsset.toQuoteData());
+  const quoteAssetDataSerialized = program.coder.types.encode("QuoteAsset", quoteData);
   const hashedQuoteAsset = sha256(quoteAssetDataSerialized);
   const fixedSizeSerialized = program.coder.types.encode("FixedSize", fixedSize);
-  const [pda] = await PublicKey.findProgramAddress(
+  const [pda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from(RFQ_SEED),
       taker.toBuffer(),
@@ -57,7 +56,7 @@ export async function getRfqPda(
   return pda;
 }
 
-export async function getResponsePda(
+export function getResponsePda(
   rfq: PublicKey,
   maker: PublicKey,
   programId: PublicKey,
@@ -65,7 +64,7 @@ export async function getResponsePda(
   askBuffer: Buffer,
   pdaDistinguisher: number
 ) {
-  const [pda] = await PublicKey.findProgramAddress(
+  const [pda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from(RESPONSE_SEED),
       rfq.toBuffer(),
@@ -79,55 +78,51 @@ export async function getResponsePda(
   return pda;
 }
 
-export async function getBaseAssetPda(index: number, programId: PublicKey) {
-  const [pda] = await PublicKey.findProgramAddress(
+export function getBaseAssetPda(index: number, programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync(
     [Buffer.from(BASE_ASSET_INFO_SEED), toLittleEndian(index, 2)],
     programId
   );
   return pda;
 }
 
-export async function getMintInfoPda(mintAddress: PublicKey, programId: PublicKey) {
-  const [pda] = await PublicKey.findProgramAddress([Buffer.from(MINT_INFO_SEED), mintAddress.toBuffer()], programId);
+export function getMintInfoPda(mintAddress: PublicKey, programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync([Buffer.from(MINT_INFO_SEED), mintAddress.toBuffer()], programId);
   return pda;
 }
 
-export async function getCollateralTokenPda(user: PublicKey, programId: PublicKey) {
-  const [pda] = await PublicKey.findProgramAddress([Buffer.from(COLLATERAL_TOKEN_SEED), user.toBuffer()], programId);
+export function getCollateralTokenPda(user: PublicKey, programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync([Buffer.from(COLLATERAL_TOKEN_SEED), user.toBuffer()], programId);
   return pda;
 }
 
-export async function getCollateralInfoPda(user: PublicKey, programId: PublicKey) {
-  const [pda] = await PublicKey.findProgramAddress([Buffer.from(COLLATERAL_SEED), user.toBuffer()], programId);
+export function getCollateralInfoPda(user: PublicKey, programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync([Buffer.from(COLLATERAL_SEED), user.toBuffer()], programId);
   return pda;
 }
 
-export async function getQuoteEscrowPda(response: PublicKey, programId: PublicKey) {
-  const [pda] = await PublicKey.findProgramAddress([Buffer.from(QUOTE_ESCROW_SEED), response.toBuffer()], programId);
+export function getQuoteEscrowPda(response: PublicKey, programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync([Buffer.from(QUOTE_ESCROW_SEED), response.toBuffer()], programId);
   return pda;
 }
 
-export async function getInstrumentEscrowPda(
-  response: PublicKey,
-  assetIdentifier: AssetIdentifier,
-  programId: PublicKey
-) {
-  const [pda] = await PublicKey.findProgramAddress(
+export function getInstrumentEscrowPda(response: PublicKey, assetIdentifier: AssetIdentifier, programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync(
     [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), assetIdentifierToSeedBytes(assetIdentifier)],
     programId
   );
   return pda;
 }
 
-export async function getPsyoptionsAmericanEscrowPda(response: PublicKey, legIndex: number, programId: PublicKey) {
-  const [pda] = await PublicKey.findProgramAddress(
+export function getPsyoptionsAmericanEscrowPda(response: PublicKey, legIndex: number, programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync(
     [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
     programId
   );
   return pda;
 }
 
-export async function getRiskEngineConfig(programId: PublicKey) {
-  const [pda] = await PublicKey.findProgramAddress([Buffer.from(RISK_ENGINE_CONFIG_SEED)], programId);
+export function getRiskEngineConfig(programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync([Buffer.from(RISK_ENGINE_CONFIG_SEED)], programId);
   return pda;
 }

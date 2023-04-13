@@ -63,12 +63,14 @@ pub fn create_print_trade<'a, 'info: 'a>(
 }
 
 pub fn settle_print_trade<'a, 'info: 'a>(
+    side: AuthoritySide,
     protocol: &Account<'info, ProtocolState>,
     rfq: &Account<'info, Rfq>,
     response: &Account<'info, Response>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
-    let data = SETTLE_PRINT_TRADE_SELECTOR.to_vec();
+    let mut data = SETTLE_PRINT_TRADE_SELECTOR.to_vec();
+    AnchorSerialize::serialize(&side, &mut data)?;
 
     let print_trade_provider_key = rfq
         .print_trade_provider
@@ -122,7 +124,7 @@ fn call_instrument<'a, 'info: 'a>(
         .ok_or(ProtocolError::NotEnoughAccounts)?;
     require!(
         &program.key() == provider_key,
-        ProtocolError::PassedProgramIdDiffersFromAnInstrument
+        ProtocolError::PassedProgramIdDiffersFromAPrintTradeProvider
     );
 
     let mut protocol_info = protocol.to_account_info();

@@ -2,7 +2,7 @@ import { Program, BN, workspace } from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer, Keypair } from "@solana/web3.js";
 import { instructions, createProgram, getOptionByKey, OptionMarketWithKey } from "@mithraic-labs/psy-american";
-import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
+import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
 import { AuthoritySide, AssetIdentifier, InstrumentType, LegSide } from "../types";
@@ -38,7 +38,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     OptionMarket: AmericanPsyoptions,
     Optiontype: OptionType,
     {
-      amount = DEFAULT_INSTRUMENT_AMOUNT,
+      amount = DEFAULT_LEG_AMOUNT,
       side = DEFAULT_LEG_SIDE,
     }: {
       amount?: BN;

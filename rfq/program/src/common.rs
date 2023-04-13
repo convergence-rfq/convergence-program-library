@@ -124,26 +124,38 @@ fn validate_legs_base_asset<'a, 'info: 'a>(
 
 fn validate_legs_settlement_type(legs: &[Leg], is_settled_as_print_trade: bool) -> Result<()> {
     for leg in legs.iter() {
-        if is_settled_as_print_trade {
-            require!(
-                matches!(
-                    leg.settlement_type_metadata,
-                    SettlementTypeMetadata::PrintTrade { instrument_type: _ }
-                ),
-                ProtocolError::LegSettlementInfoDoesNotMatchRfqType
-            );
-        } else {
-            require!(
-                matches!(
-                    leg.settlement_type_metadata,
-                    SettlementTypeMetadata::Instrument {
-                        instrument_index: _
-                    }
-                ),
-                ProtocolError::LegSettlementInfoDoesNotMatchRfqType
-            );
-        }
+        validate_settlement_type_metadata(
+            &leg.settlement_type_metadata,
+            is_settled_as_print_trade,
+        )?;
     }
+
+    Ok(())
+}
+
+pub fn validate_settlement_type_metadata(
+    value: &SettlementTypeMetadata,
+    is_settled_as_print_trade: bool,
+) -> Result<()> {
+    if is_settled_as_print_trade {
+        require!(
+            matches!(
+                value,
+                SettlementTypeMetadata::PrintTrade { instrument_type: _ }
+            ),
+            ProtocolError::SettlementInfoDoesNotMatchRfqType
+        );
+    } else {
+        require!(
+            matches!(
+                value,
+                SettlementTypeMetadata::Instrument {
+                    instrument_index: _
+                }
+            ),
+            ProtocolError::SettlementInfoDoesNotMatchRfqType
+        );
+    };
 
     Ok(())
 }

@@ -1,7 +1,7 @@
 import { Program, web3, BN, workspace } from "@project-serum/anchor";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
-import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
+import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
 import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
@@ -39,7 +39,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     optionFacade: EuroOptionsFacade,
     optionType: OptionType,
     {
-      amount = DEFAULT_INSTRUMENT_AMOUNT,
+      amount = DEFAULT_LEG_AMOUNT,
       side = DEFAULT_LEG_SIDE,
     }: {
       amount?: BN;

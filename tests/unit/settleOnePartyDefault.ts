@@ -33,7 +33,7 @@ describe("Settle one party default", () => {
 
   it("Taker defaulting transfers the correct amount of fees", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Positive })],
       activeWindow: 2,
       settlingWindow: 1,
@@ -65,7 +65,7 @@ describe("Settle one party default", () => {
 
   it("Maker defaulting transfers the correct amount of fees", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         SpotInstrument.createForLeg(context, {
           mint: context.additionalAssetToken,

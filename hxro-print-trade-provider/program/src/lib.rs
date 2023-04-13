@@ -49,15 +49,15 @@ pub mod hxro_print_trade_provider {
         Ok(())
     }
 
-    pub fn create_print_trade(
-        ctx: Context<CreatePrintTrade>,
+    pub fn create_print_trade<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreatePrintTrade<'info>>,
         authority_side: AuthoritySideDuplicate,
     ) -> Result<()> {
         helpers::create_print_trade(&ctx, authority_side.into())
     }
 
-    pub fn settle_print_trade(
-        ctx: Context<SettlePrintTrade>,
+    pub fn settle_print_trade<'info>(
+        ctx: Context<'_, '_, '_, 'info, SettlePrintTrade<'info>>,
         authority_side: AuthoritySideDuplicate,
     ) -> Result<()> {
         helpers::sign_print_trade(&ctx, authority_side.into())?;
@@ -74,23 +74,6 @@ pub struct ValidateData<'info> {
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Account<'info, Rfq>,
-
-    /// CHECK:
-    pub dex: AccountInfo<'info>,
-    /// CHECK:
-    pub fee_model_program: AccountInfo<'info>,
-    /// CHECK:
-    pub risk_engine_program: AccountInfo<'info>,
-    /// CHECK:
-    pub fee_model_configuration_acct: AccountInfo<'info>,
-    /// CHECK:
-    pub risk_model_configuration_acct: AccountInfo<'info>,
-    /// CHECK:
-    pub fee_output_register: AccountInfo<'info>,
-    /// CHECK:
-    pub risk_output_register: AccountInfo<'info>,
-    /// CHECK:
-    pub risk_and_fee_signer: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]

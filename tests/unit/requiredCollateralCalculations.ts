@@ -35,7 +35,7 @@ describe("Required collateral calculation and lock", () => {
   it("Correct collateral locked for variable size rfq creation", async () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
 
-    await context.createRfq({ fixedSize: FixedSize.None });
+    await context.createEscrowRfq({ fixedSize: FixedSize.None });
 
     await measurer.expectChange([
       { token: "unlockedCollateral", user: taker, delta: DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ.neg() },
@@ -45,7 +45,7 @@ describe("Required collateral calculation and lock", () => {
   it("Correct collateral locked for fixed quote asset size rfq creation", async () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
 
-    await context.createRfq({ fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(5)) });
+    await context.createEscrowRfq({ fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(5)) });
 
     await measurer.expectChange([
       { token: "unlockedCollateral", user: taker, delta: DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ.neg() },
@@ -56,7 +56,7 @@ describe("Required collateral calculation and lock", () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
 
     // 1 bitcoin with price of 20k$
-    await context.createRfq({
+    await context.createEscrowRfq({
       orderType: OrderType.TwoWay,
       legs: [
         SpotInstrument.createForLeg(context, {
@@ -73,7 +73,7 @@ describe("Required collateral calculation and lock", () => {
 
   it("Correct collateral locked for responding to spot rfq", async () => {
     // solana rfq with 20 tokens in the leg
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       orderType: OrderType.TwoWay,
       legs: [
         SpotInstrument.createForLeg(context, {
@@ -93,7 +93,7 @@ describe("Required collateral calculation and lock", () => {
 
   it("Correct additional collateral locked for taker and unlocked for maker on lower confirmation", async () => {
     // bitcoin leg with the size of 1, solana leg with the size of 200
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       orderType: OrderType.TwoWay,
       legs: [
         SpotInstrument.createForLeg(context, {
@@ -137,7 +137,7 @@ describe("Required collateral calculation and lock", () => {
     });
 
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, {
           amount: 10000,

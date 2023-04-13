@@ -42,7 +42,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       [context.taker.publicKey, context.maker.publicKey]
     );
 
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
@@ -86,7 +86,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     );
 
     // Create a two way RFQ specifying 1 option call as a leg
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
@@ -135,7 +135,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOptions(context.taker, new anchor.BN(2));
 
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
@@ -175,7 +175,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     // create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOptions(context.taker, new anchor.BN(2));
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
@@ -217,7 +217,7 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote", options.callMint], [taker, maker]);
 
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
@@ -256,7 +256,7 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote", options.callMint], [taker, maker]);
 
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),

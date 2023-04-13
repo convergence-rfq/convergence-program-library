@@ -61,10 +61,10 @@ export type RiskCategoryInfo = {
 };
 
 export enum InstrumentType {
-  Spot,
-  Option,
-  TermFuture,
-  PerpFuture,
+  Spot = 1,
+  Option = 2,
+  TermFuture = 3,
+  PerpFuture = 4,
 }
 
 export function instrumentTypeToObject(value: InstrumentType) {
@@ -183,3 +183,28 @@ export function toPriceOracle(address: PublicKey) {
     switchboard: { address },
   };
 }
+
+export type LegData = {
+  settlementTypeMetadata: SettlementTypeInfo;
+  baseAssetIndex: BaseAssetIndex;
+  data: Buffer;
+  amount: BN;
+  amountDecimals: number;
+  side: LegSide;
+};
+
+export type QuoteData = {
+  settlementTypeMetadata: SettlementTypeInfo;
+  data: Buffer;
+  decimals: number;
+};
+
+export type BaseAssetIndex = {
+  value: number;
+};
+
+export type SettlementTypeInfo =
+  | {
+      instrument: { instrumentIndex: number };
+    }
+  | { printTrade: { instrumentType: number } };

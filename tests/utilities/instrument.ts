@@ -1,7 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { AccountMeta, PublicKey } from "@solana/web3.js";
-import { getBaseAssetPda } from "./pdas";
-import { AssetIdentifier, LegSide } from "./types";
+import { AssetIdentifier, LegData, LegSide, QuoteData } from "./types";
 import { Response, Rfq } from "./wrappers";
 
 export interface InstrumentData {
@@ -53,7 +52,7 @@ export class InstrumentController {
     return this.legInfo.baseAssetIndex;
   }
 
-  toLegData() {
+  toLegData(): LegData {
     if (this.legInfo === null) {
       throw Error("Instrument is used for quote!");
     }
@@ -68,7 +67,7 @@ export class InstrumentController {
     };
   }
 
-  toQuoteData() {
+  toQuoteData(): QuoteData {
     if (this.legInfo !== null) {
       throw Error("Instrument is used for leg!");
     }
@@ -80,17 +79,8 @@ export class InstrumentController {
     };
   }
 
-  getInstrumendDataSize() {
-    return this.instrument.serializeInstrumentData().length;
-  }
-
   private getProgramAccount() {
     return { pubkey: this.instrument.getProgramId(), isSigner: false, isWritable: false };
-  }
-
-  async getBaseAssetAccount(rfqProgramAddress: PublicKey) {
-    const baseAssetAddress = await getBaseAssetPda(this.getBaseAssetIndex(), rfqProgramAddress);
-    return { pubkey: baseAssetAddress, isSigner: false, isWritable: false };
   }
 
   async getValidationAccounts() {

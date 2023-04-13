@@ -40,6 +40,8 @@ pub enum ProtocolError {
     NotEnoughAccounts,
     #[msg("Passed program id differs from an instrument")]
     PassedProgramIdDiffersFromAnInstrument,
+    #[msg("Passed program id differs from a print trade provider")]
+    PassedProgramIdDiffersFromAPrintTradeProvider,
     #[msg("Rfq is not in required state")]
     RfqIsNotInRequiredState,
     #[msg("Response does not match order type")]
@@ -120,6 +122,6 @@ pub enum ProtocolError {
     InstrumentIsDisabled,
     #[msg("Can't create an rfq using a disabled base asset")]
     BaseAssetIsDisabled,
-    #[msg("Leg settlement type info does not match rfq type`")]
-    LegSettlementInfoDoesNotMatchRfqType,
+    #[msg("Settlement type info does not match rfq type`")]
+    SettlementInfoDoesNotMatchRfqType,
 }

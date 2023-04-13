@@ -66,20 +66,23 @@ import {
   FeeParams,
   toPriceOracle,
   QuoteSide,
+  LegData,
+  QuoteData,
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
 import {
-  calculateLegsHash,
-  calculateLegsSize,
   executeInParallel,
   expandComputeUnits,
+  serializeLegData,
   serializeOptionQuote,
   toApiFeeParams,
+  toBaseAssetAccount,
 } from "./helpers";
 import { loadPubkeyNaming, readKeypair } from "./fixtures";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
 import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmericanInstrument";
+import { HxroPrintTradeProvider } from "./printTradeProviders/hxroPrintTradeProvider";
 
 export class Context {
   public program: Program<RfqIdl>;
@@ -126,7 +129,7 @@ export class Context {
 
   async basicInitialize() {
     this.riskEngine = await RiskEngine.create(this);
-    this.protocolPda = await getProtocolPda(this.program.programId);
+    this.protocolPda = getProtocolPda(this.program.programId);
   }
 
   async initializeFromFixtures() {
@@ -374,15 +377,14 @@ export class Context {
       .rpc();
   }
 
-  async createRfq({
+  async createEscrowRfq({
     legs = [SpotInstrument.createForLeg(this)],
     quote = SpotInstrument.createForQuote(this, this.quoteToken),
     orderType = DEFAULT_ORDER_TYPE,
     fixedSize = FixedSize.None,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
-    legsSize = calculateLegsSize(legs),
-    legsHash = calculateLegsHash(legs, this.program),
+    allLegs = legs,
     finalize = true,
   }: {
     legs?: InstrumentController[];
@@ -391,37 +393,103 @@ export class Context {
     fixedSize?: FixedSize;
     activeWindow?: number;
     settlingWindow?: number;
-    legsSize?: number;
-    legsHash?: Uint8Array;
+    allLegs?: InstrumentController[];
     finalize?: boolean;
   } = {}) {
-    const legData = legs.map((x) => x.toLegData());
     const quoteAccounts = await quote.getValidationAccounts();
-    const baseAssetAccounts = await Promise.all(legs.map((leg) => leg.getBaseAssetAccount(this.program.programId)));
+    const baseAssetIndexes = await legs.map((leg) => leg.getBaseAssetIndex());
+    const baseAssetAccounts = baseAssetIndexes.map((index) => {
+      return {
+        pubkey: getBaseAssetPda(index, this.program.programId),
+        isSigner: false,
+        isWritable: false,
+      };
+    });
     const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
+
+    return await this.createRfqInner(
+      legs.map((x) => x.toLegData()),
+      allLegs.map((x) => x.toLegData()),
+      quote.toQuoteData(),
+      [...quoteAccounts, ...baseAssetAccounts, ...legAccounts],
+      { type: "instrument", legs, quote },
+      orderType,
+      fixedSize,
+      activeWindow,
+      settlingWindow,
+      finalize
+    );
+  }
+
+  async createPrintTradeRfq({
+    printTradeProvider,
+    orderType = DEFAULT_ORDER_TYPE,
+    fixedSize = FixedSize.None,
+    activeWindow = DEFAULT_ACTIVE_WINDOW,
+    settlingWindow = DEFAULT_SETTLING_WINDOW,
+    finalize = true,
+  }: {
+    printTradeProvider: HxroPrintTradeProvider;
+    orderType?: OrderType;
+    fixedSize?: FixedSize;
+    activeWindow?: number;
+    settlingWindow?: number;
+    finalize?: boolean;
+  }) {
+    const baseAssetIndecies = printTradeProvider.getBaseAssetIndexes();
+    const baseAssetAccounts = baseAssetIndecies.map((index) => toBaseAssetAccount(index, this.program));
+
+    return await this.createRfqInner(
+      printTradeProvider.getLegData(),
+      printTradeProvider.getLegData(),
+      printTradeProvider.getQuoteData(),
+      baseAssetAccounts,
+      { type: "printTradeProvider", provider: printTradeProvider },
+      orderType,
+      fixedSize,
+      activeWindow,
+      settlingWindow,
+      finalize
+    );
+  }
+
+  private async createRfqInner(
+    legData: LegData[],
+    allLegData: LegData[],
+    quoteData: QuoteData,
+    accounts: AccountMeta[],
+    rfqContent: RfqContent,
+    orderType: OrderType,
+    fixedSize: FixedSize,
+    activeWindow: number,
+    settlingWindow: number,
+    finalize: boolean
+  ) {
+    const serializedLegData = serializeLegData(allLegData, this.program);
+
     const currentTimestamp = new BN(Math.floor(Date.now() / 1000) - 5); // -5 second because for some reason local validator is late for 1 second
+    const printTradeProvider = rfqContent.type == "printTradeProvider" ? rfqContent.provider.getProgramId() : null;
     const rfq = await getRfqPda(
       this.taker.publicKey,
-      legsHash,
-      null,
+      serializedLegData.hash,
+      printTradeProvider,
       orderType,
-      quote,
+      quoteData,
       fixedSize,
       activeWindow,
       settlingWindow,
       currentTimestamp,
       this.program
     );
-    const rfqObject = new Rfq(this, rfq, quote, legs);
 
     let txConstructor = await this.program.methods
       .createRfq(
-        legsSize,
-        Array.from(legsHash),
+        serializedLegData.data.length,
+        Array.from(serializedLegData.hash),
         legData,
-        null,
+        printTradeProvider,
         orderType,
-        quote.toQuoteData() as any,
+        quoteData as any,
         fixedSize as any,
         activeWindow,
         settlingWindow,
@@ -433,9 +501,11 @@ export class Context {
         rfq,
         systemProgram: SystemProgram.programId,
       })
-      .remainingAccounts([...quoteAccounts, ...baseAssetAccounts, ...legAccounts])
+      .remainingAccounts(accounts)
       .preInstructions([expandComputeUnits])
       .signers([this.taker]);
+
+    const rfqObject = new Rfq(this, rfq, rfqContent);
 
     if (finalize) {
       txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeConstructionInstruction()]);
@@ -749,13 +819,12 @@ export class CollateralMint extends Mint {
   }
 }
 
+type RfqContent =
+  | { type: "instrument"; quote: InstrumentController; legs: InstrumentController[] }
+  | { type: "printTradeProvider"; provider: HxroPrintTradeProvider };
+
 export class Rfq {
-  public constructor(
-    public context: Context,
-    public account: PublicKey,
-    public quote: InstrumentController,
-    public legs: InstrumentController[]
-  ) {}
+  public constructor(public context: Context, public account: PublicKey, public content: RfqContent) {}
 
   async respond({ bid = null, ask = null }: { bid?: Quote | null; ask?: Quote | null } = {}) {
     if (bid === null && ask === null) {
@@ -826,13 +895,15 @@ export class Rfq {
   }
 
   async addLegs(legs: InstrumentController[], finalize = true) {
-    this.legs = this.legs.concat(legs);
+    if (this.content.type != "instrument") {
+      throw Error("Not settled by instruments!");
+    }
+    this.content.legs = this.content.legs.concat(legs);
 
     const legData = legs.map((x) => x.toLegData());
 
-    const baseAssetAccounts = await Promise.all(
-      legs.map((leg) => leg.getBaseAssetAccount(this.context.program.programId))
-    );
+    const baseAssetIndexes = legs.map((leg) => leg.getBaseAssetIndex());
+    const baseAssetAccounts = baseAssetIndexes.map((index) => toBaseAssetAccount(index, this.context.program));
     const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
 
     let txConstructor = this.context.program.methods
@@ -858,18 +929,21 @@ export class Rfq {
     await this.context.provider.sendAndConfirm(transaction, [this.context.taker]);
   }
 
-  async getFinalizeConstructionInstruction() {
+  getFinalizeConstructionInstruction() {
+    const validationAccounts =
+      this.content.type == "printTradeProvider" ? this.content.provider.getValidationAccounts() : [];
+
     return this.context.program.methods
       .finalizeRfqConstruction()
       .accounts({
         taker: this.context.taker.publicKey,
         protocol: this.context.protocolPda,
         rfq: this.account,
-        collateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
-        collateralToken: await getCollateralTokenPda(this.context.taker.publicKey, this.context.program.programId),
+        collateralInfo: getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
+        collateralToken: getCollateralTokenPda(this.context.taker.publicKey, this.context.program.programId),
         riskEngine: this.context.riskEngine.programId,
       })
-      .remainingAccounts(await this.getRiskEngineAccounts())
+      .remainingAccounts([...validationAccounts, ...this.getRiskEngineAccounts()])
       .instruction();
   }
 
@@ -877,17 +951,16 @@ export class Rfq {
     return await this.context.program.account.rfq.fetch(this.account);
   }
 
-  async getRiskEngineAccounts(): Promise<AccountMeta[]> {
+  getRiskEngineAccounts(): AccountMeta[] {
     const config = { pubkey: this.context.riskEngine.configAddress, isSigner: false, isWritable: false };
 
-    let uniqueIndecies = Array.from(new Set(this.legs.map((leg) => leg.getBaseAssetIndex())));
-    const addresses = await Promise.all(
-      uniqueIndecies.map((index) => getBaseAssetPda(index, this.context.program.programId))
-    );
+    const allIndecies =
+      this.content.type == "instrument"
+        ? this.content.legs.map((leg) => leg.getBaseAssetIndex())
+        : this.content.provider.getBaseAssetIndexes();
+    let uniqueIndecies = Array.from(new Set(allIndecies));
+    const baseAssets = uniqueIndecies.map((index) => toBaseAssetAccount(index, this.context.program));
 
-    const baseAssets = addresses.map((address) => {
-      return { pubkey: address, isSigner: false, isWritable: false };
-    });
     const oracles = uniqueIndecies
       .map((index) => this.context.baseAssets[index].oracleAddress)
       .map((address) => {
@@ -931,16 +1004,22 @@ export class Response {
       .rpc();
   }
 
-  async prepareEscrowSettlement(side: AuthoritySide, legAmount = this.rfq.legs.length) {
+  async prepareEscrowSettlement(side: AuthoritySide, legAmount?: number) {
+    if (this.rfq.content.type != "instrument") {
+      throw Error("Not settled by instruments!");
+    }
+
+    const { legs, quote } = this.rfq.content;
+    legAmount = legAmount || legs.length;
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     if (this.firstToPrepare.equals(PublicKey.default)) {
       this.firstToPrepare = caller.publicKey;
     }
-    const quoteAccounts = await this.rfq.quote.getPrepareSettlementAccounts(side, "quote", this.rfq, this);
+    const quoteAccounts = await quote.getPrepareSettlementAccounts(side, "quote", this.rfq, this);
     const legAccounts = await (
       await Promise.all(
-        this.rfq.legs
+        legs
           .slice(0, legAmount)
           .map(async (x, index) => await x.getPrepareSettlementAccounts(side, { legIndex: index }, this.rfq, this))
       )
@@ -961,13 +1040,16 @@ export class Response {
   }
 
   async preparePrintTradeSettlement(side: AuthoritySide) {
+    if (this.rfq.content.type != "printTradeProvider") {
+      throw Error("Not settled by print trade provider!");
+    }
+
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    const accounts = this.rfq.content.provider.getPreparePrintTradeSettlementAccounts(side, this.rfq, this);
 
     if (this.firstToPrepare.equals(PublicKey.default)) {
       this.firstToPrepare = caller.publicKey;
     }
-
-    const quoteAccounts = await this.rfq.quote.getPrepareSettlementAccounts(side, "quote", this.rfq, this);
 
     await this.context.program.methods
       .preparePrintTradeSettlement(side)
@@ -978,16 +1060,20 @@ export class Response {
         response: this.account,
       })
       .signers([caller])
-      .remainingAccounts([...quoteAccounts])
-      .preInstructions([expandComputeUnits])
+      .remainingAccounts(accounts)
       .rpc();
   }
 
   async prepareMoreEscrowLegsSettlement(side: AuthoritySide, from: number, legAmount: number) {
+    if (this.rfq.content.type != "instrument") {
+      throw Error("Not settled by instruments!");
+    }
+
+    const { legs } = this.rfq.content;
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs
+        legs
           .slice(from, from + legAmount)
           .map(
             async (x, index) => await x.getPrepareSettlementAccounts(side, { legIndex: from + index }, this.rfq, this)
@@ -1010,10 +1096,15 @@ export class Response {
   }
 
   async settleEscrow(quoteReceiver: PublicKey, assetReceivers: PublicKey[], alreadySettledLegs = 0) {
-    const quoteAccounts = await this.rfq.quote.getSettleAccounts(quoteReceiver, "quote", this.rfq, this);
+    if (this.rfq.content.type != "instrument") {
+      throw Error("Not settled by instruments!");
+    }
+
+    const { legs, quote } = this.rfq.content;
+    const quoteAccounts = await quote.getSettleAccounts(quoteReceiver, "quote", this.rfq, this);
     const legAccounts = await (
       await Promise.all(
-        this.rfq.legs
+        legs
           .slice(alreadySettledLegs)
           .map(
             async (x, index) =>
@@ -1034,7 +1125,12 @@ export class Response {
       .rpc();
   }
 
-  async executePrintTrade(side: AuthoritySide, accounts: AccountMeta[]) {
+  async executePrintTradeSettlement(side: AuthoritySide) {
+    if (this.rfq.content.type != "printTradeProvider") {
+      throw Error("Not settled by print trade provider!");
+    }
+
+    const accounts = this.rfq.content.provider.getExecutePrintTradeSettlementAccounts(side, this.rfq, this);
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     await this.context.program.methods
@@ -1045,16 +1141,20 @@ export class Response {
         rfq: this.rfq.account,
         response: this.account,
       })
-      .remainingAccounts([...accounts])
+      .remainingAccounts(accounts)
       .preInstructions([expandComputeUnits])
       .signers([caller])
       .rpc();
   }
 
   async partiallySettleEscrowLegs(assetReceivers: PublicKey[], legsToSettle: number, alreadySettledLegs = 0) {
+    if (this.rfq.content.type != "instrument") {
+      throw Error("Not settled by instruments!");
+    }
+
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs
+        this.rfq.content.legs
           .slice(alreadySettledLegs, alreadySettledLegs + legsToSettle)
           .map(
             async (x, index) =>
@@ -1075,11 +1175,17 @@ export class Response {
       .rpc();
   }
 
-  async revertEscrowSettlementPreparation(side: { taker: {} } | { maker: {} }, preparedLegs = this.rfq.legs.length) {
-    const quoteAccounts = await this.rfq.quote.getRevertSettlementPreparationAccounts(side, "quote", this.rfq, this);
+  async revertEscrowSettlementPreparation(side: { taker: {} } | { maker: {} }, preparedLegs?: number) {
+    if (this.rfq.content.type != "instrument") {
+      throw Error("Not settled by instruments!");
+    }
+
+    const { legs, quote } = this.rfq.content;
+    preparedLegs = preparedLegs || legs.length;
+    const quoteAccounts = await quote.getRevertSettlementPreparationAccounts(side, "quote", this.rfq, this);
     const legAccounts = await (
       await Promise.all(
-        this.rfq.legs
+        legs
           .slice(0, preparedLegs)
           .map(
             async (x, index) =>
@@ -1104,17 +1210,24 @@ export class Response {
   async partlyRevertEscrowSettlementPreparation(
     side: { taker: {} } | { maker: {} },
     legAmount: number,
-    preparedLegs = this.rfq.legs.length
+    preparedLegs?: number
   ) {
+    if (this.rfq.content.type != "instrument") {
+      throw Error("Not settled by instruments!");
+    }
+
+    const { legs } = this.rfq.content;
+    const _preparedLegs = preparedLegs || legs.length;
+
     const remainingAccounts = await (
       await Promise.all(
-        this.rfq.legs
-          .slice(preparedLegs - legAmount, preparedLegs)
+        legs
+          .slice(_preparedLegs - legAmount, preparedLegs)
           .map(
             async (x, index) =>
               await x.getRevertSettlementPreparationAccounts(
                 side,
-                { legIndex: preparedLegs - legAmount + index },
+                { legIndex: _preparedLegs - legAmount + index },
                 this.rfq,
                 this
               )
@@ -1210,13 +1323,20 @@ export class Response {
       .rpc();
   }
 
-  async cleanUp(preparedLegs = this.rfq.legs.length) {
+  async cleanUp(preparedLegs?: number) {
+    if (this.rfq.content.type != "instrument") {
+      throw Error("Not settled by instruments!");
+    }
+
+    const { legs, quote } = this.rfq.content;
+    preparedLegs = preparedLegs || legs.length;
+
     let remainingAccounts: AccountMeta[] = [];
     if (this.firstToPrepare) {
-      const quoteAccounts = await this.rfq.quote.getCleanUpAccounts("quote", this.rfq, this);
+      const quoteAccounts = await quote.getCleanUpAccounts("quote", this.rfq, this);
       const legAccounts = await (
         await Promise.all(
-          this.rfq.legs
+          legs
             .slice(0, preparedLegs)
             .map(async (x, index) => await x.getCleanUpAccounts({ legIndex: index }, this.rfq, this))
         )
@@ -1238,16 +1358,23 @@ export class Response {
       .rpc();
   }
 
-  async cleanUpEscrowLegs(legAmount: number, preparedLegs = this.rfq.legs.length) {
+  async cleanUpEscrowLegs(legAmount: number, preparedLegs?: number) {
+    if (this.rfq.content.type != "instrument") {
+      throw Error("Not settled by instruments!");
+    }
+
+    const { legs } = this.rfq.content;
+    const _preparedLegs = preparedLegs || legs.length;
+
     let remainingAccounts: AccountMeta[] = [];
     if (this.firstToPrepare) {
       remainingAccounts = await (
         await Promise.all(
-          this.rfq.legs
-            .slice(preparedLegs - legAmount, preparedLegs)
+          legs
+            .slice(_preparedLegs - legAmount, preparedLegs)
             .map(
               async (x, index) =>
-                await x.getCleanUpAccounts({ legIndex: preparedLegs - legAmount + index }, this.rfq, this)
+                await x.getCleanUpAccounts({ legIndex: _preparedLegs - legAmount + index }, this.rfq, this)
             )
         )
       ).flat();

@@ -27,6 +27,7 @@ import {
   pubkeyNamingFilePath,
   testsDirectory,
 } from "../utilities/fixtures";
+import { HxroPrintTradeProvider } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 
 const ledgerPath = path.join(".anchor", "test-ledger");
 const buildDirectoryPath = path.join("target", "deploy");
@@ -106,6 +107,9 @@ async function main() {
   await executeInParallel(
     async () => {
       await context.riskEngine.initializeDefaultConfig();
+    },
+    async () => {
+      await HxroPrintTradeProvider.addPrintTradeProvider(context);
     },
     // initialize and fund collateral accounts
     async () => {

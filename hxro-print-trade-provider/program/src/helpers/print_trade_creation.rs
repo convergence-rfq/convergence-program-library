@@ -10,14 +10,14 @@ use crate::{
 use super::conversions::to_hxro_product;
 use super::conversions::to_hxro_side;
 
-pub fn create_print_trade(
-    ctx: &Context<CreatePrintTrade>,
+pub fn create_print_trade<'info>(
+    ctx: &Context<'_, '_, '_, 'info, CreatePrintTrade<'info>>,
     authority_side: AuthoritySide,
 ) -> Result<()> {
     let CreatePrintTrade { rfq, response, .. } = &ctx.accounts;
 
-    let side = to_hxro_side(response);
-    let product = to_hxro_product(rfq, response, authority_side, 0);
+    let side = to_hxro_side(authority_side);
+    let product = to_hxro_product(rfq, response, 0);
     let abs_price = response.get_quote_amount_to_transfer(&rfq);
     let price = dex_cpi::typedefs::Fractional {
         m: abs_price as i64,
@@ -46,7 +46,7 @@ pub fn create_print_trade(
 
     let context = CpiContext {
         accounts,
-        remaining_accounts: vec![],
+        remaining_accounts: ctx.remaining_accounts.to_vec(),
         program: ctx.accounts.dex.to_account_info(),
         signer_seeds: &[],
     };
