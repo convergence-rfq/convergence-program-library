@@ -6,8 +6,8 @@ use crate::SettlePrintTrade;
 
 use crate::{OPERATOR_COUNTERPARTY_FEE_PROPORTION, OPERATOR_CREATOR_FEE_PROPORTION};
 
-use super::conversions::to_hxro_product;
 use super::conversions::to_hxro_side;
+use super::conversions::{to_hxro_price, to_hxro_product};
 
 #[inline(never)]
 pub fn sign_print_trade<'info>(
@@ -18,11 +18,7 @@ pub fn sign_print_trade<'info>(
 
     let side = to_hxro_side(authority_side);
     let product = to_hxro_product(rfq, response, 0);
-    let abs_price = response.get_quote_amount_to_transfer(&rfq);
-    let price = dex_cpi::typedefs::Fractional {
-        m: abs_price as i64,
-        exp: 1, // TODO check why 1?
-    };
+    let price = to_hxro_price(rfq, response);
 
     let params = dex_cpi::typedefs::SignPrintTradeParams {
         product_index: product.product_index,

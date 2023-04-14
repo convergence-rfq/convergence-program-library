@@ -1,13 +1,16 @@
 import { Program, Wallet, workspace, BN } from "@project-serum/anchor";
 import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
-import { Context, Response, Rfq } from "../wrappers";
+import { Context, Mint, Response, Rfq } from "../wrappers";
 import { HxroPrintTradeProvider as HxroPrintTradeProviderIdl } from "../../../target/types/hxro_print_trade_provider";
 import { AuthoritySide, InstrumentType, LegData, LegSide, QuoteData } from "../types";
 import dexterity from "@hxronetwork/dexterity-ts";
 import { executeInParallel } from "../helpers";
+import { getMint } from "@solana/spl-token";
+import { DEFAULT_MINT_DECIMALS } from "../constants";
 
 export const productKey = new PublicKey("2Ez9E5xTbSH9zJjcHrwH71TAh85XXh2jd7sA5w7HkW2A");
 export const mpgPubkey = new PublicKey("7Z1XJ8cRvVDYDDziL8kZW6W2SbFRoZhzmpeAEBoxwXxa");
+export const cashMint = new PublicKey("HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh");
 
 let hxroPrintTradeProviderProgram: Program<HxroPrintTradeProviderIdl> | null = null;
 export function getHxroInstrumentProgram(): Program<HxroPrintTradeProviderIdl> {
@@ -22,7 +25,13 @@ export class HxroPrintTradeProvider {
   constructor(
     private context: Context,
     private proxy: HxroProxy,
-    private legs: { amount: number; amountDecimals: number; side: LegSide; baseAssetIndex: number }[]
+    private legs: {
+      amount: number;
+      amountDecimals: number;
+      side: LegSide;
+      baseAssetIndex: number;
+      productIndex: number;
+    }[]
   ) {}
 
   static async addPrintTradeProvider(context: Context) {
@@ -38,7 +47,7 @@ export class HxroPrintTradeProvider {
       return {
         settlementTypeMetadata: { printTrade: { instrumentType: Number(InstrumentType.Spot) } },
         baseAssetIndex: { value: leg.baseAssetIndex },
-        data: Buffer.from(Uint8Array.from([0])),
+        data: Buffer.from(Uint8Array.from([leg.productIndex])),
         amount: new BN(leg.amount),
         amountDecimals: leg.amountDecimals,
         side: leg.side,
@@ -50,7 +59,7 @@ export class HxroPrintTradeProvider {
     return {
       settlementTypeMetadata: { printTrade: { instrumentType: Number(InstrumentType.Spot) } },
       data: Buffer.from([]),
-      decimals: 9,
+      decimals: DEFAULT_MINT_DECIMALS,
     };
   }
 
@@ -147,8 +156,20 @@ export class HxroProxy {
 
     const createTrg = async (keypair: Keypair) => {
       const manifest = await dexterity.getManifest(context.provider.connection.rpcEndpoint, true, new Wallet(keypair));
-      return await manifest.createTrg(mpgPubkey);
+      const trgKey = await manifest.createTrg(mpgPubkey);
+      const trader = new dexterity.Trader(manifest, trgKey);
+      trader.marketProductGroup = mpgPubkey;
+      trader.mpg = await manifest.getMPG(mpgPubkey);
+      await trader.deposit(dexterity.Fractional.New(10_000_000, 0));
+      return trgKey;
     };
+
+    const mint = await Mint.loadExisting(context, cashMint);
+    await executeInParallel(
+      () => mint.createAssociatedAccountWithTokens(context.taker.publicKey),
+      () => mint.createAssociatedAccountWithTokens(context.maker.publicKey),
+      () => mint.createAssociatedAccountWithTokens(context.dao.publicKey)
+    );
 
     const [trgTakerKey, trgMakerKey, trgDaoKey] = await executeInParallel(
       () => createTrg(context.taker),
@@ -177,5 +198,25 @@ export class HxroProxy {
       printTrade,
       riskAndFeeSigner: dexterity.Manifest.GetRiskAndFeeSigner(mpgPubkey),
     });
+  }
+
+  async getBalance(party: "taker" | "maker" | "dao") {
+    const { manifest, trgTaker, trgMaker, trgDao } = this.hxroContext;
+    let trg;
+    if (party == "taker") {
+      trg = trgTaker;
+    } else if (party == "maker") {
+      trg = trgMaker;
+    } else {
+      trg = trgDao;
+    }
+    const updatedTrg = await manifest.getTRG(trg.publicKey);
+
+    return {
+      positions: updatedTrg.traderPositions.map((x: any) =>
+        dexterity.Fractional.From(x.position).toDecimal()
+      ) as number[],
+      cashBalance: dexterity.Fractional.From(updatedTrg.cashBalance).toDecimal(),
+    };
   }
 }

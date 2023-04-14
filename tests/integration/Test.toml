@@ -177,6 +177,18 @@ address = "7Z1XJ8cRvVDYDDziL8kZW6W2SbFRoZhzmpeAEBoxwXxa"
 filename = "../dependencies/hxro/mpg.json"
 
 [[test.validator.account]]
+address = "EjkxZz61J5AgsocQQzXFaYtikt6MVpM3KE9sJa2dKgXL"
+filename = "../dependencies/hxro/mpg_vault.json"
+
+[[test.validator.account]]
+address = "49kTTFhzbQM6tdyR5GBgietufi48ubExyzMU5ATMBKWV"
+filename = "../dependencies/hxro/mpg_capital_limits.json"
+
+[[test.validator.account]]
+address = "HYuv5qxNmUpAVcm8u2rPCjjL2Sz5KHnVWsm56vYzZtjh"
+filename = "../dependencies/hxro/cash_mint.json"
+
+[[test.validator.account]]
 address = "9zAooyBBRFhNw6Mb1RVu8fkYnfPUmtk5SemYiNQdDkMT"
 filename = "../dependencies/hxro/covariance_matrix.json"
 

@@ -478,7 +478,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await response.cleanUp(legAmount / 2);
   });
 
-  it.only("Create RFQ with a lot of spot legs and default with partial preparation", async () => {
+  it("Create RFQ with a lot of spot legs and default with partial preparation", async () => {
     const legAmount = 8;
     const mints = await Promise.all(
       [...Array(legAmount)].map(async () => {

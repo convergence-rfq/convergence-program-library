@@ -181,9 +181,9 @@ impl Response {
         };
 
         let price_bps = quote.get_price_bps();
-        let positibe_price_bps = price_bps.abs() as u128; // negative price is handled in get_quote_tokens_receiver
+        let positive_price_bps = price_bps.abs() as u128; // negative price is handled in get_quote_tokens_receiver
 
-        let result_with_more_decimals = legs_multiplier_bps as u128 * positibe_price_bps
+        let result_with_more_decimals = legs_multiplier_bps as u128 * positive_price_bps
             / 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS);
 
         let decimals_factor = Quote::LEG_MULTIPLIER_FACTOR;
@@ -456,7 +456,7 @@ pub enum PriceQuote {
 }
 
 impl PriceQuote {
-    const ABSOLUTE_PRICE_DECIMALS: u32 = 9;
+    pub const ABSOLUTE_PRICE_DECIMALS: u32 = 9;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
