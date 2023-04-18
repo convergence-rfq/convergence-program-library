@@ -30,7 +30,7 @@ fn validate(
     ])?;
     if let ResponseState::Defaulted = response_state {
         require!(
-            response.taker_prepared_escrow_legs == 0 && response.maker_prepared_escrow_legs == 0,
+            response.taker_prepared_counter == 0 && response.maker_prepared_counter == 0,
             ProtocolError::PendingPreparations
         );
     }

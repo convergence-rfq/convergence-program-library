@@ -5,7 +5,6 @@ import { HxroPrintTradeProvider as HxroPrintTradeProviderIdl } from "../../../ta
 import { AuthoritySide, InstrumentType, LegData, LegSide, QuoteData } from "../types";
 import dexterity from "@hxronetwork/dexterity-ts";
 import { executeInParallel } from "../helpers";
-import { getMint } from "@solana/spl-token";
 import { DEFAULT_MINT_DECIMALS } from "../constants";
 
 export const productKey = new PublicKey("2Ez9E5xTbSH9zJjcHrwH71TAh85XXh2jd7sA5w7HkW2A");
@@ -72,42 +71,20 @@ export class HxroPrintTradeProvider {
   }
 
   getPreparePrintTradeSettlementAccounts(side: AuthoritySide, rfq: Rfq, response: Response) {
-    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
-    const { trgTaker, trgMaker, trgDao, printTrade, dexProgram } = this.proxy.hxroContext;
-    const { trgCreator, trgCounterparty } =
-      side == AuthoritySide.Taker
-        ? { trgCreator: trgTaker, trgCounterparty: trgMaker }
-        : { trgCreator: trgMaker, trgCounterparty: trgTaker };
-
-    return [
-      { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
-      { pubkey: dexProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: caller.publicKey, isSigner: true, isWritable: true },
-      { pubkey: trgCreator.publicKey, isSigner: false, isWritable: false },
-      { pubkey: trgCounterparty.publicKey, isSigner: false, isWritable: false },
-      { pubkey: trgDao.publicKey, isSigner: false, isWritable: false },
-      { pubkey: mpgPubkey, isSigner: false, isWritable: true },
-      { pubkey: productKey, isSigner: false, isWritable: false },
-      { pubkey: printTrade, isSigner: false, isWritable: true },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    ];
+    return [{ pubkey: this.getProgramId(), isSigner: false, isWritable: false }];
   }
 
-  getExecutePrintTradeSettlementAccounts(side: AuthoritySide, rfq: Rfq, response: Response) {
-    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+  getExecutePrintTradeSettlementAccounts(rfq: Rfq, response: Response) {
     const { trgTaker, trgMaker, trgDao, printTrade, dexProgram, mpg, riskAndFeeSigner, manifest } =
       this.proxy.hxroContext;
-    const { trgCreator, trgCounterparty } =
-      side == AuthoritySide.Taker
-        ? { trgCreator: trgMaker, trgCounterparty: trgTaker }
-        : { trgCreator: trgTaker, trgCounterparty: trgMaker };
 
     return [
       { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
+      { pubkey: this.context.taker.publicKey, isSigner: true, isWritable: true },
+      { pubkey: this.context.maker.publicKey, isSigner: false, isWritable: true },
       { pubkey: dexProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: caller.publicKey, isSigner: true, isWritable: true },
-      { pubkey: trgCreator.publicKey, isSigner: false, isWritable: true },
-      { pubkey: trgCounterparty.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgTaker.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgMaker.publicKey, isSigner: false, isWritable: true },
       { pubkey: trgDao.publicKey, isSigner: false, isWritable: true },
       { pubkey: mpgPubkey, isSigner: false, isWritable: true },
       { pubkey: productKey, isSigner: false, isWritable: false },
@@ -120,10 +97,10 @@ export class HxroPrintTradeProvider {
       { pubkey: mpg.riskModelConfigurationAcct, isSigner: false, isWritable: false },
       { pubkey: mpg.riskOutputRegister, isSigner: false, isWritable: true },
       { pubkey: riskAndFeeSigner, isSigner: false, isWritable: false },
-      { pubkey: trgCreator.feeStateAccount, isSigner: false, isWritable: true },
-      { pubkey: trgCreator.riskStateAccount, isSigner: false, isWritable: true },
-      { pubkey: trgCounterparty.feeStateAccount, isSigner: false, isWritable: true },
-      { pubkey: trgCounterparty.riskStateAccount, isSigner: false, isWritable: true },
+      { pubkey: trgTaker.feeStateAccount, isSigner: false, isWritable: true },
+      { pubkey: trgTaker.riskStateAccount, isSigner: false, isWritable: true },
+      { pubkey: trgMaker.feeStateAccount, isSigner: false, isWritable: true },
+      { pubkey: trgMaker.riskStateAccount, isSigner: false, isWritable: true },
       { pubkey: manifest.getRiskS(mpgPubkey), isSigner: false, isWritable: true },
       { pubkey: manifest.getRiskR(mpgPubkey), isSigner: false, isWritable: true },
       { pubkey: manifest.getMarkPricesAccount(mpgPubkey), isSigner: false, isWritable: true },

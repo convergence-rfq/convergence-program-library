@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use rfq::state::AuthoritySide;
 
-use crate::SettlePrintTrade;
+use crate::SettlePrintTradeAccounts;
 
 use crate::{OPERATOR_COUNTERPARTY_FEE_PROPORTION, OPERATOR_CREATOR_FEE_PROPORTION};
 
@@ -11,12 +11,11 @@ use super::conversions::{to_hxro_price, to_hxro_product};
 
 #[inline(never)]
 pub fn sign_print_trade<'info>(
-    ctx: &Context<'_, '_, '_, 'info, SettlePrintTrade<'info>>,
-    authority_side: AuthoritySide,
+    ctx: &Context<'_, '_, '_, 'info, SettlePrintTradeAccounts<'info>>,
 ) -> Result<()> {
-    let SettlePrintTrade { rfq, response, .. } = &ctx.accounts;
+    let SettlePrintTradeAccounts { rfq, response, .. } = &ctx.accounts;
 
-    let side = to_hxro_side(authority_side);
+    let side = to_hxro_side(AuthoritySide::Maker);
     let product = to_hxro_product(rfq, response, 0);
     let price = to_hxro_price(rfq, response);
 
@@ -30,7 +29,7 @@ pub fn sign_print_trade<'info>(
     };
 
     let accounts = dex_cpi::cpi::accounts::SignPrintTrade {
-        user: ctx.accounts.user.to_account_info(),
+        user: ctx.accounts.maker.to_account_info(),
         creator: ctx.accounts.creator.to_account_info(),
         counterparty: ctx.accounts.counterparty.to_account_info(),
         operator: ctx.accounts.operator.to_account_info(),

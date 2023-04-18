@@ -1,8 +1,8 @@
 use crate::{
     errors::ProtocolError,
+    interfaces::print_trade_provider::prepare_print_trade,
     seeds::PROTOCOL_SEED,
-    state::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq},
-    interfaces::print_trade_provider::create_print_trade,
+    state::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;
 
@@ -37,9 +37,17 @@ fn validate(ctx: &Context<PreparePrintTradeSettlementAccounts>, side: AuthorityS
         ProtocolError::NotAPassedAuthority
     );
 
-    response
-        .get_state(rfq)?
-        .assert_state_in([ResponseState::SettlingPreparations])?;
+    let response_state = response.get_state(rfq)?;
+    match side {
+        AuthoritySide::Taker => response_state.assert_state_in([
+            ResponseState::SettlingPreparations,
+            ResponseState::OnlyMakerPrepared,
+        ])?,
+        AuthoritySide::Maker => response_state.assert_state_in([
+            ResponseState::SettlingPreparations,
+            ResponseState::OnlyTakerPrepared,
+        ])?,
+    };
 
     Ok(())
 }
@@ -59,9 +67,15 @@ pub fn prepare_print_trade_settlement_instruction<'info>(
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    create_print_trade(side, protocol, rfq, response, &mut remaining_accounts)?;
+    prepare_print_trade(side, protocol, rfq, response, &mut remaining_accounts)?;
 
-    response.print_trade_prepared_by = Some(side);
+    *response.get_prepared_counter_mut(side) = 1;
+
+    if response.print_trade_initialized_by.is_none() {
+        response.print_trade_initialized_by = Some(side);
+    } else {
+        response.state = StoredResponseState::ReadyForSettling;
+    }
 
     Ok(())
 }

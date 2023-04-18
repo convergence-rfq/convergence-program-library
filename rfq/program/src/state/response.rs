@@ -20,13 +20,15 @@ pub struct Response {
     pub taker_collateral_locked: u64,
     pub state: StoredResponseState,
 
-    pub taker_prepared_escrow_legs: u8,
-    pub maker_prepared_escrow_legs: u8,
+    // counter is an amount of prepared legs for escrow settlement and 1 if prepared for print trade settlement
+    pub taker_prepared_counter: u8,
+    pub maker_prepared_counter: u8,
+
     pub settled_escrow_legs: u8,
 
     pub confirmed: Option<Confirmation>,
     pub defaulting_party: Option<DefaultingParty>,
-    pub print_trade_prepared_by: Option<AuthoritySide>,
+    pub print_trade_initialized_by: Option<AuthoritySide>,
     pub escrow_leg_preparations_initialized_by: Vec<AuthoritySide>,
     pub bid: Option<Quote>,
     pub ask: Option<Quote>,
@@ -293,23 +295,23 @@ impl Response {
 
     pub fn is_prepared(&self, side: AuthoritySide, rfq: &Rfq) -> bool {
         if rfq.is_settled_as_print_trade() {
-            self.print_trade_prepared_by == Some(side)
+            self.get_prepared_counter(side) as usize == 1
         } else {
-            self.get_prepared_legs(side) as usize == rfq.legs.len()
+            self.get_prepared_counter(side) as usize == rfq.legs.len()
         }
     }
 
-    pub fn get_prepared_legs(&self, side: AuthoritySide) -> u8 {
+    pub fn get_prepared_counter(&self, side: AuthoritySide) -> u8 {
         match side {
-            AuthoritySide::Taker => self.taker_prepared_escrow_legs,
-            AuthoritySide::Maker => self.maker_prepared_escrow_legs,
+            AuthoritySide::Taker => self.taker_prepared_counter,
+            AuthoritySide::Maker => self.maker_prepared_counter,
         }
     }
 
-    pub fn get_prepared_legs_mut(&mut self, side: AuthoritySide) -> &mut u8 {
+    pub fn get_prepared_counter_mut(&mut self, side: AuthoritySide) -> &mut u8 {
         match side {
-            AuthoritySide::Taker => &mut self.taker_prepared_escrow_legs,
-            AuthoritySide::Maker => &mut self.maker_prepared_escrow_legs,
+            AuthoritySide::Taker => &mut self.taker_prepared_counter,
+            AuthoritySide::Maker => &mut self.maker_prepared_counter,
         }
     }
 

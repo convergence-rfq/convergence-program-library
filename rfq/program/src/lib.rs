@@ -32,7 +32,6 @@ use instructions::rfq::clean_up_response_escrow_legs::*;
 use instructions::rfq::clean_up_rfq::*;
 use instructions::rfq::confirm_response::*;
 use instructions::rfq::create_rfq::*;
-use instructions::rfq::execute_print_trade_settlement::*;
 use instructions::rfq::finalize_rfq_construction::*;
 use instructions::rfq::partially_settle_escrow_legs::*;
 use instructions::rfq::partly_revert_escrow_settlement_preparation::*;
@@ -43,6 +42,7 @@ use instructions::rfq::respond_to_rfq::*;
 use instructions::rfq::revert_escrow_settlement_preparation::*;
 use instructions::rfq::settle_escrow::*;
 use instructions::rfq::settle_one_party_default::*;
+use instructions::rfq::settle_print_trade::*;
 use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
 use instructions::rfq::unlock_rfq_collateral::*;
@@ -248,11 +248,10 @@ pub mod rfq {
         partially_settle_escrow_legs_instruction(ctx, leg_amount_to_settle)
     }
 
-    pub fn execute_print_trade_settlement<'info>(
-        ctx: Context<'_, '_, '_, 'info, ExecutePrintTradeSettlementAccounts<'info>>,
-        side: AuthoritySide,
+    pub fn settle_print_trade<'info>(
+        ctx: Context<'_, '_, '_, 'info, SettlePrintTradeAccounts<'info>>,
     ) -> Result<()> {
-        execute_print_trade_settlement_instruction(ctx, side)
+        settle_print_trade_instruction(ctx)
     }
 
     pub fn revert_escrow_settlement_preparation<'info>(

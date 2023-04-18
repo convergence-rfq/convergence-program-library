@@ -60,7 +60,7 @@ fn validate(
     };
 
     require!(
-        response.get_prepared_legs(side) == 0,
+        response.get_prepared_counter(side) == 0,
         ProtocolError::AlreadyStartedToPrepare
     );
 

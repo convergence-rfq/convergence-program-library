@@ -1,13 +1,13 @@
 use crate::{
     errors::ProtocolError,
+    interfaces::print_trade_provider::settle_print_trade,
     seeds::PROTOCOL_SEED,
     state::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
-    interfaces::print_trade_provider::clean_up,
 };
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct CleanUpPrintTrade<'info> {
+pub struct SettlePrintTradeAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Box<Account<'info, Rfq>>,
@@ -15,8 +15,8 @@ pub struct CleanUpPrintTrade<'info> {
     pub response: Account<'info, Response>,
 }
 
-fn validate(ctx: &Context<CleanUpPrintTrade>) -> Result<()> {
-    let CleanUpPrintTrade { rfq, response, .. } = &ctx.accounts;
+fn validate(ctx: &Context<SettlePrintTradeAccounts>) -> Result<()> {
+    let SettlePrintTradeAccounts { rfq, response, .. } = &ctx.accounts;
 
     require!(
         rfq.is_settled_as_print_trade(),
@@ -25,38 +25,27 @@ fn validate(ctx: &Context<CleanUpPrintTrade>) -> Result<()> {
 
     response
         .get_state(rfq)?
-        .assert_state_in([ResponseState::Settled, ResponseState::Defaulted])?;
-
-    require!(
-        response.print_trade_prepared_by.is_some(),
-        ProtocolError::NoPrintTradeToCleanUp
-    );
+        .assert_state_in([ResponseState::ReadyForSettling])?;
 
     Ok(())
 }
 
-pub fn clean_up_print_trade_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, CleanUpPrintTrade<'info>>,
+pub fn settle_print_trade_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, SettlePrintTradeAccounts<'info>>,
 ) -> Result<()> {
     validate(&ctx)?;
 
-    let CleanUpPrintTrade {
+    let SettlePrintTradeAccounts {
         protocol,
         rfq,
         response,
         ..
     } = ctx.accounts;
 
-    if response.state != StoredResponseState::Defaulted {
-        response.default_by_time(rfq);
-        response.exit(ctx.program_id)?;
-    }
-
     let mut remaining_accounts = ctx.remaining_accounts.iter();
+    settle_print_trade(protocol, rfq, response, &mut remaining_accounts)?;
 
-    clean_up(protocol, rfq, response, &mut remaining_accounts)?;
-
-    response.print_trade_prepared_by = None;
+    response.state = StoredResponseState::Settled;
 
     Ok(())
 }

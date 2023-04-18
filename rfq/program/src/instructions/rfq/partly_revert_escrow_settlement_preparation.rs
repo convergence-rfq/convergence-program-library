@@ -29,7 +29,7 @@ fn validate(
         .get_state(rfq)?
         .assert_state_in([ResponseState::Defaulted])?;
 
-    let prepared_legs = response.get_prepared_legs(side);
+    let prepared_legs = response.get_prepared_counter(side);
     require!(prepared_legs > 0, ProtocolError::NoPreparationToRevert);
 
     require!(
@@ -60,7 +60,7 @@ pub fn partly_revert_escrow_settlement_preparation_instruction<'info>(
     }
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-    let prepared_legs = response.get_prepared_legs(side);
+    let prepared_legs = response.get_prepared_counter(side);
     let starting_index = prepared_legs - leg_amount_to_revert;
     for leg_index in starting_index..prepared_legs {
         revert_preparation(
@@ -73,7 +73,7 @@ pub fn partly_revert_escrow_settlement_preparation_instruction<'info>(
         )?;
     }
 
-    *response.get_prepared_legs_mut(side) -= leg_amount_to_revert;
+    *response.get_prepared_counter_mut(side) -= leg_amount_to_revert;
 
     Ok(())
 }

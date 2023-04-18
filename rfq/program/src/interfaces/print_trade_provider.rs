@@ -8,17 +8,18 @@ use crate::{
     utils::ToAccountMeta,
 };
 
-const VALIDATE_LEGS_SELECTOR: [u8; 8] = [181, 2, 45, 238, 64, 129, 254, 198];
-const CREATE_PRINT_TRADE_SELECTOR: [u8; 8] = [216, 138, 167, 31, 208, 94, 3, 31];
+const VALIDATE_PRINT_TRADE_SELECTOR: [u8; 8] = [196, 101, 141, 125, 6, 132, 232, 195];
+const PREPARE_PRINT_TRADE_SELECTOR: [u8; 8] = [240, 73, 86, 183, 80, 149, 180, 158];
 const SETTLE_PRINT_TRADE_SELECTOR: [u8; 8] = [188, 110, 242, 145, 117, 203, 30, 239];
-const CLEAN_UP_SELECTOR: [u8; 8] = [8, 182, 195, 138, 85, 137, 221, 250];
+const REVERT_PRINT_TRADE_PREPARATION_SELECTOR: [u8; 8] = [242, 33, 96, 69, 184, 244, 78, 6];
+const CLEAN_UP_PRINT_TRADE_SELECTOR: [u8; 8] = [246, 29, 115, 215, 20, 227, 25, 57];
 
-pub fn validate_print_trade_data<'a, 'info: 'a>(
+pub fn validate_print_trade<'a, 'info: 'a>(
     rfq: &Account<'info, Rfq>,
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
-    let data = VALIDATE_LEGS_SELECTOR.to_vec();
+    let data = VALIDATE_PRINT_TRADE_SELECTOR.to_vec();
 
     let print_trade_provider_key = rfq
         .print_trade_provider
@@ -37,14 +38,14 @@ pub fn validate_print_trade_data<'a, 'info: 'a>(
     )
 }
 
-pub fn create_print_trade<'a, 'info: 'a>(
+pub fn prepare_print_trade<'a, 'info: 'a>(
     side: AuthoritySide,
     protocol: &Account<'info, ProtocolState>,
     rfq: &Account<'info, Rfq>,
     response: &Account<'info, Response>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
-    let mut data = CREATE_PRINT_TRADE_SELECTOR.to_vec();
+    let mut data = PREPARE_PRINT_TRADE_SELECTOR.to_vec();
     AnchorSerialize::serialize(&side, &mut data)?;
 
     let print_trade_provider_key = rfq
@@ -63,13 +64,36 @@ pub fn create_print_trade<'a, 'info: 'a>(
 }
 
 pub fn settle_print_trade<'a, 'info: 'a>(
+    protocol: &Account<'info, ProtocolState>,
+    rfq: &Account<'info, Rfq>,
+    response: &Account<'info, Response>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
+    let data = SETTLE_PRINT_TRADE_SELECTOR.to_vec();
+
+    let print_trade_provider_key = rfq
+        .print_trade_provider
+        .ok_or(error!(ProtocolError::NoPrintTradeProvider))?;
+
+    call_instrument(
+        data,
+        protocol,
+        &print_trade_provider_key,
+        None,
+        Some(rfq),
+        Some(response),
+        remaining_accounts,
+    )
+}
+
+pub fn revert_print_trade_preparation<'a, 'info: 'a>(
     side: AuthoritySide,
     protocol: &Account<'info, ProtocolState>,
     rfq: &Account<'info, Rfq>,
     response: &Account<'info, Response>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
-    let mut data = SETTLE_PRINT_TRADE_SELECTOR.to_vec();
+    let mut data = REVERT_PRINT_TRADE_PREPARATION_SELECTOR.to_vec();
     AnchorSerialize::serialize(&side, &mut data)?;
 
     let print_trade_provider_key = rfq
@@ -87,13 +111,13 @@ pub fn settle_print_trade<'a, 'info: 'a>(
     )
 }
 
-pub fn clean_up<'a, 'info: 'a>(
+pub fn clean_up_print_trade<'a, 'info: 'a>(
     protocol: &Account<'info, ProtocolState>,
     rfq: &Account<'info, Rfq>,
     response: &Account<'info, Response>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
-    let data = CLEAN_UP_SELECTOR.to_vec();
+    let data = CLEAN_UP_PRINT_TRADE_SELECTOR.to_vec();
 
     let print_trade_provider_key = rfq
         .print_trade_provider

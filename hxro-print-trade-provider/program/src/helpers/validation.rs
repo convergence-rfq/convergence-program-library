@@ -3,9 +3,12 @@ use anchor_lang::prelude::*;
 
 use super::super::errors::HxroError;
 use super::super::state::ParsedLegData;
-use super::super::ValidateData;
+use super::super::ValidatePrintTradeAccounts;
 
-pub fn validate_leg_data(_ctx: &Context<ValidateData>, instrument_data: &Vec<u8>) -> Result<()> {
+pub fn validate_leg_data(
+    _ctx: &Context<ValidatePrintTradeAccounts>,
+    instrument_data: &Vec<u8>,
+) -> Result<()> {
     let ParsedLegData { product_index: _ } = AnchorDeserialize::try_from_slice(instrument_data)?;
     require!(
         instrument_data.len() as usize == std::mem::size_of::<ParsedLegData>(),
@@ -45,7 +48,10 @@ pub fn validate_leg_data(_ctx: &Context<ValidateData>, instrument_data: &Vec<u8>
     Ok(())
 }
 
-pub fn validate_quote_data(_ctx: &Context<ValidateData>, instrument_data: &Vec<u8>) -> Result<()> {
+pub fn validate_quote_data(
+    _ctx: &Context<ValidatePrintTradeAccounts>,
+    instrument_data: &Vec<u8>,
+) -> Result<()> {
     let ParsedQuoteData {} = AnchorDeserialize::try_from_slice(instrument_data)?;
 
     Ok(())

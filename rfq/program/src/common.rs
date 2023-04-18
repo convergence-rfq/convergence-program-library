@@ -67,10 +67,10 @@ pub fn update_state_after_escrow_preparation(
     rfq: &mut Rfq,
     response: &mut Response,
 ) {
-    let state_legs_prepared = response.get_prepared_legs_mut(side);
+    let state_legs_prepared = response.get_prepared_counter_mut(side);
     *state_legs_prepared += legs_prepared;
 
-    let state_legs_prepared = response.get_prepared_legs(side);
+    let state_legs_prepared = response.get_prepared_counter(side);
     if state_legs_prepared > response.escrow_leg_preparations_initialized_by.len() as u8 {
         let additional_entries =
             state_legs_prepared - response.escrow_leg_preparations_initialized_by.len() as u8;

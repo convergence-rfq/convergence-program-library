@@ -1,16 +1,13 @@
 use crate::{
     errors::ProtocolError,
-    interfaces::instrument::revert_preparation,
+    interfaces::print_trade_provider::revert_print_trade_preparation,
     seeds::PROTOCOL_SEED,
-    state::{
-        AssetIdentifier, AuthoritySide, ProtocolState, Response, ResponseState, Rfq,
-        StoredResponseState,
-    },
+    state::{AuthoritySide, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct RevertEscrowSettlementPreparationAccounts<'info> {
+pub struct RevertPrintTradeSettlementPreparationAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Box<Account<'info, Rfq>>,
@@ -19,13 +16,13 @@ pub struct RevertEscrowSettlementPreparationAccounts<'info> {
 }
 
 fn validate(
-    ctx: &Context<RevertEscrowSettlementPreparationAccounts>,
+    ctx: &Context<RevertPrintTradeSettlementPreparationAccounts>,
     side: AuthoritySide,
 ) -> Result<()> {
-    let RevertEscrowSettlementPreparationAccounts { rfq, response, .. } = &ctx.accounts;
+    let RevertPrintTradeSettlementPreparationAccounts { rfq, response, .. } = &ctx.accounts;
 
     require!(
-        !rfq.is_settled_as_print_trade(),
+        rfq.is_settled_as_print_trade(),
         ProtocolError::InvalidSettlingFlow
     );
 
@@ -41,13 +38,13 @@ fn validate(
     Ok(())
 }
 
-pub fn revert_escrow_settlement_preparation_instruction<'info>(
-    ctx: Context<'_, '_, '_, 'info, RevertEscrowSettlementPreparationAccounts<'info>>,
+pub fn revert_print_trade_settlement_preparation_instruction<'info>(
+    ctx: Context<'_, '_, '_, 'info, RevertPrintTradeSettlementPreparationAccounts<'info>>,
     side: AuthoritySide,
 ) -> Result<()> {
     validate(&ctx, side)?;
 
-    let RevertEscrowSettlementPreparationAccounts {
+    let RevertPrintTradeSettlementPreparationAccounts {
         protocol,
         rfq,
         response,
@@ -59,27 +56,8 @@ pub fn revert_escrow_settlement_preparation_instruction<'info>(
         response.exit(ctx.program_id)?;
     }
 
-    let prepared_legs = response.get_prepared_counter(side);
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-    for leg_index in 0..prepared_legs {
-        revert_preparation(
-            AssetIdentifier::Leg { leg_index },
-            side,
-            protocol,
-            rfq,
-            response,
-            &mut remaining_accounts,
-        )?;
-    }
-
-    revert_preparation(
-        AssetIdentifier::Quote,
-        side,
-        protocol,
-        rfq,
-        response,
-        &mut remaining_accounts,
-    )?;
+    revert_print_trade_preparation(side, protocol, rfq, response, &mut remaining_accounts)?;
 
     *response.get_prepared_counter_mut(side) = 0;
 

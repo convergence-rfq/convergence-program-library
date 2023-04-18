@@ -1125,25 +1125,23 @@ export class Response {
       .rpc();
   }
 
-  async executePrintTradeSettlement(side: AuthoritySide) {
+  async settlePrintTrade() {
     if (this.rfq.content.type != "printTradeProvider") {
       throw Error("Not settled by print trade provider!");
     }
 
-    const accounts = this.rfq.content.provider.getExecutePrintTradeSettlementAccounts(side, this.rfq, this);
-    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    const accounts = this.rfq.content.provider.getExecutePrintTradeSettlementAccounts(this.rfq, this);
 
     await this.context.program.methods
-      .executePrintTradeSettlement(side)
+      .settlePrintTrade()
       .accounts({
-        caller: caller.publicKey,
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,
         response: this.account,
       })
       .remainingAccounts(accounts)
       .preInstructions([expandComputeUnits])
-      .signers([caller])
+      .signers([this.context.taker])
       .rpc();
   }
 

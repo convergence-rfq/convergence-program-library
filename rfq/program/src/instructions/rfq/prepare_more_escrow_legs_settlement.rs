@@ -41,7 +41,7 @@ fn validate(
         ProtocolError::NotAPassedAuthority
     );
 
-    let legs_left_to_prepare = rfq.legs.len() - response.get_prepared_legs(side) as usize;
+    let legs_left_to_prepare = rfq.legs.len() - response.get_prepared_counter(side) as usize;
     require!(
         leg_amount_to_prepare > 0 && leg_amount_to_prepare as usize <= legs_left_to_prepare,
         ProtocolError::InvalidSpecifiedLegAmount
@@ -60,7 +60,7 @@ fn validate(
     };
 
     require!(
-        response.get_prepared_legs(side) > 0,
+        response.get_prepared_counter(side) > 0,
         ProtocolError::HaveNotStartedToPrepare
     );
 
@@ -83,7 +83,7 @@ pub fn prepare_more_escrow_legs_settlement_instruction<'info>(
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    let start_index = response.get_prepared_legs(side);
+    let start_index = response.get_prepared_counter(side);
     for leg_index in start_index..(start_index + leg_amount_to_prepare) {
         prepare_to_settle(
             AssetIdentifier::Leg { leg_index },
