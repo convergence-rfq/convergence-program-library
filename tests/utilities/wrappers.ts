@@ -227,9 +227,9 @@ export class Context {
       .rpc();
   }
 
-  async addPrintTradeProvider(programId: PublicKey, validateDataAccounts: number) {
+  async addPrintTradeProvider(programId: PublicKey, settlementCanExpire: boolean, validateDataAccounts: number) {
     await this.program.methods
-      .addPrintTradeProvider(validateDataAccounts)
+      .addPrintTradeProvider(settlementCanExpire, validateDataAccounts)
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -1142,6 +1142,18 @@ export class Response {
       .remainingAccounts(accounts)
       .preInstructions([expandComputeUnits])
       .signers([this.context.taker])
+      .rpc();
+  }
+
+  async expireSettlement({ accountOverrides = {} }: { accountOverrides?: { [id: string]: PublicKey } } = {}) {
+    await this.context.program.methods
+      .expireSettlement()
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+        ...accountOverrides,
+      })
       .rpc();
   }
 

@@ -6,6 +6,7 @@ pub mod clean_up_response_escrow_legs;
 pub mod clean_up_rfq;
 pub mod confirm_response;
 pub mod create_rfq;
+pub mod expire_settlement;
 pub mod finalize_rfq_construction;
 pub mod partially_settle_escrow_legs;
 pub mod partly_revert_escrow_settlement_preparation;

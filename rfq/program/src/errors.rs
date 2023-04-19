@@ -122,6 +122,10 @@ pub enum ProtocolError {
     InstrumentIsDisabled,
     #[msg("Can't create an rfq using a disabled base asset")]
     BaseAssetIsDisabled,
-    #[msg("Settlement type info does not match rfq type`")]
+    #[msg("Settlement type info does not match rfq type")]
     SettlementInfoDoesNotMatchRfqType,
+    #[msg("Settlement expiration is disabled for this print trade provider")]
+    SettlementExpirationIsDisabled,
+    #[msg("Too early for the settlement expiration")]
+    TooEarlyForExpiration,
 }

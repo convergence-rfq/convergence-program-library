@@ -80,6 +80,7 @@ impl Response {
             }
             StoredResponseState::ReadyForSettling => ResponseState::ReadyForSettling,
             StoredResponseState::Settled => ResponseState::Settled,
+            StoredResponseState::SettlementExpired => ResponseState::SettlementExpired,
             StoredResponseState::Defaulted => ResponseState::Defaulted,
         };
         Ok(state)
@@ -341,6 +342,7 @@ pub enum StoredResponseState {
     SettlingPreparations,
     ReadyForSettling,
     Settled,
+    SettlementExpired,
     Defaulted,
 }
 
@@ -354,6 +356,7 @@ pub enum ResponseState {
     OnlyTakerPrepared,
     ReadyForSettling,
     Settled,
+    SettlementExpired,
     Defaulted,
     Expired,
 }

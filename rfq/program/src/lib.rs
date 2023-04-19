@@ -32,6 +32,7 @@ use instructions::rfq::clean_up_response_escrow_legs::*;
 use instructions::rfq::clean_up_rfq::*;
 use instructions::rfq::confirm_response::*;
 use instructions::rfq::create_rfq::*;
+use instructions::rfq::expire_settlement::*;
 use instructions::rfq::finalize_rfq_construction::*;
 use instructions::rfq::partially_settle_escrow_legs::*;
 use instructions::rfq::partly_revert_escrow_settlement_preparation::*;
@@ -95,9 +96,10 @@ pub mod rfq {
 
     pub fn add_print_trade_provider(
         ctx: Context<AddPrintTradeProviderAccounts>,
+        settlement_can_expire: bool,
         validate_data_accounts: u8,
     ) -> Result<()> {
-        add_print_trade_provider_instruction(ctx, validate_data_accounts)
+        add_print_trade_provider_instruction(ctx, settlement_can_expire, validate_data_accounts)
     }
 
     pub fn add_base_asset(
@@ -252,6 +254,10 @@ pub mod rfq {
         ctx: Context<'_, '_, '_, 'info, SettlePrintTradeAccounts<'info>>,
     ) -> Result<()> {
         settle_print_trade_instruction(ctx)
+    }
+
+    pub fn expire_settlement(ctx: Context<ExpireSettlementAccounts>) -> Result<()> {
+        expire_settlement_instruction(ctx)
     }
 
     pub fn revert_escrow_settlement_preparation<'info>(

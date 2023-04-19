@@ -63,8 +63,11 @@ impl Rfq {
     }
 
     pub fn settle_window_ended(&self, current_time: i64) -> bool {
-        current_time
-            >= self.creation_timestamp + self.active_window as i64 + self.settling_window as i64
+        current_time >= self.get_settle_window_end()
+    }
+
+    pub fn get_settle_window_end(&self) -> i64 {
+        self.creation_timestamp + self.active_window as i64 + self.settling_window as i64
     }
 
     pub fn is_fixed_size(&self) -> bool {

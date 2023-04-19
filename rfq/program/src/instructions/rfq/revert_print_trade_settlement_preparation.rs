@@ -28,7 +28,7 @@ fn validate(
 
     response
         .get_state(rfq)?
-        .assert_state_in([ResponseState::Defaulted])?;
+        .assert_state_in([ResponseState::Defaulted, ResponseState::SettlementExpired])?;
 
     require!(
         response.get_prepared_counter(side) > 0,
@@ -51,7 +51,9 @@ pub fn revert_print_trade_settlement_preparation_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    if response.state != StoredResponseState::Defaulted {
+    if response.state != StoredResponseState::SettlementExpired
+        && response.state != StoredResponseState::Defaulted
+    {
         response.default_by_time(rfq);
         response.exit(ctx.program_id)?;
     }

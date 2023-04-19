@@ -5,7 +5,7 @@ import { HxroPrintTradeProvider as HxroPrintTradeProviderIdl } from "../../../ta
 import { AuthoritySide, InstrumentType, LegData, LegSide, QuoteData } from "../types";
 import dexterity from "@hxronetwork/dexterity-ts";
 import { executeInParallel } from "../helpers";
-import { DEFAULT_MINT_DECIMALS } from "../constants";
+import { BITCOIN_BASE_ASSET_INDEX, DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE, DEFAULT_MINT_DECIMALS } from "../constants";
 
 export const productKey = new PublicKey("2Ez9E5xTbSH9zJjcHrwH71TAh85XXh2jd7sA5w7HkW2A");
 export const mpgPubkey = new PublicKey("7Z1XJ8cRvVDYDDziL8kZW6W2SbFRoZhzmpeAEBoxwXxa");
@@ -30,11 +30,19 @@ export class HxroPrintTradeProvider {
       side: LegSide;
       baseAssetIndex: number;
       productIndex: number;
-    }[]
+    }[] = [
+      {
+        amount: DEFAULT_LEG_AMOUNT,
+        amountDecimals: DEFAULT_MINT_DECIMALS,
+        side: DEFAULT_LEG_SIDE,
+        baseAssetIndex: BITCOIN_BASE_ASSET_INDEX,
+        productIndex: 0,
+      },
+    ]
   ) {}
 
   static async addPrintTradeProvider(context: Context) {
-    await context.addPrintTradeProvider(getHxroInstrumentProgram().programId, 0);
+    await context.addPrintTradeProvider(getHxroInstrumentProgram().programId, true, 0);
   }
 
   getProgramId(): PublicKey {
