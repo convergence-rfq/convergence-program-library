@@ -169,20 +169,6 @@ export class Context {
     this.baseAssets[SOLANA_BASE_ASSET_INDEX] = { oracleAddress: SWITCHBOARD_SOL_ORACLE };
   }
 
-  async createPayer() {
-    const keypair = Keypair.generate();
-
-    const signature = await this.provider.connection.requestAirdrop(keypair.publicKey, DEFAULT_SOL_FOR_SIGNERS);
-    const latestBlockHash = await this.provider.connection.getLatestBlockhash();
-    await this.provider.connection.confirmTransaction({
-      blockhash: latestBlockHash.blockhash,
-      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-      signature,
-    });
-
-    return keypair;
-  }
-
   async initializeProtocol({ settleFees = DEFAULT_SETTLE_FEES, defaultFees = DEFAULT_DEFAULT_FEES } = {}) {
     await this.program.methods
       .initializeProtocol(toApiFeeParams(settleFees), toApiFeeParams(defaultFees))
@@ -643,13 +629,14 @@ export class Mint {
     return mint;
   }
 
-  public static async create(context: Context) {
+  public static async create(context: Context, keypair?: Keypair) {
     const token = await createMint(
       context.provider.connection,
       context.dao,
       context.dao.publicKey,
       null,
-      DEFAULT_MINT_DECIMALS
+      DEFAULT_MINT_DECIMALS,
+      keypair
     );
     const mint = new Mint(context, token);
     await executeInParallel(
@@ -711,8 +698,8 @@ export class Mint {
 }
 
 export class CollateralMint extends Mint {
-  public static async create(context: Context) {
-    const mint = await Mint.create(context);
+  public static async create(context: Context, keypair?: Keypair) {
+    const mint = await Mint.create(context, keypair);
     return new CollateralMint(context, mint.publicKey);
   }
 
