@@ -15,6 +15,7 @@ import { PsyoptionsEuropeanInstrument } from "../utilities/instruments/psyoption
 import {
   BITCOIN_BASE_ASSET_INDEX,
   DEFAULT_COLLATERAL_FUNDED,
+  DEFAULT_SOL_FOR_SIGNERS,
   SOLANA_BASE_ASSET_INDEX,
   SWITCHBOARD_BTC_ORACLE,
   SWITCHBOARD_SOL_ORACLE,
@@ -22,9 +23,9 @@ import {
 import { RiskCategory } from "../utilities/types";
 import {
   fixtureAccountsPath,
-  fixtureKeypairsPath,
-  fixturesBasePath,
+  getKeypairPath,
   pubkeyNamingFilePath,
+  readKeypair,
   testsDirectory,
 } from "../utilities/fixtures";
 
@@ -57,17 +58,17 @@ async function main() {
   // create and save payers
   await executeInParallel(
     async () => {
-      const dao = await context.createPayer();
+      const dao = await fundPayer(context.provider.connection, "dao");
       context.dao = dao;
       await savePayer(context, context.dao, "dao");
     },
     async () => {
-      const taker = await context.createPayer();
+      const taker = await fundPayer(context.provider.connection, "taker");
       context.taker = taker;
       await savePayer(context, context.taker, "taker");
     },
     async () => {
-      const maker = await context.createPayer();
+      const maker = await fundPayer(context.provider.connection, "maker");
       context.maker = maker;
       await savePayer(context, context.maker, "maker");
     }
@@ -76,22 +77,22 @@ async function main() {
   // create and save mints and related token accounts
   await executeInParallel(
     async () => {
-      const assetToken = await Mint.create(context);
+      const assetToken = await Mint.create(context, await readOrCreateKeypair("mint-btc"));
       context.assetToken = assetToken;
       await saveMint(context, context.assetToken, "btc");
     },
     async () => {
-      const additionalAssetToken = await Mint.create(context);
+      const additionalAssetToken = await Mint.create(context, await readOrCreateKeypair("mint-sol"));
       context.additionalAssetToken = additionalAssetToken;
       await saveMint(context, context.additionalAssetToken, "sol");
     },
     async () => {
-      const quoteToken = await Mint.create(context);
+      const quoteToken = await Mint.create(context, await readOrCreateKeypair("mint-usd-quote"));
       context.quoteToken = quoteToken;
       await saveMint(context, context.quoteToken, "usd-quote");
     },
     async () => {
-      const collateralToken = await CollateralMint.create(context);
+      const collateralToken = await CollateralMint.create(context, await readOrCreateKeypair("mint-usd-collateral"));
       context.collateralToken = collateralToken;
       await saveMint(context, context.collateralToken, "usd-collateral");
     }
@@ -247,10 +248,38 @@ async function waitForValidator(): Promise<void> {
 }
 
 async function clearFixtures() {
-  await rimraf(fixturesBasePath);
-  await fsPromise.mkdir(fixturesBasePath);
+  await rimraf(fixtureAccountsPath);
   await fsPromise.mkdir(fixtureAccountsPath);
-  await fsPromise.mkdir(fixtureKeypairsPath);
+}
+
+async function fundPayer(connection: Connection, name: string) {
+  const keypair = await readOrCreateKeypair(name);
+
+  const signature = await connection.requestAirdrop(keypair.publicKey, DEFAULT_SOL_FOR_SIGNERS);
+  const latestBlockHash = await connection.getLatestBlockhash();
+  await connection.confirmTransaction({
+    blockhash: latestBlockHash.blockhash,
+    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+    signature,
+  });
+
+  return keypair;
+}
+
+async function readOrCreateKeypair(name: string) {
+  try {
+    return await readKeypair(name);
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      throw error;
+    }
+    const keypair = Keypair.generate();
+
+    const content = JSON.stringify(Array.from(keypair.secretKey));
+    await fsPromise.writeFile(getKeypairPath(name), content);
+
+    return keypair;
+  }
 }
 
 async function saveCollateralPdas(context: Context, owner: PublicKey, ownerName: string) {
@@ -267,10 +296,6 @@ async function saveCollateralPdas(context: Context, owner: PublicKey, ownerName:
 }
 
 async function savePayer(context: Context, keypair: Keypair, name: string) {
-  const content = JSON.stringify(Array.from(keypair.secretKey));
-  const keypairPath = path.join(fixtureKeypairsPath, `${name}.json`);
-  await fsPromise.writeFile(keypairPath, content);
-
   await saveAccountAsFixture(context, keypair.publicKey, `account-${name}`);
 }
 
@@ -290,7 +315,12 @@ async function saveTokenAccount(context: Context, mint: Mint, owner: PublicKey, 
 }
 
 async function savePubkeyNaming() {
-  const content = JSON.stringify(namedPubkeys, null, 2);
+  let sorted: { [pubkey: string]: string } = {};
+  Object.entries(namedPubkeys)
+    .sort((x, y) => x[1].localeCompare(y[1]))
+    .forEach(([key, value]) => (sorted[key] = value));
+
+  const content = JSON.stringify(sorted, null, 2);
   await fsPromise.writeFile(pubkeyNamingFilePath, content);
 }
 
@@ -340,6 +370,7 @@ async function writeFixturesToTestConfigs() {
     const newBlock =
       testFixturesBlockStart +
       savedAccountFixtures
+        .sort((x, y) => x.name.localeCompare(y.name))
         .map(
           ({ pubkey, name }) => `
 [[test.validator.account]]

@@ -9,9 +9,12 @@ export const fixtureAccountsPath = path.join(fixturesBasePath, "accounts");
 export const fixtureKeypairsPath = path.join(fixturesBasePath, "keypairs");
 export const pubkeyNamingFilePath = path.join(fixturesBasePath, "pubkey-naming.json");
 
-export async function readKeypair(fileName: string) {
-  const filePath = path.join(fixtureKeypairsPath, `${fileName}.json`);
-  const content = await fsPromise.readFile(filePath, { encoding: "utf-8" });
+export function getKeypairPath(name: string) {
+  return path.join(fixtureKeypairsPath, `${name}.json`);
+}
+
+export async function readKeypair(name: string) {
+  const content = await fsPromise.readFile(getKeypairPath(name), { encoding: "utf-8" });
   const secretKey: number[] = JSON.parse(content);
   return Keypair.fromSecretKey(Uint8Array.from(secretKey));
 }
