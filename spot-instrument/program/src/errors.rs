@@ -14,8 +14,6 @@ pub enum SpotError {
     BaseAssetDoesNotMatch,
     #[msg("Passed account is not an associated token account of a receiver")]
     InvalidReceiver,
-    #[msg("Passed backup address should be an associated account of protocol owner")]
-    InvalidBackupAddress,
     #[msg("Passed address is not of a party first to prepare for settlement")]
     NotFirstToPrepare,
     #[msg("Mint type does not match. Either stablecoin passed as leg asset or asset with risk passed as quote")]
