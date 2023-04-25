@@ -390,7 +390,7 @@ pub struct InitializeConfigAccounts<'info> {
         bump
     )]
     pub config: AccountLoader<'info, Config>,
-    
+
     pub system_program: Program<'info, System>,
 }
 
@@ -401,7 +401,7 @@ pub struct CloseConfigAccounts<'info> {
     pub protocol: Account<'info, ProtocolState>,
     #[account(
         mut,
-        close = authority,        
+        close = authority,
         seeds = [CONFIG_SEED.as_bytes()],
         bump
     )]
