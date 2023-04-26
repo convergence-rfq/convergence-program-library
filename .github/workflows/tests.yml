@@ -20,12 +20,8 @@ jobs:
           fetch-depth: 0
       - name: Install Rust
         run: curl --proto '=https' -y --tlsv1.2 -sSf https://sh.rustup.rs | sh
-      - name: Install AVM
-        run: cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-      - name: Install latest Anchor
-        run: avm install 0.25.0
-      - name: Use latest Anchor
-        run: avm use 0.25.0
+      - name: Install Anchor
+        run: cargo install --git https://github.com/coral-xyz/anchor --tag v0.26.0 anchor-cli --locked
       - name: Install Solana
         uses: ./.github/actions/install-solana
         with:
