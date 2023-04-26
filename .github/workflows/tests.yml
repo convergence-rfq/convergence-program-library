@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
 
       - name: Cache build artefacts
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2.2.1
         with:
           cache-on-failure: 'true'
 
