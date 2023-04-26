@@ -18,31 +18,42 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Install Rust
-        run: curl --proto '=https' -y --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+      - name: Cache build artefacts
+        uses: Swatinem/rust-cache@v1
+        with:
+          cache-on-failure: 'true'
+
       - name: Install Anchor
-        run: cargo install --git https://github.com/coral-xyz/anchor --tag v0.26.0 anchor-cli --locked
+        run: cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
+
       - name: Install Solana
         uses: ./.github/actions/install-solana
         with:
           solana_version: ${{ matrix.solana }}
+
       - name: Setup Node.js ${{ matrix.node }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
           cache: "yarn"
+
       - name: Check Cargo fmt
         continue-on-error: false
         shell: bash
         run: cargo fmt --check
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
       - name: Lint TypeScript
         continue-on-error: false
         shell: bash
         run: yarn lint:check
+
       - name: Build
         run: anchor build
+
       - name: Run tests
         continue-on-error: false
         shell: bash
