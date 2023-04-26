@@ -57,4 +57,4 @@ jobs:
       - name: Run tests
         continue-on-error: false
         shell: bash
-        run: anchor test
+        run: anchor test --skip-build
