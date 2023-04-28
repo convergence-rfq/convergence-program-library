@@ -21,6 +21,13 @@ spot_instrument = "ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS"
 psyoptions_european_instrument = "Hk3n7BobDvZuf7sVAD68vpth2ziTFqvuytVtiBGmCwes"
 psyoptions_american_instrument = "DgP7BXvyTUzDDWVThy6usX7HZvBF5b6QwHovCz271hAv"
 
+[programs.mainnet]
+rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"
+risk_engine = "7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo"
+spot_instrument = "HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW"
+psyoptions_european_instrument = "HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1"
+psyoptions_american_instrument = "7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR"
+
 [registry]
 url = "https://anchor.projectserum.com"
 
