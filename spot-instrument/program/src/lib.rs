@@ -12,7 +12,7 @@ use rfq::state::{
 mod errors;
 mod state;
 
-declare_id!("ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS");
+declare_id!("HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW");
 
 const ESCROW_SEED: &str = "escrow";
 
@@ -44,7 +44,7 @@ pub mod spot_instrument {
             (None, MintType::Stablecoin) => (),
             (Some(passed_base_asset_index), MintType::AssetWithRisk { base_asset_index }) => {
                 require!(
-                    passed_base_asset_index == base_asset_index.into(),
+                    passed_base_asset_index == u16::from(base_asset_index),
                     SpotError::BaseAssetDoesNotMatch
                 );
             }

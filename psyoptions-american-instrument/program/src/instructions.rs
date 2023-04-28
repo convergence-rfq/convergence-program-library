@@ -1,11 +1,13 @@
+use crate::american_options::OptionMarket;
 use crate::errors;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use errors::PsyoptionsAmericanError;
-use psy_american::OptionMarket;
 use rfq::state::MintInfo;
 use rfq::state::{AssetIdentifier, ProtocolState, Response, Rfq};
+
 const ESCROW_SEED: &str = "escrow";
+
 #[derive(Accounts)]
 pub struct ValidateData<'info> {
     /// protocol provided
@@ -16,6 +18,8 @@ pub struct ValidateData<'info> {
     pub american_meta: Account<'info, OptionMarket>,
     #[account(constraint = american_meta.underlying_asset_mint == mint_info.mint_address @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub mint_info: Account<'info, MintInfo>,
+    #[account(constraint = american_meta.quote_asset_mint == quote_mint.mint_address @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
+    pub quote_mint: Account<'info, MintInfo>,
 }
 
 #[derive(Accounts)]

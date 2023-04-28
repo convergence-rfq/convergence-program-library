@@ -1,32 +1,48 @@
 anchor_version = "0.25.0"
 
 [programs.localnet]
-rfq = "5Mqd2rYZ1YcmZ711H78mTHaevwSCwAf6Qh4Bc8DjZanH"
-risk_engine = "AKHxbHfXzsfzaxadyBGZfttzRKaLJeFnu2yWiAWDyh86"
+rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"
+risk_engine = "7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo"
+spot_instrument = "HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW"
+psyoptions_european_instrument = "HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1"
+psyoptions_american_instrument = "7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR"
+
+[programs.devnet]
+rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"
+risk_engine = "7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo"
+spot_instrument = "HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW"
+psyoptions_european_instrument = "HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1"
+psyoptions_american_instrument = "7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR"
+
+[programs.testnet]
+rfq = "FNqQsjRU3CRx4N4BvMbTxCrCRBkvKyEZC5mDr4HTxnW4"
+risk_engine = "AY9P4T28wvG7zHGvMNmdUAzAdwQFrfyzQRdi8nhH5fpv"
 spot_instrument = "ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS"
 psyoptions_european_instrument = "Hk3n7BobDvZuf7sVAD68vpth2ziTFqvuytVtiBGmCwes"
 psyoptions_american_instrument = "DgP7BXvyTUzDDWVThy6usX7HZvBF5b6QwHovCz271hAv"
 
-[programs.devnet]
-rfq = "5Mqd2rYZ1YcmZ711H78mTHaevwSCwAf6Qh4Bc8DjZanH"
-risk_engine = "AKHxbHfXzsfzaxadyBGZfttzRKaLJeFnu2yWiAWDyh86"
-spot_instrument = "ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS"
-psyoptions_european_instrument = "Hk3n7BobDvZuf7sVAD68vpth2ziTFqvuytVtiBGmCwes"
-psyoptions_american_instrument = "DgP7BXvyTUzDDWVThy6usX7HZvBF5b6QwHovCz271hAv"
+[programs.mainnet]
+rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"
+risk_engine = "7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo"
+spot_instrument = "HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW"
+psyoptions_european_instrument = "HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1"
+psyoptions_american_instrument = "7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
 members = [
-   "rfq/program",
+    "rfq/program",
     "risk-engine/program",
     "spot-instrument/program",
     "psyoptions-american-instrument/program",
-    "psyoptions-european-instrument/program"
+    "psyoptions-european-instrument/program",
 ]
 
+[scripts]
+generate-test-fixtures = "yarn ts-node -T tests/scripts/fixturesGenerator.ts"

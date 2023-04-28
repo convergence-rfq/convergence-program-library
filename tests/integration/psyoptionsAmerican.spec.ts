@@ -1,6 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
+  attachImprovedLogDisplay,
   runInParallelWithWait,
   toAbsolutePrice,
   TokenChangeMeasurer,
@@ -20,18 +21,20 @@ describe("Psyoptions American instrument integration tests", async () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
-  let dao: PublicKey;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();
     taker = context.taker.publicKey;
     maker = context.maker.publicKey;
-    dao = context.dao.publicKey;
   });
 
   it("Create buy RFQ for 1 option", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker);
-    await options.mintPsyOptions(context.maker, new anchor.BN(1), OptionType.CALL, context);
+    await options.mintPsyOptions(context.maker, new anchor.BN(1));
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
@@ -75,7 +78,7 @@ describe("Psyoptions American instrument integration tests", async () => {
 
   it("Create sell RFQ where taker wants 2 options", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
-    await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL, context);
+    await options.mintPsyOptions(context.taker, new anchor.BN(2));
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
       ["asset", "quote", options.callMint],
@@ -130,7 +133,7 @@ describe("Psyoptions American instrument integration tests", async () => {
   it("Create two-way RFQ with one Psyoptions American option leg, respond but maker defaults on settlement", async () => {
     // Create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
-    await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL, context);
+    await options.mintPsyOptions(context.taker, new anchor.BN(2));
 
     const rfq = await context.createRfq({
       activeWindow: 2,
@@ -171,7 +174,7 @@ describe("Psyoptions American instrument integration tests", async () => {
   it("Create two-way RFQ with one Psyoptions American option leg, respond but taker defaults on settlement", async () => {
     // create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
-    await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL, context);
+    await options.mintPsyOptions(context.taker, new anchor.BN(2));
     const rfq = await context.createRfq({
       activeWindow: 2,
       settlingWindow: 1,
@@ -210,7 +213,7 @@ describe("Psyoptions American instrument integration tests", async () => {
 
   it("With fractional leg multiplier, rounds option amount to a bigger amount for a maker at settlement", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
-    await options.mintPsyOptions(context.taker, new anchor.BN(1), OptionType.CALL, context);
+    await options.mintPsyOptions(context.taker, new anchor.BN(1));
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote", options.callMint], [taker, maker]);
 
@@ -249,7 +252,7 @@ describe("Psyoptions American instrument integration tests", async () => {
 
   it("With fractional leg multiplier, rounds option amount to a lower amount for a taker at settlement", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker);
-    await options.mintPsyOptions(context.maker, new anchor.BN(2), OptionType.CALL, context);
+    await options.mintPsyOptions(context.maker, new anchor.BN(2));
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote", options.callMint], [taker, maker]);
 

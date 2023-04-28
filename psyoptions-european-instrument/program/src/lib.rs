@@ -14,7 +14,7 @@ mod errors;
 mod euro_options;
 mod state;
 
-declare_id!("Hk3n7BobDvZuf7sVAD68vpth2ziTFqvuytVtiBGmCwes");
+declare_id!("HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1");
 
 const ESCROW_SEED: &str = "escrow";
 
@@ -63,9 +63,19 @@ pub mod psyoptions_european_instrument {
                 == euro_meta.underlying_amount_per_contract,
             PsyoptionsEuropeanError::PassedUnderlyingAmountPerContractDoesNotMatch
         );
+        require_eq!(
+            option_common_data.underlying_amound_per_contract_decimals,
+            euro_meta.underlying_decimals,
+            PsyoptionsEuropeanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
+        );
         require!(
             option_common_data.strike_price == euro_meta.strike_price,
             PsyoptionsEuropeanError::PassedStrikePriceDoesNotMatch
+        );
+        require_eq!(
+            option_common_data.strike_price_decimals,
+            euro_meta.price_decimals,
+            PsyoptionsEuropeanError::PassedStrikePriceDecimalsDoesNotMatch
         );
         require!(
             option_common_data.expiration_timestamp == euro_meta.expiration,
@@ -81,7 +91,7 @@ pub mod psyoptions_european_instrument {
             (base_asset_index, mint_info.mint_type)
         {
             require!(
-                passed_base_asset_index == base_asset_index.into(),
+                passed_base_asset_index == u16::from(base_asset_index),
                 PsyoptionsEuropeanError::BaseAssetDoesNotMatch
             );
         } else {

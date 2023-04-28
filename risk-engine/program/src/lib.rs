@@ -20,7 +20,7 @@ pub mod scenarios;
 pub mod state;
 pub mod utils;
 
-declare_id!("AKHxbHfXzsfzaxadyBGZfttzRKaLJeFnu2yWiAWDyh86");
+declare_id!("7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo");
 
 pub const CONFIG_SEED: &str = "config";
 
@@ -51,6 +51,10 @@ pub mod risk_engine {
         config.accepted_oracle_confidence_interval_portion =
             accepted_oracle_confidence_interval_portion;
 
+        Ok(())
+    }
+
+    pub fn close_config(_ctx: Context<CloseConfigAccounts>) -> Result<()> {
         Ok(())
     }
 
@@ -375,17 +379,33 @@ fn construct_risk_calculator<'a>(
 
 #[derive(Accounts)]
 pub struct InitializeConfigAccounts<'info> {
-    #[account(mut)]
-    pub signer: Signer<'info>,
+    #[account(mut, constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Account<'info, ProtocolState>,
     #[account(
         init,
-        payer = signer,
+        payer = authority,
         seeds = [CONFIG_SEED.as_bytes()],
         space = Config::get_allocated_size(),
         bump
     )]
     pub config: AccountLoader<'info, Config>,
+
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct CloseConfigAccounts<'info> {
+    #[account(mut, constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Account<'info, ProtocolState>,
+    #[account(
+        mut,
+        close = authority,
+        seeds = [CONFIG_SEED.as_bytes()],
+        bump
+    )]
+    pub config: AccountLoader<'info, Config>,
 }
 
 #[derive(Accounts)]

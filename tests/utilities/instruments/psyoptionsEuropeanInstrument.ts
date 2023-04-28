@@ -1,10 +1,10 @@
 import { Program, web3, BN, workspace } from "@project-serum/anchor";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AssetIdentifier, AuthoritySide, InstrumentType } from "../types";
+import { AssetIdentifier, AuthoritySide, InstrumentType, Side } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { PsyoptionsEuropeanInstrument as PsyoptionsEuropeanInstrumentIdl } from "../../../target/types/psyoptions_european_instrument";
 import { executeInParallel, withTokenDecimals } from "../helpers";
@@ -17,10 +17,10 @@ import {
   programId as euroOptionsProgramId,
   instructions,
 } from "@mithraic-labs/tokenized-euros";
-import { IDL as PseudoPythIdl } from "../../dependencies/pseudo_pyth_idl";
+import { IDL as PseudoPythIdl, Pyth } from "../../dependencies/pseudo_pyth_idl";
 const { createEuroMetaInstruction, initializeAllAccountsInstructions, mintOptions } = instructions;
 
-let psyoptionsEuropeanInstrumentProgram = null;
+let psyoptionsEuropeanInstrumentProgram: Program<PsyoptionsEuropeanInstrumentIdl> | null = null;
 export function getEuroOptionsInstrumentProgram(): Program<PsyoptionsEuropeanInstrumentIdl> {
   if (psyoptionsEuropeanInstrumentProgram === null) {
     psyoptionsEuropeanInstrumentProgram =
@@ -36,19 +36,28 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     context: Context,
     optionFacade: EuroOptionsFacade,
     optionType: OptionType,
-    { amount = DEFAULT_INSTRUMENT_AMOUNT, side = null } = {}
+    {
+      amount = DEFAULT_INSTRUMENT_AMOUNT,
+      side = DEFAULT_INSTRUMENT_SIDE,
+    }: {
+      amount?: BN;
+      side?: Side;
+    } = {}
   ): InstrumentController {
     const instrument = new PsyoptionsEuropeanInstrument(context, optionFacade, optionType);
-    optionFacade.underlyingMint.assertRegistered();
+    optionFacade.underlyingMint.assertRegisteredAsBaseAsset();
     return new InstrumentController(
-      instrument,
-      { amount, side: side ?? DEFAULT_INSTRUMENT_SIDE, baseAssetIndex: optionFacade.underlyingMint.baseAssetIndex },
+      instrument as Instrument,
+      { amount, side, baseAssetIndex: optionFacade.underlyingMint.baseAssetIndex },
       4
     );
   }
 
   static async addInstrument(context: Context) {
     await context.addInstrument(getEuroOptionsInstrumentProgram().programId, false, 2, 7, 3, 3, 4);
+  }
+
+  static async setRiskEngineInstrumentType(context: Context) {
     await context.riskEngine.setInstrumentType(getEuroOptionsInstrumentProgram().programId, InstrumentType.Option);
   }
 
@@ -56,14 +65,18 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     const mint = this.getOptionMint().publicKey.toBytes();
     const meta = this.optionFacade.metaKey.toBytes();
     const underlyingAmountPerContract = this.optionFacade.meta.underlyingAmountPerContract.toBuffer("le", 8);
+    const underlyingAmountPerContractDecimals = this.optionFacade.meta.underlyingDecimals;
     const strikePrice = this.optionFacade.meta.strikePrice.toBuffer("le", 8);
+    const strikePriceDecimals = this.optionFacade.meta.priceDecimals;
     const expirationTimestamp = this.optionFacade.meta.expiration.toBuffer("le", 8);
 
     return Buffer.from(
       new Uint8Array([
         this.optionType == OptionType.CALL ? 0 : 1,
         ...underlyingAmountPerContract,
+        underlyingAmountPerContractDecimals,
         ...strikePrice,
+        strikePriceDecimals,
         ...expirationTimestamp,
         ...mint,
         ...meta,
@@ -76,6 +89,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
   }
 
   async getValidationAccounts() {
+    this.optionFacade.underlyingMint.assertRegistered();
     return [
       { pubkey: this.optionFacade.metaKey, isSigner: false, isWritable: false },
       { pubkey: this.optionFacade.underlyingMint.mintInfoAddress, isSigner: false, isWritable: false },
@@ -93,12 +107,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     return [
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
       {
-        pubkey: await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          this.getOptionMint().publicKey,
-          caller.publicKey
-        ),
+        pubkey: await getAssociatedTokenAddress(this.getOptionMint().publicKey, caller.publicKey),
         isSigner: false,
         isWritable: true,
       },
@@ -185,6 +194,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
 
 export class EuroOptionsFacade {
   private constructor(
+    private context: Context,
     private program: Program<EuroPrimitive>,
     public meta: EuroMeta,
     public metaKey: PublicKey,
@@ -216,7 +226,7 @@ export class EuroOptionsFacade {
     // change signer
     instruction.keys[0] = { pubkey: mintBy.publicKey, isSigner: true, isWritable: false };
     const transaction = new web3.Transaction().add(instruction);
-    await this.program.provider.sendAndConfirm(transaction, [mintBy]);
+    await this.context.provider.sendAndConfirm(transaction, [mintBy]);
   }
 
   public static async initalizeNewOptionMeta(
@@ -249,7 +259,7 @@ export class EuroOptionsFacade {
       stableMint.publicKey,
       oracle,
       expiration,
-      8
+      9
     );
     const {
       instruction: ix,
@@ -258,13 +268,13 @@ export class EuroOptionsFacade {
     } = await createEuroMetaInstruction(
       program,
       underlyingMint.publicKey,
-      8,
+      underlyingMint.decimals,
       stableMint.publicKey,
-      8,
+      stableMint.decimals,
       expiration,
       underlyingPerContract,
       strikePrice,
-      8,
+      9,
       oracle
     );
     const transaction = new web3.Transaction().add(...preparationIxs, ix);
@@ -278,6 +288,7 @@ export class EuroOptionsFacade {
     );
 
     return new EuroOptionsFacade(
+      context,
       program,
       euroMeta,
       euroMetaKey,
@@ -290,7 +301,17 @@ export class EuroOptionsFacade {
     );
   }
 
-  private static createPriceFeed = async ({ oracleProgram, initPrice, confidence, expo = -4 }) => {
+  private static createPriceFeed = async ({
+    oracleProgram,
+    initPrice,
+    confidence,
+    expo = -4,
+  }: {
+    oracleProgram: Program<Pyth>;
+    initPrice: number;
+    confidence?: BN;
+    expo?: BN;
+  }) => {
     const conf = confidence || new BN((initPrice / 10) * 10 ** -expo);
     const collateralTokenFeed = new web3.Account();
     await oracleProgram.rpc.initialize(new BN(initPrice * 10 ** -expo), expo, conf, {
@@ -298,7 +319,7 @@ export class EuroOptionsFacade {
       signers: [collateralTokenFeed],
       instructions: [
         web3.SystemProgram.createAccount({
-          fromPubkey: oracleProgram.provider.publicKey,
+          fromPubkey: oracleProgram.provider.publicKey as PublicKey,
           newAccountPubkey: collateralTokenFeed.publicKey,
           space: 3312,
           lamports: await oracleProgram.provider.connection.getMinimumBalanceForRentExemption(3312),

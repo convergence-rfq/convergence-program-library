@@ -1,28 +1,23 @@
-import { BN, Program } from "@project-serum/anchor";
+import { AnchorError, BN, Program } from "@project-serum/anchor";
 import { sha256 } from "@noble/hashes/sha256";
 import { BigNumber } from "bignumber.js";
-import { PublicKey, ComputeBudgetProgram } from "@solana/web3.js";
+import { PublicKey, ComputeBudgetProgram, SendTransactionError } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
-import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, LEG_MULTIPLIER_DECIMALS } from "./constants";
+import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, FEE_BPS_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
 import { InstrumentController } from "./instrument";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
+import { FeeParams } from "./types";
 
 chai.use(chaiBn(BN));
 
 // This function supresses solana error traces making test output clearer
 export const expectError = async (promise: Promise<any>, errorText: string) => {
-  // Disable error logs to prevent errors from blockchain validator spam
-  const cachedStderrWrite = process.stdout.write;
-  process.stderr.write = () => true;
   try {
     await promise;
     throw new Error(`No error thrown!`);
   } catch (e) {
-    // Restore error logs
-    process.stderr.write = cachedStderrWrite;
-
     if (!e?.message.includes(errorText) && !e?.logs?.some((e: string) => e.includes(errorText))) {
       throw e;
     }
@@ -71,8 +66,6 @@ export function calculateLegsSize(legs: InstrumentController[]) {
 }
 
 export function calculateLegsHash(legs: InstrumentController[], program: Program<RfqIdl>) {
-  let x = program.idl.types[12];
-  let y = x.type;
   const serializedLegsData = legs.map((leg) => program.coder.types.encode("Leg", leg.toLegData()));
   const lengthBuffer = Buffer.alloc(4);
   lengthBuffer.writeInt32LE(legs.length);
@@ -158,6 +151,9 @@ export class TokenChangeMeasurer {
     );
     for (const change of extendedChanges) {
       const snapshot = this.snapshots.find((x) => x.token == change.token && x.user.equals(change.user));
+      if (!snapshot) {
+        throw Error(`Missing snapshot for token ${change.token} and user ${change.user.toString()}`);
+      }
       if (change.precision === undefined) {
         expect(change.delta).to.be.bignumber.equal(
           change.currentBalance.sub(snapshot.balance),
@@ -196,4 +192,67 @@ export function serializeOptionQuote(quote: any | null, program: Program<RfqIdl>
 export function calculateFeesValue(value: BN, fee: number): BN {
   const bignumValue = new BigNumber(value.toString());
   return new BN(bignumValue.multipliedBy(fee).toString());
+}
+
+export function toApiFeeParams(params: FeeParams) {
+  return {
+    takerBps: new BN(params.taker * 10 ** FEE_BPS_DECIMALS),
+    makerBps: new BN(params.maker * 10 ** FEE_BPS_DECIMALS),
+  };
+}
+
+// call this function from mocha beforeAll hook
+export function attachImprovedLogDisplay(mochaContext: Mocha.Context, context: Context) {
+  function customErrorHandler(error: Error) {
+    let parsedError;
+    if (error instanceof AnchorError) {
+      parsedError = {
+        logs: error.logs,
+        message: error.error.errorMessage,
+      };
+    } else if (error instanceof SendTransactionError && error.logs) {
+      parsedError = {
+        logs: error.logs,
+        message: error.message,
+      };
+    }
+
+    if (parsedError) {
+      console.error(`Logs for error "${parsedError.message}"`);
+      for (const log of parsedError.logs) {
+        const modifiedLog = addPubkeyExplanations(context, log);
+        console.error(modifiedLog);
+      }
+    }
+  }
+
+  function wrapTestFunction(fn: Mocha.Func | Mocha.AsyncFunc): Mocha.Func | Mocha.AsyncFunc {
+    return async function (this: Mocha.Context, done) {
+      try {
+        if (fn.length === 1) {
+          // The test function expects a 'done' callback
+          (fn as Mocha.Func).call(this, done);
+        } else {
+          // The test function returns a promise
+          await (fn as Mocha.AsyncFunc).call(this);
+        }
+      } catch (error) {
+        customErrorHandler(error);
+        throw error;
+      }
+    };
+  }
+
+  if (mochaContext.currentTest?.fn) {
+    mochaContext.currentTest.fn = wrapTestFunction(mochaContext.currentTest.fn);
+  }
+}
+
+export function addPubkeyExplanations(context: Context, input: string) {
+  let result = input;
+  for (const [pubkeyString, name] of Object.entries(context.pubkeyToName)) {
+    result = result.replace(new RegExp(pubkeyString, "g"), `${pubkeyString}(${name})`);
+  }
+
+  return result;
 }

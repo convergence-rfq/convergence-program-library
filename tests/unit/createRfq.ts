@@ -1,21 +1,18 @@
 import { BN } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
-import { calculateLegsHash, expectError } from "../utilities/helpers";
+import { attachImprovedLogDisplay, calculateLegsHash, expectError } from "../utilities/helpers";
 import { getSpotInstrumentProgram, SpotInstrument } from "../utilities/instruments/spotInstrument";
 
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Create RFQ", () => {
   let context: Context;
-  let taker: PublicKey;
-  let maker: PublicKey;
-  let dao: PublicKey;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();
-    taker = context.taker.publicKey;
-    maker = context.maker.publicKey;
-    dao = context.dao.publicKey;
   });
 
   it("Cannot create rfq with invalid legs hash", async () => {
@@ -28,14 +25,15 @@ describe("Create RFQ", () => {
   });
 
   it("Cannot create rfq with the disabled base asset", async () => {
-    await context.setBaseAssetEnabledStatus(context.assetToken.baseAssetIndex, false);
+    context.assetToken.assertRegisteredAsBaseAsset();
+    await context.changeBaseAssetParametersStatus(context.assetToken.baseAssetIndex, { enabled: false });
     await expectError(
       context.createRfq({
         legs: [SpotInstrument.createForLeg(context, { mint: context.assetToken, amount: new BN(10) })],
       }),
       "BaseAssetIsDisabled"
     );
-    await context.setBaseAssetEnabledStatus(context.assetToken.baseAssetIndex, true);
+    await context.changeBaseAssetParametersStatus(context.assetToken.baseAssetIndex, { enabled: true });
   });
 
   it("Cannot create rfq with the disabled instrument", async () => {

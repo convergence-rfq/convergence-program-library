@@ -1,17 +1,19 @@
 use anchor_lang::prelude::*;
-mod state;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{close_account, transfer, CloseAccount, Token, TokenAccount, Transfer};
-use state::{AssetIdentifierDuplicate, ParsedLegData};
-mod instructions;
-use instructions::*;
-use state::{AuthoritySideDuplicate, TOKEN_DECIMALS};
-mod errors;
 use errors::PsyoptionsAmericanError;
+use instructions::*;
 use rfq::state::MintType;
 use rfq::state::{AssetIdentifier, AuthoritySide};
+use state::{AssetIdentifierDuplicate, ParsedLegData};
+use state::{AuthoritySideDuplicate, TOKEN_DECIMALS};
 
-declare_id!("DgP7BXvyTUzDDWVThy6usX7HZvBF5b6QwHovCz271hAv");
+mod american_options;
+mod errors;
+mod instructions;
+mod state;
+
+declare_id!("7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR");
 
 const ESCROW_SEED: &str = "escrow";
 #[program]
@@ -28,6 +30,7 @@ pub mod psyoptions_american_instrument {
         let ValidateData {
             american_meta,
             mint_info,
+            quote_mint,
             ..
         } = &ctx.accounts;
 
@@ -55,9 +58,19 @@ pub mod psyoptions_american_instrument {
                 == american_meta.underlying_amount_per_contract,
             PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
         );
+        require_eq!(
+            option_common_data.underlying_amound_per_contract_decimals,
+            mint_info.decimals,
+            PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
+        );
         require!(
             option_common_data.strike_price == american_meta.quote_amount_per_contract,
             PsyoptionsAmericanError::PassedStrikePriceDoesNotMatch
+        );
+        require_eq!(
+            option_common_data.strike_price_decimals,
+            quote_mint.decimals,
+            PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
         );
         require!(
             option_common_data.expiration_timestamp == american_meta.expiration_unix_timestamp,
@@ -73,7 +86,7 @@ pub mod psyoptions_american_instrument {
             (base_asset_index, mint_info.mint_type)
         {
             require!(
-                passed_base_asset_index == base_asset_index.into(),
+                passed_base_asset_index == u16::from(base_asset_index),
                 PsyoptionsAmericanError::BaseAssetDoesNotMatch
             );
         } else {

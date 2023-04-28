@@ -1,6 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { FEE_BPS_DECIMALS } from "./constants";
+
+export type OrderType = { buy: {} } | { sell: {} } | { twoWay: {} };
 
 export const OrderType = {
   Buy: { buy: {} },
@@ -8,10 +9,14 @@ export const OrderType = {
   TwoWay: { twoWay: {} },
 };
 
+export type Side = { bid: {} } | { ask: {} };
+
 export const Side = {
   Bid: { bid: {} },
   Ask: { ask: {} },
 };
+
+export type AuthoritySide = { taker: {} } | { maker: {} };
 
 export const AuthoritySide = {
   Taker: { taker: {} },
@@ -24,6 +29,9 @@ export enum RiskCategory {
   Medium,
   High,
   VeryHigh,
+  Custom1,
+  Custom2,
+  Custom3,
 }
 
 export function riskCategoryToObject(value: RiskCategory) {
@@ -60,8 +68,21 @@ export function instrumentTypeToObject(value: InstrumentType) {
   };
 }
 
+export type Quote =
+  | {
+      standard: {
+        priceQuote: { absolutePrice: { amountBps: BN } };
+        legsMultiplierBps: BN;
+      };
+    }
+  | {
+      fixedSize: {
+        priceQuote: { absolutePrice: { amountBps: BN } };
+      };
+    };
+
 export const Quote = {
-  getStandard: (priceBps: BN, legsMultiplierBps: BN) => {
+  getStandard: (priceBps: BN, legsMultiplierBps: BN): Quote => {
     return {
       standard: {
         priceQuote: {
@@ -73,7 +94,7 @@ export const Quote = {
       },
     };
   },
-  getFixedSize: (priceBps: BN) => {
+  getFixedSize: (priceBps: BN): Quote => {
     return {
       fixedSize: {
         priceQuote: {
@@ -85,6 +106,19 @@ export const Quote = {
     };
   },
 };
+
+export type FixedSize =
+  | { none: { padding: BN } }
+  | {
+      baseAsset: {
+        legsMultiplierBps: BN;
+      };
+    }
+  | {
+      quoteAsset: {
+        quoteAmount: BN;
+      };
+    };
 
 export const FixedSize = {
   None: {
@@ -134,13 +168,11 @@ export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
   }
 }
 
-export function toApiFeeParams(params: { taker: number; maker: number } | null) {
-  if (params === null) {
-    return null;
-  }
+export type FeeParams = { taker: number; maker: number };
 
+export function toPriceOracle(address: PublicKey) {
   return {
-    takerBps: new BN(params.taker * 10 ** FEE_BPS_DECIMALS),
-    makerBps: new BN(params.maker * 10 ** FEE_BPS_DECIMALS),
+    address,
+    switchboard: { address },
   };
 }

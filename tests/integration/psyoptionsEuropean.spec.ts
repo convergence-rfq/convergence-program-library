@@ -1,6 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
+  attachImprovedLogDisplay,
   calculateLegsHash,
   calculateLegsSize,
   runInParallelWithWait,
@@ -19,14 +20,16 @@ describe("Psyoptions European instrument integration tests", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
-  let dao: PublicKey;
   let options: EuroOptionsFacade;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();
     taker = context.taker.publicKey;
     maker = context.maker.publicKey;
-    dao = context.dao.publicKey;
 
     options = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
       underlyingMint: context.assetToken,

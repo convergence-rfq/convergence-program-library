@@ -5,7 +5,13 @@ import {
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
   DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
 } from "../utilities/constants";
-import { toAbsolutePrice, TokenChangeMeasurer, toLegMultiplier, withTokenDecimals } from "../utilities/helpers";
+import {
+  attachImprovedLogDisplay,
+  toAbsolutePrice,
+  TokenChangeMeasurer,
+  toLegMultiplier,
+  withTokenDecimals,
+} from "../utilities/helpers";
 import { EuroOptionsFacade, PsyoptionsEuropeanInstrument } from "../utilities/instruments/psyoptionsEuropeanInstrument";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { FixedSize, OrderType, Quote, Side } from "../utilities/types";
@@ -15,13 +21,15 @@ describe("Required collateral calculation and lock", () => {
   let context: Context;
   let taker: PublicKey;
   let maker: PublicKey;
-  let dao: PublicKey;
+
+  beforeEach(function () {
+    attachImprovedLogDisplay(this, context);
+  });
 
   before(async () => {
     context = await getContext();
     taker = context.taker.publicKey;
     maker = context.maker.publicKey;
-    dao = context.dao.publicKey;
   });
 
   it("Correct collateral locked for variable size rfq creation", async () => {

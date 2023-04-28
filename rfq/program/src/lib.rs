@@ -18,10 +18,10 @@ use instructions::collateral::initialize_collateral::*;
 use instructions::collateral::withdraw_collateral::*;
 use instructions::protocol::add_base_asset::*;
 use instructions::protocol::add_instrument::*;
+use instructions::protocol::change_base_asset_parameters::*;
 use instructions::protocol::change_protocol_fees::*;
 use instructions::protocol::initialize_protocol::*;
 use instructions::protocol::register_mint::*;
-use instructions::protocol::set_base_asset_enabled_status::*;
 use instructions::protocol::set_instrument_enabled_status::*;
 use instructions::rfq::add_legs_to_rfq::*;
 use instructions::rfq::cancel_response::*;
@@ -55,7 +55,7 @@ security_txt! {
     auditors: "None"
 }
 
-declare_id!("5Mqd2rYZ1YcmZ711H78mTHaevwSCwAf6Qh4Bc8DjZanH");
+declare_id!("AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx");
 
 /// Request for quote (RFQ) protocol module.
 #[program]
@@ -108,11 +108,13 @@ pub mod rfq {
         change_protocol_fees_instruction(ctx, settle_fees, default_fees)
     }
 
-    pub fn set_base_asset_enabled_status(
-        ctx: Context<SetBaseAssetEnabledStatusAccounts>,
-        enabled_status_to_set: bool,
+    pub fn change_base_asset_parameters(
+        ctx: Context<ChangeBaseAssetParametersAccounts>,
+        enabled: Option<bool>,
+        risk_category: Option<RiskCategory>,
+        price_oracle: Option<PriceOracle>,
     ) -> Result<()> {
-        set_base_asset_enabled_status_instruction(ctx, enabled_status_to_set)
+        change_base_asset_parameters_instruction(ctx, enabled, risk_category, price_oracle)
     }
 
     pub fn set_instrument_enabled_status(

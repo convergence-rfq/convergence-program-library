@@ -1,6 +1,7 @@
 use std::{collections::HashMap, mem};
 
 use anchor_lang::prelude::*;
+use bytemuck::{Pod, Zeroable};
 use rfq::state::RiskCategory;
 
 use crate::utils::convert_fixed_point_to_f64;
@@ -14,7 +15,7 @@ pub struct Config {
     pub overall_safety_factor: f64,
     pub accepted_oracle_staleness: u64,
     pub accepted_oracle_confidence_interval_portion: f64,
-    pub risk_categories_info: [RiskCategoryInfo; 5],
+    pub risk_categories_info: [RiskCategoryInfo; 8], // 8 - mem::variant_count::<RiskCategory>
     pub instrument_types: [InstrumentInfo; 50], // Embed ProtocolState::MAX_INSTRUMENTS to work around anchor idl generation issue
 }
 
@@ -35,8 +36,8 @@ impl Config {
     }
 }
 
-#[zero_copy]
-#[derive(AnchorSerialize, AnchorDeserialize, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Zeroable, Pod)]
+#[repr(C)]
 pub struct InstrumentInfo {
     pub program: Pubkey,
     pub r#type: InstrumentType,
@@ -80,7 +81,8 @@ impl RiskCategoryInfo {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, Zeroable, Pod)]
+#[repr(C)]
 pub struct Scenario {
     pub base_asset_price_change: f64,
     pub volatility_change: f64,
@@ -97,11 +99,14 @@ impl Scenario {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
 pub enum InstrumentType {
-    Spot,
+    Spot = 0,
     Option,
     TermFuture,
     PerpFuture,
 }
+
+unsafe impl Zeroable for InstrumentType {} // Allows 0 value, so it's okay
+unsafe impl Pod for InstrumentType {} // Does not allow for all bit patterns, but it is okay in our case as only the program can set this byte
 
 impl Default for InstrumentType {
     fn default() -> Self {
@@ -113,23 +118,23 @@ impl Default for InstrumentType {
 pub struct OptionCommonData {
     pub option_type: OptionType,
     pub underlying_amount_per_contract: u64,
+    pub underlying_amound_per_contract_decimals: u8,
     pub strike_price: u64,
+    pub strike_price_decimals: u8,
     pub expiration_timestamp: i64,
 }
 
 impl OptionCommonData {
-    pub const STRIKE_PRICE_DECIMALS: u8 = 9;
-    pub const UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS: u8 = 9;
-    pub const SERIALIZED_SIZE: usize = 1 + 8 + 8 + 8;
+    pub const SERIALIZED_SIZE: usize = 1 + 8 + 1 + 8 + 1 + 8;
 
     pub fn get_strike_price(&self) -> f64 {
-        convert_fixed_point_to_f64(self.strike_price.into(), Self::STRIKE_PRICE_DECIMALS)
+        convert_fixed_point_to_f64(self.strike_price.into(), self.strike_price_decimals)
     }
 
     pub fn get_underlying_amount_per_contract(&self) -> f64 {
         convert_fixed_point_to_f64(
             self.underlying_amount_per_contract.into(),
-            Self::UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS,
+            self.underlying_amound_per_contract_decimals,
         )
     }
 }
@@ -143,16 +148,16 @@ pub enum OptionType {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct FutureCommonData {
     pub underlying_amount_per_contract: u64,
+    pub underlying_amound_per_contract_decimals: u8,
 }
 
 impl FutureCommonData {
-    pub const UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS: u8 = 9;
     pub const SERIALIZED_SIZE: usize = 8;
 
     pub fn get_underlying_amount_per_contract(&self) -> f64 {
         convert_fixed_point_to_f64(
             self.underlying_amount_per_contract.into(),
-            Self::UNDERLYING_AMOUNT_PER_CONTRACT_DECIMALS,
+            self.underlying_amound_per_contract_decimals,
         )
     }
 }

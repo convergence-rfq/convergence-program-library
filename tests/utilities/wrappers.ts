@@ -1,6 +1,23 @@
 import { BN, Program, Provider, workspace, AnchorProvider, setProvider } from "@project-serum/anchor";
-import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import {
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  Transaction,
+  AccountMeta,
+  Signer,
+  ConfirmOptions,
+  TransactionSignature,
+} from "@solana/web3.js";
+import {
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccount,
+  mintTo,
+  getAccount,
+  createMint,
+} from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { RiskEngine as RiskEngineIdl } from "../../target/types/risk_engine";
 import {
@@ -15,18 +32,13 @@ import {
 } from "./pdas";
 import {
   DEFAULT_ACTIVE_WINDOW,
-  DEFAULT_COLLATERAL_FUNDED,
   DEFAULT_ORDER_TYPE,
   DEFAULT_SETTLING_WINDOW,
   DEFAULT_SOL_FOR_SIGNERS,
   DEFAULT_TOKEN_AMOUNT,
   DEFAULT_PRICE,
   DEFAULT_LEG_MULTIPLIER,
-  BITCOIN_BASE_ASSET_INDEX,
-  SOLANA_BASE_ASSET_INDEX,
   DEFAULT_MINT_DECIMALS,
-  SWITCHBOARD_BTC_ORACLE,
-  SWITCHBOARD_SOL_ORACLE,
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
   DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
   DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
@@ -36,6 +48,10 @@ import {
   DEFAULT_ACCEPTED_ORACLE_CONFIDENCE_INTERVAL_PORTION,
   DEFAULT_SETTLE_FEES,
   DEFAULT_DEFAULT_FEES,
+  SWITCHBOARD_BTC_ORACLE,
+  BITCOIN_BASE_ASSET_INDEX,
+  SOLANA_BASE_ASSET_INDEX,
+  SWITCHBOARD_SOL_ORACLE,
 } from "./constants";
 import {
   AuthoritySide,
@@ -47,7 +63,9 @@ import {
   InstrumentType,
   instrumentTypeToObject,
   RiskCategoryInfo,
-  toApiFeeParams,
+  OrderType,
+  FeeParams,
+  toPriceOracle,
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
@@ -57,69 +75,98 @@ import {
   executeInParallel,
   expandComputeUnits,
   serializeOptionQuote,
+  toApiFeeParams,
 } from "./helpers";
+import { loadPubkeyNaming, readKeypair } from "./fixtures";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
 import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmericanInstrument";
 
 export class Context {
   public program: Program<RfqIdl>;
-  public riskEngine: RiskEngine;
-  public provider: Provider;
-  public dao: Keypair;
-  public taker: Keypair;
-  public maker: Keypair;
-  public assetToken: Mint; // BTC with the price of 20k$ in oracle
-  public additionalAssetToken: Mint; // SOL with the price of 30$ in oracle
-  public quoteToken: Mint;
-  public collateralToken: CollateralMint;
-  public protocolPda: PublicKey;
+  public provider: Provider & {
+    sendAndConfirm: (tx: Transaction, signers?: Signer[], opts?: ConfirmOptions) => Promise<TransactionSignature>;
+  };
   public baseAssets: { [baseAssetIndex: number]: { oracleAddress: PublicKey } };
+
+  public riskEngine!: RiskEngine;
+  public protocolPda!: PublicKey;
+
+  public dao!: Keypair;
+  public taker!: Keypair;
+  public maker!: Keypair;
+
+  public assetToken!: Mint; // BTC with the price of 20k$ in oracle
+  public additionalAssetToken!: Mint; // SOL with the price of 30$ in oracle
+  public quoteToken!: Mint;
+  public collateralToken!: CollateralMint;
+
+  public pubkeyToName: { [pubkey: string]: string };
+  public nameToPubkey: { [name: string]: PublicKey };
 
   constructor() {
     this.provider = AnchorProvider.env();
+    this.assertProvider();
     setProvider(this.provider);
     this.program = workspace.Rfq as Program<RfqIdl>;
-    this.riskEngine = new RiskEngine(this);
     this.baseAssets = {};
+
+    this.pubkeyToName = {};
+    this.nameToPubkey = {};
   }
 
-  async initialize() {
-    await executeInParallel(
-      async () => (this.dao = await this.createPayer()),
-      async () => (this.taker = await this.createPayer()),
-      async () => (this.maker = await this.createPayer())
-    );
+  assertProvider(): asserts this is {
+    provider: {
+      sendAndConfirm: (tx: Transaction, signers?: Signer[], opts?: ConfirmOptions) => Promise<TransactionSignature>;
+    };
+  } {
+    if (!this.provider.sendAndConfirm) {
+      throw Error("Provider doesn't support send and confirm!");
+    }
+  }
 
+  async basicInitialize() {
+    this.riskEngine = await RiskEngine.create(this);
     this.protocolPda = await getProtocolPda(this.program.programId);
+  }
+
+  async initializeFromFixtures() {
+    await this.basicInitialize();
 
     await executeInParallel(
-      async () => (this.assetToken = await Mint.create(this)),
-      async () => (this.additionalAssetToken = await Mint.create(this)),
-      async () => (this.quoteToken = await Mint.create(this)),
-      async () => (this.collateralToken = await CollateralMint.create(this))
-    );
-  }
-
-  async createPayer() {
-    const payer = Keypair.generate();
-
-    await this.provider.connection.confirmTransaction(
-      await this.provider.connection.requestAirdrop(payer.publicKey, DEFAULT_SOL_FOR_SIGNERS),
-      "confirmed"
+      async () => {
+        this.pubkeyToName = await loadPubkeyNaming();
+        for (const key in this.pubkeyToName) {
+          const name = this.pubkeyToName[key];
+          this.nameToPubkey[name] = new PublicKey(key);
+        }
+      },
+      async () => (this.dao = await readKeypair("dao")),
+      async () => (this.taker = await readKeypair("taker")),
+      async () => (this.maker = await readKeypair("maker"))
     );
 
-    return payer;
-  }
-
-  async createMint() {
-    return await Token.createMint(
-      this.provider.connection,
-      this.dao,
-      this.dao.publicKey,
-      null,
-      DEFAULT_MINT_DECIMALS,
-      TOKEN_PROGRAM_ID
+    await executeInParallel(
+      async () =>
+        (this.assetToken = await Mint.loadExisting(
+          this,
+          this.nameToPubkey["mint-btc"],
+          true,
+          BITCOIN_BASE_ASSET_INDEX
+        )),
+      async () =>
+        (this.additionalAssetToken = await Mint.loadExisting(
+          this,
+          this.nameToPubkey["mint-sol"],
+          true,
+          SOLANA_BASE_ASSET_INDEX
+        )),
+      async () => (this.quoteToken = await Mint.loadExisting(this, this.nameToPubkey["mint-usd-quote"], true)),
+      async () =>
+        (this.collateralToken = await CollateralMint.loadExisting(this, this.nameToPubkey["mint-usd-collateral"]))
     );
+
+    this.baseAssets[BITCOIN_BASE_ASSET_INDEX] = { oracleAddress: SWITCHBOARD_BTC_ORACLE };
+    this.baseAssets[SOLANA_BASE_ASSET_INDEX] = { oracleAddress: SWITCHBOARD_SOL_ORACLE };
   }
 
   async initializeProtocol({ settleFees = DEFAULT_SETTLE_FEES, defaultFees = DEFAULT_DEFAULT_FEES } = {}) {
@@ -164,27 +211,33 @@ export class Context {
   }
 
   async addBaseAsset(baseAssetIndex: number, ticker: string, riskCategory: RiskCategory, oracle: PublicKey) {
-    await this.program.methods // @ts-ignore Strange error with anchor IDL parsing
-      .addBaseAsset({ value: baseAssetIndex }, ticker, riskCategoryToObject(riskCategory), {
-        switchboard: { address: oracle },
-      })
+    const baseAssetPda = await getBaseAssetPda(baseAssetIndex, this.program.programId);
+
+    await this.program.methods
+      .addBaseAsset({ value: baseAssetIndex }, ticker, riskCategoryToObject(riskCategory), toPriceOracle(oracle))
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
-        baseAsset: await getBaseAssetPda(baseAssetIndex, this.program.programId),
+        baseAsset: baseAssetPda,
         systemProgram: SystemProgram.programId,
       })
       .signers([this.dao])
       .rpc();
-
     this.baseAssets[baseAssetIndex] = {
       oracleAddress: oracle,
     };
+
+    return { baseAssetPda };
   }
 
-  async changeProtocolFees({ settleFees = null, defaultFees = null } = {}) {
+  async changeProtocolFees({
+    settleFees = null,
+    defaultFees = null,
+  }: { settleFees?: FeeParams | null; defaultFees?: FeeParams | null } = {}) {
+    let serializedSettleFees = settleFees ? toApiFeeParams(settleFees) : null;
+    let serializedDettleFees = defaultFees ? toApiFeeParams(defaultFees) : null;
     await this.program.methods
-      .changeProtocolFees(toApiFeeParams(settleFees), toApiFeeParams(defaultFees))
+      .changeProtocolFees(serializedSettleFees, serializedDettleFees)
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -213,10 +266,21 @@ export class Context {
       .rpc();
   }
 
-  async setBaseAssetEnabledStatus(index: number, statusToSet: boolean) {
+  async changeBaseAssetParametersStatus(
+    index: number,
+    {
+      enabled = null,
+      riskCategory = null,
+      priceOracle = null,
+    }: {
+      enabled?: boolean | null;
+      riskCategory?: RiskCategory | null;
+      priceOracle?: PublicKey | null;
+    }
+  ) {
     const baseAsset = await getBaseAssetPda(index, this.program.programId);
     await this.program.methods
-      .setBaseAssetEnabledStatus(statusToSet)
+      .changeBaseAssetParameters(enabled, riskCategory, priceOracle && toPriceOracle(priceOracle))
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -287,28 +351,34 @@ export class Context {
   async createRfq({
     legs = [SpotInstrument.createForLeg(this)],
     quote = SpotInstrument.createForQuote(this, this.quoteToken),
-    orderType = null,
-    fixedSize = null,
+    orderType = DEFAULT_ORDER_TYPE,
+    fixedSize = FixedSize.None,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
-    legsSize = null,
-    legsHash = null,
+    legsSize = calculateLegsSize(legs),
+    legsHash = calculateLegsHash(legs, this.program),
     finalize = true,
+  }: {
+    legs?: InstrumentController[];
+    quote?: InstrumentController;
+    orderType?: OrderType;
+    fixedSize?: FixedSize;
+    activeWindow?: number;
+    settlingWindow?: number;
+    legsSize?: number;
+    legsHash?: Uint8Array;
+    finalize?: boolean;
   } = {}) {
-    orderType = orderType ?? DEFAULT_ORDER_TYPE;
-    fixedSize = fixedSize ?? FixedSize.None;
-    legsSize = legsSize ?? calculateLegsSize(legs);
-    legsHash = legsHash ?? calculateLegsHash(legs, this.program);
     const legData = legs.map((x) => x.toLegData());
     const quoteAccounts = await quote.getValidationAccounts();
     const baseAssetAccounts = await Promise.all(legs.map((leg) => leg.getBaseAssetAccount(this.program.programId)));
     const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
-    const currentTimestamp = new BN(Math.floor(Date.now() / 1000) - 1); // -1 second because for some reason local validator is late for 1 second
+    const currentTimestamp = new BN(Math.floor(Date.now() / 1000) - 5); // -5 second because for some reason local validator is late for 1 second
     const rfq = await getRfqPda(
       this.taker.publicKey,
       legsHash,
       orderType,
-      quote.toQuoteData(),
+      quote,
       fixedSize,
       activeWindow,
       settlingWindow,
@@ -320,11 +390,11 @@ export class Context {
     let txConstructor = await this.program.methods
       .createRfq(
         legsSize,
-        legsHash,
+        Array.from(legsHash),
         legData,
         orderType,
         quote.toQuoteData(),
-        fixedSize,
+        fixedSize as any,
         activeWindow,
         settlingWindow,
         new BN(currentTimestamp)
@@ -354,13 +424,19 @@ export class Context {
 }
 
 export class RiskEngine {
-  public program: Program<RiskEngineIdl>;
-  public programId: PublicKey;
-  public configAddress?: PublicKey;
+  private constructor(
+    private context: Context,
+    public program: Program<RiskEngineIdl>,
+    public programId: PublicKey,
+    public configAddress: PublicKey
+  ) {}
 
-  constructor(private context: Context) {
-    this.program = workspace.RiskEngine as Program<RiskEngineIdl>;
-    this.programId = this.program.programId;
+  static async create(context: Context) {
+    const program = workspace.RiskEngine as Program<RiskEngineIdl>;
+    const programId = program.programId;
+    const configAddress = await getRiskEngineConfig(programId);
+
+    return new RiskEngine(context, program, programId, configAddress);
   }
 
   async initializeDefaultConfig() {
@@ -377,7 +453,8 @@ export class RiskEngine {
         DEFAULT_ACCEPTED_ORACLE_CONFIDENCE_INTERVAL_PORTION
       )
       .accounts({
-        signer: this.context.dao.publicKey,
+        authority: this.context.dao.publicKey,
+        protocol: this.context.protocolPda,
         config: this.configAddress,
         systemProgram: SystemProgram.programId,
       })
@@ -396,9 +473,39 @@ export class RiskEngine {
         await this.setRiskCategoriesInfo([
           { riskCategory: RiskCategory.High, newValue: DEFAULT_RISK_CATEGORIES_INFO[3] },
           { riskCategory: RiskCategory.VeryHigh, newValue: DEFAULT_RISK_CATEGORIES_INFO[4] },
+          { riskCategory: RiskCategory.Custom1, newValue: DEFAULT_RISK_CATEGORIES_INFO[5] },
         ]);
+      },
+      async () => {
+        await this.setRiskCategoriesInfo([
+          { riskCategory: RiskCategory.Custom2, newValue: DEFAULT_RISK_CATEGORIES_INFO[6] },
+          { riskCategory: RiskCategory.Custom3, newValue: DEFAULT_RISK_CATEGORIES_INFO[7] },
+        ]);
+      },
+      async () => {
+        await SpotInstrument.setRiskEngineInstrumentType(this.context);
+      },
+      async () => {
+        await PsyoptionsEuropeanInstrument.setRiskEngineInstrumentType(this.context);
+      },
+      async () => {
+        await PsyoptionsAmericanInstrumentClass.setRiskEngineInstrumentType(this.context);
       }
     );
+  }
+
+  async closeConfig({ signer = this.context.dao } = {}) {
+    this.configAddress = await getRiskEngineConfig(this.programId);
+
+    await this.program.methods
+      .closeConfig()
+      .accounts({
+        authority: signer.publicKey,
+        protocol: this.context.protocolPda,
+        config: this.configAddress,
+      })
+      .signers([signer])
+      .rpc();
   }
 
   async updateConfig({
@@ -409,6 +516,14 @@ export class RiskEngine {
     overallSafetyFactor = null,
     defaultAcceptedOracleStaleness = null,
     defaultAcceptedOracleConfidenceIntervalPortion = null,
+  }: {
+    collateralForVariableSizeRfq?: number | null;
+    collateralForFixedQuoteAmountRfq?: number | null;
+    collateralMintDecimals?: number | null;
+    safetyPriceShiftFactor?: number | null;
+    overallSafetyFactor?: number | null;
+    defaultAcceptedOracleStaleness?: number | null;
+    defaultAcceptedOracleConfidenceIntervalPortion?: number | null;
   } = {}) {
     await this.program.methods
       .updateConfig(
@@ -471,36 +586,58 @@ export class RiskEngine {
   }
 
   async getConfig() {
-    return this.program.account.config.fetch(this.configAddress);
+    return this.program.account.config.fetchNullable(this.configAddress);
   }
 }
 
 export class Mint {
   public publicKey: PublicKey;
   public decimals: number;
-  public baseAssetIndex?: number;
-  public mintInfoAddress?: PublicKey;
+  public baseAssetIndex: number | null;
+  public mintInfoAddress: PublicKey | null;
 
-  protected constructor(protected context: Context, public token: Token) {
-    this.publicKey = token.publicKey;
+  protected constructor(protected context: Context, address: PublicKey) {
+    this.publicKey = address;
     this.decimals = DEFAULT_MINT_DECIMALS;
+    this.baseAssetIndex = null;
+    this.mintInfoAddress = null;
   }
 
   public static async wrap(context: Context, address: PublicKey) {
-    const token = new Token(context.provider.connection, address, TOKEN_PROGRAM_ID, context.dao);
-    const mint = new Mint(context, token);
+    const mint = new Mint(context, address);
 
     await executeInParallel(
-      async () => await token.createAssociatedTokenAccount(context.taker.publicKey),
-      async () => await token.createAssociatedTokenAccount(context.maker.publicKey),
-      async () => await token.createAssociatedTokenAccount(context.dao.publicKey)
+      async () => await mint.createAssociatedTokenAccount(context.taker.publicKey),
+      async () => await mint.createAssociatedTokenAccount(context.maker.publicKey),
+      async () => await mint.createAssociatedTokenAccount(context.dao.publicKey)
     );
 
     return mint;
   }
 
-  public static async create(context: Context) {
-    const token = await context.createMint();
+  public static async loadExisting(
+    context: Context,
+    mintAddress: PublicKey,
+    isRegistered?: boolean,
+    baseAssetIndex?: number
+  ) {
+    const mint = new Mint(context, mintAddress);
+    if (isRegistered) {
+      mint.mintInfoAddress = await getMintInfoPda(mintAddress, context.program.programId);
+    }
+    mint.baseAssetIndex = baseAssetIndex ?? null;
+    return mint;
+  }
+
+  public static async create(context: Context, keypair?: Keypair) {
+    const token = await createMint(
+      context.provider.connection,
+      context.dao,
+      context.dao.publicKey,
+      null,
+      DEFAULT_MINT_DECIMALS,
+      keypair
+    );
     const mint = new Mint(context, token);
     await executeInParallel(
       async () => await mint.createAssociatedAccountWithTokens(context.taker.publicKey),
@@ -518,53 +655,75 @@ export class Mint {
   }
 
   public async createAssociatedAccountWithTokens(address: PublicKey, amount = DEFAULT_TOKEN_AMOUNT) {
-    const account = await this.token.createAssociatedTokenAccount(address);
-    await this.token.mintTo(account, this.context.dao, [], amount.toString());
+    const account = await this.createAssociatedTokenAccount(address);
+    await mintTo(
+      this.context.provider.connection,
+      this.context.dao,
+      this.publicKey,
+      account,
+      this.context.dao,
+      amount.toString()
+    );
   }
 
-  public async getAssociatedAddress(address: PublicKey) {
-    return await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+  public async createAssociatedTokenAccount(address: PublicKey) {
+    return await createAssociatedTokenAccount(
+      this.context.provider.connection,
+      this.context.dao,
       this.publicKey,
       address
     );
   }
 
-  public async getAssociatedBalance(address: PublicKey) {
-    const account = await this.token.getAccountInfo(await this.getAssociatedAddress(address));
-    return account.amount;
+  public async getAssociatedAddress(address: PublicKey) {
+    return await getAssociatedTokenAddress(this.publicKey, address);
   }
 
-  public assertRegistered() {
-    if (this.baseAssetIndex === undefined) {
+  public async getAssociatedBalance(address: PublicKey) {
+    const account = await getAccount(this.context.provider.connection, await this.getAssociatedAddress(address));
+    return new BN(account.amount);
+  }
+
+  public assertRegisteredAsBaseAsset(): asserts this is { baseAssetIndex: number; mintInfoAddress: PublicKey } {
+    if (this.baseAssetIndex === null || this.mintInfoAddress === null) {
+      throw new Error(`Mint ${this.publicKey.toString()} is not registered as base asset!`);
+    }
+  }
+
+  public assertRegistered(): asserts this is { mintInfoAddress: PublicKey } {
+    if (this.mintInfoAddress === null) {
       throw new Error(`Mint ${this.publicKey.toString()} is not registered!`);
     }
   }
 }
 
 export class CollateralMint extends Mint {
-  public static async create(context: Context) {
-    const mint = await Mint.create(context);
-    return new CollateralMint(context, mint.token);
+  public static async create(context: Context, keypair?: Keypair) {
+    const mint = await Mint.create(context, keypair);
+    return new CollateralMint(context, mint.publicKey);
+  }
+
+  public static async loadExisting(context: Context, mintAddress: PublicKey) {
+    return new CollateralMint(context, mintAddress);
   }
 
   public async getTotalCollateral(address: PublicKey) {
-    const account = await this.token.getAccountInfo(
-      await getCollateralTokenPda(address, this.context.program.programId)
-    );
+    const account = await getAccount(this.context.provider.connection, await this.getTokenPda(address));
     return account.amount;
   }
 
   public async getUnlockedCollateral(address: PublicKey) {
-    const tokenAccount = await this.token.getAccountInfo(
-      await getCollateralTokenPda(address, this.context.program.programId)
-    );
-    const collateralInfo = await this.context.program.account.collateralInfo.fetch(
-      await getCollateralInfoPda(address, this.context.program.programId)
-    );
-    // @ts-ignore
-    return tokenAccount.amount.sub(collateralInfo.lockedTokensAmount);
+    const tokenAccount = await getAccount(this.context.provider.connection, await this.getTokenPda(address));
+    const collateralInfo = await this.context.program.account.collateralInfo.fetch(await this.getInfoPda(address));
+    return new BN(tokenAccount.amount).sub(collateralInfo.lockedTokensAmount);
+  }
+
+  public async getTokenPda(address: PublicKey) {
+    return await getCollateralTokenPda(address, this.context.program.programId);
+  }
+
+  public async getInfoPda(address: PublicKey) {
+    return await getCollateralInfoPda(address, this.context.program.programId);
   }
 }
 
@@ -576,7 +735,7 @@ export class Rfq {
     public legs: InstrumentController[]
   ) {}
 
-  async respond({ bid = null, ask = null } = {}) {
+  async respond({ bid = null, ask = null }: { bid?: Quote | null; ask?: Quote | null } = {}) {
     if (bid === null && ask === null) {
       bid = Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
     }
@@ -591,7 +750,7 @@ export class Rfq {
     );
 
     await this.context.program.methods
-      .respondToRfq(bid, ask, 0)
+      .respondToRfq(bid as any, ask as any, 0)
       .accounts({
         maker: this.context.maker.publicKey,
         protocol: this.context.protocolPda,
@@ -674,7 +833,7 @@ export class Rfq {
   async finalizeConstruction() {
     let instruction = await this.getFinalizeConstructionInstruction();
     let transaction = new Transaction().add(instruction);
-    await this.context.program.provider.sendAndConfirm(transaction, [this.context.taker]);
+    await this.context.provider.sendAndConfirm(transaction, [this.context.taker]);
   }
 
   async getFinalizeConstructionInstruction() {
@@ -696,7 +855,7 @@ export class Rfq {
     return await this.context.program.account.rfq.fetch(this.account);
   }
 
-  async getRiskEngineAccounts() {
+  async getRiskEngineAccounts(): Promise<AccountMeta[]> {
     const config = { pubkey: this.context.riskEngine.configAddress, isSigner: false, isWritable: false };
 
     let uniqueIndecies = Array.from(new Set(this.legs.map((leg) => leg.getBaseAssetIndex())));
@@ -708,7 +867,7 @@ export class Rfq {
       return { pubkey: address, isSigner: false, isWritable: false };
     });
     const oracles = uniqueIndecies
-      .map((index) => context.baseAssets[index].oracleAddress)
+      .map((index) => this.context.baseAssets[index].oracleAddress)
       .map((address) => {
         return { pubkey: address, isSigner: false, isWritable: false };
       });
@@ -725,7 +884,13 @@ export class Response {
     this.firstToPrepare = PublicKey.default;
   }
 
-  async confirm({ side = null, legMultiplierBps = null } = {}) {
+  async confirm({
+    side = Side.Bid,
+    legMultiplierBps = null,
+  }: {
+    side?: Side;
+    legMultiplierBps?: BN | null;
+  } = {}) {
     await this.context.program.methods
       .confirmResponse(side ?? Side.Bid, legMultiplierBps)
       .accounts({
@@ -744,7 +909,7 @@ export class Response {
       .rpc();
   }
 
-  async prepareSettlement(side, legAmount = this.rfq.legs.length) {
+  async prepareSettlement(side: AuthoritySide, legAmount = this.rfq.legs.length) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
     if (this.firstToPrepare.equals(PublicKey.default)) {
@@ -773,7 +938,7 @@ export class Response {
       .rpc();
   }
 
-  async prepareMoreLegsSettlement(side, from: number, legAmount: number) {
+  async prepareMoreLegsSettlement(side: AuthoritySide, from: number, legAmount: number) {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
     const remainingAccounts = await (
       await Promise.all(
@@ -984,7 +1149,7 @@ export class Response {
   }
 
   async cleanUp(preparedLegs = this.rfq.legs.length) {
-    let remainingAccounts = [];
+    let remainingAccounts: AccountMeta[] = [];
     if (this.firstToPrepare) {
       const quoteAccounts = await this.rfq.quote.getCleanUpAccounts("quote", this.rfq, this);
       const legAccounts = await (
@@ -1012,7 +1177,7 @@ export class Response {
   }
 
   async cleanUpLegs(legAmount: number, preparedLegs = this.rfq.legs.length) {
-    let remainingAccounts = [];
+    let remainingAccounts: AccountMeta[] = [];
     if (this.firstToPrepare) {
       remainingAccounts = await (
         await Promise.all(
@@ -1056,52 +1221,15 @@ export class Response {
   }
 }
 
-let context: Context | null = null;
+let globalContext: Context | null = null;
 export async function getContext() {
-  if (context !== null) {
-    return context;
+  if (globalContext !== null) {
+    return globalContext;
   }
 
-  context = new Context();
-  await context.initialize();
-  await context.initializeProtocol();
-
-  await executeInParallel(
-    async () => {
-      await context.riskEngine.initializeDefaultConfig();
-    },
-    async () => {
-      await SpotInstrument.addInstrument(context);
-    },
-    async () => {
-      await PsyoptionsEuropeanInstrument.addInstrument(context);
-    },
-    async () => {
-      await PsyoptionsAmericanInstrumentClass.addInstrument(context);
-    },
-    async () => {
-      await context.initializeCollateral(context.taker);
-      await context.fundCollateral(context.taker, DEFAULT_COLLATERAL_FUNDED);
-    },
-    async () => {
-      await context.initializeCollateral(context.maker);
-      await context.fundCollateral(context.maker, DEFAULT_COLLATERAL_FUNDED);
-    },
-    async () => {
-      await context.initializeCollateral(context.dao);
-    },
-    async () => {
-      await context.addBaseAsset(BITCOIN_BASE_ASSET_INDEX, "BTC", RiskCategory.VeryLow, SWITCHBOARD_BTC_ORACLE);
-      await context.assetToken.register(BITCOIN_BASE_ASSET_INDEX);
-    },
-    async () => {
-      await context.addBaseAsset(SOLANA_BASE_ASSET_INDEX, "SOL", RiskCategory.Medium, SWITCHBOARD_SOL_ORACLE);
-      await context.additionalAssetToken.register(SOLANA_BASE_ASSET_INDEX);
-    },
-    async () => {
-      await context.quoteToken.register(null);
-    }
-  );
+  let context = new Context();
+  globalContext = context;
+  await context.initializeFromFixtures();
 
   return context;
 }

@@ -440,7 +440,7 @@ impl Quote {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum PriceQuote {
-    AbsolutePrice { amount_bps: i128 },
+    AbsolutePrice { amount_bps: i128 }, // this value have ABSOLUTE_PRICE_DECIMALS + quote asset mint decimals
 }
 
 impl PriceQuote {
