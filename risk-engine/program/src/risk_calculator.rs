@@ -324,7 +324,7 @@ mod tests {
                 interest_rate: 0.05,
                 annualized_30_day_volatility: 0.5,
                 scenario_per_settlement_period: Default::default(),
-            }; 5],
+            }; 8],
             instrument_types: [Default::default(); ProtocolState::MAX_INSTRUMENTS],
         }
     }
