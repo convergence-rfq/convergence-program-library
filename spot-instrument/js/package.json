@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/spot-instrument",
-  "version": "2.2.2-rc.3",
+  "version": "2.2.3",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
