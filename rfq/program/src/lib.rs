@@ -20,6 +20,7 @@ use instructions::protocol::add_base_asset::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::change_base_asset_parameters::*;
 use instructions::protocol::change_protocol_fees::*;
+use instructions::protocol::close_protocol_state::*;
 use instructions::protocol::initialize_protocol::*;
 use instructions::protocol::register_mint::*;
 use instructions::protocol::set_instrument_enabled_status::*;
@@ -285,5 +286,9 @@ pub mod rfq {
 
     pub fn cancel_rfq(ctx: Context<CancelRfqAccounts>) -> Result<()> {
         cancel_rfq_instruction(ctx)
+    }
+
+    pub fn close_protocol_state(ctx: Context<CloseProtocolStateAccounts>) -> Result<()> {
+        close_protocol_state_instruction(ctx)
     }
 }
