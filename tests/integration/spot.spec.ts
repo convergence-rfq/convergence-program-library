@@ -96,7 +96,7 @@ describe("RFQ Spot instrument integration tests", () => {
       legs: [
         SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: Side.Bid }),
         SpotInstrument.createForLeg(context, {
-          mint: context.additionalAssetToken,
+          mint: context.solToken,
           amount: withTokenDecimals(1000),
           side: Side.Ask,
         }),

@@ -30,7 +30,7 @@ describe("Unlock response collateral", () => {
     dao = context.dao.publicKey;
   });
 
-  it("Correct amount of fees is taken as result as settled response ", async () => {
+  it("Correct amount of fees is taken as result as settled response", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
     const rfq = await context.createRfq({
       legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(22), side: Side.Bid })],

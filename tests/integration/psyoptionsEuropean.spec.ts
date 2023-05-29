@@ -11,7 +11,7 @@ import {
   withTokenDecimals,
 } from "../utilities/helpers";
 import { PsyoptionsEuropeanInstrument, EuroOptionsFacade } from "../utilities/instruments/psyoptionsEuropeanInstrument";
-import { AuthoritySide, Quote, RiskCategory, Side } from "../utilities/types";
+import { AuthoritySide, OracleSource, Quote, RiskCategory, Side } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 import { CONTRACT_DECIMALS_BN, OptionType } from "@mithraic-labs/tokenized-euros";
 import { SWITCHBOARD_BTC_ORACLE } from "../utilities/constants";
@@ -32,7 +32,7 @@ describe("Psyoptions European instrument integration tests", () => {
     maker = context.maker.publicKey;
 
     options = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
-      underlyingMint: context.assetToken,
+      underlyingMint: context.btcToken,
       stableMint: context.quoteToken,
       underlyingPerContract: withTokenDecimals(1),
     });
@@ -126,7 +126,15 @@ describe("Psyoptions European instrument integration tests", () => {
     const mints = await Promise.all(
       [...Array(legAmount)].map(async (_, i) => {
         const mint = await Mint.create(context);
-        await context.addBaseAsset(baseAssetOffset + i, "TEST", RiskCategory.High, SWITCHBOARD_BTC_ORACLE);
+        await context.addBaseAsset(
+          baseAssetOffset + i,
+          "TEST",
+          RiskCategory.High,
+          OracleSource.Switchboard,
+          SWITCHBOARD_BTC_ORACLE,
+          null,
+          null
+        );
         await mint.register(baseAssetOffset + i);
         return mint;
       })

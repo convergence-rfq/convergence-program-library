@@ -96,9 +96,21 @@ pub mod rfq {
         index: BaseAssetIndex,
         ticker: String,
         risk_category: RiskCategory,
-        price_oracle: PriceOracle,
+        oracle_source: OracleSource,
+        switchboard_oracle: Option<Pubkey>,
+        pyth_oracle: Option<Pubkey>,
+        in_place_price: Option<f64>,
     ) -> Result<()> {
-        add_base_asset_instruction(ctx, index, ticker, risk_category, price_oracle)
+        add_base_asset_instruction(
+            ctx,
+            index,
+            ticker,
+            risk_category,
+            oracle_source,
+            switchboard_oracle,
+            pyth_oracle,
+            in_place_price,
+        )
     }
 
     pub fn change_protocol_fees(
@@ -113,9 +125,20 @@ pub mod rfq {
         ctx: Context<ChangeBaseAssetParametersAccounts>,
         enabled: Option<bool>,
         risk_category: Option<RiskCategory>,
-        price_oracle: Option<PriceOracle>,
+        oracle_source: Option<OracleSource>,
+        switchboard_oracle: CustomOptionalPubkey,
+        pyth_oracle: CustomOptionalPubkey,
+        in_place_price: CustomOptionalF64,
     ) -> Result<()> {
-        change_base_asset_parameters_instruction(ctx, enabled, risk_category, price_oracle)
+        change_base_asset_parameters_instruction(
+            ctx,
+            enabled,
+            risk_category,
+            oracle_source,
+            switchboard_oracle,
+            pyth_oracle,
+            in_place_price,
+        )
     }
 
     pub fn set_instrument_enabled_status(

@@ -3,7 +3,7 @@ use std::mem;
 use crate::{
     errors::ProtocolError,
     seeds::{BASE_ASSET_INFO_SEED, PROTOCOL_SEED},
-    state::{BaseAssetIndex, BaseAssetInfo, PriceOracle, ProtocolState, RiskCategory},
+    state::{BaseAssetIndex, BaseAssetInfo, OracleSource, ProtocolState, RiskCategory},
 };
 use anchor_lang::prelude::*;
 
@@ -26,18 +26,23 @@ pub fn add_base_asset_instruction(
     index: BaseAssetIndex,
     ticker: String,
     risk_category: RiskCategory,
-    price_oracle: PriceOracle,
+    oracle_source: OracleSource,
+    switchboard_oracle: Option<Pubkey>,
+    pyth_oracle: Option<Pubkey>,
+    in_place_price: Option<f64>,
 ) -> Result<()> {
     let AddBaseAssetAccounts { base_asset, .. } = ctx.accounts;
 
-    base_asset.set_inner(BaseAssetInfo {
-        bump: *ctx.bumps.get("base_asset").unwrap(),
+    base_asset.set_inner(BaseAssetInfo::new(
+        *ctx.bumps.get("base_asset").unwrap(),
         index,
-        enabled: true,
         risk_category,
-        price_oracle,
+        oracle_source,
         ticker,
-    });
+    ));
 
-    Ok(())
+    base_asset.set_switchboard_oracle(switchboard_oracle)?;
+    base_asset.set_pyth_oracle(pyth_oracle)?;
+    base_asset.set_in_place_price(in_place_price)?;
+    base_asset.validate_oracle_source()
 }
