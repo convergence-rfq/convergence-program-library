@@ -16,6 +16,7 @@ anchor-lang = { version = "0.27.0", features = ["init-if-needed"] }
 anchor-spl = "0.27.0"
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
 switchboard-v2 = "^0.1.23"
+pyth-sdk-solana = "0.7.2"
 shank = "0.0.8"
 borsh = { version = "0.9.1", features = ["const-generics"] }
 bytemuck = { version = "1.4.0", features = ["derive", "min_const_generics"] }

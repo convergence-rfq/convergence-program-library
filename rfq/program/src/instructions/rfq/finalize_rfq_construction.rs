@@ -34,7 +34,7 @@ fn validate(ctx: &Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
 
     rfq.get_state()?.assert_state_in([RfqState::Constructed])?;
 
-    require!(rfq.legs.len() > 0, ProtocolError::EmptyLegsNotSupported);
+    require!(!rfq.legs.is_empty(), ProtocolError::EmptyLegsNotSupported);
 
     let serialized_legs = rfq.legs.try_to_vec()?;
     require!(

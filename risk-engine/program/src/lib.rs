@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 use anchor_lang::prelude::*;
 use rfq::state::{
     AuthoritySide, FixedSize, Leg, OrderType, ProtocolState, Quote, Response, Rfq, Side,
@@ -20,7 +22,7 @@ pub mod scenarios;
 pub mod state;
 pub mod utils;
 
-declare_id!("7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo");
+declare_id!("5A1gyRgASMwvLWWXYkWEShVLzUj6Qmc8ArSUirEo3tb5");
 
 pub const CONFIG_SEED: &str = "config";
 
@@ -28,6 +30,7 @@ pub const CONFIG_SEED: &str = "config";
 pub mod risk_engine {
     use super::*;
 
+    #[allow(clippy::too_many_arguments)]
     pub fn initialize_config(
         ctx: Context<InitializeConfigAccounts>,
         collateral_for_variable_size_rfq_creation: u64,
@@ -79,6 +82,7 @@ pub mod risk_engine {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn update_config(
         ctx: Context<UpdateConfigAccounts>,
         collateral_for_variable_size_rfq_creation: Option<u64>,
@@ -202,7 +206,7 @@ pub mod risk_engine {
                     &mut ctx.remaining_accounts,
                 )?;
                 let leg_multiplier = convert_fixed_point_to_f64(
-                    legs_multiplier_bps.into(),
+                    legs_multiplier_bps,
                     Quote::LEG_MULTIPLIER_DECIMALS as u8,
                 );
 
@@ -254,7 +258,7 @@ pub mod risk_engine {
         let get_case = |quote, side| {
             let legs_multiplier_bps = response.calculate_legs_multiplier_bps_for_quote(rfq, quote);
             let leg_multiplier = convert_fixed_point_to_f64(
-                legs_multiplier_bps.into(),
+                legs_multiplier_bps,
                 Quote::LEG_MULTIPLIER_DECIMALS as u8,
             );
             CalculationCase {
@@ -300,10 +304,8 @@ pub mod risk_engine {
         let risk_calculator = construct_risk_calculator(rfq, &config, &mut ctx.remaining_accounts)?;
 
         let legs_multiplier_bps = response.calculate_confirmed_legs_multiplier_bps(rfq);
-        let leg_multiplier = convert_fixed_point_to_f64(
-            legs_multiplier_bps.into(),
-            Quote::LEG_MULTIPLIER_DECIMALS as u8,
-        );
+        let leg_multiplier =
+            convert_fixed_point_to_f64(legs_multiplier_bps, Quote::LEG_MULTIPLIER_DECIMALS as u8);
         let confirmed_side = response.confirmed.unwrap().side;
 
         let side_to_case = |side| CalculationCase {
@@ -352,13 +354,12 @@ fn construct_risk_calculator<'a>(
         .legs
         .iter()
         .map(|leg| -> Result<LegWithMetadata> {
-            let instrument_type = instrument_types
+            let instrument_type = *instrument_types
                 .get(&leg.instrument_program)
-                .ok_or_else(|| error!(Error::MissingInstrument))?
-                .clone();
+                .ok_or_else(|| error!(Error::MissingInstrument))?;
 
             Ok(LegWithMetadata {
-                leg: &leg,
+                leg,
                 leg_amount_fraction: get_leg_amount_f64(leg),
                 instrument_type,
             })

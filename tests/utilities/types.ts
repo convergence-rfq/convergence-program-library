@@ -170,9 +170,16 @@ export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
 
 export type FeeParams = { taker: number; maker: number };
 
-export function toPriceOracle(address: PublicKey) {
+export enum OracleSource {
+  Switchboard,
+  Pyth,
+  InPlace,
+}
+
+export function oracleSourceToObject(value: OracleSource) {
+  const stringValue = OracleSource[value];
+  const uncapitalizedValue = stringValue.charAt(0).toLowerCase() + stringValue.slice(1);
   return {
-    address,
-    switchboard: { address },
+    [uncapitalizedValue]: {},
   };
 }

@@ -108,4 +108,8 @@ pub enum ProtocolError {
     InstrumentIsDisabled,
     #[msg("Can't create an rfq using a disabled base asset")]
     BaseAssetIsDisabled,
+    #[msg("Can't accept default value in non-default field")]
+    DefaultValueIsNotPermitted,
+    #[msg("Specified oracle source is missing")]
+    OracleSourceIsMissing,
 }

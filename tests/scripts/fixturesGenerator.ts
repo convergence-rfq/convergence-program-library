@@ -16,11 +16,13 @@ import {
   BITCOIN_BASE_ASSET_INDEX,
   DEFAULT_COLLATERAL_FUNDED,
   DEFAULT_SOL_FOR_SIGNERS,
+  ETH_BASE_ASSET_INDEX,
+  ETH_IN_PLACE_PRICE,
+  PYTH_SOL_ORACLE,
   SOLANA_BASE_ASSET_INDEX,
   SWITCHBOARD_BTC_ORACLE,
-  SWITCHBOARD_SOL_ORACLE,
 } from "../utilities/constants";
-import { RiskCategory } from "../utilities/types";
+import { OracleSource, RiskCategory } from "../utilities/types";
 import {
   fixtureAccountsPath,
   getKeypairPath,
@@ -77,14 +79,19 @@ async function main() {
   // create and save mints and related token accounts
   await executeInParallel(
     async () => {
-      const assetToken = await Mint.create(context, await readOrCreateKeypair("mint-btc"));
-      context.assetToken = assetToken;
-      await saveMint(context, context.assetToken, "btc");
+      const btcToken = await Mint.create(context, await readOrCreateKeypair("mint-btc"));
+      context.btcToken = btcToken;
+      await saveMint(context, context.btcToken, "btc");
     },
     async () => {
-      const additionalAssetToken = await Mint.create(context, await readOrCreateKeypair("mint-sol"));
-      context.additionalAssetToken = additionalAssetToken;
-      await saveMint(context, context.additionalAssetToken, "sol");
+      const solToken = await Mint.create(context, await readOrCreateKeypair("mint-sol"));
+      context.solToken = solToken;
+      await saveMint(context, context.solToken, "sol");
+    },
+    async () => {
+      const ethToken = await Mint.create(context, await readOrCreateKeypair("mint-eth"));
+      context.ethToken = ethToken;
+      await saveMint(context, context.ethToken, "eth");
     },
     async () => {
       const quoteToken = await Mint.create(context, await readOrCreateKeypair("mint-usd-quote"));
@@ -135,28 +142,45 @@ async function main() {
         BITCOIN_BASE_ASSET_INDEX,
         "BTC",
         RiskCategory.VeryLow,
-        SWITCHBOARD_BTC_ORACLE
+        OracleSource.Switchboard,
+        SWITCHBOARD_BTC_ORACLE,
+        null,
+        null
       );
-      await context.assetToken.register(BITCOIN_BASE_ASSET_INDEX);
+      await context.btcToken.register(BITCOIN_BASE_ASSET_INDEX);
 
       await saveAccountAsFixture(context, baseAssetPda, "rfq-base-asset-btc");
-      await saveAccountAsFixture(context, context.assetToken.mintInfoAddress as PublicKey, "rfq-mint-info-btc");
+      await saveAccountAsFixture(context, context.btcToken.mintInfoAddress as PublicKey, "rfq-mint-info-btc");
     },
     async () => {
       const { baseAssetPda } = await context.addBaseAsset(
         SOLANA_BASE_ASSET_INDEX,
         "SOL",
         RiskCategory.Medium,
-        SWITCHBOARD_SOL_ORACLE
+        OracleSource.Pyth,
+        null,
+        PYTH_SOL_ORACLE,
+        null
       );
-      await context.additionalAssetToken.register(SOLANA_BASE_ASSET_INDEX);
+      await context.solToken.register(SOLANA_BASE_ASSET_INDEX);
 
       await saveAccountAsFixture(context, baseAssetPda, "rfq-base-asset-sol");
-      await saveAccountAsFixture(
-        context,
-        context.additionalAssetToken.mintInfoAddress as PublicKey,
-        "rfq-mint-info-sol"
+      await saveAccountAsFixture(context, context.solToken.mintInfoAddress as PublicKey, "rfq-mint-info-sol");
+    },
+    async () => {
+      const { baseAssetPda } = await context.addBaseAsset(
+        ETH_BASE_ASSET_INDEX,
+        "ETH",
+        RiskCategory.Low,
+        OracleSource.InPlace,
+        null,
+        null,
+        ETH_IN_PLACE_PRICE
       );
+      await context.ethToken.register(ETH_BASE_ASSET_INDEX);
+
+      await saveAccountAsFixture(context, baseAssetPda, "rfq-base-asset-eth");
+      await saveAccountAsFixture(context, context.ethToken.mintInfoAddress as PublicKey, "rfq-mint-info-eth");
     },
     async () => {
       await context.quoteToken.register(null);
@@ -178,6 +202,8 @@ async function main() {
 }
 
 async function launchLocalValidator() {
+  console.log("Launching local validator...");
+
   await rimraf(ledgerPath);
   await fsPromise.mkdir(ledgerPath);
 

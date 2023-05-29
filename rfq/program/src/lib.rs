@@ -1,6 +1,7 @@
 //! Request for quote (RFQ) protocol.
 //!
 //! Provides an abstraction and implements the RFQ mechanism.
+#![allow(clippy::result_large_err)]
 
 use anchor_lang::prelude::*;
 use solana_security_txt::security_txt;
@@ -56,7 +57,7 @@ security_txt! {
     auditors: "None"
 }
 
-declare_id!("AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx");
+declare_id!("54DfGVnmAgRskJE5wu9n6o3y97sY9Djow2FvaGuSMxNf");
 
 /// Request for quote (RFQ) protocol module.
 #[program]
@@ -91,14 +92,27 @@ pub mod rfq {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn add_base_asset(
         ctx: Context<AddBaseAssetAccounts>,
         index: BaseAssetIndex,
         ticker: String,
         risk_category: RiskCategory,
-        price_oracle: PriceOracle,
+        oracle_source: OracleSource,
+        switchboard_oracle: Option<Pubkey>,
+        pyth_oracle: Option<Pubkey>,
+        in_place_price: Option<f64>,
     ) -> Result<()> {
-        add_base_asset_instruction(ctx, index, ticker, risk_category, price_oracle)
+        add_base_asset_instruction(
+            ctx,
+            index,
+            ticker,
+            risk_category,
+            oracle_source,
+            switchboard_oracle,
+            pyth_oracle,
+            in_place_price,
+        )
     }
 
     pub fn change_protocol_fees(
@@ -113,9 +127,20 @@ pub mod rfq {
         ctx: Context<ChangeBaseAssetParametersAccounts>,
         enabled: Option<bool>,
         risk_category: Option<RiskCategory>,
-        price_oracle: Option<PriceOracle>,
+        oracle_source: Option<OracleSource>,
+        switchboard_oracle: CustomOptionalPubkey,
+        pyth_oracle: CustomOptionalPubkey,
+        in_place_price: CustomOptionalF64,
     ) -> Result<()> {
-        change_base_asset_parameters_instruction(ctx, enabled, risk_category, price_oracle)
+        change_base_asset_parameters_instruction(
+            ctx,
+            enabled,
+            risk_category,
+            oracle_source,
+            switchboard_oracle,
+            pyth_oracle,
+            in_place_price,
+        )
     }
 
     pub fn set_instrument_enabled_status(
@@ -145,6 +170,7 @@ pub mod rfq {
         withdraw_collateral_instruction(ctx, amount)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn create_rfq<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
         expected_legs_size: u16,

@@ -128,12 +128,12 @@ impl OptionCommonData {
     pub const SERIALIZED_SIZE: usize = 1 + 8 + 1 + 8 + 1 + 8;
 
     pub fn get_strike_price(&self) -> f64 {
-        convert_fixed_point_to_f64(self.strike_price.into(), self.strike_price_decimals)
+        convert_fixed_point_to_f64(self.strike_price, self.strike_price_decimals)
     }
 
     pub fn get_underlying_amount_per_contract(&self) -> f64 {
         convert_fixed_point_to_f64(
-            self.underlying_amount_per_contract.into(),
+            self.underlying_amount_per_contract,
             self.underlying_amound_per_contract_decimals,
         )
     }
@@ -156,7 +156,7 @@ impl FutureCommonData {
 
     pub fn get_underlying_amount_per_contract(&self) -> f64 {
         convert_fixed_point_to_f64(
-            self.underlying_amount_per_contract.into(),
+            self.underlying_amount_per_contract,
             self.underlying_amound_per_contract_decimals,
         )
     }

@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 use crate::errors::SpotError;
 use crate::state::{AssetIdentifierDuplicate, AuthoritySideDuplicate};
 use anchor_lang::prelude::*;
@@ -11,7 +13,7 @@ use rfq::state::{
 mod errors;
 mod state;
 
-declare_id!("HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW");
+declare_id!("aYdmgtebSCbKPPcvevLhdw1eWRpsLM2PuDXkQn9Cu2E");
 
 const ESCROW_SEED: &str = "escrow";
 
@@ -186,7 +188,7 @@ pub mod spot_instrument {
         );
 
         if escrow.amount > 0 {
-            let backup_receiver = Account::try_from(&backup_receiver)?;
+            let backup_receiver = Account::try_from(backup_receiver)?;
 
             transfer_from_an_escrow(
                 escrow,

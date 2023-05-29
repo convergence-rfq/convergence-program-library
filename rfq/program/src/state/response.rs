@@ -179,9 +179,9 @@ impl Response {
         };
 
         let price_bps = quote.get_price_bps();
-        let positibe_price_bps = price_bps.abs() as u128; // negative price is handled in get_quote_tokens_receiver
+        let positive_price_bps = price_bps.unsigned_abs(); // negative price is handled in get_quote_tokens_receiver
 
-        let result_with_more_decimals = legs_multiplier_bps as u128 * positibe_price_bps
+        let result_with_more_decimals = legs_multiplier_bps as u128 * positive_price_bps
             / 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS);
 
         let decimals_factor = Quote::LEG_MULTIPLIER_FACTOR;
@@ -254,8 +254,7 @@ impl Response {
                     Side::Bid => self.bid,
                     Side::Ask => self.ask,
                 }
-                .unwrap()
-                .clone();
+                .unwrap();
 
                 // apply overriden leg multiplier
                 if let Some(override_leg_multiplier_bps) = confirmation.override_leg_multiplier_bps

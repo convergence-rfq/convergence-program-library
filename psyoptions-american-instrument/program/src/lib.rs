@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{close_account, transfer, CloseAccount, Token, TokenAccount, Transfer};
 use errors::PsyoptionsAmericanError;
@@ -12,7 +14,7 @@ mod errors;
 mod instructions;
 mod state;
 
-declare_id!("7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR");
+declare_id!("HUhJBzPgs2jz3mxAuq5bG8yr8bY1ZtmvGLYnpGfLPrVu");
 
 const ESCROW_SEED: &str = "escrow";
 #[program]
@@ -113,7 +115,7 @@ pub mod psyoptions_american_instrument {
 
         let asset_data = rfq.get_asset_instrument_data(asset_identifier.into());
 
-        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(&asset_data)?;
+        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(asset_data)?;
 
         require!(
             mint_address == mint.key(),
@@ -232,7 +234,7 @@ pub mod psyoptions_american_instrument {
         );
 
         if escrow.amount > 0 {
-            let backup_receiver = Account::try_from(&backup_receiver)?;
+            let backup_receiver = Account::try_from(backup_receiver)?;
 
             transfer_from_an_escrow(
                 escrow,

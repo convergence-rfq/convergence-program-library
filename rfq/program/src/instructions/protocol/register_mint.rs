@@ -48,6 +48,7 @@ pub fn register_mint_instruction(ctx: Context<RegisterMintAccounts>) -> Result<(
         mint_address: mint.key(),
         mint_type,
         decimals: mint.decimals,
+        reserved: [0; 160],
     });
 
     Ok(())
