@@ -17,13 +17,6 @@ impl From<AuthoritySideDuplicate> for AuthoritySide {
     }
 }
 
-#[derive(Debug, AnchorSerialize, AnchorDeserialize, PartialEq)]
-#[repr(u8)]
-pub enum OptionType {
-    CALL = 0,
-    PUT = 1,
-}
-
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum AssetIdentifierDuplicate {
     Leg { leg_index: u8 },

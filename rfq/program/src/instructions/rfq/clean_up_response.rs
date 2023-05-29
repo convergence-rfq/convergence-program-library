@@ -57,14 +57,14 @@ pub fn clean_up_response_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    if response.leg_preparations_initialized_by.len() > 0 {
+    if !response.leg_preparations_initialized_by.is_empty() {
         let mut remaining_accounts = ctx.remaining_accounts.iter();
 
         let legs_to_revert = response.leg_preparations_initialized_by.len() as u8;
         for leg_index in 0..legs_to_revert {
             clean_up(
                 AssetIdentifier::Leg { leg_index },
-                &protocol,
+                protocol,
                 rfq,
                 response,
                 &mut remaining_accounts,
@@ -73,7 +73,7 @@ pub fn clean_up_response_instruction<'info>(
 
         clean_up(
             AssetIdentifier::Quote,
-            &protocol,
+            protocol,
             rfq,
             response,
             &mut remaining_accounts,

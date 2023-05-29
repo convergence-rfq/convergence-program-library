@@ -1,6 +1,7 @@
 //! Request for quote (RFQ) protocol.
 //!
 //! Provides an abstraction and implements the RFQ mechanism.
+#![allow(clippy::result_large_err)]
 
 use anchor_lang::prelude::*;
 use solana_security_txt::security_txt;
@@ -91,6 +92,7 @@ pub mod rfq {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn add_base_asset(
         ctx: Context<AddBaseAssetAccounts>,
         index: BaseAssetIndex,
@@ -168,6 +170,7 @@ pub mod rfq {
         withdraw_collateral_instruction(ctx, amount)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn create_rfq<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
         expected_legs_size: u16,

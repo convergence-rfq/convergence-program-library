@@ -41,7 +41,7 @@ pub fn settle_instruction<'info>(
     for leg_index in response.settled_legs..(rfq.legs.len() as u8) {
         settle(
             AssetIdentifier::Leg { leg_index },
-            &protocol,
+            protocol,
             rfq,
             response,
             &mut remaining_accounts,
@@ -50,7 +50,7 @@ pub fn settle_instruction<'info>(
 
     settle(
         AssetIdentifier::Quote,
-        &protocol,
+        protocol,
         rfq,
         response,
         &mut remaining_accounts,

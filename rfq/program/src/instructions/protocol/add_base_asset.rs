@@ -21,6 +21,7 @@ pub struct AddBaseAssetAccounts<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn add_base_asset_instruction(
     ctx: Context<AddBaseAssetAccounts>,
     index: BaseAssetIndex,
