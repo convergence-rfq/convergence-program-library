@@ -12,13 +12,15 @@ use crate::{
     LegWithMetadata,
 };
 
+type ScenariosSelector<'a> =
+    Box<dyn Fn(&Vec<LegWithMetadata<'a>>, RiskCategory) -> Vec<Scenario> + 'a>;
+
 pub struct RiskCalculator<'a> {
     pub legs_with_meta: Vec<LegWithMetadata<'a>>,
     pub config: &'a Config,
     pub base_assets: Vec<BaseAssetInfo>,
     pub prices: HashMap<BaseAssetIndex, f64>,
-    pub scenarios_selector:
-        Box<dyn Fn(&Vec<LegWithMetadata<'a>>, RiskCategory) -> Vec<Scenario> + 'a>,
+    pub scenarios_selector: ScenariosSelector<'a>,
     pub current_timestamp: i64,
 }
 
@@ -301,7 +303,7 @@ fn calculate_asset_unit_value(
 #[cfg(test)]
 mod tests {
     use float_cmp::assert_approx_eq;
-    use rfq::state::{Leg, PriceOracle, ProtocolState};
+    use rfq::state::{Leg, OracleSource, ProtocolState};
 
     use crate::state::{OptionType, RiskCategoryInfo};
     use crate::utils::{convert_fixed_point_to_f64, get_leg_amount_f64};
@@ -329,6 +331,16 @@ mod tests {
         }
     }
 
+    fn construct_base_asset(index: BaseAssetIndex, risk_category: RiskCategory) -> BaseAssetInfo {
+        BaseAssetInfo::new(
+            Default::default(),
+            index,
+            risk_category,
+            OracleSource::Switchboard,
+            Default::default(),
+        )
+    }
+
     #[test]
     fn one_spot_bitcoin_leg() {
         let config = get_config();
@@ -347,16 +359,7 @@ mod tests {
             leg_amount_fraction: get_leg_amount_f64(&leg),
         }];
 
-        let base_assets = vec![BaseAssetInfo {
-            index: BTC_INDEX,
-            bump: Default::default(),
-            enabled: true,
-            risk_category: RiskCategory::VeryLow,
-            price_oracle: PriceOracle::Switchboard {
-                address: Default::default(),
-            },
-            ticker: Default::default(),
-        }];
+        let base_assets = vec![construct_base_asset(BTC_INDEX, RiskCategory::VeryLow)];
 
         let prices = HashMap::from([(BTC_INDEX, 20_000.0)]);
 
@@ -424,16 +427,7 @@ mod tests {
             },
         ];
 
-        let base_assets = vec![BaseAssetInfo {
-            index: BTC_INDEX,
-            bump: Default::default(),
-            enabled: true,
-            risk_category: RiskCategory::VeryLow,
-            price_oracle: PriceOracle::Switchboard {
-                address: Default::default(),
-            },
-            ticker: Default::default(),
-        }];
+        let base_assets = vec![construct_base_asset(BTC_INDEX, RiskCategory::VeryLow)];
 
         let prices = HashMap::from([(BTC_INDEX, 20_000.0)]);
 
@@ -502,26 +496,8 @@ mod tests {
         ];
 
         let base_assets = vec![
-            BaseAssetInfo {
-                index: BTC_INDEX,
-                bump: Default::default(),
-                enabled: true,
-                risk_category: RiskCategory::VeryLow,
-                price_oracle: PriceOracle::Switchboard {
-                    address: Default::default(),
-                },
-                ticker: Default::default(),
-            },
-            BaseAssetInfo {
-                index: SOL_INDEX,
-                bump: Default::default(),
-                enabled: true,
-                risk_category: RiskCategory::Medium,
-                price_oracle: PriceOracle::Switchboard {
-                    address: Default::default(),
-                },
-                ticker: Default::default(),
-            },
+            construct_base_asset(BTC_INDEX, RiskCategory::VeryLow),
+            construct_base_asset(SOL_INDEX, RiskCategory::Medium),
         ];
 
         let prices = HashMap::from([(BTC_INDEX, 20_000.0), (SOL_INDEX, 30.0)]);
@@ -586,16 +562,7 @@ mod tests {
             leg_amount_fraction: get_leg_amount_f64(&leg),
         }];
 
-        let base_assets = vec![BaseAssetInfo {
-            index: BTC_INDEX,
-            bump: Default::default(),
-            enabled: true,
-            risk_category: RiskCategory::VeryLow,
-            price_oracle: PriceOracle::Switchboard {
-                address: Default::default(),
-            },
-            ticker: Default::default(),
-        }];
+        let base_assets = vec![construct_base_asset(BTC_INDEX, RiskCategory::VeryLow)];
 
         let prices = HashMap::from([(BTC_INDEX, 20_000.0)]);
 

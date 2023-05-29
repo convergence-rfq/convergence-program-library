@@ -60,7 +60,7 @@ describe("Required collateral calculation and lock", () => {
       orderType: OrderType.TwoWay,
       legs: [
         SpotInstrument.createForLeg(context, {
-          mint: context.assetToken,
+          mint: context.btcToken,
           amount: withTokenDecimals(1),
           side: Side.Bid,
         }),
@@ -71,13 +71,44 @@ describe("Required collateral calculation and lock", () => {
     await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-660) }]);
   });
 
+  it("Correct collateral locked for fix base asset rfq creation with different oracle types", async () => {
+    let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
+
+    // 1 bitcoin + 10 sol + 2 eth
+    const rfq = await context.createRfq({
+      orderType: OrderType.TwoWay,
+      legs: [
+        SpotInstrument.createForLeg(context, {
+          mint: context.btcToken,
+          amount: withTokenDecimals(1),
+          side: Side.Bid,
+        }), // 660 USDC collateral
+        SpotInstrument.createForLeg(context, {
+          mint: context.solToken,
+          amount: withTokenDecimals(10),
+          side: Side.Bid,
+        }), // 23.1 USDC collateral
+        SpotInstrument.createForLeg(context, {
+          mint: context.ethToken,
+          amount: withTokenDecimals(2),
+          side: Side.Bid,
+        }), // 220 USDC collateral
+      ],
+      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
+      finalize: false,
+    });
+    await rfq.finalizeConstruction();
+
+    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-903.1) }]);
+  });
+
   it("Correct collateral locked for responding to spot rfq", async () => {
     // solana rfq with 20 tokens in the leg
     const rfq = await context.createRfq({
       orderType: OrderType.TwoWay,
       legs: [
         SpotInstrument.createForLeg(context, {
-          mint: context.additionalAssetToken,
+          mint: context.solToken,
           amount: withTokenDecimals(20),
           side: Side.Bid,
         }),
@@ -97,12 +128,12 @@ describe("Required collateral calculation and lock", () => {
       orderType: OrderType.TwoWay,
       legs: [
         SpotInstrument.createForLeg(context, {
-          mint: context.assetToken,
+          mint: context.btcToken,
           amount: withTokenDecimals(1),
           side: Side.Bid,
         }),
         SpotInstrument.createForLeg(context, {
-          mint: context.additionalAssetToken,
+          mint: context.solToken,
           amount: withTokenDecimals(200),
           side: Side.Ask,
         }),
@@ -129,7 +160,7 @@ describe("Required collateral calculation and lock", () => {
 
   it("Correct collateral locked for option rfq", async () => {
     const options = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
-      underlyingMint: context.assetToken,
+      underlyingMint: context.btcToken,
       stableMint: context.quoteToken,
       underlyingPerContract: withTokenDecimals(0.1),
       strikePrice: withTokenDecimals(22000),

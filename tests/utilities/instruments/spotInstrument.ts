@@ -23,7 +23,7 @@ export class SpotInstrument implements Instrument {
   static createForLeg(
     context: Context,
     {
-      mint = context.assetToken,
+      mint = context.btcToken,
       amount = DEFAULT_INSTRUMENT_AMOUNT,
       side = DEFAULT_INSTRUMENT_SIDE,
     }: {
@@ -42,7 +42,7 @@ export class SpotInstrument implements Instrument {
     );
   }
 
-  static createForQuote(context: Context, mint: Mint = context.assetToken): InstrumentController {
+  static createForQuote(context: Context, mint: Mint = context.btcToken): InstrumentController {
     const instrument = new SpotInstrument(context, mint);
     return new InstrumentController(instrument as Instrument, null, mint.decimals);
   }
