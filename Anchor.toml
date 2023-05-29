@@ -1,18 +1,18 @@
 anchor_version = "0.25.0"
 
 [programs.localnet]
-rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"
-risk_engine = "7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo"
-spot_instrument = "HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW"
-psyoptions_european_instrument = "HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1"
-psyoptions_american_instrument = "7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR"
+rfq = "54DfGVnmAgRskJE5wu9n6o3y97sY9Djow2FvaGuSMxNf"
+risk_engine = "5A1gyRgASMwvLWWXYkWEShVLzUj6Qmc8ArSUirEo3tb5"
+spot_instrument = "aYdmgtebSCbKPPcvevLhdw1eWRpsLM2PuDXkQn9Cu2E"
+psyoptions_european_instrument = "2ZEFFaZgtZAkfDJqBev3yXNW1xHBsFgVW6WYaQFdEwbr"
+psyoptions_american_instrument = "HUhJBzPgs2jz3mxAuq5bG8yr8bY1ZtmvGLYnpGfLPrVu"
 
 [programs.devnet]
-rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"
-risk_engine = "7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo"
-spot_instrument = "HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW"
-psyoptions_european_instrument = "HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1"
-psyoptions_american_instrument = "7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR"
+rfq = "54DfGVnmAgRskJE5wu9n6o3y97sY9Djow2FvaGuSMxNf"
+risk_engine = "5A1gyRgASMwvLWWXYkWEShVLzUj6Qmc8ArSUirEo3tb5"
+spot_instrument = "aYdmgtebSCbKPPcvevLhdw1eWRpsLM2PuDXkQn9Cu2E"
+psyoptions_european_instrument = "2ZEFFaZgtZAkfDJqBev3yXNW1xHBsFgVW6WYaQFdEwbr"
+psyoptions_american_instrument = "HUhJBzPgs2jz3mxAuq5bG8yr8bY1ZtmvGLYnpGfLPrVu"
 
 [programs.testnet]
 rfq = "FNqQsjRU3CRx4N4BvMbTxCrCRBkvKyEZC5mDr4HTxnW4"
@@ -40,8 +40,8 @@ members = [
     "rfq/program",
     "risk-engine/program",
     "spot-instrument/program",
-    "psyoptions-american-instrument/program",
     "psyoptions-european-instrument/program",
+    "psyoptions-american-instrument/program",
 ]
 
 [scripts]
