@@ -1,5 +1,6 @@
+#![allow(clippy::result_large_err)]
+
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
@@ -117,7 +118,7 @@ pub mod psyoptions_european_instrument {
             ..
         } = &ctx.accounts;
         let asset_data = rfq.get_asset_instrument_data(asset_identifier.into());
-        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(&asset_data)?;
+        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(asset_data)?;
 
         require!(
             mint_address == mint.key(),
@@ -212,7 +213,6 @@ pub mod psyoptions_european_instrument {
         asset_identifier: AssetIdentifierDuplicate,
     ) -> Result<()> {
         let CleanUp {
-            protocol,
             rfq,
             response,
             first_to_prepare,
@@ -221,12 +221,6 @@ pub mod psyoptions_european_instrument {
             token_program,
             ..
         } = &ctx.accounts;
-
-        require!(
-            get_associated_token_address(&protocol.authority, &escrow.mint)
-                == backup_receiver.key(),
-            PsyoptionsEuropeanError::InvalidBackupAddress
-        );
 
         let expected_first_to_prepare = response
             .get_preparation_initialized_by(asset_identifier.into())
@@ -237,14 +231,18 @@ pub mod psyoptions_european_instrument {
             PsyoptionsEuropeanError::NotFirstToPrepare
         );
 
-        transfer_from_an_escrow(
-            escrow,
-            backup_receiver,
-            response.key(),
-            asset_identifier.into(),
-            *ctx.bumps.get("escrow").unwrap(),
-            token_program,
-        )?;
+        if escrow.amount > 0 {
+            let backup_receiver = Account::try_from(backup_receiver)?;
+
+            transfer_from_an_escrow(
+                escrow,
+                &backup_receiver,
+                response.key(),
+                asset_identifier.into(),
+                *ctx.bumps.get("escrow").unwrap(),
+                token_program,
+            )?;
+        }
 
         close_escrow_account(
             escrow,
@@ -414,8 +412,9 @@ pub struct CleanUp<'info> {
     pub first_to_prepare: UncheckedAccount<'info>,
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
-    pub backup_receiver: Account<'info, TokenAccount>,
+    /// CHECK: if there are tokens still in the escrow, send them to this account
+    #[account(mut)]
+    pub backup_receiver: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
 }

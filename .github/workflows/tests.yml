@@ -43,6 +43,9 @@ jobs:
         shell: bash
         run: cargo fmt --check
 
+      - name: Check cargo clippy
+        run: cargo clippy
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 

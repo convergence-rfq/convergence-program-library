@@ -2,7 +2,10 @@ use std::mem;
 
 use anchor_lang::prelude::*;
 
-use crate::errors::ProtocolError;
+use crate::{
+    errors::ProtocolError,
+    utils::{default_as_none, none_as_default},
+};
 
 use super::AuthoritySide;
 
@@ -94,14 +97,85 @@ impl FeeParameters {
     }
 }
 
+// We can store all three oracle sources even though only one will be used to extract the price
+// Sometimes is convenient to match base asset with an integrated protocol product using the oracle address
 #[account]
 pub struct BaseAssetInfo {
     pub bump: u8,
     pub index: BaseAssetIndex,
     pub enabled: bool,
     pub risk_category: RiskCategory,
-    pub price_oracle: PriceOracle,
+    pub oracle_source: OracleSource,
+    // next several fields should be accessed through accessors and not directly
+    // as a default value there means that the value is not set
+    // storing the Option directly would result in different account sizes for Some and None value
+    switchboard_oracle: Pubkey,
+    pyth_oracle: Pubkey,
+    in_place_price: f64,
+    pub reserved: [u8; 160],
     pub ticker: String,
+}
+
+impl BaseAssetInfo {
+    pub fn new(
+        bump: u8,
+        index: BaseAssetIndex,
+        risk_category: RiskCategory,
+        oracle_source: OracleSource,
+        ticker: String,
+    ) -> Self {
+        BaseAssetInfo {
+            bump,
+            index,
+            enabled: true,
+            risk_category,
+            oracle_source,
+            switchboard_oracle: Default::default(),
+            pyth_oracle: Default::default(),
+            in_place_price: Default::default(),
+            reserved: [0; 160],
+            ticker,
+        }
+    }
+
+    pub fn validate_oracle_source(&self) -> Result<()> {
+        let have_oracle_data = match self.oracle_source {
+            OracleSource::Switchboard => self.get_switchboard_oracle().is_some(),
+            OracleSource::Pyth => self.get_pyth_oracle().is_some(),
+            OracleSource::InPlace => self.get_in_place_price().is_some(),
+        };
+
+        require!(have_oracle_data, ProtocolError::OracleSourceIsMissing);
+
+        Ok(())
+    }
+
+    pub fn get_switchboard_oracle(&self) -> Option<Pubkey> {
+        default_as_none(self.switchboard_oracle)
+    }
+
+    pub fn get_pyth_oracle(&self) -> Option<Pubkey> {
+        default_as_none(self.pyth_oracle)
+    }
+
+    pub fn get_in_place_price(&self) -> Option<f64> {
+        default_as_none(self.in_place_price)
+    }
+
+    pub fn set_switchboard_oracle(&mut self, value: Option<Pubkey>) -> Result<()> {
+        self.switchboard_oracle = none_as_default(value)?;
+        Ok(())
+    }
+
+    pub fn set_pyth_oracle(&mut self, value: Option<Pubkey>) -> Result<()> {
+        self.pyth_oracle = none_as_default(value)?;
+        Ok(())
+    }
+
+    pub fn set_in_place_price(&mut self, value: Option<f64>) -> Result<()> {
+        self.in_place_price = none_as_default(value)?;
+        Ok(())
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq, Hash)]
@@ -134,8 +208,10 @@ pub enum RiskCategory {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
-pub enum PriceOracle {
-    Switchboard { address: Pubkey },
+pub enum OracleSource {
+    Switchboard,
+    Pyth,
+    InPlace,
 }
 
 #[account]
@@ -144,6 +220,7 @@ pub struct MintInfo {
     pub mint_address: Pubkey,
     pub decimals: u8,
     pub mint_type: MintType,
+    pub reserved: [u8; 160],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

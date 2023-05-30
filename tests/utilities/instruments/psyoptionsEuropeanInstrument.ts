@@ -232,7 +232,7 @@ export class EuroOptionsFacade {
   public static async initalizeNewOptionMeta(
     context: Context,
     {
-      underlyingMint = context.assetToken,
+      underlyingMint = context.btcToken,
       stableMint = context.quoteToken,
       underlyingPerContract = withTokenDecimals(1),
       strikePrice = withTokenDecimals(20000),

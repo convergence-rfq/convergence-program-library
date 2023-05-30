@@ -21,7 +21,7 @@ impl CollateralInfo {
         Ok(())
     }
 
-    pub fn unlock_collateral(&mut self, amount: u64) -> () {
+    pub fn unlock_collateral(&mut self, amount: u64) {
         self.locked_tokens_amount -= amount;
     }
 }

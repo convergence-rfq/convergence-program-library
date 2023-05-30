@@ -68,7 +68,7 @@ describe("Settle one party default", () => {
     const rfq = await context.createRfq({
       legs: [
         SpotInstrument.createForLeg(context, {
-          mint: context.additionalAssetToken,
+          mint: context.solToken,
           amount: withTokenDecimals(1),
           side: Side.Bid,
         }),

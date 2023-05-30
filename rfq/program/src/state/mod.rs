@@ -8,7 +8,7 @@ pub use self::rfq::{
 };
 pub use collateral::CollateralInfo;
 pub use protocol::{
-    BaseAssetIndex, BaseAssetInfo, FeeParameters, Instrument, MintInfo, MintType, PriceOracle,
+    BaseAssetIndex, BaseAssetInfo, FeeParameters, Instrument, MintInfo, MintType, OracleSource,
     ProtocolState, RiskCategory,
 };
 pub use response::{

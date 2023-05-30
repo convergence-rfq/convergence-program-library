@@ -97,6 +97,7 @@ fn validate_recent_timestamp(recent_timestamp: u64) -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn create_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
     expected_legs_size: u16,

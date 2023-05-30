@@ -1,3 +1,5 @@
+#![allow(clippy::excessive_precision)]
+
 use std::f64::consts::SQRT_2;
 
 use crate::state::OptionType;

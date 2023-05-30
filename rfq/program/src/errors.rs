@@ -74,8 +74,6 @@ pub enum ProtocolError {
     HaveCollateralLocked,
     #[msg("Can't clean up with pending settle preparations")]
     PendingPreparations,
-    #[msg("Passed backup address should be an associated account of protocol owner")]
-    InvalidBackupAddress,
     #[msg("Passed address is not a response maker")]
     NotAMaker,
     #[msg("Passed address is not of a party first to prepare for settlement")]
@@ -110,4 +108,8 @@ pub enum ProtocolError {
     InstrumentIsDisabled,
     #[msg("Can't create an rfq using a disabled base asset")]
     BaseAssetIsDisabled,
+    #[msg("Can't accept default value in non-default field")]
+    DefaultValueIsNotPermitted,
+    #[msg("Specified oracle source is missing")]
+    OracleSourceIsMissing,
 }

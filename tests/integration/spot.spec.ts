@@ -96,7 +96,7 @@ describe("RFQ Spot instrument integration tests", () => {
       legs: [
         SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: Side.Bid }),
         SpotInstrument.createForLeg(context, {
-          mint: context.additionalAssetToken,
+          mint: context.solToken,
           amount: withTokenDecimals(1000),
           side: Side.Ask,
         }),
@@ -374,7 +374,7 @@ describe("RFQ Spot instrument integration tests", () => {
       legsSize: calculateLegsSize(legs),
       legsHash: calculateLegsHash(legs, context.program),
       finalize: false,
-      activeWindow: 2,
+      activeWindow: 3,
       settlingWindow: 1,
     });
     await rfq.addLegs(legs.slice(legAmount / 2));
@@ -387,7 +387,7 @@ describe("RFQ Spot instrument integration tests", () => {
       await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
 
       return response;
-    }, 3.5);
+    }, 4.5);
 
     await response.partlyRevertSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
     await response.revertSettlementPreparation(AuthoritySide.Taker, legAmount / 2);

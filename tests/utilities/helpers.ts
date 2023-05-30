@@ -119,9 +119,9 @@ export class TokenChangeMeasurer {
     if (token == "quote") {
       return context.quoteToken.getAssociatedBalance(user);
     } else if (token == "asset") {
-      return context.assetToken.getAssociatedBalance(user);
+      return context.btcToken.getAssociatedBalance(user);
     } else if (token == "additionalAsset") {
-      return context.additionalAssetToken.getAssociatedBalance(user);
+      return context.solToken.getAssociatedBalance(user);
     } else if (token == "unlockedCollateral") {
       return context.collateralToken.getUnlockedCollateral(user);
     } else if (token == "totalCollateral") {

@@ -98,7 +98,8 @@ pub struct CleanUp<'info> {
     pub first_to_prepare: UncheckedAccount<'info>,
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(mut, constraint = backup_receiver.mint == escrow.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
-    pub backup_receiver: Account<'info, TokenAccount>,
+    /// CHECK: if there are tokens still in the escrow, send them to this account
+    #[account(mut)]
+    pub backup_receiver: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
 }

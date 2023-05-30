@@ -13,7 +13,7 @@ pub struct ScenarioSelector<'a> {
 impl ScenarioSelector<'_> {
     pub fn select_scenarious(
         &self,
-        legs_with_meta: &Vec<LegWithMetadata>,
+        legs_with_meta: &[LegWithMetadata],
         risk_category: RiskCategory,
     ) -> Vec<Scenario> {
         let have_option_legs = legs_with_meta

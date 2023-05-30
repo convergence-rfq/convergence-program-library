@@ -49,7 +49,7 @@ impl AccountDeserialize for EuroMeta {
             return Err(error::ErrorCode::AccountDiscriminatorNotFound.into());
         }
         let given_disc = &buf[..8];
-        if &[143, 142, 75, 68, 96, 251, 84, 36] != given_disc {
+        if [143, 142, 75, 68, 96, 251, 84, 36] != given_disc {
             return Err(error::ErrorCode::AccountDiscriminatorMismatch.into());
         }
         Self::try_deserialize_unchecked(buf)

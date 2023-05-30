@@ -23,7 +23,7 @@ pub struct RespondToRfqAccounts<'info> {
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     // rfq legs additional storage for first_to_prepare_legs field
-    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>() + rfq.legs.len() * 1, seeds = [
+    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>() + rfq.legs.len(), seeds = [
         RESPONSE_SEED.as_bytes(),
         rfq.key().as_ref(),
         maker.key().as_ref(),

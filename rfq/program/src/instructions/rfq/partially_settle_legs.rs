@@ -49,7 +49,7 @@ pub fn partially_settle_legs_instruction<'info>(
     for leg_index in response.settled_legs..(response.settled_legs + leg_amount_to_settle) {
         settle(
             AssetIdentifier::Leg { leg_index },
-            &protocol,
+            protocol,
             rfq,
             response,
             &mut remaining_accounts,
