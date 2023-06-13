@@ -413,7 +413,7 @@ export class Context {
     const quoteAccounts = await quote.getValidationAccounts();
     const baseAssetAccounts = await Promise.all(legs.map((leg) => leg.getBaseAssetAccount(this.program.programId)));
     const legAccounts = await (await Promise.all(legs.map(async (x) => await x.getValidationAccounts()))).flat();
-    const currentTimestamp = new BN(Math.floor(Date.now() / 1000) - 5); // -5 second because for some reason local validator is late for 1 second
+    const currentTimestamp = new BN(Math.floor(Date.now() / 1000));
     const rfq = await getRfqPda(
       this.taker.publicKey,
       legsHash,
