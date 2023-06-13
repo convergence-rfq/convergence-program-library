@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.6] - 2023-05-30
+
+### Breaking
+
+- rfq: Extended base assets by adding support for Pyth oracles and fixed prices for assets without an oracle. Added reserved space for base assets and base mints. Instruction `add_base_asset and change_base_asset_parameters` has been updated to include new properties. See PR ([#139](https://github.com/convergence-rfq/convergence-program-library/pull/139)) for full details.
+
+### Features
+
+- solita: Updated Solita packages to 2.2.6 ([#140](https://github.com/convergence-rfq/convergence-program-library/pull/140))
+
 ## [2.2.2-rc.3] - 2023-04-06
 
 ### Breaking
