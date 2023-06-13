@@ -202,6 +202,8 @@ async function main() {
 }
 
 async function launchLocalValidator() {
+  console.log("Launching local validator...");
+
   await rimraf(ledgerPath);
   await fsPromise.mkdir(ledgerPath);
 
