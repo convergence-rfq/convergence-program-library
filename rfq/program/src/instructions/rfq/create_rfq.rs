@@ -10,7 +10,7 @@ use crate::{
 use anchor_lang::prelude::*;
 use solana_program::hash::hash;
 
-const RECENT_TIMESTAMP_VALIDITY: u64 = 90; // slightly higher then the recent blockhash validity
+const RECENT_TIMESTAMP_VALIDITY: u64 = 120; // slightly higher then the recent blockhash validity
 
 #[derive(Accounts)]
 #[instruction(
@@ -86,12 +86,11 @@ fn validate_legs<'a, 'info: 'a>(
 
 fn validate_recent_timestamp(recent_timestamp: u64) -> Result<()> {
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let time_offset = recent_timestamp.abs_diff(current_timestamp);
 
     require!(
-        recent_timestamp <= current_timestamp
-            && (current_timestamp - recent_timestamp) < RECENT_TIMESTAMP_VALIDITY,
-        // TODO: Could rename
-        ProtocolError::InvalidRecentBlockhash
+        time_offset < RECENT_TIMESTAMP_VALIDITY,
+        ProtocolError::InvalidRecentTimestamp
     );
 
     Ok(())

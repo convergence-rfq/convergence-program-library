@@ -18,8 +18,8 @@ pub enum ProtocolError {
     NotACollateralTokenAccount,
     #[msg("Passed account is not a risk engine in the protocol")]
     NotARiskEngine,
-    #[msg("Invalid recent blockhash")]
-    InvalidRecentBlockhash,
+    #[msg("Recent timestamp is too different from on-chain time")]
+    InvalidRecentTimestamp,
     #[msg("An Rfq without legs is not supported")]
     EmptyLegsNotSupported,
     #[msg("Legs size does not match specified expected leg size")]
