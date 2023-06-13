@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.7] - 2023-06-13
+
+### Fixes
+
+- rfq: RFQ recent blockhash window has been extended. See PR ([#142](https://github.com/convergence-rfq/convergence-program-library/pull/142)) for full details.
+
 ## [2.2.6] - 2023-05-30
 
 ### Breaking
