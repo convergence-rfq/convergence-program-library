@@ -221,7 +221,7 @@ pub mod rfq {
 
     pub fn confirm_response<'info>(
         ctx: Context<'_, '_, '_, 'info, ConfirmResponseAccounts<'info>>,
-        side: Side,
+        side: QuoteSide,
         override_leg_multiplier_bps: Option<u64>,
     ) -> Result<()> {
         confirm_response_instruction(ctx, side, override_leg_multiplier_bps)

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use rfq::state::{AuthoritySide, BaseAssetIndex, BaseAssetInfo, RiskCategory, Side};
+use rfq::state::{AuthoritySide, BaseAssetIndex, BaseAssetInfo, QuoteSide, RiskCategory};
 use std::collections::HashMap;
 
 use crate::{
@@ -27,7 +27,7 @@ pub struct RiskCalculator<'a> {
 pub struct CalculationCase {
     pub leg_multiplier: f64,
     pub authority_side: AuthoritySide,
-    pub quote_side: Side,
+    pub quote_side: QuoteSide,
 }
 
 struct PortfolioStatistics {
@@ -69,7 +69,7 @@ impl<'a> RiskCalculator<'a> {
     ) -> Result<u64> {
         let mut portfolio_inverted = false;
 
-        if let Side::Bid = case.quote_side {
+        if let QuoteSide::Bid = case.quote_side {
             portfolio_inverted = !portfolio_inverted;
         }
 
@@ -303,7 +303,7 @@ fn calculate_asset_unit_value(
 #[cfg(test)]
 mod tests {
     use float_cmp::assert_approx_eq;
-    use rfq::state::{Leg, OracleSource, ProtocolState};
+    use rfq::state::{Leg, LegSide, OracleSource, ProtocolState};
 
     use crate::state::{OptionType, RiskCategoryInfo};
     use crate::utils::{convert_fixed_point_to_f64, get_leg_amount_f64};
@@ -348,7 +348,7 @@ mod tests {
         let leg = Leg {
             instrument_amount: 2 * 10_u64.pow(6),
             instrument_decimals: 6,
-            side: Side::Bid,
+            side: LegSide::Long,
             base_asset_index: BTC_INDEX,
             instrument_program: Default::default(),
             instrument_data: Default::default(),
@@ -383,7 +383,7 @@ mod tests {
             .calculate_risk(CalculationCase {
                 leg_multiplier: 3.0,
                 authority_side: AuthoritySide::Taker,
-                quote_side: Side::Ask,
+                quote_side: QuoteSide::Ask,
             })
             .unwrap();
         assert_eq!(
@@ -400,7 +400,7 @@ mod tests {
             Leg {
                 instrument_amount: 2 * 10_u64.pow(6),
                 instrument_decimals: 6,
-                side: Side::Bid,
+                side: LegSide::Long,
                 base_asset_index: BTC_INDEX,
                 instrument_program: Default::default(),
                 instrument_data: Default::default(),
@@ -408,7 +408,7 @@ mod tests {
             Leg {
                 instrument_amount: 2 * 10_u64.pow(6),
                 instrument_decimals: 6,
-                side: Side::Ask,
+                side: LegSide::Short,
                 base_asset_index: BTC_INDEX,
                 instrument_program: Default::default(),
                 instrument_data: Default::default(),
@@ -451,7 +451,7 @@ mod tests {
             .calculate_risk(CalculationCase {
                 leg_multiplier: 3.0,
                 authority_side: AuthoritySide::Taker,
-                quote_side: Side::Ask,
+                quote_side: QuoteSide::Ask,
             })
             .unwrap();
         assert_eq!(
@@ -468,7 +468,7 @@ mod tests {
             Leg {
                 instrument_amount: 1 * 10_u64.pow(6),
                 instrument_decimals: 6,
-                side: Side::Bid,
+                side: LegSide::Long,
                 base_asset_index: BTC_INDEX,
                 instrument_program: Default::default(),
                 instrument_data: Default::default(),
@@ -476,7 +476,7 @@ mod tests {
             Leg {
                 instrument_amount: 100 * 10_u64.pow(9),
                 instrument_decimals: 9,
-                side: Side::Ask,
+                side: LegSide::Short,
                 base_asset_index: SOL_INDEX,
                 instrument_program: Default::default(),
                 instrument_data: Default::default(),
@@ -526,7 +526,7 @@ mod tests {
             .calculate_risk(CalculationCase {
                 leg_multiplier: 3.0,
                 authority_side: AuthoritySide::Taker,
-                quote_side: Side::Ask,
+                quote_side: QuoteSide::Ask,
             })
             .unwrap();
         assert_eq!(
@@ -551,7 +551,7 @@ mod tests {
         let leg = Leg {
             instrument_amount: 1 * 10_u64.pow(6),
             instrument_decimals: 6,
-            side: Side::Bid,
+            side: LegSide::Long,
             base_asset_index: BTC_INDEX,
             instrument_program: Default::default(),
             instrument_data: option_data.try_to_vec().unwrap(),
@@ -591,7 +591,7 @@ mod tests {
             .calculate_risk(CalculationCase {
                 leg_multiplier: 3.0,
                 authority_side: AuthoritySide::Taker,
-                quote_side: Side::Bid,
+                quote_side: QuoteSide::Bid,
             })
             .unwrap();
         assert_approx_eq!(

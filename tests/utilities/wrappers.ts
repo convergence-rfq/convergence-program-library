@@ -56,7 +56,7 @@ import {
 import {
   AuthoritySide,
   Quote,
-  Side,
+  QuoteSide,
   FixedSize,
   RiskCategory,
   riskCategoryToObject,
@@ -931,14 +931,14 @@ export class Response {
   }
 
   async confirm({
-    side = Side.Bid,
+    side = QuoteSide.Bid,
     legMultiplierBps = null,
   }: {
-    side?: Side;
+    side?: QuoteSide;
     legMultiplierBps?: BN | null;
   } = {}) {
     await this.context.program.methods
-      .confirmResponse(side ?? Side.Bid, legMultiplierBps)
+      .confirmResponse(side, legMultiplierBps)
       .accounts({
         taker: this.context.taker.publicKey,
         protocol: this.context.protocolPda,

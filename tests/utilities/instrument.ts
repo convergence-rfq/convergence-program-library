@@ -1,7 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { AccountMeta, PublicKey } from "@solana/web3.js";
 import { getBaseAssetPda } from "./pdas";
-import { AssetIdentifier } from "./types";
+import { AssetIdentifier, LegSide } from "./types";
 import { Response, Rfq } from "./wrappers";
 
 export interface InstrumentData {
@@ -39,7 +39,7 @@ export interface Instrument {
 export class InstrumentController {
   constructor(
     protected instrument: Instrument,
-    protected legInfo: { amount: BN; side: { bid: {} } | { ask: {} }; baseAssetIndex: number } | null,
+    protected legInfo: { amount: BN; side: LegSide; baseAssetIndex: number } | null,
     protected decimals: number
   ) {}
 

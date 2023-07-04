@@ -14,7 +14,7 @@ import {
 } from "../utilities/helpers";
 import { EuroOptionsFacade, PsyoptionsEuropeanInstrument } from "../utilities/instruments/psyoptionsEuropeanInstrument";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
-import { FixedSize, OrderType, Quote, Side } from "../utilities/types";
+import { FixedSize, LegSide, OrderType, Quote, QuoteSide } from "../utilities/types";
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Required collateral calculation and lock", () => {
@@ -62,7 +62,7 @@ describe("Required collateral calculation and lock", () => {
         SpotInstrument.createForLeg(context, {
           mint: context.btcToken,
           amount: withTokenDecimals(1),
-          side: Side.Bid,
+          side: LegSide.Long,
         }),
       ],
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
@@ -81,17 +81,17 @@ describe("Required collateral calculation and lock", () => {
         SpotInstrument.createForLeg(context, {
           mint: context.btcToken,
           amount: withTokenDecimals(1),
-          side: Side.Bid,
+          side: LegSide.Long,
         }), // 660 USDC collateral
         SpotInstrument.createForLeg(context, {
           mint: context.solToken,
           amount: withTokenDecimals(10),
-          side: Side.Bid,
+          side: LegSide.Long,
         }), // 23.1 USDC collateral
         SpotInstrument.createForLeg(context, {
           mint: context.ethToken,
           amount: withTokenDecimals(2),
-          side: Side.Bid,
+          side: LegSide.Long,
         }), // 220 USDC collateral
       ],
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
@@ -110,7 +110,7 @@ describe("Required collateral calculation and lock", () => {
         SpotInstrument.createForLeg(context, {
           mint: context.solToken,
           amount: withTokenDecimals(20),
-          side: Side.Bid,
+          side: LegSide.Long,
         }),
       ],
       fixedSize: FixedSize.None,
@@ -130,12 +130,12 @@ describe("Required collateral calculation and lock", () => {
         SpotInstrument.createForLeg(context, {
           mint: context.btcToken,
           amount: withTokenDecimals(1),
-          side: Side.Bid,
+          side: LegSide.Long,
         }),
         SpotInstrument.createForLeg(context, {
           mint: context.solToken,
           amount: withTokenDecimals(200),
-          side: Side.Ask,
+          side: LegSide.Short,
         }),
       ],
       fixedSize: FixedSize.None,
@@ -146,7 +146,7 @@ describe("Required collateral calculation and lock", () => {
 
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     // confirm multiplier leg multiplier of 1
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(1) });
     let expectedCollateral = withTokenDecimals(1122);
     await measurer.expectChange([
       {
@@ -169,7 +169,9 @@ describe("Required collateral calculation and lock", () => {
 
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
     const rfq = await context.createRfq({
-      legs: [PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, { amount: 10000, side: Side.Bid })], // 1 contract with 4 decimals
+      legs: [
+        PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, { amount: 10000, side: LegSide.Long }),
+      ], // 1 contract with 4 decimals
       fixedSize: FixedSize.None,
     });
     const response = await rfq.respond({ bid: Quote.getStandard(withTokenDecimals(200), toLegMultiplier(3)) });

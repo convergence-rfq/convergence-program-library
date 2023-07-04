@@ -10,7 +10,7 @@ import {
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 
-import { AuthoritySide, Quote, Side } from "../utilities/types";
+import { AuthoritySide, LegSide, Quote, QuoteSide } from "../utilities/types";
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Unlock response collateral", () => {
@@ -33,14 +33,14 @@ describe("Unlock response collateral", () => {
   it("Correct amount of fees is taken as result as settled response", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(22), side: Side.Bid })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(22), side: LegSide.Long })],
     });
 
     const response = await rfq.respond({
       bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(1)),
     });
 
-    await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(1) });
     await response.prepareSettlement(AuthoritySide.Taker);
     await response.prepareSettlement(AuthoritySide.Maker);
     await response.settle(taker, [maker]);

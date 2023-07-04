@@ -4,7 +4,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/we
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AssetIdentifier, AuthoritySide, InstrumentType, Side } from "../types";
+import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { PsyoptionsEuropeanInstrument as PsyoptionsEuropeanInstrumentIdl } from "../../../target/types/psyoptions_european_instrument";
 import { executeInParallel, withTokenDecimals } from "../helpers";
@@ -41,7 +41,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
       side = DEFAULT_INSTRUMENT_SIDE,
     }: {
       amount?: BN;
-      side?: Side;
+      side?: LegSide;
     } = {}
   ): InstrumentController {
     const instrument = new PsyoptionsEuropeanInstrument(context, optionFacade, optionType);
