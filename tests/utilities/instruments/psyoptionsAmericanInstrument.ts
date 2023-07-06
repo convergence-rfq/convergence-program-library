@@ -5,7 +5,7 @@ import { instructions, createProgram, getOptionByKey, OptionMarketWithKey } from
 import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AuthoritySide, AssetIdentifier, InstrumentType, Side } from "../types";
+import { AuthoritySide, AssetIdentifier, InstrumentType, LegSide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { executeInParallel, withTokenDecimals } from "../helpers";
 import * as anchor from "@project-serum/anchor";
@@ -40,7 +40,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
       side = DEFAULT_INSTRUMENT_SIDE,
     }: {
       amount?: BN;
-      side?: Side;
+      side?: LegSide;
     } = {}
   ): InstrumentController {
     const instrument = new PsyoptionsAmericanInstrumentClass(context, OptionMarket, Optiontype);

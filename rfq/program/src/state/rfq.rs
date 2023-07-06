@@ -94,7 +94,7 @@ pub struct Leg {
     pub instrument_data: Vec<u8>,
     pub instrument_amount: u64,
     pub instrument_decimals: u8,
-    pub side: Side,
+    pub side: LegSide,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
@@ -144,9 +144,9 @@ impl RfqState {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
-pub enum Side {
-    Bid,
-    Ask,
+pub enum LegSide {
+    Long,
+    Short,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

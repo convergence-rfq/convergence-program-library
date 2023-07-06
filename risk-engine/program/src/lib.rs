@@ -2,7 +2,7 @@
 
 use anchor_lang::prelude::*;
 use rfq::state::{
-    AuthoritySide, FixedSize, Leg, OrderType, ProtocolState, Quote, Response, Rfq, Side,
+    AuthoritySide, FixedSize, Leg, OrderType, ProtocolState, Quote, QuoteSide, Response, Rfq,
 };
 
 use base_asset_extractor::extract_base_assets;
@@ -217,12 +217,16 @@ pub mod risk_engine {
                 };
 
                 match rfq.order_type {
-                    OrderType::Buy => risk_calculator.calculate_risk(side_to_case(Side::Ask))?,
-                    OrderType::Sell => risk_calculator.calculate_risk(side_to_case(Side::Bid))?,
+                    OrderType::Buy => {
+                        risk_calculator.calculate_risk(side_to_case(QuoteSide::Ask))?
+                    }
+                    OrderType::Sell => {
+                        risk_calculator.calculate_risk(side_to_case(QuoteSide::Bid))?
+                    }
                     OrderType::TwoWay => risk_calculator
                         .calculate_risk_for_several_cases([
-                            side_to_case(Side::Bid),
-                            side_to_case(Side::Ask),
+                            side_to_case(QuoteSide::Bid),
+                            side_to_case(QuoteSide::Ask),
                         ])?
                         .into_iter()
                         .max()
@@ -271,14 +275,18 @@ pub mod risk_engine {
         let collateral = match (response.bid, response.ask) {
             (Some(bid_quote), Some(ask_quote)) => risk_calculator
                 .calculate_risk_for_several_cases([
-                    get_case(bid_quote, Side::Bid),
-                    get_case(ask_quote, Side::Ask),
+                    get_case(bid_quote, QuoteSide::Bid),
+                    get_case(ask_quote, QuoteSide::Ask),
                 ])?
                 .into_iter()
                 .max()
                 .unwrap(),
-            (Some(quote), None) => risk_calculator.calculate_risk(get_case(quote, Side::Bid))?,
-            (None, Some(quote)) => risk_calculator.calculate_risk(get_case(quote, Side::Ask))?,
+            (Some(quote), None) => {
+                risk_calculator.calculate_risk(get_case(quote, QuoteSide::Bid))?
+            }
+            (None, Some(quote)) => {
+                risk_calculator.calculate_risk(get_case(quote, QuoteSide::Ask))?
+            }
             _ => unreachable!(),
         };
 
