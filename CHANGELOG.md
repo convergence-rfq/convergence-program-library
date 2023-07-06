@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.8] - 2023-07-06
+
+### Breaking
+
+- rfq: Separate one side enum to leg side and quote side. See PR ([#139](https://github.com/convergence-rfq/convergence-program-library/pull/146)) for full details.
+
 ## [2.2.7] - 2023-06-13
 
 ### Fixes
