@@ -11,7 +11,7 @@ import {
   withTokenDecimals,
 } from "../utilities/helpers";
 import { PsyoptionsEuropeanInstrument, EuroOptionsFacade } from "../utilities/instruments/psyoptionsEuropeanInstrument";
-import { AuthoritySide, OracleSource, Quote, RiskCategory, Side } from "../utilities/types";
+import { AuthoritySide, OracleSource, Quote, RiskCategory, QuoteSide, LegSide } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 import { CONTRACT_DECIMALS_BN, OptionType } from "@mithraic-labs/tokenized-euros";
 import { SWITCHBOARD_BTC_ORACLE } from "../utilities/constants";
@@ -50,7 +50,7 @@ describe("Psyoptions European instrument integration tests", () => {
       legs: [
         PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, {
           amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
-          side: Side.Bid,
+          side: LegSide.Long,
         }),
       ],
     });
@@ -60,7 +60,7 @@ describe("Psyoptions European instrument integration tests", () => {
       ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
     });
     // taker confirms to buy 1 option
-    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1) });
 
     await response.prepareSettlement(AuthoritySide.Taker);
 
@@ -89,7 +89,7 @@ describe("Psyoptions European instrument integration tests", () => {
       legs: [
         PsyoptionsEuropeanInstrument.create(context, options, OptionType.PUT, {
           amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
-          side: Side.Bid,
+          side: LegSide.Long,
         }),
       ],
     });
@@ -100,7 +100,7 @@ describe("Psyoptions European instrument integration tests", () => {
         bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
       });
       // taker confirms to sell 2 options
-      await response.confirm({ side: Side.Bid, legMultiplierBps: toLegMultiplier(2) });
+      await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(2) });
 
       await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
 
@@ -152,7 +152,7 @@ describe("Psyoptions European instrument integration tests", () => {
     const legs = options.map((option) =>
       PsyoptionsEuropeanInstrument.create(context, option, OptionType.CALL, {
         amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
-        side: Side.Bid,
+        side: LegSide.Long,
       })
     );
     const rfq = await context.createRfq({
@@ -169,7 +169,7 @@ describe("Psyoptions European instrument integration tests", () => {
       bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
       ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
     });
-    await response.confirm({ side: Side.Ask, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1) });
 
     // mint options
     await Promise.all(options.map(async (option) => option.mintOptions(context.maker, new BN(2), OptionType.CALL)));

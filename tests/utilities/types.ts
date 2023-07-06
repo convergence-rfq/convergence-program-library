@@ -1,5 +1,4 @@
 import { BN } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
 
 export type OrderType = { buy: {} } | { sell: {} } | { twoWay: {} };
 
@@ -9,11 +8,18 @@ export const OrderType = {
   TwoWay: { twoWay: {} },
 };
 
-export type Side = { bid: {} } | { ask: {} };
+export type QuoteSide = { bid: {} } | { ask: {} };
 
-export const Side = {
+export const QuoteSide = {
   Bid: { bid: {} },
   Ask: { ask: {} },
+};
+
+export type LegSide = { long: {} } | { short: {} };
+
+export const LegSide = {
+  Long: { long: {} },
+  Short: { short: {} },
 };
 
 export type AuthoritySide = { taker: {} } | { maker: {} };
