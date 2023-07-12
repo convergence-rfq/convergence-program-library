@@ -135,5 +135,7 @@ pub fn confirm_response_instruction<'info>(
         response.maker_collateral_locked -= to_unlock;
     }
 
+    rfq.confirmed_responses += 1;
+
     Ok(())
 }

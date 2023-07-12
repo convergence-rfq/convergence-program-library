@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.9] - 2023-07-12
+
+### Fixes
+
+- rfq: Increment confirmed responses on RFQ confirmation. See PR ([#149](https://github.com/convergence-rfq/convergence-program-library/pull/149)) for full details.
+
 ## [2.2.8] - 2023-07-06
 
 ### Breaking
