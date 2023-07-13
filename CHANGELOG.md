@@ -12,7 +12,7 @@ The minor version will be incremented upon a breaking change and the patch versi
 
 ### Breaking
 
-- all: Updated program ids. See PR ([#150](https://github.com/convergence-rfq/convergence-program-library/pull/150)) for full details.
+- all: Updated program ids. See PR ([#152](https://github.com/convergence-rfq/convergence-program-library/pull/152)) for full details.
 
 ## [2.2.9] - 2023-07-12
 
