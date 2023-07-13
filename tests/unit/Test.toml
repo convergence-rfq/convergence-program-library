@@ -56,63 +56,63 @@ address = "9JgYBxL6w11XJ4xtvEicRhXGse6A1akPgZJaKjM1JnZB"
 filename = "../fixtures/accounts/mint-usd-quote.json"
 
 [[test.validator.account]]
-address = "9qsFm5sXuJwRvx1TcnKaersw9TciacK2pmHd3r225Gh7"
+address = "DcP8g86f7WxKVmFNUm1o7bPDbmj3hkNoWhkwRpVyZV11"
 filename = "../fixtures/accounts/rfq-base-asset-btc.json"
 
 [[test.validator.account]]
-address = "Fzefa3sywyLHwqLjn4STuZTEQbd7UK5uVcWbyDJHK86n"
+address = "439cjNap8aRJ3BgRc5G3eHEtEJMzbDhRQSZvjpnGbcFV"
 filename = "../fixtures/accounts/rfq-base-asset-eth.json"
 
 [[test.validator.account]]
-address = "5mhAJXEM8ZsVhw5cVWoKx1au1AgdBEB31zrzY8LbStTs"
+address = "8x7hjf2mnwTeayV86caKAQBzEXc6zMC3z17XjDWEzffD"
 filename = "../fixtures/accounts/rfq-base-asset-sol.json"
 
 [[test.validator.account]]
-address = "nbeJZQBYNASGykUCt3PkAgp6WiAioYwm4r87rYj4Lhw"
+address = "EES2vhXowsyNzCo7iRABtb2pjTC2CzRU3KoR4iNzWaNM"
 filename = "../fixtures/accounts/rfq-collateral-info-dao.json"
 
 [[test.validator.account]]
-address = "99ejsHQgYnNBcnnZqwuujcf8XEsfH4FkYR3XdvAALSVY"
+address = "Db2vmyiWT8DJReEG8AZHd6DiK3kTRw22NLY3BQWKiWqS"
 filename = "../fixtures/accounts/rfq-collateral-info-maker.json"
 
 [[test.validator.account]]
-address = "E2AxP2hHaM5UfKnaKE9q2M1kw12MEhu3iErUSKwk9MBY"
+address = "ABtYxAFisHFdrwL5P1nLhjP6KrtdX7Q1RPRWfNPAcoZX"
 filename = "../fixtures/accounts/rfq-collateral-info-taker.json"
 
 [[test.validator.account]]
-address = "GitSjKjicHM8qJtXdYvvP53kWjxCnbBXbgptCCWwk3ZT"
+address = "B82kXR6yBP55btHCkmovhHRNYeRgJ4ApUrwGnzatieYR"
 filename = "../fixtures/accounts/rfq-collateral-token-dao.json"
 
 [[test.validator.account]]
-address = "3AaepfF8pVkomJXjeqjQDh5QUQS6FV6DR7v6XMDuJiL4"
+address = "9RTWX9gkMtq8rHcTDiKDNyYDH2UUN9hjfYaEkL88ok8A"
 filename = "../fixtures/accounts/rfq-collateral-token-maker.json"
 
 [[test.validator.account]]
-address = "2T3abBXHD2WvG2WrkBhCjjqWwjhG8JPg4kbWVUxkYneh"
+address = "5GKbWheozXu5UdDWR7rh7NXCHtRmnhvqmwY6REsRDshS"
 filename = "../fixtures/accounts/rfq-collateral-token-taker.json"
 
 [[test.validator.account]]
-address = "7sTd7qMEaGX6xYf6ULRnqdR8ULorBcDeZPu3hHukgkye"
+address = "2eoTJHVP1UuW9fSRaN7AjvBYyHRLcCqebJhHFzid6Ltd"
 filename = "../fixtures/accounts/rfq-mint-info-btc.json"
 
 [[test.validator.account]]
-address = "3HvgZ23oMF3PYYhfj7y8P4PoFy9zhYM2vwcNWypfdxee"
+address = "BfEQtEoXdnQyedHjjU1DAidDz9Qy3DwLA2jxE1oGaoM7"
 filename = "../fixtures/accounts/rfq-mint-info-eth.json"
 
 [[test.validator.account]]
-address = "HK3mpcF5Rd38C92CMRChv6mMxWAz5FscmDZwK9GqALBh"
+address = "DZ8AjrQ8LZyrj8sMoDpCMDdxvnfDkPov3hesnahyx8i6"
 filename = "../fixtures/accounts/rfq-mint-info-sol.json"
 
 [[test.validator.account]]
-address = "3aAmhS6UEUZeQrJLrhsMFW4Myj6ujpbn6ypch6mWfbtn"
+address = "8ras5A6ciiJCzB73KEU8zH6W2aFjh7mPdApZKGdjNjfp"
 filename = "../fixtures/accounts/rfq-mint-info-usd-quote.json"
 
 [[test.validator.account]]
-address = "AyfCxm6D1E4PnYXHuhKUu1gSU41QjU2TogcHf2QAx99U"
+address = "BRLhhsBrEwXeJD5w1rcrXT3PytZYvC11bmC7jz3rkf3q"
 filename = "../fixtures/accounts/rfq-protocol.json"
 
 [[test.validator.account]]
-address = "5QSwywCsuyxgu8kKQ6dA5BKiFeH4BFyx71ppQboSAmEo"
+address = "Hcu5LZCmxDEE3uYvs28F1VEW1NS29yGB7Av8rWmGF5Mu"
 filename = "../fixtures/accounts/risk-engine-config.json"
 
 [[test.validator.account]]

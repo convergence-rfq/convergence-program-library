@@ -57,7 +57,7 @@ security_txt! {
     auditors: "None"
 }
 
-declare_id!("54DfGVnmAgRskJE5wu9n6o3y97sY9Djow2FvaGuSMxNf");
+declare_id!("CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4");
 
 /// Request for quote (RFQ) protocol module.
 #[program]

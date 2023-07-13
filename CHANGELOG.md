@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.10] - 2023-07-13
+
+### Breaking
+
+- all: Updated program ids. See PR ([#152](https://github.com/convergence-rfq/convergence-program-library/pull/152)) for full details.
+
 ## [2.2.9] - 2023-07-12
 
 ### Fixes

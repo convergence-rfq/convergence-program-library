@@ -1,25 +1,18 @@
 anchor_version = "0.25.0"
 
 [programs.localnet]
-rfq = "54DfGVnmAgRskJE5wu9n6o3y97sY9Djow2FvaGuSMxNf"
-risk_engine = "5A1gyRgASMwvLWWXYkWEShVLzUj6Qmc8ArSUirEo3tb5"
-spot_instrument = "aYdmgtebSCbKPPcvevLhdw1eWRpsLM2PuDXkQn9Cu2E"
-psyoptions_european_instrument = "2ZEFFaZgtZAkfDJqBev3yXNW1xHBsFgVW6WYaQFdEwbr"
-psyoptions_american_instrument = "HUhJBzPgs2jz3mxAuq5bG8yr8bY1ZtmvGLYnpGfLPrVu"
+rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
+risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
+spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
+psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
+psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
 
 [programs.devnet]
-rfq = "54DfGVnmAgRskJE5wu9n6o3y97sY9Djow2FvaGuSMxNf"
-risk_engine = "5A1gyRgASMwvLWWXYkWEShVLzUj6Qmc8ArSUirEo3tb5"
-spot_instrument = "aYdmgtebSCbKPPcvevLhdw1eWRpsLM2PuDXkQn9Cu2E"
-psyoptions_european_instrument = "2ZEFFaZgtZAkfDJqBev3yXNW1xHBsFgVW6WYaQFdEwbr"
-psyoptions_american_instrument = "HUhJBzPgs2jz3mxAuq5bG8yr8bY1ZtmvGLYnpGfLPrVu"
-
-[programs.testnet]
-rfq = "FNqQsjRU3CRx4N4BvMbTxCrCRBkvKyEZC5mDr4HTxnW4"
-risk_engine = "AY9P4T28wvG7zHGvMNmdUAzAdwQFrfyzQRdi8nhH5fpv"
-spot_instrument = "ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS"
-psyoptions_european_instrument = "Hk3n7BobDvZuf7sVAD68vpth2ziTFqvuytVtiBGmCwes"
-psyoptions_american_instrument = "DgP7BXvyTUzDDWVThy6usX7HZvBF5b6QwHovCz271hAv"
+rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
+risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
+spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
+psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
+psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
 
 [programs.mainnet]
 rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"

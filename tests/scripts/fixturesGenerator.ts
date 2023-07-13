@@ -49,6 +49,8 @@ const testFixturesBlockEnd = `
 const namedPubkeys: { [pubkey: string]: string } = {};
 const savedAccountFixtures: { pubkey: PublicKey; name: string }[] = [];
 
+process.env.ANCHOR_PROVIDER_URL = "http://127.0.0.1:8899";
+
 async function main() {
   clearFixtures();
 
@@ -215,6 +217,8 @@ async function launchLocalValidator() {
 
   const wallet = NodeWallet.local();
   const validator = spawn("solana-test-validator", [
+    "-u",
+    "http://0.0.0.0",
     "--ledger",
     ledgerPath,
     "--rpc-port",
@@ -258,7 +262,7 @@ async function parsePrograms() {
 }
 
 async function waitForValidator(): Promise<void> {
-  const connection = new Connection(`http://localhost:${validatorPort}`);
+  const connection = new Connection(`http://127.0.0.1:${validatorPort}`);
   let version: Version | null = null;
 
   while (!version) {
