@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { attachImprovedLogDisplay } from "../utilities/helpers";
 import {
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
-  DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
+  DEFAULT_MIN_COLLATERAL_REQUIREMENT,
   DEFAULT_MINT_DECIMALS,
 } from "../utilities/constants";
 import { Context, getContext, RiskEngine } from "../utilities/wrappers";
@@ -23,7 +23,7 @@ describe("Update Risk Engine config", () => {
 
   it("Successfully partially update risk engine config", async () => {
     await riskEngine.updateConfig({
-      collateralForVariableSizeRfq: new BN(100_000_000),
+      minCollateralRequirement: new BN(100_000_000),
       collateralMintDecimals: 3,
     });
 
@@ -31,7 +31,7 @@ describe("Update Risk Engine config", () => {
     if (config === null) {
       throw Error("Config is expected to exist");
     }
-    expect(config.collateralForVariableSizeRfqCreation).to.be.bignumber.equal(new BN(100_000_000));
+    expect(config.minCollateralRequirement).to.be.bignumber.equal(new BN(100_000_000));
     expect(config.collateralMintDecimals).to.be.bignumber.equal(new BN(3));
     expect(config.collateralForFixedQuoteAmountRfqCreation).to.be.bignumber.equal(
       DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ
@@ -39,7 +39,7 @@ describe("Update Risk Engine config", () => {
 
     // reset config
     await riskEngine.updateConfig({
-      collateralForVariableSizeRfq: DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
+      minCollateralRequirement: DEFAULT_MIN_COLLATERAL_REQUIREMENT,
       collateralMintDecimals: DEFAULT_MINT_DECIMALS,
     });
   });
