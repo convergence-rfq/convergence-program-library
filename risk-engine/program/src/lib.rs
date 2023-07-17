@@ -33,7 +33,7 @@ pub mod risk_engine {
     #[allow(clippy::too_many_arguments)]
     pub fn initialize_config(
         ctx: Context<InitializeConfigAccounts>,
-        collateral_for_variable_size_rfq_creation: u64,
+        min_collateral_requirement: u64,
         collateral_for_fixed_quote_amount_rfq_creation: u64,
         collateral_mint_decimals: u8,
         safety_price_shift_factor: f64,
@@ -43,8 +43,7 @@ pub mod risk_engine {
     ) -> Result<()> {
         let mut config = ctx.accounts.config.load_init()?;
 
-        config.collateral_for_variable_size_rfq_creation =
-            collateral_for_variable_size_rfq_creation;
+        config.min_collateral_requirement = min_collateral_requirement;
         config.collateral_for_fixed_quote_amount_rfq_creation =
             collateral_for_fixed_quote_amount_rfq_creation;
         config.collateral_mint_decimals = collateral_mint_decimals as u64;
@@ -85,7 +84,7 @@ pub mod risk_engine {
     #[allow(clippy::too_many_arguments)]
     pub fn update_config(
         ctx: Context<UpdateConfigAccounts>,
-        collateral_for_variable_size_rfq_creation: Option<u64>,
+        min_collateral_requirement: Option<u64>,
         collateral_for_fixed_quote_amount_rfq_creation: Option<u64>,
         collateral_mint_decimals: Option<u8>,
         safety_price_shift_factor: Option<f64>,
@@ -95,8 +94,8 @@ pub mod risk_engine {
     ) -> Result<()> {
         let mut config = ctx.accounts.config.load_mut()?;
 
-        if let Some(value) = collateral_for_variable_size_rfq_creation {
-            config.collateral_for_variable_size_rfq_creation = value;
+        if let Some(value) = min_collateral_requirement {
+            config.min_collateral_requirement = value;
         }
 
         if let Some(value) = collateral_for_fixed_quote_amount_rfq_creation {
@@ -196,7 +195,7 @@ pub mod risk_engine {
         let config = config.load()?;
 
         let required_collateral = match rfq.fixed_size {
-            FixedSize::None { padding: _ } => config.collateral_for_variable_size_rfq_creation,
+            FixedSize::None { padding: _ } => config.min_collateral_requirement,
             FixedSize::BaseAsset {
                 legs_multiplier_bps,
             } => {

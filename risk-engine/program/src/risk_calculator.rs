@@ -85,6 +85,16 @@ impl<'a> RiskCalculator<'a> {
 
         let total_risk = portfolio_risk * case.leg_multiplier;
 
+        let token_amount = self.risk_to_token_amount(total_risk)?;
+        Ok(token_amount.max(self.config.min_collateral_requirement))
+    }
+
+    fn risk_to_token_amount(&self, total_risk: f64) -> Result<u64> {
+        // If there are no risk just return 0
+        if total_risk <= 0.0 {
+            return Ok(0);
+        }
+
         let total_risk_with_decimals =
             total_risk * (10_u64.pow(self.config.collateral_mint_decimals as u32)) as f64;
         strict_f64_to_u64(total_risk_with_decimals)
@@ -166,9 +176,6 @@ impl<'a> RiskCalculator<'a> {
         }
 
         let absolute_value_of_legs = leg_values.into_iter().map(|value| value.abs()).sum();
-
-        require!(biggest_profit >= 0.0, Error::RiskOutOfBounds);
-        require!(biggest_loss <= 0.0, Error::RiskOutOfBounds);
 
         Ok(BaseAssetStatistics {
             biggest_profit,
@@ -315,7 +322,7 @@ mod tests {
 
     fn get_config() -> Config {
         Config {
-            collateral_for_variable_size_rfq_creation: 0,
+            min_collateral_requirement: 0,
             collateral_for_fixed_quote_amount_rfq_creation: 0,
             collateral_mint_decimals: 9,
             safety_price_shift_factor: 0.01,
