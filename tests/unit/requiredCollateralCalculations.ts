@@ -3,10 +3,12 @@ import { PublicKey } from "@solana/web3.js";
 import { OptionType } from "@mithraic-labs/tokenized-euros";
 import {
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
-  DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
+  DEFAULT_MIN_COLLATERAL_REQUIREMENT,
 } from "../utilities/constants";
 import {
   attachImprovedLogDisplay,
+  calculateLegsHash,
+  calculateLegsSize,
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
@@ -38,7 +40,7 @@ describe("Required collateral calculation and lock", () => {
     await context.createRfq({ fixedSize: FixedSize.None });
 
     await measurer.expectChange([
-      { token: "unlockedCollateral", user: taker, delta: DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ.neg() },
+      { token: "unlockedCollateral", user: taker, delta: DEFAULT_MIN_COLLATERAL_REQUIREMENT.neg() },
     ]);
   });
 
@@ -152,7 +154,7 @@ describe("Required collateral calculation and lock", () => {
       {
         token: "unlockedCollateral",
         user: taker,
-        delta: expectedCollateral.neg().add(DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ),
+        delta: expectedCollateral.neg().add(DEFAULT_MIN_COLLATERAL_REQUIREMENT),
       },
       { token: "unlockedCollateral", user: maker, delta: expectedCollateral },
     ]);
@@ -183,6 +185,123 @@ describe("Required collateral calculation and lock", () => {
         user: taker,
         delta: withTokenDecimals(-194),
         precision: withTokenDecimals(1),
+      },
+    ]);
+  });
+
+  it("Correct collateral locked if all scenarios yield positive pnl", async () => {
+    const optionLow = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
+      underlyingMint: context.btcToken,
+      stableMint: context.quoteToken,
+      underlyingPerContract: withTokenDecimals(1),
+      strikePrice: withTokenDecimals(18000),
+      expireIn: 90 * 24 * 60 * 60, // 90 days
+    });
+    const optionMedium = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
+      underlyingMint: context.btcToken,
+      stableMint: context.quoteToken,
+      underlyingPerContract: withTokenDecimals(1),
+      strikePrice: withTokenDecimals(20000),
+      expireIn: 90 * 24 * 60 * 60, // 90 days
+    });
+    const optionHigh = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
+      underlyingMint: context.btcToken,
+      stableMint: context.quoteToken,
+      underlyingPerContract: withTokenDecimals(1),
+      strikePrice: withTokenDecimals(22000),
+      expireIn: 90 * 24 * 60 * 60, // 90 days
+    });
+
+    let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
+    const legs = [
+      PsyoptionsEuropeanInstrument.create(context, optionLow, OptionType.CALL, {
+        amount: 10000,
+        side: LegSide.Long,
+      }),
+      PsyoptionsEuropeanInstrument.create(context, optionMedium, OptionType.CALL, {
+        amount: 20000,
+        side: LegSide.Short,
+      }),
+      PsyoptionsEuropeanInstrument.create(context, optionHigh, OptionType.CALL, {
+        amount: 10000,
+        side: LegSide.Long,
+      }),
+    ];
+    const rfq = await context.createRfq({
+      legs: legs.slice(0, 2),
+      legsSize: calculateLegsSize(legs),
+      legsHash: calculateLegsHash(legs, context.program),
+      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
+      finalize: false,
+      orderType: OrderType.Buy,
+      settlingWindow: 90 * 24 * 60 * 60, // 90 days
+    });
+    await rfq.addLegs(legs.slice(2));
+
+    await measurer.expectChange([
+      {
+        token: "unlockedCollateral",
+        user: taker,
+        delta: withTokenDecimals(-440),
+        precision: withTokenDecimals(1),
+      },
+    ]);
+  });
+
+  it("Correct collateral locked if all scenarios yield negative pnl", async () => {
+    const optionLow = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
+      underlyingMint: context.btcToken,
+      stableMint: context.quoteToken,
+      underlyingPerContract: withTokenDecimals(1),
+      strikePrice: withTokenDecimals(18000),
+      expireIn: 90 * 24 * 60 * 60, // 90 days
+    });
+    const optionMedium = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
+      underlyingMint: context.btcToken,
+      stableMint: context.quoteToken,
+      underlyingPerContract: withTokenDecimals(1),
+      strikePrice: withTokenDecimals(20000),
+      expireIn: 90 * 24 * 60 * 60, // 90 days
+    });
+    const optionHigh = await EuroOptionsFacade.initalizeNewOptionMeta(context, {
+      underlyingMint: context.btcToken,
+      stableMint: context.quoteToken,
+      underlyingPerContract: withTokenDecimals(1),
+      strikePrice: withTokenDecimals(22000),
+      expireIn: 90 * 24 * 60 * 60, // 90 days
+    });
+
+    let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
+    const legs = [
+      PsyoptionsEuropeanInstrument.create(context, optionLow, OptionType.CALL, {
+        amount: 10000,
+        side: LegSide.Long,
+      }),
+      PsyoptionsEuropeanInstrument.create(context, optionMedium, OptionType.CALL, {
+        amount: 20000,
+        side: LegSide.Short,
+      }),
+      PsyoptionsEuropeanInstrument.create(context, optionHigh, OptionType.CALL, {
+        amount: 10000,
+        side: LegSide.Long,
+      }),
+    ];
+    const rfq = await context.createRfq({
+      legs: legs.slice(0, 2),
+      legsSize: calculateLegsSize(legs),
+      legsHash: calculateLegsHash(legs, context.program),
+      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
+      finalize: false,
+      orderType: OrderType.Sell,
+      settlingWindow: 90 * 24 * 60 * 60, // 90 days
+    });
+    await rfq.addLegs(legs.slice(2));
+
+    await measurer.expectChange([
+      {
+        token: "unlockedCollateral",
+        user: taker,
+        delta: DEFAULT_MIN_COLLATERAL_REQUIREMENT.neg(),
       },
     ]);
   });

@@ -39,7 +39,7 @@ import {
   DEFAULT_LEG_MULTIPLIER,
   DEFAULT_MINT_DECIMALS,
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
-  DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
+  DEFAULT_MIN_COLLATERAL_REQUIREMENT,
   DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
   DEFAULT_OVERALL_SAFETY_FACTOR,
   DEFAULT_RISK_CATEGORIES_INFO,
@@ -489,7 +489,7 @@ export class RiskEngine {
 
     await this.program.methods
       .initializeConfig(
-        DEFAULT_COLLATERAL_FOR_VARIABLE_SIZE_RFQ,
+        DEFAULT_MIN_COLLATERAL_REQUIREMENT,
         DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
         DEFAULT_MINT_DECIMALS,
         DEFAULT_SAFETY_PRICE_SHIFT_FACTOR,
@@ -554,7 +554,7 @@ export class RiskEngine {
   }
 
   async updateConfig({
-    collateralForVariableSizeRfq = null,
+    minCollateralRequirement = null,
     collateralForFixedQuoteAmountRfq = null,
     collateralMintDecimals = null,
     safetyPriceShiftFactor = null,
@@ -562,7 +562,7 @@ export class RiskEngine {
     defaultAcceptedOracleStaleness = null,
     defaultAcceptedOracleConfidenceIntervalPortion = null,
   }: {
-    collateralForVariableSizeRfq?: number | null;
+    minCollateralRequirement?: number | null;
     collateralForFixedQuoteAmountRfq?: number | null;
     collateralMintDecimals?: number | null;
     safetyPriceShiftFactor?: number | null;
@@ -572,7 +572,7 @@ export class RiskEngine {
   } = {}) {
     await this.program.methods
       .updateConfig(
-        collateralForVariableSizeRfq,
+        minCollateralRequirement,
         collateralForFixedQuoteAmountRfq,
         collateralMintDecimals,
         safetyPriceShiftFactor,
@@ -866,6 +866,7 @@ export class Rfq {
         rfq: this.account,
       })
       .remainingAccounts([...baseAssetAccounts, ...legAccounts])
+      .preInstructions([expandComputeUnits])
       .signers([this.context.taker]);
 
     if (finalize) {
