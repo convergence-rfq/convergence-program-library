@@ -5,8 +5,8 @@
   "devDependencies": {
     "@mithraic-labs/psy-american": "^0.2.3",
     "@mithraic-labs/tokenized-euros": "^0.2.2",
-    "@project-serum/anchor": "0.25.0",
-    "@solana/spl-token": "^0.3.7",
+    "@coral-xyz/anchor": "0.28.0",
+    "@solana/spl-token": "^0.3.8",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",
     "bignumber.js": "^9.1.0",
