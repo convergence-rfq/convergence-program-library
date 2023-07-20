@@ -25,7 +25,7 @@ jobs:
           cache-on-failure: 'true'
 
       - name: Install Anchor
-        run: cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
+        run: cargo install --git https://github.com/coral-xyz/anchor --tag v0.28.0 anchor-cli --locked
 
       - name: Install Solana
         uses: ./.github/actions/install-solana
