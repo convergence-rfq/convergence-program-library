@@ -22,4 +22,3 @@ anchor-spl = "0.28.0"
 solana-program = "1.14.16"
 borsh = { version = "0.9.1", features = ["const-generics"] }
 solana-security-txt = "1.1.1"
-shank = "0.0.8"

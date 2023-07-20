@@ -2448,7 +2448,6 @@ dependencies = [
  "anchor-spl 0.28.0",
  "rfq",
  "risk-engine",
- "shank",
 ]
 
 [[package]]
@@ -2459,7 +2458,6 @@ dependencies = [
  "anchor-spl 0.28.0",
  "rfq",
  "risk-engine",
- "shank",
 ]
 
 [[package]]
@@ -2782,7 +2780,6 @@ dependencies = [
  "anchor-lang 0.28.0",
  "anchor-spl 0.28.0",
  "borsh",
- "shank",
  "solana-program",
  "solana-security-txt",
 ]
@@ -2813,7 +2810,6 @@ dependencies = [
  "float-cmp",
  "pyth-sdk-solana",
  "rfq",
- "shank",
  "switchboard-solana",
 ]
 
@@ -3177,40 +3173,6 @@ checksum = "eaedf34ed289ea47c2b741bb72e5357a209512d67bcd4bda44359e5bf0470f56"
 dependencies = [
  "digest 0.10.7",
  "keccak",
-]
-
-[[package]]
-name = "shank"
-version = "0.0.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2935c06d5a141ad2854622a014e30c5eeaa40096667df6bdd682dba9f8f81819"
-dependencies = [
- "shank_macro",
-]
-
-[[package]]
-name = "shank_macro"
-version = "0.0.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ab8a1eb550845e36c88007f4c00175eeeb436d2fc6c70d05207a338cba7519f"
-dependencies = [
- "proc-macro2 1.0.66",
- "quote 1.0.31",
- "shank_macro_impl",
- "syn 1.0.99",
-]
-
-[[package]]
-name = "shank_macro_impl"
-version = "0.0.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23ec51b35f2336faaeff44daf8952ddee4fe3e3693a313804ae7366f18a9967d"
-dependencies = [
- "anyhow",
- "proc-macro2 1.0.66",
- "quote 1.0.31",
- "serde",
- "syn 1.0.99",
 ]
 
 [[package]]
@@ -3971,7 +3933,6 @@ dependencies = [
  "anchor-lang 0.28.0",
  "anchor-spl 0.28.0",
  "rfq",
- "shank",
 ]
 
 [[package]]

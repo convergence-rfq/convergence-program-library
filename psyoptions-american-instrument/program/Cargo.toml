@@ -12,7 +12,6 @@ name = "psyoptions_american_instrument"
 anchor-lang = { version = "0.28.0", features = ["init-if-needed"] }
 anchor-spl = "0.28.0"
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
-shank = "0.0.8"
 risk-engine = { path = "../../risk-engine/program", features = [
     "no-entrypoint",
 ] }
