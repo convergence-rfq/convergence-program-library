@@ -293,8 +293,8 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create RFQ, respond and confirm, taker prepares but maker only partly prepares and defaults", async () => {
     const rfq = await context.createEscrowRfq({
       legs: [
-        SpotInstrument.createForLeg(context, { mint: context.assetToken }),
-        SpotInstrument.createForLeg(context, { mint: context.additionalAssetToken, side: LegSide.Negative }),
+        SpotInstrument.createForLeg(context, { mint: context.btcToken }),
+        SpotInstrument.createForLeg(context, { mint: context.solToken, side: LegSide.Short }),
       ],
       activeWindow: 2,
       settlingWindow: 1,
@@ -347,8 +347,8 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create RFQ, respond and confirm, maker prepares but taker only partly prepares and defaults", async () => {
     const rfq = await context.createEscrowRfq({
       legs: [
-        SpotInstrument.createForLeg(context, { mint: context.assetToken }),
-        SpotInstrument.createForLeg(context, { mint: context.additionalAssetToken, side: LegSide.Negative }),
+        SpotInstrument.createForLeg(context, { mint: context.btcToken }),
+        SpotInstrument.createForLeg(context, { mint: context.solToken, side: LegSide.Short }),
       ],
       activeWindow: 2,
       settlingWindow: 1,
@@ -396,8 +396,8 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create RFQ, respond and confirm, both parties only partly prepare and default", async () => {
     const rfq = await context.createEscrowRfq({
       legs: [
-        SpotInstrument.createForLeg(context, { mint: context.assetToken }),
-        SpotInstrument.createForLeg(context, { mint: context.additionalAssetToken, side: LegSide.Negative }),
+        SpotInstrument.createForLeg(context, { mint: context.btcToken }),
+        SpotInstrument.createForLeg(context, { mint: context.solToken, side: LegSide.Short }),
       ],
       activeWindow: 2,
       settlingWindow: 1,

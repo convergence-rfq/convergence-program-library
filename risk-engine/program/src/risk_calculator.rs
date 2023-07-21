@@ -310,7 +310,7 @@ fn calculate_asset_unit_value(
 #[cfg(test)]
 mod tests {
     use float_cmp::assert_approx_eq;
-    use rfq::state::{Leg, LegSide, OracleSource, ProtocolState};
+    use rfq::state::{Leg, LegSide, OracleSource, ProtocolState, SettlementTypeMetadata};
 
     use crate::state::{OptionType, RiskCategoryInfo};
     use crate::utils::{convert_fixed_point_to_f64, get_leg_amount_f64};

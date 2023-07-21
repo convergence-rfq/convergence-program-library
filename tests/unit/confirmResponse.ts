@@ -15,7 +15,7 @@ describe("Create RFQ", () => {
   });
 
   it("Confirmed responses counter gets incremented", async () => {
-    const rfq = await context.createRfq();
+    const rfq = await context.createEscrowRfq();
     const rfqDataBefore = await rfq.getData();
     expect(rfqDataBefore.confirmedResponses).to.be.equal(0);
 

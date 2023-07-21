@@ -6,7 +6,6 @@ import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
 import { ABSOLUTE_PRICE_DECIMALS, FEE_BPS_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
-import { InstrumentController } from "./instrument";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { FeeParams, LegData } from "./types";
 import { getBaseAssetPda } from "./pdas";

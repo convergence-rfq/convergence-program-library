@@ -7,8 +7,6 @@ import {
 } from "../utilities/constants";
 import {
   attachImprovedLogDisplay,
-  calculateLegsHash,
-  calculateLegsSize,
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
@@ -77,7 +75,7 @@ describe("Required collateral calculation and lock", () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
 
     // 1 bitcoin + 10 sol + 2 eth
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       orderType: OrderType.TwoWay,
       legs: [
         SpotInstrument.createForLeg(context, {
@@ -227,10 +225,9 @@ describe("Required collateral calculation and lock", () => {
         side: LegSide.Long,
       }),
     ];
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: legs.slice(0, 2),
-      legsSize: calculateLegsSize(legs),
-      legsHash: calculateLegsHash(legs, context.program),
+      allLegs: legs,
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
       finalize: false,
       orderType: OrderType.Buy,
@@ -286,10 +283,9 @@ describe("Required collateral calculation and lock", () => {
         side: LegSide.Long,
       }),
     ];
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: legs.slice(0, 2),
-      legsSize: calculateLegsSize(legs),
-      legsHash: calculateLegsHash(legs, context.program),
+      allLegs: legs,
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
       finalize: false,
       orderType: OrderType.Sell,

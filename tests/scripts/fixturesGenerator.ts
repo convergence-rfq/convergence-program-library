@@ -24,6 +24,7 @@ import {
 } from "../utilities/constants";
 import { OracleSource, RiskCategory } from "../utilities/types";
 import { fixtureAccountsPath, getKeypairPath, pubkeyNamingFilePath, readKeypair } from "../utilities/fixtures";
+import { HxroPrintTradeProvider } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 
 const ledgerPath = path.join(".anchor", "test-ledger");
 const buildDirectoryPath = path.join("target", "deploy");

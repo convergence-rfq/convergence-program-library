@@ -140,12 +140,6 @@ pub enum OrderType {
     TwoWay,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
-pub enum LegSide {
-    Positive,
-    Negative,
-}
-
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum StoredRfqState {
     Constructed,

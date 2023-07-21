@@ -3,6 +3,7 @@
 use anchor_lang::prelude::*;
 use rfq::state::{
     AuthoritySide, FixedSize, Leg, OrderType, ProtocolState, Quote, QuoteSide, Response, Rfq,
+    SettlementTypeMetadata,
 };
 
 use base_asset_extractor::extract_base_assets;
@@ -135,7 +136,10 @@ pub mod risk_engine {
         } = ctx.accounts;
         let mut config = config.load_mut()?;
 
-        require!((instrument_index as usize) < protocol.instruments.len(), Error::MissingInstrumentIndex);
+        require!(
+            (instrument_index as usize) < protocol.instruments.len(),
+            Error::MissingInstrumentIndex
+        );
 
         config.instrument_types[instrument_index as usize] = instrument_type.into();
 
@@ -316,8 +320,12 @@ fn construct_risk_calculator<'a>(
         .iter()
         .map(|leg| -> Result<LegWithMetadata> {
             let instrument_type = match leg.settlement_type_metadata {
-                SettlementTypeMetadata::Instrument { instrument_index } => config.instrument_types[instrument_index as usize].try_into()?,
-                SettlementTypeMetadata::PrintTrade { instrument_type } => instrument_type.try_into()?,
+                SettlementTypeMetadata::Instrument { instrument_index } => {
+                    config.instrument_types[instrument_index as usize].try_into()?
+                }
+                SettlementTypeMetadata::PrintTrade { instrument_type } => {
+                    instrument_type.try_into()?
+                }
             };
 
             Ok(LegWithMetadata {
