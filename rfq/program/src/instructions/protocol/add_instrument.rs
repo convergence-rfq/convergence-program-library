@@ -27,9 +27,8 @@ fn validate(ctx: &Context<AddInstrumentAccounts>) -> Result<()> {
         protocol
             .instruments
             .iter()
-            .find(|x| x.program_key == instrument_program.key())
-            .is_none(),
-        ProtocolError::AlreadyAdded
+            .all(|x| x.program_key != instrument_program.key()),
+        ProtocolError::InstrumentAlreadyAdded
     );
 
     require!(

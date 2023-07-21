@@ -8,6 +8,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.11] - 2023-07-17
+
+### Fixes
+
+- risk-engine: Fix risk engine failing in some cases and add min risk value logic. See PR ([#154](https://github.com/convergence-rfq/convergence-program-library/pull/154)) for full details.
+
+## [2.2.10] - 2023-07-13
+
+### Breaking
+
+- all: Updated program ids. See PR ([#152](https://github.com/convergence-rfq/convergence-program-library/pull/152)) for full details.
+
+## [2.2.9] - 2023-07-12
+
+### Fixes
+
+- rfq: Increment confirmed responses on RFQ confirmation. See PR ([#149](https://github.com/convergence-rfq/convergence-program-library/pull/149)) for full details.
+
+## [2.2.8] - 2023-07-06
+
+### Breaking
+
+- rfq: Separate one side enum to leg side and quote side. See PR ([#139](https://github.com/convergence-rfq/convergence-program-library/pull/146)) for full details.
+
+## [2.2.7] - 2023-06-13
+
+### Fixes
+
+- rfq: RFQ recent blockhash window has been extended. See PR ([#142](https://github.com/convergence-rfq/convergence-program-library/pull/142)) for full details.
+
+## [2.2.6] - 2023-05-30
+
+### Breaking
+
+- rfq: Extended base assets by adding support for Pyth oracles and fixed prices for assets without an oracle. Added reserved space for base assets and base mints. Instruction `add_base_asset and change_base_asset_parameters` has been updated to include new properties. See PR ([#139](https://github.com/convergence-rfq/convergence-program-library/pull/139)) for full details.
+
+### Features
+
+- solita: Updated Solita packages to 2.2.6 ([#140](https://github.com/convergence-rfq/convergence-program-library/pull/140))
+
 ## [2.2.2-rc.3] - 2023-04-06
 
 ### Breaking

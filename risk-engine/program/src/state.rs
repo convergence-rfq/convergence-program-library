@@ -9,7 +9,7 @@ use crate::utils::convert_fixed_point_to_f64;
 
 #[account(zero_copy)]
 pub struct Config {
-    pub collateral_for_variable_size_rfq_creation: u64,
+    pub min_collateral_requirement: u64,
     pub collateral_for_fixed_quote_amount_rfq_creation: u64,
     pub collateral_mint_decimals: u64, // is used as u8, but represented as u64 to avoid memory padding
     pub safety_price_shift_factor: f64,
@@ -150,12 +150,12 @@ impl OptionCommonData {
     pub const SERIALIZED_SIZE: usize = 1 + 8 + 1 + 8 + 1 + 8;
 
     pub fn get_strike_price(&self) -> f64 {
-        convert_fixed_point_to_f64(self.strike_price.into(), self.strike_price_decimals)
+        convert_fixed_point_to_f64(self.strike_price, self.strike_price_decimals)
     }
 
     pub fn get_underlying_amount_per_contract(&self) -> f64 {
         convert_fixed_point_to_f64(
-            self.underlying_amount_per_contract.into(),
+            self.underlying_amount_per_contract,
             self.underlying_amound_per_contract_decimals,
         )
     }
@@ -178,7 +178,7 @@ impl FutureCommonData {
 
     pub fn get_underlying_amount_per_contract(&self) -> f64 {
         convert_fixed_point_to_f64(
-            self.underlying_amount_per_contract.into(),
+            self.underlying_amount_per_contract,
             self.underlying_amound_per_contract_decimals,
         )
     }

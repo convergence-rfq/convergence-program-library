@@ -11,7 +11,7 @@ import {
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 
-import { AuthoritySide, Quote, LegSide, QuoteSide } from "../utilities/types";
+import { AuthoritySide, LegSide, Quote, QuoteSide } from "../utilities/types";
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Settle one party default", () => {
@@ -34,7 +34,7 @@ describe("Settle one party default", () => {
   it("Taker defaulting transfers the correct amount of fees", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
     const rfq = await context.createEscrowRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Positive })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Long })],
       activeWindow: 2,
       settlingWindow: 1,
     });
@@ -68,9 +68,9 @@ describe("Settle one party default", () => {
     const rfq = await context.createEscrowRfq({
       legs: [
         SpotInstrument.createForLeg(context, {
-          mint: context.additionalAssetToken,
+          mint: context.solToken,
           amount: withTokenDecimals(1),
-          side: LegSide.Positive,
+          side: LegSide.Long,
         }),
       ],
       activeWindow: 2,

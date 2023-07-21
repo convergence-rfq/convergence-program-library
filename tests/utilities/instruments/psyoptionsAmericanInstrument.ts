@@ -249,7 +249,7 @@ export class AmericanPsyoptions {
     context: Context,
     user: Keypair,
     {
-      underlyingMint = context.assetToken,
+      underlyingMint = context.btcToken,
       quoteMint = context.quoteToken,
       underlyingAmountPerContract = withTokenDecimals(1),
       quoteAmountPerContract = withTokenDecimals(100),

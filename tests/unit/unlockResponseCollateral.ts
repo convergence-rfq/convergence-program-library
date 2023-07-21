@@ -10,7 +10,7 @@ import {
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 
-import { AuthoritySide, Quote, LegSide, QuoteSide } from "../utilities/types";
+import { AuthoritySide, LegSide, Quote, QuoteSide } from "../utilities/types";
 import { Context, getContext } from "../utilities/wrappers";
 
 describe("Unlock response collateral", () => {
@@ -30,10 +30,10 @@ describe("Unlock response collateral", () => {
     dao = context.dao.publicKey;
   });
 
-  it("Correct amount of fees is taken as result as settled response ", async () => {
+  it("Correct amount of fees is taken as result as settled response", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
     const rfq = await context.createEscrowRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(22), side: LegSide.Positive })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(22), side: LegSide.Long })],
     });
 
     const response = await rfq.respond({

@@ -184,7 +184,7 @@ impl Response {
         };
 
         let price_bps = quote.get_price_bps();
-        let positive_price_bps = price_bps.abs() as u128; // negative price is handled in get_quote_tokens_receiver
+        let positive_price_bps = price_bps.unsigned_abs(); // negative price is handled in get_quote_tokens_receiver
 
         let result_with_more_decimals = legs_multiplier_bps as u128 * positive_price_bps
             / 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS);
@@ -220,10 +220,10 @@ impl Response {
         let leg = &rfq.legs[leg_index as usize];
         let confirmation = self.confirmed.unwrap();
 
-        // leg assets receiver for a bid leg and with the ask response from maker is a taker
+        // leg assets receiver for a long leg and with the ask response from maker is a taker
         let mut receiver = AuthoritySide::Taker;
 
-        if let LegSide::Negative = leg.side {
+        if let LegSide::Short = leg.side {
             receiver = receiver.inverse();
         }
         if let QuoteSide::Bid = confirmation.side {
@@ -259,8 +259,7 @@ impl Response {
                     QuoteSide::Bid => self.bid,
                     QuoteSide::Ask => self.ask,
                 }
-                .unwrap()
-                .clone();
+                .unwrap();
 
                 // apply overriden leg multiplier
                 if let Some(override_leg_multiplier_bps) = confirmation.override_leg_multiplier_bps
@@ -332,6 +331,12 @@ impl Response {
             AssetIdentifier::Quote => self.escrow_leg_preparations_initialized_by.get(0).cloned(),
         }
     }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+pub enum QuoteSide {
+    Bid,
+    Ask,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]

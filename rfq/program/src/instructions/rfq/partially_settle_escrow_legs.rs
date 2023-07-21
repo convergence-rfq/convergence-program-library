@@ -54,7 +54,7 @@ pub fn partially_settle_escrow_legs_instruction<'info>(
     {
         settle(
             AssetIdentifier::Leg { leg_index },
-            &protocol,
+            protocol,
             rfq,
             response,
             &mut remaining_accounts,

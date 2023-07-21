@@ -178,6 +178,12 @@ impl RfqState {
     }
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+pub enum LegSide {
+    Long,
+    Short,
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum AssetIdentifier {
     Leg { leg_index: u8 },

@@ -63,7 +63,7 @@ impl anchor_lang::AccountDeserialize for OptionMarket {
             return Err(anchor_lang::error::ErrorCode::AccountDiscriminatorNotFound.into());
         }
         let given_disc = &buf[..8];
-        if &[175, 238, 162, 97, 53, 122, 16, 29] != given_disc {
+        if [175, 238, 162, 97, 53, 122, 16, 29] != given_disc {
             return Err(anchor_lang::error!(
                 anchor_lang::error::ErrorCode::AccountDiscriminatorMismatch
             )

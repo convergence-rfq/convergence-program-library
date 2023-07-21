@@ -12,7 +12,7 @@ import {
   sleep,
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
-import { AuthoritySide, FixedSize, LegSide, OrderType, Quote, QuoteSide } from "../utilities/types";
+import { AuthoritySide, FixedSize, OrderType, Quote, QuoteSide, LegSide } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
 
 describe("RFQ escrow settlement using spot integration tests", () => {
@@ -71,7 +71,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
 
     // create a two way RFQ specifying 1 bitcoin as a leg
     const rfq = await context.createEscrowRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Positive })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Long })],
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
     const response = await rfq.respond({
@@ -100,7 +100,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
 
     // create a two way RFQ specifying 1 bitcoin ask as a leg
     const rfq = await context.createEscrowRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Negative })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Short })],
     });
     // response with agreeing to sell 5 bitcoins for 22k$ or buy 2 for 20000$
     const response = await rfq.respond({
@@ -128,11 +128,11 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     // create a sell RFQ specifying 5 bitcoin bid and 1000 sol ask
     const rfq = await context.createEscrowRfq({
       legs: [
-        SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Positive }),
+        SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Short }),
         SpotInstrument.createForLeg(context, {
-          mint: context.additionalAssetToken,
+          mint: context.solToken,
           amount: withTokenDecimals(1000),
-          side: LegSide.Negative,
+          side: LegSide.Short,
         }),
       ],
       orderType: OrderType.Sell,
@@ -194,7 +194,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create fixed leg size buy RFQ, respond and settle response", async () => {
     // create a buy RFQ specifying 15 bitcoin as a leg(5 in leg with multiplier of 3)
     const rfq = await context.createEscrowRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Positive })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Long })],
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(3)),
       orderType: OrderType.Buy,
     });
@@ -222,7 +222,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create fixed quote size sell RFQ, respond and settle response", async () => {
     // create a sell RFQ specifying 0.5 bitcoin in leg and fixed quote of 38.5k$
     const rfq = await context.createEscrowRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(0.5), side: LegSide.Positive })],
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(0.5), side: LegSide.Long })],
       fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(38_500)),
       orderType: OrderType.Sell,
     });
@@ -496,7 +496,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       legs: legs.slice(0, legAmount / 2),
       allLegs: legs,
       finalize: false,
-      activeWindow: 2,
+      activeWindow: 3,
       settlingWindow: 1,
     });
     await rfq.addLegs(legs.slice(legAmount / 2));
@@ -509,7 +509,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       await response.prepareEscrowSettlement(AuthoritySide.Maker, legAmount / 2);
 
       return response;
-    }, 3.5);
+    }, 4.5);
 
     await response.partlyRevertEscrowSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker, legAmount / 2);

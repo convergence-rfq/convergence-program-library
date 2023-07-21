@@ -12,13 +12,15 @@ use crate::{
     LegWithMetadata,
 };
 
+type ScenariosSelector<'a> =
+    Box<dyn Fn(&Vec<LegWithMetadata<'a>>, RiskCategory) -> Vec<Scenario> + 'a>;
+
 pub struct RiskCalculator<'a> {
     pub legs_with_meta: Vec<LegWithMetadata<'a>>,
     pub config: &'a Config,
     pub base_assets: Vec<BaseAssetInfo>,
     pub prices: HashMap<BaseAssetIndex, f64>,
-    pub scenarios_selector:
-        Box<dyn Fn(&Vec<LegWithMetadata<'a>>, RiskCategory) -> Vec<Scenario> + 'a>,
+    pub scenarios_selector: ScenariosSelector<'a>,
     pub current_timestamp: i64,
 }
 
@@ -82,6 +84,16 @@ impl<'a> RiskCalculator<'a> {
         };
 
         let total_risk = portfolio_risk * case.leg_multiplier;
+
+        let token_amount = self.risk_to_token_amount(total_risk)?;
+        Ok(token_amount.max(self.config.min_collateral_requirement))
+    }
+
+    fn risk_to_token_amount(&self, total_risk: f64) -> Result<u64> {
+        // If there are no risk just return 0
+        if total_risk <= 0.0 {
+            return Ok(0);
+        }
 
         let total_risk_with_decimals =
             total_risk * (10_u64.pow(self.config.collateral_mint_decimals as u32)) as f64;
@@ -164,9 +176,6 @@ impl<'a> RiskCalculator<'a> {
         }
 
         let absolute_value_of_legs = leg_values.into_iter().map(|value| value.abs()).sum();
-
-        require!(biggest_profit >= 0.0, Error::RiskOutOfBounds);
-        require!(biggest_loss <= 0.0, Error::RiskOutOfBounds);
 
         Ok(BaseAssetStatistics {
             biggest_profit,
@@ -301,7 +310,7 @@ fn calculate_asset_unit_value(
 #[cfg(test)]
 mod tests {
     use float_cmp::assert_approx_eq;
-    use rfq::state::{Leg, LegSide, PriceOracle, ProtocolState, SettlementTypeMetadata};
+    use rfq::state::{Leg, LegSide, OracleSource, ProtocolState};
 
     use crate::state::{OptionType, RiskCategoryInfo};
     use crate::utils::{convert_fixed_point_to_f64, get_leg_amount_f64};
@@ -313,7 +322,7 @@ mod tests {
 
     fn get_config() -> Config {
         Config {
-            collateral_for_variable_size_rfq_creation: 0,
+            min_collateral_requirement: 0,
             collateral_for_fixed_quote_amount_rfq_creation: 0,
             collateral_mint_decimals: 9,
             safety_price_shift_factor: 0.01,
@@ -330,6 +339,16 @@ mod tests {
         }
     }
 
+    fn construct_base_asset(index: BaseAssetIndex, risk_category: RiskCategory) -> BaseAssetInfo {
+        BaseAssetInfo::new(
+            Default::default(),
+            index,
+            risk_category,
+            OracleSource::Switchboard,
+            Default::default(),
+        )
+    }
+
     #[test]
     fn one_spot_bitcoin_leg() {
         let config = get_config();
@@ -337,7 +356,7 @@ mod tests {
         let leg = Leg {
             amount: 2 * 10_u64.pow(6),
             amount_decimals: 6,
-            side: LegSide::Positive,
+            side: LegSide::Long,
             base_asset_index: BTC_INDEX,
             data: Default::default(),
             settlement_type_metadata: SettlementTypeMetadata::Instrument {
@@ -350,16 +369,7 @@ mod tests {
             leg_amount_fraction: get_leg_amount_f64(&leg),
         }];
 
-        let base_assets = vec![BaseAssetInfo {
-            index: BTC_INDEX,
-            bump: Default::default(),
-            enabled: true,
-            risk_category: RiskCategory::VeryLow,
-            price_oracle: PriceOracle::Switchboard {
-                address: Default::default(),
-            },
-            ticker: Default::default(),
-        }];
+        let base_assets = vec![construct_base_asset(BTC_INDEX, RiskCategory::VeryLow)];
 
         let prices = HashMap::from([(BTC_INDEX, 20_000.0)]);
 
@@ -400,7 +410,7 @@ mod tests {
             Leg {
                 amount: 2 * 10_u64.pow(6),
                 amount_decimals: 6,
-                side: LegSide::Positive,
+                side: LegSide::Long,
                 base_asset_index: BTC_INDEX,
                 data: Default::default(),
                 settlement_type_metadata: SettlementTypeMetadata::Instrument {
@@ -410,7 +420,7 @@ mod tests {
             Leg {
                 amount: 2 * 10_u64.pow(6),
                 amount_decimals: 6,
-                side: LegSide::Negative,
+                side: LegSide::Short,
                 base_asset_index: BTC_INDEX,
                 data: Default::default(),
                 settlement_type_metadata: SettlementTypeMetadata::Instrument {
@@ -431,16 +441,7 @@ mod tests {
             },
         ];
 
-        let base_assets = vec![BaseAssetInfo {
-            index: BTC_INDEX,
-            bump: Default::default(),
-            enabled: true,
-            risk_category: RiskCategory::VeryLow,
-            price_oracle: PriceOracle::Switchboard {
-                address: Default::default(),
-            },
-            ticker: Default::default(),
-        }];
+        let base_assets = vec![construct_base_asset(BTC_INDEX, RiskCategory::VeryLow)];
 
         let prices = HashMap::from([(BTC_INDEX, 20_000.0)]);
 
@@ -481,7 +482,7 @@ mod tests {
             Leg {
                 amount: 1 * 10_u64.pow(6),
                 amount_decimals: 6,
-                side: LegSide::Positive,
+                side: LegSide::Long,
                 base_asset_index: BTC_INDEX,
                 data: Default::default(),
                 settlement_type_metadata: SettlementTypeMetadata::Instrument {
@@ -491,7 +492,7 @@ mod tests {
             Leg {
                 amount: 100 * 10_u64.pow(9),
                 amount_decimals: 9,
-                side: LegSide::Negative,
+                side: LegSide::Short,
                 base_asset_index: SOL_INDEX,
                 data: Default::default(),
                 settlement_type_metadata: SettlementTypeMetadata::Instrument {
@@ -513,26 +514,8 @@ mod tests {
         ];
 
         let base_assets = vec![
-            BaseAssetInfo {
-                index: BTC_INDEX,
-                bump: Default::default(),
-                enabled: true,
-                risk_category: RiskCategory::VeryLow,
-                price_oracle: PriceOracle::Switchboard {
-                    address: Default::default(),
-                },
-                ticker: Default::default(),
-            },
-            BaseAssetInfo {
-                index: SOL_INDEX,
-                bump: Default::default(),
-                enabled: true,
-                risk_category: RiskCategory::Medium,
-                price_oracle: PriceOracle::Switchboard {
-                    address: Default::default(),
-                },
-                ticker: Default::default(),
-            },
+            construct_base_asset(BTC_INDEX, RiskCategory::VeryLow),
+            construct_base_asset(SOL_INDEX, RiskCategory::Medium),
         ];
 
         let prices = HashMap::from([(BTC_INDEX, 20_000.0), (SOL_INDEX, 30.0)]);
@@ -586,7 +569,7 @@ mod tests {
         let leg = Leg {
             amount: 1 * 10_u64.pow(6),
             amount_decimals: 6,
-            side: LegSide::Positive,
+            side: LegSide::Long,
             base_asset_index: BTC_INDEX,
             data: option_data.try_to_vec().unwrap(),
             settlement_type_metadata: SettlementTypeMetadata::Instrument {
@@ -599,16 +582,7 @@ mod tests {
             leg_amount_fraction: get_leg_amount_f64(&leg),
         }];
 
-        let base_assets = vec![BaseAssetInfo {
-            index: BTC_INDEX,
-            bump: Default::default(),
-            enabled: true,
-            risk_category: RiskCategory::VeryLow,
-            price_oracle: PriceOracle::Switchboard {
-                address: Default::default(),
-            },
-            ticker: Default::default(),
-        }];
+        let base_assets = vec![construct_base_asset(BTC_INDEX, RiskCategory::VeryLow)];
 
         let prices = HashMap::from([(BTC_INDEX, 20_000.0)]);
 

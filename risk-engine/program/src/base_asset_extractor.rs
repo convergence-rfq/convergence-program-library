@@ -5,13 +5,11 @@ use anchor_lang::prelude::*;
 use rfq::state::{BaseAssetIndex, BaseAssetInfo, Leg};
 
 pub fn extract_base_assets(
-    legs: &Vec<Leg>,
+    legs: &[Leg],
     remaining_accounts: &mut &[AccountInfo],
 ) -> Result<Vec<BaseAssetInfo>> {
-    let mut base_assets: HashSet<BaseAssetIndex> = legs
-        .iter()
-        .map(|leg| leg.base_asset_index.clone())
-        .collect();
+    let mut base_assets: HashSet<BaseAssetIndex> =
+        legs.iter().map(|leg| leg.base_asset_index).collect();
 
     let mut result = vec![];
 

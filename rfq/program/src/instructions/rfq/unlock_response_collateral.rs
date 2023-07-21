@@ -88,7 +88,7 @@ pub fn unlock_response_collateral_instruction(
             fee_params.calculate_fees(response.maker_collateral_locked, AuthoritySide::Maker);
         transfer_collateral_token(
             maker_fees,
-            &maker_collateral_tokens,
+            maker_collateral_tokens,
             protocol_collateral_tokens,
             &maker_collateral_info.clone(),
             token_program,

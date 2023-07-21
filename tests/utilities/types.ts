@@ -1,5 +1,4 @@
 import { BN } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
 
 export type OrderType = { buy: {} } | { sell: {} } | { twoWay: {} };
 
@@ -16,11 +15,11 @@ export const QuoteSide = {
   Ask: { ask: {} },
 };
 
-export type LegSide = { positive: {} } | { negative: {} };
+export type LegSide = { long: {} } | { short: {} };
 
 export const LegSide = {
-  Positive: { positive: {} },
-  Negative: { negative: {} },
+  Long: { long: {} },
+  Short: { short: {} },
 };
 
 export type AuthoritySide = { taker: {} } | { maker: {} };
@@ -177,10 +176,17 @@ export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
 
 export type FeeParams = { taker: number; maker: number };
 
-export function toPriceOracle(address: PublicKey) {
+export enum OracleSource {
+  Switchboard,
+  Pyth,
+  InPlace,
+}
+
+export function oracleSourceToObject(value: OracleSource) {
+  const stringValue = OracleSource[value];
+  const uncapitalizedValue = stringValue.charAt(0).toLowerCase() + stringValue.slice(1);
   return {
-    address,
-    switchboard: { address },
+    [uncapitalizedValue]: {},
   };
 }
 

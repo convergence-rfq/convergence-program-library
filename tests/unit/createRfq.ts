@@ -25,15 +25,15 @@ describe("Create RFQ", () => {
   });
 
   it("Cannot create rfq with the disabled base asset", async () => {
-    context.assetToken.assertRegisteredAsBaseAsset();
-    await context.changeBaseAssetParametersStatus(context.assetToken.baseAssetIndex, { enabled: false });
+    context.btcToken.assertRegisteredAsBaseAsset();
+    await context.changeBaseAssetParametersStatus(context.btcToken.baseAssetIndex, { enabled: false });
     await expectError(
       context.createEscrowRfq({
-        legs: [SpotInstrument.createForLeg(context, { mint: context.assetToken, amount: new BN(10) })],
+        legs: [SpotInstrument.createForLeg(context, { mint: context.btcToken, amount: new BN(10) })],
       }),
       "BaseAssetIsDisabled"
     );
-    await context.changeBaseAssetParametersStatus(context.assetToken.baseAssetIndex, { enabled: true });
+    await context.changeBaseAssetParametersStatus(context.btcToken.baseAssetIndex, { enabled: true });
   });
 
   it("Cannot create rfq with the disabled instrument", async () => {
@@ -41,7 +41,7 @@ describe("Create RFQ", () => {
     await context.setInstrumentEnabledStatus(spotInstrumentProgram.programId, false);
     await expectError(
       context.createEscrowRfq({
-        legs: [SpotInstrument.createForLeg(context, { mint: context.assetToken, amount: new BN(10) })],
+        legs: [SpotInstrument.createForLeg(context, { mint: context.btcToken, amount: new BN(10) })],
       }),
       "InstrumentIsDisabled"
     );

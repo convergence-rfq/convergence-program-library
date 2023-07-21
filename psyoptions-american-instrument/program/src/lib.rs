@@ -1,5 +1,6 @@
+#![allow(clippy::result_large_err)]
+
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{close_account, transfer, CloseAccount, Token, TokenAccount, Transfer};
 use errors::PsyoptionsAmericanError;
 use instructions::*;
@@ -13,7 +14,7 @@ mod errors;
 mod instructions;
 mod state;
 
-declare_id!("7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR");
+declare_id!("8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9");
 
 const ESCROW_SEED: &str = "escrow";
 #[program]
@@ -114,7 +115,7 @@ pub mod psyoptions_american_instrument {
 
         let asset_data = rfq.get_asset_instrument_data(asset_identifier.into());
 
-        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(&asset_data)?;
+        let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(asset_data)?;
 
         require!(
             mint_address == mint.key(),
@@ -214,7 +215,6 @@ pub mod psyoptions_american_instrument {
         asset_identifier: AssetIdentifierDuplicate,
     ) -> Result<()> {
         let CleanUp {
-            protocol,
             rfq,
             response,
             first_to_prepare,
@@ -223,12 +223,6 @@ pub mod psyoptions_american_instrument {
             token_program,
             ..
         } = &ctx.accounts;
-
-        require!(
-            get_associated_token_address(&protocol.authority, &escrow.mint)
-                == backup_receiver.key(),
-            PsyoptionsAmericanError::InvalidBackupAddress
-        );
 
         let expected_first_to_prepare = response
             .get_preparation_initialized_by(asset_identifier.into())
@@ -239,14 +233,18 @@ pub mod psyoptions_american_instrument {
             PsyoptionsAmericanError::NotFirstToPrepare
         );
 
-        transfer_from_an_escrow(
-            escrow,
-            backup_receiver,
-            response.key(),
-            asset_identifier.into(),
-            *ctx.bumps.get("escrow").unwrap(),
-            token_program,
-        )?;
+        if escrow.amount > 0 {
+            let backup_receiver = Account::try_from(backup_receiver)?;
+
+            transfer_from_an_escrow(
+                escrow,
+                &backup_receiver,
+                response.key(),
+                asset_identifier.into(),
+                *ctx.bumps.get("escrow").unwrap(),
+                token_program,
+            )?;
+        }
 
         close_escrow_account(
             escrow,

@@ -20,8 +20,8 @@ pub enum ProtocolError {
     NotACollateralTokenAccount,
     #[msg("Passed account is not a risk engine in the protocol")]
     NotARiskEngine,
-    #[msg("Invalid recent blockhash")]
-    InvalidRecentBlockhash,
+    #[msg("Recent timestamp is too different from on-chain time")]
+    InvalidRecentTimestamp,
     #[msg("An Rfq without legs is not supported")]
     EmptyLegsNotSupported,
     #[msg("Legs size does not match specified expected leg size")]
@@ -80,8 +80,6 @@ pub enum ProtocolError {
     HaveCollateralLocked,
     #[msg("Can't clean up with pending settle preparations")]
     PendingPreparations,
-    #[msg("Passed backup address should be an associated account of protocol owner")]
-    InvalidBackupAddress,
     #[msg("Passed address is not a response maker")]
     NotAMaker,
     #[msg("Passed address is not of a party first to prepare for settlement")]
@@ -128,4 +126,8 @@ pub enum ProtocolError {
     SettlementExpirationIsDisabled,
     #[msg("Too early for the settlement expiration")]
     TooEarlyForExpiration,
+    #[msg("Can't accept default value in non-default field")]
+    DefaultValueIsNotPermitted,
+    #[msg("Specified oracle source is missing")]
+    OracleSourceIsMissing,
 }

@@ -1,0 +1,16 @@
+[View code on GitHub](https://github.com/convergence-rfq/convergence-program-library/rfq/program/src/instructions/rfq/revert_settlement_preparation.rs)
+
+The `revert_settlement_preparation_instruction` function is part of the Convergence Program Library and is used to revert the preparation for a settlement. The purpose of this function is to undo the preparation for a settlement that was previously made by the `prepare_settlement_instruction` function. This function is called when there is an error in the settlement process and the preparation needs to be undone.
+
+The function takes in a `Context` object and an `AuthoritySide` object as arguments. The `Context` object contains the accounts that are required for the function to execute, while the `AuthoritySide` object specifies which side of the trade is being reverted. The function first calls the `validate` function to ensure that the response is in the correct state and that there is preparation to revert. If the validation is successful, the function then retrieves the necessary accounts from the `Context` object.
+
+If the response is not in the `Defaulted` state, the function calls the `default_by_time` function to set the response to the `Defaulted` state and exits the response account. The function then retrieves the number of prepared legs for the specified side and iterates over each leg to call the `revert_preparation` function. The `revert_preparation` function is called with the `AssetIdentifier` of the leg, the `AuthoritySide`, the `ProtocolState`, the `Rfq` account, the `Response` account, and the remaining accounts. The function then calls the `revert_preparation` function again with the `AssetIdentifier` of the quote to revert the quote preparation. Finally, the function sets the number of prepared legs for the specified side to zero.
+
+Overall, this function is used to revert the preparation for a settlement that was previously made by the `prepare_settlement_instruction` function. It is called when there is an error in the settlement process and the preparation needs to be undone. The function ensures that the response is in the correct state and that there is preparation to revert before undoing the preparation.
+## Questions: 
+ 1. What is the purpose of the `RevertSettlementPreparationAccounts` struct and what accounts does it contain?
+- The `RevertSettlementPreparationAccounts` struct is used as input to the `revert_settlement_preparation_instruction` function and contains the `protocol`, `rfq`, and `response` accounts.
+2. What is the `validate` function checking for and what errors can it return?
+- The `validate` function checks that the `response` account is in the `Defaulted` state and that there is at least one prepared leg to revert. It can return a `ProtocolError::NoPreparationToRevert` error if there are no prepared legs to revert.
+3. What does the `revert_settlement_preparation_instruction` function do and what accounts does it modify?
+- The `revert_settlement_preparation_instruction` function reverts the settlement preparation for a given `side` by calling the `revert_preparation` function for each prepared leg and the quote asset. It modifies the `response` account by setting the prepared legs for the given `side` to 0 and potentially changing the state to `Defaulted`. It also modifies the remaining accounts passed in as input.

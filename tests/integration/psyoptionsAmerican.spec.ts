@@ -10,7 +10,7 @@ import {
 } from "../utilities/helpers";
 import * as anchor from "@project-serum/anchor";
 import { Context, getContext } from "../utilities/wrappers";
-import { AuthoritySide, Quote, OrderType, QuoteSide, LegSide } from "../utilities/types";
+import { AuthoritySide, Quote, LegSide, QuoteSide, OrderType } from "../utilities/types";
 import {
   PsyoptionsAmericanInstrumentClass,
   AmericanPsyoptions,
@@ -46,7 +46,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: LegSide.Positive,
+          side: LegSide.Long,
         }),
       ],
     });
@@ -90,7 +90,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: LegSide.Positive,
+          side: LegSide.Long,
         }),
       ],
     });
@@ -141,7 +141,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: LegSide.Positive,
+          side: LegSide.Long,
         }),
       ],
       orderType: OrderType.TwoWay,
@@ -181,7 +181,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: LegSide.Positive,
+          side: LegSide.Long,
         }),
       ],
       orderType: OrderType.TwoWay,
@@ -221,7 +221,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: LegSide.Positive,
+          side: LegSide.Long,
         }),
       ],
     });
@@ -260,7 +260,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
-          side: LegSide.Positive,
+          side: LegSide.Long,
         }),
       ],
     });

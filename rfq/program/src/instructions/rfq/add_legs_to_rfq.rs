@@ -31,7 +31,7 @@ fn validate<'info>(
         rfq.is_settled_as_print_trade(),
     )?;
 
-    require!(legs.len() > 0, ProtocolError::EmptyLegsNotSupported);
+    require!(!legs.is_empty(), ProtocolError::EmptyLegsNotSupported);
     require!(
         legs.len() + rfq.legs.len() <= Rfq::MAX_LEGS_AMOUNT as usize,
         ProtocolError::TooManyLegs
@@ -44,13 +44,13 @@ fn validate<'info>(
 
 pub fn add_legs_to_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, AddLegsToRfqAccounts<'info>>,
-    legs: Vec<Leg>,
+    mut legs: Vec<Leg>,
 ) -> Result<()> {
     validate(&ctx, &legs)?;
 
     let AddLegsToRfqAccounts { rfq, .. } = ctx.accounts;
 
-    rfq.legs.append(&mut legs.clone());
+    rfq.legs.append(&mut legs);
 
     Ok(())
 }

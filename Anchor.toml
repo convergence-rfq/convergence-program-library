@@ -1,27 +1,27 @@
-anchor_version = "0.25.0"
+anchor_version = "0.28.0"
 
 [programs.localnet]
-rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"
-risk_engine = "7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo"
-spot_instrument = "HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW"
-psyoptions_european_instrument = "HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1"
-psyoptions_american_instrument = "7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR"
+rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
+risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
+spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
+psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
+psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
 hxro_print_trade_provider = "fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE"
 
 [programs.devnet]
+rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
+risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
+spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
+psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
+psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
+hxro_print_trade_provider = "fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE"
+
+[programs.mainnet]
 rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"
 risk_engine = "7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo"
 spot_instrument = "HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW"
 psyoptions_european_instrument = "HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1"
 psyoptions_american_instrument = "7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR"
-hxro_print_trade_provider = "fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE"
-
-[programs.testnet]
-rfq = "FNqQsjRU3CRx4N4BvMbTxCrCRBkvKyEZC5mDr4HTxnW4"
-risk_engine = "AY9P4T28wvG7zHGvMNmdUAzAdwQFrfyzQRdi8nhH5fpv"
-spot_instrument = "ZsYgiLpGrn287cJ4EFVToKULMuTVJyGLcMM6ADcm9iS"
-psyoptions_european_instrument = "Hk3n7BobDvZuf7sVAD68vpth2ziTFqvuytVtiBGmCwes"
-psyoptions_american_instrument = "DgP7BXvyTUzDDWVThy6usX7HZvBF5b6QwHovCz271hAv"
 hxro_print_trade_provider = "fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE"
 
 [registry]
@@ -36,9 +36,9 @@ members = [
     "rfq/program",
     "risk-engine/program",
     "spot-instrument/program",
-    "psyoptions-american-instrument/program",
     "psyoptions-european-instrument/program",
     "hxro-print-trade-provider/program",
+    "psyoptions-american-instrument/program",
 ]
 
 [scripts]

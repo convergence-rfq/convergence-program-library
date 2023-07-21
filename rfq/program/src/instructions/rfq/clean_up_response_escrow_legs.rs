@@ -68,7 +68,7 @@ pub fn clean_up_response_escrow_legs_instruction<'info>(
     for leg_index in starting_index..initialized_legs {
         clean_up(
             AssetIdentifier::Leg { leg_index },
-            &protocol,
+            protocol,
             rfq,
             response,
             &mut remaining_accounts,

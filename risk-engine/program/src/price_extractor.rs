@@ -1,10 +1,11 @@
-use std::collections::HashMap;
+use std::{cell::Ref, collections::HashMap};
 
 use anchor_lang::prelude::*;
-use rfq::state::{BaseAssetIndex, BaseAssetInfo, PriceOracle};
-use switchboard_v2::{AggregatorAccountData, SwitchboardDecimal};
+use pyth_sdk_solana::{load_price_feed_from_account_info, Price, PriceFeed};
+use rfq::state::{BaseAssetIndex, BaseAssetInfo, OracleSource};
+use switchboard_solana::{AggregatorAccountData, SwitchboardDecimal, SWITCHBOARD_PROGRAM_ID};
 
-use crate::{errors::Error, state::Config};
+use crate::{errors::Error, state::Config, utils::convert_fixed_point_to_f64};
 
 pub fn extract_prices(
     base_assets: &Vec<BaseAssetInfo>,
@@ -13,6 +14,32 @@ pub fn extract_prices(
 ) -> Result<HashMap<BaseAssetIndex, f64>> {
     let mut result = HashMap::default();
 
+    extract_in_place_prices(base_assets, &mut result);
+    extract_oracle_prices(base_assets, accounts, config, &mut result)?;
+
+    Ok(result)
+}
+
+fn extract_in_place_prices(
+    base_assets: &[BaseAssetInfo],
+    result: &mut HashMap<BaseAssetIndex, f64>,
+) {
+    for in_place_base_asset in base_assets
+        .iter()
+        .filter(|x| matches!(x.oracle_source, OracleSource::InPlace))
+    {
+        let price = in_place_base_asset.get_in_place_price().unwrap();
+        result.insert(in_place_base_asset.index, price);
+    }
+}
+
+fn extract_oracle_prices(
+    base_assets: &Vec<BaseAssetInfo>,
+    accounts: &mut &[AccountInfo],
+    config: &Config,
+    result: &mut HashMap<BaseAssetIndex, f64>,
+) -> Result<()> {
+    // extract oracles while we won't have price for each base asset
     while result.len() < base_assets.len() {
         require!(!accounts.is_empty(), Error::NotEnoughAccounts);
         let account = &accounts[0];
@@ -26,46 +53,98 @@ pub fn extract_prices(
         let first_matched_asset = matched_assets
             .next()
             .ok_or_else(|| error!(Error::InvalidOracle))?;
-        let price = extract_price(first_matched_asset.price_oracle, account, config)?;
-        result.insert(first_matched_asset.index, price.clone());
+        let price = extract_oracle_price(first_matched_asset.oracle_source, account, config)?;
+        result.insert(first_matched_asset.index, price);
 
         for base_asset in matched_assets {
-            result.insert(base_asset.index, price.clone());
+            result.insert(base_asset.index, price);
         }
     }
 
-    Ok(result)
+    Ok(())
 }
 
 fn does_oracle_match(base_asset: &BaseAssetInfo, address: Pubkey) -> bool {
-    match base_asset.price_oracle {
-        PriceOracle::Switchboard {
-            address: stored_address,
-        } => stored_address == address,
+    match base_asset.oracle_source {
+        OracleSource::Switchboard => base_asset.get_switchboard_oracle() == Some(address),
+        OracleSource::Pyth => base_asset.get_pyth_oracle() == Some(address),
+        OracleSource::InPlace => false,
     }
 }
 
-fn extract_price(oracle: PriceOracle, account: &AccountInfo, config: &Config) -> Result<f64> {
-    match oracle {
-        PriceOracle::Switchboard { address: _ } => extract_switchboard_price(account, config),
+fn extract_oracle_price(
+    oracle_source: OracleSource,
+    account: &AccountInfo,
+    config: &Config,
+) -> Result<f64> {
+    match oracle_source {
+        OracleSource::Switchboard => extract_switchboard_price(account, config),
+        OracleSource::Pyth => extract_pyth_price(account, config),
+        OracleSource::InPlace => unreachable!(),
     }
 }
 
+// some of the code in this method is copied from AggregatorAccountData::new() as it has incompatible lifetime requirements
 fn extract_switchboard_price(account: &AccountInfo, config: &Config) -> Result<f64> {
-    let loader = AccountLoader::<AggregatorAccountData>::try_from(account)?;
-    let feed = loader.load()?;
+    use switchboard_solana::prelude::Discriminator;
+    let owner = *account.owner;
+    if owner != SWITCHBOARD_PROGRAM_ID {
+        return Err(ProgramError::IncorrectProgramId.into());
+    }
 
+    let data = account.try_borrow_data()?;
+    if data.len() < AggregatorAccountData::discriminator().len() {
+        return Err(ErrorCode::AccountDiscriminatorNotFound.into());
+    }
+
+    let mut disc_bytes = [0u8; 8];
+    disc_bytes.copy_from_slice(&data[..8]);
+    if disc_bytes != AggregatorAccountData::discriminator() {
+        return Err(ErrorCode::AccountDiscriminatorMismatch.into());
+    }
+
+    let feed: Ref<AggregatorAccountData> = Ref::map(data, |data| {
+        bytemuck::from_bytes(&data[8..std::mem::size_of::<AggregatorAccountData>() + 8])
+    });
     feed.check_staleness(
         Clock::get()?.unix_timestamp,
         config.accepted_oracle_staleness as i64,
     )
     .map_err(|_| error!(Error::StaleOracle))?;
 
-    let price = feed.get_result()?.try_into()?;
+    let price = feed
+        .get_result()
+        .map_err(|_| error!(Error::InvalidOracleData))?
+        .try_into()
+        .map_err(|_| error!(Error::InvalidOracleData))?;
 
     let confidence_interval = price * config.accepted_oracle_confidence_interval_portion;
     feed.check_confidence_interval(SwitchboardDecimal::from_f64(confidence_interval))
         .map_err(|_| error!(Error::OracleConfidenceOutOfRange))?;
+
+    Ok(price)
+}
+
+fn extract_pyth_price(account: &AccountInfo, config: &Config) -> Result<f64> {
+    let price_feed: PriceFeed =
+        load_price_feed_from_account_info(account).map_err(|_| error!(Error::InvalidOracle))?;
+    let current_timestamp = Clock::get()?.unix_timestamp;
+    let current_data: Price = price_feed
+        .get_price_no_older_than(current_timestamp, config.accepted_oracle_staleness)
+        .ok_or_else(|| error!(Error::StaleOracle))?;
+    let decimals =
+        u8::try_from(-current_data.expo).map_err(|_| error!(Error::InvalidOracleData))?;
+    let price = convert_fixed_point_to_f64(
+        u64::try_from(current_data.price).map_err(|_| error!(Error::InvalidOracleData))?,
+        decimals,
+    );
+
+    let confidence = convert_fixed_point_to_f64(current_data.conf, decimals);
+    let confidence_interval = price * config.accepted_oracle_confidence_interval_portion;
+    require!(
+        confidence <= confidence_interval,
+        Error::OracleConfidenceOutOfRange
+    );
 
     Ok(price)
 }
