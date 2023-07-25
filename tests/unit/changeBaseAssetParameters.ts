@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 
-import { OracleSource, RiskCategory, oracleSourceToObject, riskCategoryToObject } from "../utilities/types";
+import { OracleSource, RiskCategory } from "../utilities/types";
 import { attachImprovedLogDisplay, expectError } from "../utilities/helpers";
 import { Context, getContext } from "../utilities/wrappers";
 import { PYTH_SOL_ORACLE, SWITCHBOARD_BTC_ORACLE } from "../utilities/constants";
@@ -59,8 +59,8 @@ describe("Change base asset parameters", () => {
 
     const data = await context.getBaseAsset(TEST_BASE_ASSET_INDEX);
     expect(data.enabled).to.be.false;
-    expect(data.riskCategory).to.be.deep.equal(riskCategoryToObject(RiskCategory.High));
-    expect(data.oracleSource).to.be.deep.equal(oracleSourceToObject(OracleSource.Pyth));
+    expect(data.riskCategory.hasOwnProperty("high")).to.be.true;
+    expect(data.oracleSource).to.be.deep.equal(OracleSource.Pyth);
     expect(data.switchboardOracle).to.be.deep.equal(PublicKey.default);
     expect(data.pythOracle).to.be.deep.equal(PYTH_SOL_ORACLE);
     expect(data.inPlacePrice).to.be.equal(2000);

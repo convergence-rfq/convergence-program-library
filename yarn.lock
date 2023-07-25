@@ -139,7 +139,7 @@
   resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-american/-/psy-american-0.2.3.tgz#a6f3a62f96ec01f94463a7b12f5bf71a003c9942"
   integrity sha512-NsDfb9QNuLKNqRnq8rWAoD2Y3ouAEsAPFfwP28SmDVfkugvj03nvQtjotFLlH2TsE31YonG+gauhpeeGKZyyuw==
   dependencies:
-    "@project-serum/anchor" "^0.24.2"
+    "@coral-xyz/anchor" "^0.24.2"
     "@project-serum/serum" "^0.13.60"
     "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "^1.28.0"
@@ -149,7 +149,7 @@
   resolved "https://registry.yarnpkg.com/@mithraic-labs/tokenized-euros/-/tokenized-euros-0.2.3.tgz#1a7081a6c2a986bbc8347e8ac36cf98043998149"
   integrity sha512-zcBKx+EczXFBUMuhIe0aROwTMJjvzzxEV2+e9cbjye54z4968Kw47q2rq67oikKrZiixWLSDTHVvO+wxS+oAdw==
   dependencies:
-    "@project-serum/anchor" "0.25.0"
+    "@coral-xyz/anchor" "0.25.0"
     "@project-serum/serum" "^0.13.62"
     "@solana/spl-token" "^0.2.0"
 
@@ -180,9 +180,9 @@
   resolved "https://registry.yarnpkg.com/@noble/secp256k1/-/secp256k1-1.7.1.tgz#b251c70f824ce3ca7f8dc3df08d58f005cc0507c"
   integrity sha512-hOUk6AyBFmqVrv7k5WAw/LpszxVbj9gGN4JRkIX52fdFAj1UA61KXmZDvqVEm+pOyec3+fIeZB02LYa/pWOArw==
 
-"@project-serum/anchor@0.25.0":
+""@coral-xyz/anchor@0.25.0":
   version "0.25.0"
-  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.25.0.tgz#88ee4843336005cf5a64c80636ce626f0996f503"
+  resolved "https://registry.yarnpkg.com/"@coral-xyz/anchor/-/anchor-0.25.0.tgz#88ee4843336005cf5a64c80636ce626f0996f503"
   integrity sha512-E6A5Y/ijqpfMJ5psJvbw0kVTzLZFUcOFgs6eSM2M2iWE1lVRF18T6hWZVNl6zqZsoz98jgnNHtVGJMs+ds9A7A==
   dependencies:
     "@project-serum/borsh" "^0.2.5"
@@ -201,9 +201,9 @@
     superstruct "^0.15.4"
     toml "^3.0.0"
 
-"@project-serum/anchor@^0.11.1":
+""@coral-xyz/anchor@^0.11.1":
   version "0.11.1"
-  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.11.1.tgz#155bff2c70652eafdcfd5559c81a83bb19cec9ff"
+  resolved "https://registry.yarnpkg.com/"@coral-xyz/anchor/-/anchor-0.11.1.tgz#155bff2c70652eafdcfd5559c81a83bb19cec9ff"
   integrity sha512-oIdm4vTJkUy6GmE6JgqDAuQPKI7XM4TPJkjtoIzp69RZe0iAD9JP2XHx7lV1jLdYXeYHqDXfBt3zcq7W91K6PA==
   dependencies:
     "@project-serum/borsh" "^0.2.2"
@@ -221,9 +221,9 @@
     snake-case "^3.0.4"
     toml "^3.0.0"
 
-"@project-serum/anchor@^0.24.2":
+""@coral-xyz/anchor@^0.24.2":
   version "0.24.2"
-  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.24.2.tgz#a3c52a99605c80735f446ca9b3a4885034731004"
+  resolved "https://registry.yarnpkg.com/"@coral-xyz/anchor/-/anchor-0.24.2.tgz#a3c52a99605c80735f446ca9b3a4885034731004"
   integrity sha512-0/718g8/DnEuwAidUwh5wLYphUYXhUbiClkuRNhvNoa+1Y8a4g2tJyxoae+emV+PG/Gikd/QUBNMkIcimiIRTA==
   dependencies:
     "@project-serum/borsh" "^0.2.5"
@@ -254,7 +254,7 @@
   resolved "https://registry.yarnpkg.com/@project-serum/serum/-/serum-0.13.65.tgz#6d3cf07912f13985765237f053cca716fe84b0b0"
   integrity sha512-BHRqsTqPSfFB5p+MgI2pjvMBAQtO8ibTK2fYY96boIFkCI3TTwXDt2gUmspeChKO2pqHr5aKevmexzAcXxrSRA==
   dependencies:
-    "@project-serum/anchor" "^0.11.1"
+    "@coral-xyz/anchor" "^0.11.1"
     "@solana/spl-token" "^0.1.6"
     "@solana/web3.js" "^1.21.0"
     bn.js "^5.1.2"
