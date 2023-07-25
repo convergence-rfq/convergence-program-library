@@ -1,4 +1,4 @@
-import { Program, Wallet, workspace, BN } from "@project-serum/anchor";
+import { Program, Wallet, workspace, BN } from "@coral-xyz/anchor";
 import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { HxroPrintTradeProvider as HxroPrintTradeProviderIdl } from "../../../target/types/hxro_print_trade_provider";

@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { SystemProgram } from "@solana/web3.js";
 import { Context, getContext } from "../utilities/wrappers";
 import {

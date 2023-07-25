@@ -1,8 +1,8 @@
-// import * as anchor from "@project-serum/anchor";
+// import * as anchor from "@coral-xyz/anchor";
 // import {HxroInstrument as HxroInstrumentType} from '../../target/types/hxro_instrument';
 // import {Context, getUpdatedContext, Rfq} from "../utilities/wrappers";
 // import {Dex, DexIdl} from "../../hxro-instrument/dex-cpi/types";
-// import {Program} from "@project-serum/anchor";
+// import {Program} from "@coral-xyz/anchor";
 // import {HxroInstrument} from "../utilities/instruments/hxroInstrument";
 // import {AuthoritySide, Quote, Side} from "../utilities/types";
 // import {toAbsolutePrice, toLegMultiplier, withTokenDecimals} from "../utilities/helpers";

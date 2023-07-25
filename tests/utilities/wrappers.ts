@@ -670,9 +670,9 @@ export class RiskEngine {
       .rpc();
   }
 
-  async setInstrumentType(program: PublicKey, instrumentType: InstrumentType | null) {
+  async setInstrumentType(instrumentIndex: number, instrumentType: InstrumentType) {
     await this.program.methods
-      .setInstrumentType(program, instrumentType)
+      .setInstrumentType(instrumentIndex, instrumentType)
       .accounts({
         authority: this.context.dao.publicKey,
         protocol: this.context.protocolPda,
