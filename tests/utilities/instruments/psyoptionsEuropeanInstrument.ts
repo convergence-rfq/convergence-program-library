@@ -1,4 +1,4 @@
-import { Program, web3, BN, workspace } from "@project-serum/anchor";
+import { Program, web3, BN, workspace, AnchorProvider } from "@coral-xyz/anchor";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
 import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
@@ -11,11 +11,10 @@ import { executeInParallel, withTokenDecimals } from "../helpers";
 import {
   CONTRACT_DECIMALS_BN,
   EuroMeta,
-  EuroPrimitive,
-  IDL as EuroOptionsIdl,
   OptionType,
   programId as euroOptionsProgramId,
   instructions,
+  createProgramFromProvider,
 } from "@mithraic-labs/tokenized-euros";
 import { IDL as PseudoPythIdl, Pyth } from "../../dependencies/pseudo_pyth_idl";
 const { createEuroMetaInstruction, initializeAllAccountsInstructions, mintOptions } = instructions;
@@ -205,7 +204,6 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
 export class EuroOptionsFacade {
   private constructor(
     private context: Context,
-    private program: Program<EuroPrimitive>,
     public meta: EuroMeta,
     public metaKey: PublicKey,
     public underlyingMint: Mint,
@@ -218,7 +216,7 @@ export class EuroOptionsFacade {
 
   async mintOptions(mintBy: Signer, amount: BN, optionType: OptionType) {
     const { instruction } = await mintOptions(
-      this.program,
+      EuroOptionsFacade.getEuroOptionsProgram(this.context),
       this.metaKey,
       this.meta,
       optionType == OptionType.CALL
@@ -249,7 +247,7 @@ export class EuroOptionsFacade {
       expireIn = 3600,
     } = {}
   ) {
-    const program = new Program(EuroOptionsIdl, euroOptionsProgramId, context.provider);
+    const program = this.getEuroOptionsProgram(context);
     const pseudoPythProgram = new Program(
       PseudoPythIdl,
       new PublicKey("FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"),
@@ -299,7 +297,6 @@ export class EuroOptionsFacade {
 
     return new EuroOptionsFacade(
       context,
-      program,
       euroMeta,
       euroMetaKey,
       underlyingMint,
@@ -339,4 +336,8 @@ export class EuroOptionsFacade {
     });
     return collateralTokenFeed.publicKey;
   };
+
+  private static getEuroOptionsProgram(context: Context) {
+    return createProgramFromProvider(context.provider as AnchorProvider, new PublicKey(euroOptionsProgramId));
+  }
 }

@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
   attachImprovedLogDisplay,
@@ -8,7 +8,7 @@ import {
   toLegMultiplier,
   withTokenDecimals,
 } from "../utilities/helpers";
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import { Context, getContext } from "../utilities/wrappers";
 import { AuthoritySide, Quote, LegSide, QuoteSide, OrderType } from "../utilities/types";
 import {

@@ -1,4 +1,4 @@
-import { AnchorError, BN, Program } from "@project-serum/anchor";
+import { AnchorError, BN, Program } from "@coral-xyz/anchor";
 import { sha256 } from "@noble/hashes/sha256";
 import { BigNumber } from "bignumber.js";
 import { PublicKey, ComputeBudgetProgram, SendTransactionError } from "@solana/web3.js";

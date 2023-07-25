@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { AccountMeta, PublicKey } from "@solana/web3.js";
 import { AssetIdentifier, LegData, LegSide, QuoteData } from "./types";
 import { Response, Rfq } from "./wrappers";

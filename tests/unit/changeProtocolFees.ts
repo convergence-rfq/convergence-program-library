@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { expect } from "chai";
 import { DEFAULT_DEFAULT_FEES, DEFAULT_SETTLE_FEES } from "../utilities/constants";
 import { attachImprovedLogDisplay, expectError } from "../utilities/helpers";

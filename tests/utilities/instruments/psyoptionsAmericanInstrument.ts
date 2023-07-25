@@ -1,4 +1,4 @@
-import { Program, BN, workspace } from "@project-serum/anchor";
+import { Program, BN, workspace, Wallet } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer, Keypair } from "@solana/web3.js";
 import { instructions, createProgram, getOptionByKey, OptionMarketWithKey } from "@mithraic-labs/psy-american";
@@ -8,8 +8,7 @@ import { getInstrumentEscrowPda } from "../pdas";
 import { AuthoritySide, AssetIdentifier, InstrumentType, LegSide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { executeInParallel, withTokenDecimals } from "../helpers";
-import * as anchor from "@project-serum/anchor";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import * as anchor from "@coral-xyz/anchor";
 
 import { PsyoptionsAmericanInstrument } from "../../../target/types/psyoptions_american_instrument";
 
@@ -213,7 +212,7 @@ export class AmericanPsyoptions {
   private static createProgramWithProvider(user: anchor.web3.Keypair, context: Context) {
     const provider = new anchor.AnchorProvider(
       context.provider.connection,
-      new NodeWallet(user),
+      new Wallet(user),
       anchor.AnchorProvider.defaultOptions()
     );
     return createProgram(psyOptionsAmericanLocalNetProgramId, provider);

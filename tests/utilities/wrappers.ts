@@ -1,4 +1,4 @@
-import { BN, Program, Provider, workspace, AnchorProvider, setProvider } from "@project-serum/anchor";
+import { BN, Program, Provider, workspace, AnchorProvider, setProvider } from "@coral-xyz/anchor";
 import {
   PublicKey,
   Keypair,
@@ -59,14 +59,11 @@ import {
   QuoteSide,
   FixedSize,
   RiskCategory,
-  riskCategoryToObject,
   InstrumentType,
-  instrumentTypeToObject,
   RiskCategoryInfo,
   OrderType,
   FeeParams,
   OracleSource,
-  oracleSourceToObject,
   LegData,
   QuoteData,
 } from "./types";
@@ -235,8 +232,8 @@ export class Context {
       .addBaseAsset(
         { value: baseAssetIndex },
         ticker,
-        riskCategoryToObject(riskCategory),
-        oracleSourceToObject(oracleSource),
+        riskCategory,
+        oracleSource,
         switchboardOracle,
         pythOracle,
         inPlacePrice
@@ -329,8 +326,8 @@ export class Context {
     await this.program.methods
       .changeBaseAssetParameters(
         enabled,
-        riskCategory && riskCategoryToObject(riskCategory),
-        oracleSource && oracleSourceToObject(oracleSource),
+        riskCategory,
+        oracleSource,
         wrapInCustomOption(switchboardOracle),
         wrapInCustomOption(pythOracle),
         wrapInCustomOption(inPlacePrice)
@@ -494,7 +491,7 @@ export class Context {
     const serializedLegData = serializeLegData(allLegData, this.program);
 
     const currentTimestamp = new BN(Math.floor(Date.now() / 1000));
-        const printTradeProvider = rfqContent.type == "printTradeProvider" ? rfqContent.provider.getProgramId() : null;
+    const printTradeProvider = rfqContent.type == "printTradeProvider" ? rfqContent.provider.getProgramId() : null;
     const rfq = await getRfqPda(
       this.taker.publicKey,
       serializedLegData.hash,
@@ -673,9 +670,9 @@ export class RiskEngine {
       .rpc();
   }
 
-  async setInstrumentType(instrumentIndex: number, instrumentType: InstrumentType) {
+  async setInstrumentType(program: PublicKey, instrumentType: InstrumentType | null) {
     await this.program.methods
-      .setInstrumentType(instrumentIndex, instrumentTypeToObject(instrumentType))
+      .setInstrumentType(program, instrumentType)
       .accounts({
         authority: this.context.dao.publicKey,
         protocol: this.context.protocolPda,
@@ -693,7 +690,7 @@ export class RiskEngine {
   ) {
     let changesForInstruction = changes.map((x) => {
       return {
-        riskCategoryIndex: x.riskCategory.valueOf(),
+        riskCategoryIndex: x.riskCategory.index,
         newValue: x.newValue,
       };
     });

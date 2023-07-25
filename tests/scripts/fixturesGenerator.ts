@@ -5,10 +5,10 @@ import { spawn } from "node:child_process";
 
 import * as toml from "toml";
 import { rimraf } from "rimraf";
-import { executeInParallel, sleep } from "../utilities/helpers";
 import { PublicKey, Keypair, Connection, Version } from "@solana/web3.js";
+import { Wallet } from "@coral-xyz/anchor";
+import { executeInParallel, sleep } from "../utilities/helpers";
 import { CollateralMint, Context, Mint } from "../utilities/wrappers";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { PsyoptionsAmericanInstrumentClass } from "../utilities/instruments/psyoptionsAmericanInstrument";
 import { PsyoptionsEuropeanInstrument } from "../utilities/instruments/psyoptionsEuropeanInstrument";
@@ -197,7 +197,7 @@ async function launchLocalValidator() {
     return ["--bpf-program", address, binaryPath];
   });
 
-  const wallet = NodeWallet.local();
+  const wallet = Wallet.local();
   const validator = spawn("solana-test-validator", [
     "-u",
     "http://0.0.0.0",
