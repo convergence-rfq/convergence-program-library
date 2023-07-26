@@ -103,7 +103,7 @@
   dependencies:
     "@hapi/hoek" "^9.0.0"
 
-"@hxronetwork/dexterity-ts@^1.5.9":
+"@hxronetwork/dexterity-ts@^1.5.36":
   version "1.5.36"
   resolved "https://registry.yarnpkg.com/@hxronetwork/dexterity-ts/-/dexterity-ts-1.5.36.tgz#86509bb35b4a805afad5e4942542dea0a77d706b"
   integrity sha512-dQpCzndbiSC8LspsFxC1sYnhtb1iH6WJ4fBtQMwi3+DcqilCMQY5o3uqeqU3z3twADes52Q7QGL++j/ec6/ruw==

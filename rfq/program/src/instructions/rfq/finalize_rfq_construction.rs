@@ -1,9 +1,6 @@
 use crate::{
     errors::ProtocolError,
-    interfaces::{
-        print_trade_provider::validate_print_trade,
-        risk_engine::calculate_required_collateral_for_rfq,
-    },
+    interfaces::risk_engine::calculate_required_collateral_for_rfq,
     seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
     state::{CollateralInfo, ProtocolState, Rfq, RfqState, StoredRfqState},
 };
@@ -35,7 +32,12 @@ pub struct FinalizeRfqConstructionAccounts<'info> {
 fn validate(ctx: &Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
     let FinalizeRfqConstructionAccounts { rfq, .. } = &ctx.accounts;
 
-    rfq.get_state()?.assert_state_in([RfqState::Constructed])?;
+    let expected_state = if rfq.is_settled_as_print_trade() {
+        RfqState::ValidatedByPrintTradeProvider
+    } else {
+        RfqState::Constructed
+    };
+    rfq.get_state()?.assert_state_in([expected_state])?;
 
     require!(!rfq.legs.is_empty(), ProtocolError::EmptyLegsNotSupported);
 
@@ -65,17 +67,10 @@ pub fn finalize_rfq_construction_instruction<'info>(
         collateral_info,
         collateral_token,
         risk_engine,
-        protocol,
         ..
     } = ctx.accounts;
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-
-    // rfq validation by the print trade provider
-    if rfq.is_settled_as_print_trade() {
-        validate_print_trade(rfq, protocol, &mut remaining_accounts)?;
-    }
-
     let required_collateral = calculate_required_collateral_for_rfq(
         rfq.to_account_info(),
         risk_engine,

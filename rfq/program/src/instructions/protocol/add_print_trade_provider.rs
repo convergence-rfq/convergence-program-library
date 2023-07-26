@@ -43,7 +43,6 @@ fn validate(ctx: &Context<AddPrintTradeProviderAccounts>) -> Result<()> {
 pub fn add_print_trade_provider_instruction(
     ctx: Context<AddPrintTradeProviderAccounts>,
     settlement_can_expire: bool,
-    validate_data_accounts: u8,
 ) -> Result<()> {
     validate(&ctx)?;
 
@@ -56,7 +55,6 @@ pub fn add_print_trade_provider_instruction(
     protocol.print_trade_providers.push(PrintTradeProvider {
         program_key: instrument_program.key(),
         settlement_can_expire,
-        validate_data_accounts,
     });
 
     Ok(())

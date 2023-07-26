@@ -24,14 +24,11 @@ pub fn validate_print_trade<'a, 'info: 'a>(
     let print_trade_provider_key = rfq
         .print_trade_provider
         .ok_or(error!(ProtocolError::NoPrintTradeProvider))?;
-    let print_trade_provider_parameters =
-        protocol.get_print_trade_provider_parameters(print_trade_provider_key)?;
 
     call_instrument(
         data,
         protocol,
         &print_trade_provider_key,
-        Some(print_trade_provider_parameters.validate_data_accounts as usize),
         Some(rfq),
         None,
         remaining_accounts,
@@ -56,7 +53,6 @@ pub fn prepare_print_trade<'a, 'info: 'a>(
         data,
         protocol,
         &print_trade_provider_key,
-        None,
         Some(rfq),
         Some(response),
         remaining_accounts,
@@ -79,7 +75,6 @@ pub fn settle_print_trade<'a, 'info: 'a>(
         data,
         protocol,
         &print_trade_provider_key,
-        None,
         Some(rfq),
         Some(response),
         remaining_accounts,
@@ -104,7 +99,6 @@ pub fn revert_print_trade_preparation<'a, 'info: 'a>(
         data,
         protocol,
         &print_trade_provider_key,
-        None,
         Some(rfq),
         Some(response),
         remaining_accounts,
@@ -127,7 +121,6 @@ pub fn clean_up_print_trade<'a, 'info: 'a>(
         data,
         protocol,
         &print_trade_provider_key,
-        None,
         Some(rfq),
         Some(response),
         remaining_accounts,
@@ -138,7 +131,6 @@ fn call_instrument<'a, 'info: 'a>(
     data: Vec<u8>,
     protocol: &Account<'info, ProtocolState>,
     provider_key: &Pubkey,
-    accounts_number: Option<usize>,
     rfq: Option<&Account<'info, Rfq>>,
     response: Option<&Account<'info, Response>>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
@@ -161,18 +153,7 @@ fn call_instrument<'a, 'info: 'a>(
         accounts.push(acc.to_account_info());
     }
 
-    if let Some(accounts_to_take) = accounts_number {
-        let accounts_number_before = accounts.len();
-
-        accounts.extend(remaining_accounts.take(accounts_to_take).cloned());
-
-        require!(
-            accounts.len() == accounts_to_take + accounts_number_before,
-            ProtocolError::NotEnoughAccounts
-        );
-    } else {
-        accounts.extend(remaining_accounts.cloned());
-    }
+    accounts.extend(remaining_accounts.cloned());
 
     let account_metas: Vec<AccountMeta> = accounts.iter().map(|x| x.to_account_meta()).collect();
 

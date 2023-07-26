@@ -22,3 +22,4 @@ pub mod settle_print_trade;
 pub mod settle_two_party_default;
 pub mod unlock_response_collateral;
 pub mod unlock_rfq_collateral;
+pub mod validate_rfq_by_print_trade_provider;

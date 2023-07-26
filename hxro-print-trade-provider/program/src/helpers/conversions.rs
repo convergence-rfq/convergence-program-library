@@ -1,15 +1,16 @@
 use anchor_lang::AnchorDeserialize;
-use dex_cpi::Fractional;
+
+use dex::utils::numeric::Fractional;
 use rfq::state::{AuthoritySide, Response, Rfq};
 
 use crate::state::ParsedLegData;
 
-pub fn to_hxro_side(side: AuthoritySide) -> dex_cpi::typedefs::Side {
-    match side {
-        AuthoritySide::Taker => dex_cpi::typedefs::Side::Bid,
-        AuthoritySide::Maker => dex_cpi::typedefs::Side::Ask,
-    }
-}
+// pub fn to_hxro_side(side: AuthoritySide) -> Side {
+//     match side {
+//         AuthoritySide::Taker => Side::Bid,
+//         AuthoritySide::Maker => Side::Ask,
+//     }
+// }
 
 pub struct ProductInfo {
     pub product_index: u64,
@@ -27,17 +28,17 @@ pub fn to_hxro_product(rfq: &Rfq, response: &Response, leg_index: u8) -> Product
 
     ProductInfo {
         product_index: leg_data.product_index as u64,
-        size: dex_cpi::typedefs::Fractional {
+        size: Fractional {
             m: amount,
             exp: leg.amount_decimals as u64,
         },
     }
 }
 
-pub fn to_hxro_price(rfq: &Rfq, response: &Response) -> dex_cpi::typedefs::Fractional {
+pub fn to_hxro_price(rfq: &Rfq, response: &Response) -> Fractional {
     let full_amount = response.get_quote_amount_to_transfer(rfq) as i64;
 
-    dex_cpi::typedefs::Fractional {
+    Fractional {
         m: full_amount,
         exp: rfq.quote_asset.decimals as u64,
     } // missing division by the amount in leg

@@ -265,3 +265,14 @@ export function toBaseAssetAccount(index: number, program: Program<RfqIdl>) {
     isWritable: false,
   };
 }
+
+export function inversePubkeyToName(value: { [pubkey: string]: string }): { [name: string]: PublicKey } {
+  const result: { [name: string]: PublicKey } = {};
+
+  for (const key in value) {
+    const name = value[key];
+    result[name] = new PublicKey(key);
+  }
+
+  return result;
+}

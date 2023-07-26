@@ -8,6 +8,7 @@ export const fixturesBasePath = path.join(testsDirectory, "fixtures");
 export const fixtureAccountsPath = path.join(fixturesBasePath, "accounts");
 export const fixtureKeypairsPath = path.join(fixturesBasePath, "keypairs");
 export const pubkeyNamingFilePath = path.join(fixturesBasePath, "pubkey-naming.json");
+export const hxroPubkeyNamingFilePath = path.join(testsDirectory, "dependencies/hxro/pubkey-naming.json");
 
 export function getKeypairPath(name: string) {
   return path.join(fixtureKeypairsPath, `${name}.json`);
@@ -20,7 +21,20 @@ export async function readKeypair(name: string) {
 }
 
 export async function loadPubkeyNaming() {
+  return {
+    ...(await loadHxroPubkeyNaming()),
+    ...(await loadFixturesPubkeyNaming()),
+  };
+}
+
+export async function loadFixturesPubkeyNaming() {
   const content = await fsPromise.readFile(pubkeyNamingFilePath, { encoding: "utf-8" });
-  const naming: { [pubkey: string]: string } = JSON.parse(content);
-  return naming;
+  const namings: { [pubkey: string]: string } = JSON.parse(content);
+  return namings;
+}
+
+export async function loadHxroPubkeyNaming() {
+  const content = await fsPromise.readFile(hxroPubkeyNamingFilePath, { encoding: "utf-8" });
+  const namings: { [pubkey: string]: string } = JSON.parse(content);
+  return namings;
 }

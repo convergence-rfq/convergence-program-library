@@ -8,18 +8,12 @@ use errors::HxroError;
 use rfq::state::{ProtocolState, Response, Rfq};
 use state::AuthoritySideDuplicate;
 
+mod constants;
 mod errors;
 mod helpers;
 mod state;
 
 declare_id!("fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE");
-
-const MAX_PRODUCTS_PER_TRADE: usize = 1;
-
-const OPERATOR_CREATOR_FEE_PROPORTION: dex_cpi::typedefs::Fractional =
-    dex_cpi::typedefs::Fractional { m: 0, exp: 0 };
-const OPERATOR_COUNTERPARTY_FEE_PROPORTION: dex_cpi::typedefs::Fractional =
-    dex_cpi::typedefs::Fractional { m: 0, exp: 0 };
 
 #[derive(Debug, Clone)]
 pub struct Dex;
@@ -36,7 +30,7 @@ pub mod hxro_print_trade_provider {
 
     pub fn validate_print_trade(ctx: Context<ValidatePrintTradeAccounts>) -> Result<()> {
         require!(
-            ctx.accounts.rfq.legs.len() <= MAX_PRODUCTS_PER_TRADE,
+            ctx.accounts.rfq.legs.len() <= constants::MAX_PRODUCTS_PER_TRADE,
             HxroError::TooManyLegs
         );
 

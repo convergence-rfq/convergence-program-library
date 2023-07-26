@@ -7,7 +7,7 @@ import * as toml from "toml";
 import { rimraf } from "rimraf";
 import { PublicKey, Keypair, Connection, Version } from "@solana/web3.js";
 import { Wallet } from "@coral-xyz/anchor";
-import { executeInParallel, sleep } from "../utilities/helpers";
+import { executeInParallel, inversePubkeyToName, sleep } from "../utilities/helpers";
 import { CollateralMint, Context, Mint } from "../utilities/wrappers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { PsyoptionsAmericanInstrumentClass } from "../utilities/instruments/psyoptionsAmericanInstrument";
@@ -23,7 +23,13 @@ import {
   SWITCHBOARD_BTC_ORACLE,
 } from "../utilities/constants";
 import { OracleSource, RiskCategory } from "../utilities/types";
-import { fixtureAccountsPath, getKeypairPath, pubkeyNamingFilePath, readKeypair } from "../utilities/fixtures";
+import {
+  fixtureAccountsPath,
+  getKeypairPath,
+  loadHxroPubkeyNaming,
+  pubkeyNamingFilePath,
+  readKeypair,
+} from "../utilities/fixtures";
 import { HxroPrintTradeProvider } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 
 const ledgerPath = path.join(".anchor", "test-ledger");
@@ -105,6 +111,11 @@ async function main() {
     },
     async () => {
       await HxroPrintTradeProvider.addPrintTradeProvider(context);
+
+      const mpgAddress = inversePubkeyToName(await loadHxroPubkeyNaming())["mpg"];
+      await HxroPrintTradeProvider.initializeConfig(context, mpgAddress);
+      const configAddress = HxroPrintTradeProvider.getConfigAddress();
+      await saveAccountAsFixture(context, configAddress, "hxro-print-trade-provider-config");
     },
     // initialize and fund collateral accounts
     async () => {

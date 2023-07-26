@@ -108,6 +108,7 @@ impl TryFrom<u8> for InstrumentType {
     type Error = Error;
 
     fn try_from(value: u8) -> std::result::Result<Self, Self::Error> {
+        msg!("Value: {}", value);
         match value {
             v if v == InstrumentType::Spot as u8 => Ok(InstrumentType::Spot),
             v if v == InstrumentType::Option as u8 => Ok(InstrumentType::Option),

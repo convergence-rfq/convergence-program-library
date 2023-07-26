@@ -97,7 +97,7 @@ describe("Required collateral calculation and lock", () => {
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
       finalize: false,
     });
-    await rfq.finalizeConstruction();
+    await rfq.finalizeRfq();
 
     await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-903.1) }]);
   });

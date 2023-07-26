@@ -1,4 +1,4 @@
-import { BN, Program, Provider, workspace, AnchorProvider, setProvider } from "@coral-xyz/anchor";
+import { BN, Program, workspace, AnchorProvider, setProvider } from "@coral-xyz/anchor";
 import {
   PublicKey,
   Keypair,
@@ -72,6 +72,7 @@ import { InstrumentController } from "./instrument";
 import {
   executeInParallel,
   expandComputeUnits,
+  inversePubkeyToName,
   serializeLegData,
   serializeOptionQuote,
   toApiFeeParams,
@@ -84,9 +85,7 @@ import { HxroPrintTradeProvider } from "./printTradeProviders/hxroPrintTradeProv
 
 export class Context {
   public program: Program<RfqIdl>;
-  public provider: Provider & {
-    sendAndConfirm: (tx: Transaction, signers?: Signer[], opts?: ConfirmOptions) => Promise<TransactionSignature>;
-  };
+  public provider: AnchorProvider;
   public baseAssets: { [baseAssetIndex: number]: { oracleAddress: PublicKey | null } };
 
   public riskEngine!: RiskEngine;
@@ -107,23 +106,12 @@ export class Context {
 
   constructor() {
     this.provider = AnchorProvider.env();
-    this.assertProvider();
     setProvider(this.provider);
     this.program = workspace.Rfq as Program<RfqIdl>;
     this.baseAssets = {};
 
     this.pubkeyToName = {};
     this.nameToPubkey = {};
-  }
-
-  assertProvider(): asserts this is {
-    provider: {
-      sendAndConfirm: (tx: Transaction, signers?: Signer[], opts?: ConfirmOptions) => Promise<TransactionSignature>;
-    };
-  } {
-    if (!this.provider.sendAndConfirm) {
-      throw Error("Provider doesn't support send and confirm!");
-    }
   }
 
   async basicInitialize() {
@@ -137,10 +125,7 @@ export class Context {
     await executeInParallel(
       async () => {
         this.pubkeyToName = await loadPubkeyNaming();
-        for (const key in this.pubkeyToName) {
-          const name = this.pubkeyToName[key];
-          this.nameToPubkey[name] = new PublicKey(key);
-        }
+        this.nameToPubkey = inversePubkeyToName(this.pubkeyToName);
       },
       async () => (this.dao = await readKeypair("dao")),
       async () => (this.taker = await readKeypair("taker")),
@@ -205,9 +190,9 @@ export class Context {
       .rpc();
   }
 
-  async addPrintTradeProvider(programId: PublicKey, settlementCanExpire: boolean, validateDataAccounts: number) {
+  async addPrintTradeProvider(programId: PublicKey, settlementCanExpire: boolean) {
     await this.program.methods
-      .addPrintTradeProvider(settlementCanExpire, validateDataAccounts)
+      .addPrintTradeProvider(settlementCanExpire)
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -531,7 +516,7 @@ export class Context {
     const rfqObject = new Rfq(this, rfq, rfqContent);
 
     if (finalize) {
-      txConstructor = txConstructor.postInstructions([await rfqObject.getFinalizeConstructionInstruction()]);
+      txConstructor = txConstructor.postInstructions(await rfqObject.getFinalizeRfqInstructions());
     }
 
     await txConstructor.rpc();
@@ -953,16 +938,24 @@ export class Rfq {
     await txConstructor.rpc();
   }
 
-  async finalizeConstruction() {
-    let instruction = await this.getFinalizeConstructionInstruction();
-    let transaction = new Transaction().add(instruction);
-    await this.context.provider.sendAndConfirm(transaction, [this.context.taker]);
+  async finalizeRfq() {
+    let tx = new Transaction();
+    let ixs = await this.getFinalizeRfqInstructions();
+    tx.add(...ixs);
+    await this.context.provider.sendAndConfirm(tx, [this.context.taker]);
+  }
+
+  async getFinalizeRfqInstructions() {
+    const ixs = [];
+    if (this.content.type === "printTradeProvider") {
+      ixs.push(await this.getValidateByPrintTradeProviderInstruction());
+    }
+    ixs.push(await this.getFinalizeConstructionInstruction());
+
+    return ixs;
   }
 
   getFinalizeConstructionInstruction() {
-    const validationAccounts =
-      this.content.type == "printTradeProvider" ? this.content.provider.getValidationAccounts() : [];
-
     return this.context.program.methods
       .finalizeRfqConstruction()
       .accounts({
@@ -973,7 +966,23 @@ export class Rfq {
         collateralToken: getCollateralTokenPda(this.context.taker.publicKey, this.context.program.programId),
         riskEngine: this.context.riskEngine.programId,
       })
-      .remainingAccounts([...validationAccounts, ...this.getRiskEngineAccounts()])
+      .remainingAccounts(this.getRiskEngineAccounts())
+      .instruction();
+  }
+
+  getValidateByPrintTradeProviderInstruction() {
+    if (this.content.type !== "printTradeProvider") {
+      throw Error("Is only supported for print trade RFQs!");
+    }
+
+    return this.context.program.methods
+      .validateRfqByPrintTradeProvider()
+      .accounts({
+        taker: this.context.taker.publicKey,
+        protocol: this.context.protocolPda,
+        rfq: this.account,
+      })
+      .remainingAccounts(this.content.provider.getValidationAccounts())
       .instruction();
   }
 

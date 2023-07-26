@@ -16,6 +16,26 @@ program = "../dependencies/pseudo_pyth.so"
 address = "R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs"
 program = "../dependencies/psy_american.so"
 
+[[test.genesis]]
+address = "FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL"
+program = "../dependencies/hxro/programs/dex_FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL.so"
+
+[[test.genesis]]
+address = "DchhQ6g8LyRCM5mnao1MAg3g9twfqBbDmUWgpQpFfn1b"
+program = "../dependencies/hxro/programs/aaob_DchhQ6g8LyRCM5mnao1MAg3g9twfqBbDmUWgpQpFfn1b.so"
+
+[[test.genesis]]
+address = "8981bZYszfz1FrFVx7gcUm61RfawMoAHnURuERRJKdkq"
+program = "../dependencies/hxro/programs/instrument_8981bZYszfz1FrFVx7gcUm61RfawMoAHnURuERRJKdkq.so"
+
+[[test.genesis]]
+address = "5T9gt3frWPAvu1hxEULbsKrP2WF4ggqSxCMqpJvtWXHV"
+program = "../dependencies/hxro/programs/constant_fees.so"
+
+[[test.genesis]]
+address = "BVDTB61eHY7UnCb4ueatdaV4rctTzqfLAL6sQDeMNSHA"
+program = "../dependencies/hxro/programs/noop_risk_engine.so"
+
 [[test.validator.account]]
 address = "8SXvChNYFhRq4EZuZvnhjrB3jJRQCv4k3P4W6hesH3Ee"
 filename = "../dependencies/btc_20000_oracle_switchboard.json"
@@ -26,3 +46,6 @@ filename = "../dependencies/sol_30_oracle_pyth.json"
 
 [[test.validator.account_dir]]
 directory = "tests/fixtures/accounts"
+
+[[test.validator.account_dir]]
+directory = "tests/dependencies/hxro/accounts"

@@ -70,7 +70,6 @@ impl ProtocolState {
 pub struct PrintTradeProvider {
     pub program_key: Pubkey,
     pub settlement_can_expire: bool,
-    pub validate_data_accounts: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

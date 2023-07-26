@@ -10,6 +10,5 @@ name = "hxro_print_trade_provider"
 
 [dependencies]
 anchor-lang = { version = "0.28.0", features = ["init-if-needed"] }
-dex-cpi = { path = "../dex-cpi", features = ["cpi"] }
-risk-cpi = { path = "../risk-cpi", features = ["cpi"] }
+dex = { path = "../dex", features = ["cpi"] }
 rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }

@@ -338,6 +338,6 @@ export class EuroOptionsFacade {
   };
 
   private static getEuroOptionsProgram(context: Context) {
-    return createProgramFromProvider(context.provider as AnchorProvider, new PublicKey(euroOptionsProgramId));
+    return createProgramFromProvider(context.provider, new PublicKey(euroOptionsProgramId));
   }
 }

@@ -61,13 +61,15 @@ export type RiskCategoryInfo = {
   scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario];
 };
 
-export type InstrumentType = { spot: {} } | { option: {} } | { termFuture: {} } | { perpFuture: {} };
+export type InstrumentType = ({ spot: {} } | { option: {} } | { termFuture: {} } | { perpFuture: {} }) & {
+  index: number;
+};
 
 export const InstrumentType = {
-  Spot: { spot: {} },
-  Option: { option: {} },
-  TermFuture: { termFuture: {} },
-  PerpFuture: { perpFuture: {} },
+  Spot: { spot: {}, index: 1 },
+  Option: { option: {}, index: 2 },
+  TermFuture: { termFuture: {}, index: 3 },
+  PerpFuture: { perpFuture: {}, index: 4 },
 };
 
 export type Quote =

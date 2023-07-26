@@ -49,6 +49,7 @@ use instructions::rfq::settle_print_trade::*;
 use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
 use instructions::rfq::unlock_rfq_collateral::*;
+use instructions::rfq::validate_rfq_by_print_trade_provider::*;
 use state::*;
 
 security_txt! {
@@ -99,9 +100,8 @@ pub mod rfq {
     pub fn add_print_trade_provider(
         ctx: Context<AddPrintTradeProviderAccounts>,
         settlement_can_expire: bool,
-        validate_data_accounts: u8,
     ) -> Result<()> {
-        add_print_trade_provider_instruction(ctx, settlement_can_expire, validate_data_accounts)
+        add_print_trade_provider_instruction(ctx, settlement_can_expire)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -216,6 +216,12 @@ pub mod rfq {
         legs: Vec<Leg>,
     ) -> Result<()> {
         add_legs_to_rfq_instruction(ctx, legs)
+    }
+
+    pub fn validate_rfq_by_print_trade_provider<'info>(
+        ctx: Context<'_, '_, '_, 'info, ValidateRfqByPrintTradeProviderAccounts<'info>>,
+    ) -> Result<()> {
+        validate_rfq_by_print_trade_provider_instruction(ctx)
     }
 
     pub fn finalize_rfq_construction<'info>(
