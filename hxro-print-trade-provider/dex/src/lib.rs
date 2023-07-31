@@ -13,6 +13,10 @@ use anchor_lang::{
 };
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use borsh::{BorshDeserialize, BorshSerialize};
+use state::{
+    print_trade::{PrintTrade, PrintTradeProductIndexes},
+    trader_risk_group::LockedCollateralProductIndexes,
+};
 
 use crate::{
     error::{DomainOrProgramError, UtilError},
@@ -140,6 +144,27 @@ pub mod dex {
 
     pub fn claim_authority(ctx: Context<ClaimAuthority>) -> ProgramResult {
         processor::change_authority::claim_authority(ctx).map_err(log_errors)
+    }
+
+    pub fn lock_collateral<'info>(
+        ctx: Context<'_, '_, '_, 'info, LockCollateral<'info>>,
+        params: LockCollateralParams,
+    ) -> ProgramResult {
+        Ok(())
+    }
+
+    pub fn initialize_print_trade(
+        ctx: Context<InitializePrintTrade>,
+        params: InitializePrintTradeParams,
+    ) -> ProgramResult {
+        Ok(())
+    }
+
+    pub fn sign_print_trade<'info>(
+        ctx: Context<'_, '_, '_, 'info, SignPrintTrade<'info>>,
+        params: SignPrintTradeParams,
+    ) -> ProgramResult {
+        Ok(())
     }
 }
 
@@ -631,4 +656,124 @@ pub fn create_trader_risk_state_acct_ix(
         accounts,
         data: discriminant,
     }
+}
+
+#[repr(C)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub struct LockCollateralParams {
+    pub num_products: usize,
+    pub products: LockedCollateralProductIndexes,
+}
+
+#[derive(Accounts)]
+pub struct LockCollateral<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+    #[account(mut)]
+    pub trader_risk_group: AccountLoader<'info, TraderRiskGroup>,
+    #[account(mut)]
+    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
+    #[account(executable)]
+    fee_model_program: AccountInfo<'info>,
+    fee_model_configuration_acct: AccountInfo<'info>,
+    #[account(mut)]
+    fee_output_register: AccountInfo<'info>,
+    #[account(executable)]
+    risk_engine_program: AccountInfo<'info>,
+    risk_model_configuration_acct: AccountInfo<'info>,
+    #[account(mut)]
+    risk_output_register: AccountInfo<'info>,
+    risk_and_fee_signer: AccountInfo<'info>,
+    #[account(mut)]
+    fee_state_acct: AccountInfo<'info>,
+    #[account(mut)]
+    risk_state_acct: AccountInfo<'info>,
+}
+
+// this is for convenience. this is not supposed to derive(Accounts).
+pub struct LockedCollateralAccounts {
+    pub fee_model_program: Pubkey,
+    pub fee_model_configuration_acct: Pubkey,
+    pub fee_output_register: Pubkey,
+    pub risk_engine_program: Pubkey,
+    pub risk_model_configuration_acct: Pubkey,
+    pub risk_output_register: Pubkey,
+    pub creator_trader_fee_state_acct: Pubkey,
+    pub creator_trader_risk_state_acct: Pubkey,
+}
+
+#[repr(C)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub struct InitializePrintTradeParams {
+    pub num_products: usize,
+    pub products: PrintTradeProductIndexes,
+    pub price: Fractional, // quantity of quote (e.g., USDC) per base
+    pub side: Side,        // side that creator is taking
+    pub operator_creator_fee_proportion: Fractional,
+    pub operator_counterparty_fee_proportion: Fractional,
+    pub is_operator_signer: bool,
+}
+
+#[derive(Accounts)]
+pub struct InitializePrintTrade<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+    pub creator: AccountLoader<'info, TraderRiskGroup>, // user owns creator trg
+    pub counterparty: AccountLoader<'info, TraderRiskGroup>,
+    pub operator: AccountLoader<'info, TraderRiskGroup>,
+    #[account(mut)]
+    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
+    #[account(init, owner = crate::ID, payer = user, space = 8 + PrintTrade::SIZE, seeds = [b"print_trade", creator.key().as_ref(), counterparty.key().as_ref()], bump)]
+    pub print_trade: AccountLoader<'info, PrintTrade>,
+    pub system_program: Program<'info, System>,
+    pub operator_owner: AccountInfo<'info>,
+}
+
+#[repr(C)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub struct SignPrintTradeParams {
+    pub num_products: usize,
+    pub products: PrintTradeProductIndexes,
+    pub price: Fractional, // quantity of quote (e.g., USDC) per base
+    pub side: Side,        // side that counter party is taking
+    pub operator_creator_fee_proportion: Fractional, // force counterparty to pass in operator fees to avoid rugging via operator fees
+    pub operator_counterparty_fee_proportion: Fractional, // force counterparty to pass in operator fees to avoid rugging via operator fees
+    pub use_locked_collateral: bool,
+}
+
+#[derive(Accounts)]
+pub struct SignPrintTrade<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>, // user owns counterparty trg
+    #[account(mut)]
+    pub creator: AccountLoader<'info, TraderRiskGroup>,
+    #[account(mut)]
+    pub counterparty: AccountLoader<'info, TraderRiskGroup>,
+    #[account(mut)]
+    pub operator: AccountLoader<'info, TraderRiskGroup>,
+    #[account(mut)]
+    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
+    #[account(mut, close=creator)]
+    pub print_trade: AccountLoader<'info, PrintTrade>,
+    pub system_program: Program<'info, System>,
+    #[account(executable)]
+    fee_model_program: AccountInfo<'info>,
+    fee_model_configuration_acct: AccountInfo<'info>,
+    #[account(mut)]
+    fee_output_register: AccountInfo<'info>,
+    #[account(executable)]
+    risk_engine_program: AccountInfo<'info>,
+    risk_model_configuration_acct: AccountInfo<'info>,
+    #[account(mut)]
+    risk_output_register: AccountInfo<'info>,
+    risk_and_fee_signer: AccountInfo<'info>,
+    #[account(mut)]
+    creator_trader_fee_state_acct: AccountInfo<'info>,
+    #[account(mut)]
+    creator_trader_risk_state_acct: AccountInfo<'info>,
+    #[account(mut)]
+    counterparty_trader_fee_state_acct: AccountInfo<'info>,
+    #[account(mut)]
+    counterparty_trader_risk_state_acct: AccountInfo<'info>,
+    pub operator_owner: AccountInfo<'info>,
 }

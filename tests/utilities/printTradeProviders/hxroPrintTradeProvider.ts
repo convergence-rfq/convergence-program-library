@@ -5,7 +5,8 @@ import { HxroPrintTradeProvider as HxroPrintTradeProviderIdl } from "../../../ta
 import { AuthoritySide, InstrumentType, LegData, LegSide, QuoteData } from "../types";
 import dexterity from "@hxronetwork/dexterity-ts";
 import { executeInParallel } from "../helpers";
-import { BITCOIN_BASE_ASSET_INDEX, DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE, DEFAULT_MINT_DECIMALS } from "../constants";
+import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE, DEFAULT_MINT_DECIMALS, SOLANA_BASE_ASSET_INDEX } from "../constants";
+import { getBaseAssetPda } from "../pdas";
 
 const configSeed = "config";
 
@@ -33,7 +34,7 @@ export class HxroPrintTradeProvider {
         amount: DEFAULT_LEG_AMOUNT,
         amountDecimals: DEFAULT_MINT_DECIMALS,
         side: DEFAULT_LEG_SIDE,
-        baseAssetIndex: BITCOIN_BASE_ASSET_INDEX,
+        baseAssetIndex: SOLANA_BASE_ASSET_INDEX,
         productIndex: 0,
       },
     ]
@@ -90,10 +91,30 @@ export class HxroPrintTradeProvider {
   }
 
   getValidationAccounts() {
+    const validationAccounts = this.legs
+      .map((leg) => {
+        const accountName = "product-" + String(leg.productIndex);
+        const productAccountInfo = {
+          pubkey: this.context.nameToPubkey[accountName],
+          isSigner: false,
+          isWritable: false,
+        };
+        const baseAssetAccountInfo = {
+          pubkey: getBaseAssetPda(leg.baseAssetIndex, this.context.program.programId),
+          isSigner: false,
+          isWritable: false,
+        };
+        console.log(productAccountInfo.pubkey.toString());
+        console.log(baseAssetAccountInfo.pubkey.toString());
+        return [productAccountInfo, baseAssetAccountInfo];
+      })
+      .flat();
+
     return [
       { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
       { pubkey: HxroPrintTradeProvider.getConfigAddress(), isSigner: false, isWritable: false },
       { pubkey: this.proxy.hxroContext.mpg.publicKey, isSigner: false, isWritable: false },
+      ...validationAccounts,
     ];
   }
 

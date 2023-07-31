@@ -25,7 +25,7 @@ pub enum OperationType {
     ConsumeEvents,
 }
 
-#[account(zero_copy)]
+#[account(zero_copy(unsafe))]
 pub struct RiskOutputRegister {
     pub risk_engine_output: HealthResult,
 }

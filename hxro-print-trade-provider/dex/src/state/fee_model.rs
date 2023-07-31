@@ -8,7 +8,7 @@ use bytemuck::{Pod, Zeroable};
 
 #[repr(C)]
 #[zero_copy]
-#[derive(Debug, Zeroable, Pod)]
+#[derive(Debug)]
 pub struct TraderFees {
     pub valid_until: UnixTimestamp,
     pub maker_fee_bps: i32,

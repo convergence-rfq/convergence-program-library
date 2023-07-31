@@ -104,266 +104,266 @@ pub fn process<'info>(
     ctx: Context<'_, '_, '_, 'info, NewOrder<'info>>,
     params: NewOrderParams,
 ) -> DomainOrProgramResult {
-    validate(&ctx)?;
-    let accts = ctx.accounts;
+    // validate(&ctx)?;
+    // let accts = ctx.accounts;
 
-    let mut trader_risk_group = accts.trader_risk_group.load_mut()?;
-    let mut market_product_group = accts.market_product_group.load_mut()?;
+    // let mut trader_risk_group = accts.trader_risk_group.load_mut()?;
+    // let mut market_product_group = accts.market_product_group.load_mut()?;
 
-    let NewOrderParams {
-        side,
-        max_base_qty,
-        order_type,
-        self_trade_behavior,
-        match_limit,
-        limit_price,
-    } = params;
-    let orderbook = MarketState::get(&accts.orderbook)?;
-    if max_base_qty < u64_to_quote(orderbook.min_base_order_size as u64)? {
-        msg!("The base order size is too small.");
-        return Err(ProgramError::InvalidArgument.into());
-    }
-    let (product_index, _) = market_product_group.find_product_index(&accts.product.key())?;
-    let product = market_product_group.market_products[product_index];
+    // let NewOrderParams {
+    //     side,
+    //     max_base_qty,
+    //     order_type,
+    //     self_trade_behavior,
+    //     match_limit,
+    //     limit_price,
+    // } = params;
+    // let orderbook = MarketState::get(&accts.orderbook)?;
+    // if max_base_qty < u64_to_quote(orderbook.min_base_order_size as u64)? {
+    //     msg!("The base order size is too small.");
+    //     return Err(ProgramError::InvalidArgument.into());
+    // }
+    // let (product_index, _) = market_product_group.find_product_index(&accts.product.key())?;
+    // let product = market_product_group.market_products[product_index];
 
-    // Product validation
-    assert(
-        !market_product_group.is_expired(&product),
-        DexError::ContractIsExpired,
-    )?;
-    assert_keys_equal(product.orderbook, accts.orderbook.key())?;
+    // // Product validation
+    // assert(
+    //     !market_product_group.is_expired(&product),
+    //     DexError::ContractIsExpired,
+    // )?;
+    // assert_keys_equal(product.orderbook, accts.orderbook.key())?;
 
-    let (post_only, post_allowed) = match order_type {
-        OrderType::Limit => (false, true),
-        OrderType::ImmediateOrCancel | OrderType::FillOrKill => (false, false),
-        OrderType::PostOnly => (true, true),
-    };
+    // let (post_only, post_allowed) = match order_type {
+    //     OrderType::Limit => (false, true),
+    //     OrderType::ImmediateOrCancel | OrderType::FillOrKill => (false, false),
+    //     OrderType::PostOnly => (true, true),
+    // };
 
-    let callback_info = CallBackInfo {
-        user_account: accts.trader_risk_group.key(),
-        open_orders_idx: trader_risk_group.open_orders.get_next_index() as u64,
-    };
-    assert(accts.orderbook.is_writable, DexError::CombosNotRemoved)?;
-    invoke_unchecked(
-        &system_instruction::transfer(
-            accts.user.key,
-            accts.orderbook.key,
-            orderbook.cranker_reward,
-        ),
-        &[
-            accts.user.clone(),
-            accts.orderbook.clone(),
-            accts.system_program.to_account_info(),
-        ],
-    )?;
-    let limit_price_aob =
-        get_limit_price_aob(limit_price, product.price_offset, product.tick_size)?;
+    // let callback_info = CallBackInfo {
+    //     user_account: accts.trader_risk_group.key(),
+    //     open_orders_idx: trader_risk_group.open_orders.get_next_index() as u64,
+    // };
+    // assert(accts.orderbook.is_writable, DexError::CombosNotRemoved)?;
+    // invoke_unchecked(
+    //     &system_instruction::transfer(
+    //         accts.user.key,
+    //         accts.orderbook.key,
+    //         orderbook.cranker_reward,
+    //     ),
+    //     &[
+    //         accts.user.clone(),
+    //         accts.orderbook.clone(),
+    //         accts.system_program.to_account_info(),
+    //     ],
+    // )?;
+    // let limit_price_aob =
+    //     get_limit_price_aob(limit_price, product.price_offset, product.tick_size)?;
 
-    let starting_queue_size =
-        EventQueueHeader::deserialize(&mut (&accts.event_queue.data.borrow() as &[u8]))
-            .map_err(ProgramError::from)?
-            .count;
+    // let starting_queue_size =
+    //     EventQueueHeader::deserialize(&mut (&accts.event_queue.data.borrow() as &[u8]))
+    //         .map_err(ProgramError::from)?
+    //         .count;
 
-    invoke_signed_unchecked(
-        &agnostic_orderbook::instruction::new_order::Accounts {
-            market: accts.orderbook.key,
-            event_queue: accts.event_queue.key,
-            bids: accts.bids.key,
-            asks: accts.asks.key,
-            authority: accts.market_signer.key,
-        }
-        .get_instruction(
-            accts.aaob_program.key(),
-            agnostic_orderbook::instruction::AgnosticOrderbookInstruction::NewOrder as u8,
-            agnostic_orderbook::instruction::new_order::Params {
-                max_base_qty: max_base_qty.round(product.base_decimals as u32)?.m as u64,
-                max_quote_qty: u64::MAX,
-                limit_price: limit_price_aob,
-                side,
-                match_limit,
-                callback_info: callback_info.to_vec(),
-                post_only,
-                post_allowed,
-                self_trade_behavior,
-            },
-        ),
-        &[
-            accts.aaob_program.clone(),
-            accts.orderbook.clone(),
-            accts.market_signer.clone(),
-            accts.event_queue.clone(),
-            accts.bids.clone(),
-            accts.asks.clone(),
-        ],
-        &[&[accts.product.key.as_ref(), &[product.bump as u8]]],
-    )?;
+    // invoke_signed_unchecked(
+    //     &agnostic_orderbook::instruction::new_order::Accounts {
+    //         market: accts.orderbook.key,
+    //         event_queue: accts.event_queue.key,
+    //         bids: accts.bids.key,
+    //         asks: accts.asks.key,
+    //         authority: accts.market_signer.key,
+    //     }
+    //     .get_instruction(
+    //         accts.aaob_program.key(),
+    //         agnostic_orderbook::instruction::AgnosticOrderbookInstruction::NewOrder as u8,
+    //         agnostic_orderbook::instruction::new_order::Params {
+    //             max_base_qty: max_base_qty.round(product.base_decimals as u32)?.m as u64,
+    //             max_quote_qty: u64::MAX,
+    //             limit_price: limit_price_aob,
+    //             side,
+    //             match_limit,
+    //             callback_info: callback_info.to_vec(),
+    //             post_only,
+    //             post_allowed,
+    //             self_trade_behavior,
+    //         },
+    //     ),
+    //     &[
+    //         accts.aaob_program.clone(),
+    //         accts.orderbook.clone(),
+    //         accts.market_signer.clone(),
+    //         accts.event_queue.clone(),
+    //         accts.bids.clone(),
+    //         accts.asks.clone(),
+    //     ],
+    //     &[&[accts.product.key.as_ref(), &[product.bump as u8]]],
+    // )?;
 
-    let ending_queue_size =
-        EventQueueHeader::deserialize(&mut (&accts.event_queue.data.borrow() as &[u8]))
-            .map_err(ProgramError::from)?
-            .count;
+    // let ending_queue_size =
+    //     EventQueueHeader::deserialize(&mut (&accts.event_queue.data.borrow() as &[u8]))
+    //         .map_err(ProgramError::from)?
+    //         .count;
 
-    let new_events = ending_queue_size.saturating_sub(starting_queue_size);
+    // let new_events = ending_queue_size.saturating_sub(starting_queue_size);
 
-    update_new_queue_events(
-        &product,
-        product_index,
-        &mut market_product_group,
-        new_events,
-    )?;
+    // update_new_queue_events(
+    //     &product,
+    //     product_index,
+    //     &mut market_product_group,
+    //     new_events,
+    // )?;
 
-    let OrderSummary {
-        posted_order_id,
-        total_base_qty,
-        total_quote_qty,
-        total_base_qty_posted,
-    }: OrderSummary = read_register(&accts.event_queue).unwrap().unwrap();
+    // let OrderSummary {
+    //     posted_order_id,
+    //     total_base_qty,
+    //     total_quote_qty,
+    //     total_base_qty_posted,
+    // }: OrderSummary = read_register(&accts.event_queue).unwrap().unwrap();
 
-    emit!(DexOrderSummary::new(
-        posted_order_id,
-        total_base_qty,
-        total_quote_qty,
-        total_base_qty_posted,
-    ));
+    // emit!(DexOrderSummary::new(
+    //     posted_order_id,
+    //     total_base_qty,
+    //     total_quote_qty,
+    //     total_base_qty_posted,
+    // ));
 
-    {
-        let bids = Slab::new_from_acc_info(&accts.bids, orderbook.callback_info_len as usize);
-        let asks = Slab::new_from_acc_info(&accts.asks, orderbook.callback_info_len as usize);
-        let windows = &market_product_group.ewma_windows.clone();
-        let best_bid = get_bbo(
-            bids.find_max(),
-            &bids,
-            Side::Bid,
-            product.tick_size,
-            product.price_offset,
-        )?;
-        let best_ask = get_bbo(
-            asks.find_min(),
-            &asks,
-            Side::Ask,
-            product.tick_size,
-            product.price_offset,
-        )?;
-        update_prices(
-            &Clock::get()?,
-            &mut market_product_group.market_products[product_index].prices,
-            best_bid,
-            best_ask,
-            windows,
-        )?;
-    }
-
-    let [total_base_qty_dex, matched_base_qty_dex, matched_quote_qty_dex] = process_from_aob(
-        total_base_qty,
-        total_base_qty_posted,
-        total_quote_qty,
-        limit_price_aob,
-        product.price_offset,
-        product.tick_size,
-        product.base_decimals,
-    )?;
-    let is_combo = product.is_combo();
-    //// For the snapshot to be sent to risk engine
-    let (old_ask_qty_in_book, old_bid_qty_in_book) = (
-        trader_risk_group.open_orders.products[product_index].ask_qty_in_book,
-        trader_risk_group.open_orders.products[product_index].bid_qty_in_book,
-    );
-
-    trader_risk_group.adjust_book_qty(
-        product_index,
-        total_base_qty_dex.checked_sub(matched_base_qty_dex)?,
-        side,
-    )?;
-
-    let crossed = matched_quote_qty_dex != ZERO_FRAC;
-    update_metadata(
-        &product,
-        &mut trader_risk_group,
-        &mut market_product_group,
-        product_index,
-        matched_base_qty_dex,
-        side,
-        crossed,
-    )?;
-
-    if crossed || trader_risk_group.valid_until == 0 {
-        // Make call into the risk engine if there's a cross or if the trader's fees are uninitialized
-        handle_fees(
-            accts,
-            &Clock::get()?,
-            &market_product_group,
-            &mut trader_risk_group,
-            if crossed {
-                matched_quote_qty_dex
-            } else {
-                ZERO_FRAC
-            },
-            matched_base_qty_dex,
-            accts.product.key(),
-            side,
-        )?;
-    }
-    if crossed {
-        match side {
-            Side::Bid => {
-                trader_risk_group.pending_cash_balance = trader_risk_group
-                    .pending_cash_balance
-                    .checked_sub(matched_quote_qty_dex)?
-                    .round(market_product_group.decimals as u32)?;
-            }
-
-            Side::Ask => {
-                trader_risk_group.pending_cash_balance = trader_risk_group
-                    .pending_cash_balance
-                    .checked_add(matched_quote_qty_dex)?
-                    .round(market_product_group.decimals as u32)?;
-            }
-        }
-    }
-    // match posted_order_id {
-    //     Some(order_id) => trader_risk_group.add_open_order(product_index, order_id)?,
-    //     None => {}
+    // {
+    //     let bids = Slab::new_from_acc_info(&accts.bids, orderbook.callback_info_len as usize);
+    //     let asks = Slab::new_from_acc_info(&accts.asks, orderbook.callback_info_len as usize);
+    //     let windows = &market_product_group.ewma_windows.clone();
+    //     let best_bid = get_bbo(
+    //         bids.find_max(),
+    //         &bids,
+    //         Side::Bid,
+    //         product.tick_size,
+    //         product.price_offset,
+    //     )?;
+    //     let best_ask = get_bbo(
+    //         asks.find_min(),
+    //         &asks,
+    //         Side::Ask,
+    //         product.tick_size,
+    //         product.price_offset,
+    //     )?;
+    //     update_prices(
+    //         &Clock::get()?,
+    //         &mut market_product_group.market_products[product_index].prices,
+    //         best_bid,
+    //         best_ask,
+    //         windows,
+    //     )?;
     // }
 
-    // Apply all unsettled funding prior to calling the risk engine
-    trader_risk_group.apply_all_funding(&mut market_product_group)?;
+    // let [total_base_qty_dex, matched_base_qty_dex, matched_quote_qty_dex] = process_from_aob(
+    //     total_base_qty,
+    //     total_base_qty_posted,
+    //     total_quote_qty,
+    //     limit_price_aob,
+    //     product.price_offset,
+    //     product.tick_size,
+    //     product.base_decimals,
+    // )?;
+    // let is_combo = product.is_combo();
+    // //// For the snapshot to be sent to risk engine
+    // let (old_ask_qty_in_book, old_bid_qty_in_book) = (
+    //     trader_risk_group.open_orders.products[product_index].ask_qty_in_book,
+    //     trader_risk_group.open_orders.products[product_index].bid_qty_in_book,
+    // );
 
-    match risk_check(
-        &accts.risk_engine_program,
-        &accts.market_product_group,
-        &accts.trader_risk_group,
-        &accts.risk_output_register,
-        &accts.trader_risk_state_acct,
-        &accts.risk_model_configuration_acct,
-        &accts.risk_and_fee_signer,
-        ctx.remaining_accounts,
-        &OrderInfo {
-            total_order_qty: total_base_qty_dex,
-            matched_order_qty: matched_base_qty_dex,
-            old_ask_qty_in_book,
-            old_bid_qty_in_book,
-            order_side: side,
-            is_combo,
-            product_index,
-            operation_type: OperationType::NewOrder,
-        },
-        market_product_group.get_validate_account_health_discriminant(),
-        market_product_group.risk_and_fee_bump as u8,
-    )? {
-        HealthResult::Health { health_info } => {
-            if health_info.action != ActionStatus::Approved {
-                msg!("health_info.action: {:?}", health_info.action);
-                return Err(DexError::InvalidAccountHealthError.into());
-            }
-        }
-        HealthResult::Liquidation {
-            liquidation_info: _,
-        } => return Err(DexError::InvalidAccountHealthError.into()),
-    }
+    // trader_risk_group.adjust_book_qty(
+    //     product_index,
+    //     total_base_qty_dex.checked_sub(matched_base_qty_dex)?,
+    //     side,
+    // )?;
 
-    market_product_group.sequence_number += 1;
-    msg!("sequence: {}", market_product_group.sequence_number);
-    accts.market_product_group.key().log();
+    // let crossed = matched_quote_qty_dex != ZERO_FRAC;
+    // update_metadata(
+    //     &product,
+    //     &mut trader_risk_group,
+    //     &mut market_product_group,
+    //     product_index,
+    //     matched_base_qty_dex,
+    //     side,
+    //     crossed,
+    // )?;
+
+    // if crossed || trader_risk_group.valid_until == 0 {
+    //     // Make call into the risk engine if there's a cross or if the trader's fees are uninitialized
+    //     handle_fees(
+    //         accts,
+    //         &Clock::get()?,
+    //         &market_product_group,
+    //         &mut trader_risk_group,
+    //         if crossed {
+    //             matched_quote_qty_dex
+    //         } else {
+    //             ZERO_FRAC
+    //         },
+    //         matched_base_qty_dex,
+    //         accts.product.key(),
+    //         side,
+    //     )?;
+    // }
+    // if crossed {
+    //     match side {
+    //         Side::Bid => {
+    //             trader_risk_group.pending_cash_balance = trader_risk_group
+    //                 .pending_cash_balance
+    //                 .checked_sub(matched_quote_qty_dex)?
+    //                 .round(market_product_group.decimals as u32)?;
+    //         }
+
+    //         Side::Ask => {
+    //             trader_risk_group.pending_cash_balance = trader_risk_group
+    //                 .pending_cash_balance
+    //                 .checked_add(matched_quote_qty_dex)?
+    //                 .round(market_product_group.decimals as u32)?;
+    //         }
+    //     }
+    // }
+    // // match posted_order_id {
+    // //     Some(order_id) => trader_risk_group.add_open_order(product_index, order_id)?,
+    // //     None => {}
+    // // }
+
+    // // Apply all unsettled funding prior to calling the risk engine
+    // trader_risk_group.apply_all_funding(&mut market_product_group)?;
+
+    // match risk_check(
+    //     &accts.risk_engine_program,
+    //     &accts.market_product_group,
+    //     &accts.trader_risk_group,
+    //     &accts.risk_output_register,
+    //     &accts.trader_risk_state_acct,
+    //     &accts.risk_model_configuration_acct,
+    //     &accts.risk_and_fee_signer,
+    //     ctx.remaining_accounts,
+    //     &OrderInfo {
+    //         total_order_qty: total_base_qty_dex,
+    //         matched_order_qty: matched_base_qty_dex,
+    //         old_ask_qty_in_book,
+    //         old_bid_qty_in_book,
+    //         order_side: side,
+    //         is_combo,
+    //         product_index,
+    //         operation_type: OperationType::NewOrder,
+    //     },
+    //     market_product_group.get_validate_account_health_discriminant(),
+    //     market_product_group.risk_and_fee_bump as u8,
+    // )? {
+    //     HealthResult::Health { health_info } => {
+    //         if health_info.action != ActionStatus::Approved {
+    //             msg!("health_info.action: {:?}", health_info.action);
+    //             return Err(DexError::InvalidAccountHealthError.into());
+    //         }
+    //     }
+    //     HealthResult::Liquidation {
+    //         liquidation_info: _,
+    //     } => return Err(DexError::InvalidAccountHealthError.into()),
+    // }
+
+    // market_product_group.sequence_number += 1;
+    // msg!("sequence: {}", market_product_group.sequence_number);
+    // accts.market_product_group.key().log();
     Ok(())
 }
 
@@ -417,12 +417,12 @@ fn update_new_queue_events(
     market_product_group: &mut MarketProductGroup,
     new_events: u64,
 ) -> DomainOrProgramResult {
-    for (_, i) in product.get_ratios_and_product_indices(product_index) {
-        let outright = market_product_group.market_products[i].try_to_outright_mut()?;
-        outright.num_queue_events = outright
-            .num_queue_events
-            .saturating_add(new_events as usize);
-    }
+    // for (_, i) in product.get_ratios_and_product_indices(product_index) {
+    //     let outright = market_product_group.market_products[i].try_to_outright_mut()?;
+    //     outright.num_queue_events = outright
+    //         .num_queue_events
+    //         .saturating_add(new_events as usize);
+    // }
     Ok(())
 }
 
@@ -436,30 +436,30 @@ fn update_metadata(
     crossed: bool,
 ) -> DomainOrProgramResult {
     for (ratio, i) in product.get_ratios_and_product_indices(product_index) {
-        let outright = market_product_group.market_products[i].try_to_outright()?;
-        // trader_risk_group.activate_if_uninitialized(
-        //     i,
-        //     &outright.product_key,
-        //     outright.cum_funding_per_share,
-        //     outright.cum_social_loss_per_share,
-        //     market_product_group.active_combos(),
-        // )?;
-        if crossed {
-            let trader_position_index = trader_risk_group.active_products[i] as usize;
-            let trader_position = &mut trader_risk_group.trader_positions[trader_position_index];
-            match side {
-                Side::Bid => {
-                    trader_position.pending_position = trader_position
-                        .pending_position
-                        .checked_add(matched_base_qty_dex.checked_mul(Fractional::from(ratio))?)?
-                }
-                Side::Ask => {
-                    trader_position.pending_position = trader_position
-                        .pending_position
-                        .checked_sub(matched_base_qty_dex.checked_mul(Fractional::from(ratio))?)?
-                }
-            }
-        }
+        // let outright = market_product_group.market_products[i].try_to_outright()?;
+        // // trader_risk_group.activate_if_uninitialized(
+        // //     i,
+        // //     &outright.product_key,
+        // //     outright.cum_funding_per_share,
+        // //     outright.cum_social_loss_per_share,
+        // //     market_product_group.active_combos(),
+        // // )?;
+        // if crossed {
+        //     let trader_position_index = trader_risk_group.active_products[i] as usize;
+        //     let trader_position = &mut trader_risk_group.trader_positions[trader_position_index];
+        //     match side {
+        //         Side::Bid => {
+        //             trader_position.pending_position = trader_position
+        //                 .pending_position
+        //                 .checked_add(matched_base_qty_dex.checked_mul(Fractional::from(ratio))?)?
+        //         }
+        //         Side::Ask => {
+        //             trader_position.pending_position = trader_position
+        //                 .pending_position
+        //                 .checked_sub(matched_base_qty_dex.checked_mul(Fractional::from(ratio))?)?
+        //         }
+        //     }
+        // }
     }
     Ok(())
 }

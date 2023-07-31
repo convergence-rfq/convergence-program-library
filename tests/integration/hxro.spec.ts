@@ -11,7 +11,7 @@ import {
 import dexterity from "@hxronetwork/dexterity-ts";
 import { HxroPrintTradeProvider, HxroProxy } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 import { AuthoritySide, FixedSize, LegSide, OrderType, Quote, QuoteSide } from "../utilities/types";
-import { BITCOIN_BASE_ASSET_INDEX } from "../utilities/constants";
+import { BITCOIN_BASE_ASSET_INDEX, SOLANA_BASE_ASSET_INDEX } from "../utilities/constants";
 import { expect } from "chai";
 
 describe("RFQ HXRO instrument integration tests", () => {
@@ -109,7 +109,7 @@ describe("RFQ HXRO instrument integration tests", () => {
         {
           amount: 1_000,
           amountDecimals: 3,
-          baseAssetIndex: BITCOIN_BASE_ASSET_INDEX,
+          baseAssetIndex: SOLANA_BASE_ASSET_INDEX,
           side: LegSide.Long,
           productIndex: 0,
         },

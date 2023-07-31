@@ -28,7 +28,7 @@ pub fn process(ctx: Context<UpdateTraderFunding>) -> DomainOrProgramResult {
 
     trader_risk_group.apply_all_funding(&mut market_product_group)?;
     market_product_group.sequence_number += 1;
-    msg!("sequence: {}", market_product_group.sequence_number);
+    // msg!("sequence: {}", market_product_group.sequence_number);
     accts.market_product_group.key().log();
     Ok(())
 }

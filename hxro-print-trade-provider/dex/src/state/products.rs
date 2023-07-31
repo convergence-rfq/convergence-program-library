@@ -14,9 +14,7 @@ use crate::{
     DomainOrProgramError, Fractional, NAME_LEN,
 };
 
-#[derive(
-    Eq, Debug, PartialEq, Clone, Copy, AnchorDeserialize, AnchorSerialize, Deserialize, Serialize,
-)]
+#[derive(Eq, Debug, PartialEq, Clone, Copy, AnchorDeserialize, Deserialize, Serialize)]
 #[repr(C, u64)]
 /// Unify Outright and Combo
 pub enum Product {
@@ -86,10 +84,11 @@ impl Product {
         match self {
             Product::Outright { outright: _ } => TwoIterators::A(([(1, product_idx)]).into_iter()),
             Product::Combo { combo: c } => TwoIterators::B(
-                c.legs
-                    .iter()
-                    .take(c.num_legs)
-                    .map(|leg| (leg.ratio, leg.product_index)),
+                // c.legs
+                //     .iter()
+                //     .take(c.num_legs)
+                //     .map(|leg| (leg.ratio, leg.product_index)),
+                vec![].into_iter(),
             ),
         }
     }
@@ -104,7 +103,7 @@ impl Product {
 }
 
 #[zero_copy]
-#[derive(Debug, Eq, PartialEq, AnchorSerialize, AnchorDeserialize, Deserialize, Serialize)] // serde
+#[derive(Debug, Eq, PartialEq, AnchorDeserialize, Deserialize, Serialize)] // serde
 /// A market product corresponding to one underlying asset
 pub struct Outright {
     pub metadata: ProductMetadata,
@@ -195,7 +194,7 @@ impl Outright {
 }
 
 #[zero_copy]
-#[derive(Debug, Eq, PartialEq, Pod, AnchorSerialize, AnchorDeserialize, Deserialize, Serialize)] // serde
+#[derive(Debug, Eq, PartialEq, AnchorSerialize, AnchorDeserialize, Deserialize, Serialize)] // serde
 /// Shared fields between Outright and Combo products
 pub struct ProductMetadata {
     pub bump: u64,
@@ -210,8 +209,6 @@ pub struct ProductMetadata {
     // Prices
     pub prices: PriceEwma,
 }
-
-unsafe impl Zeroable for ProductMetadata {}
 
 #[zero_copy]
 #[derive(Debug, Eq, PartialEq, AnchorSerialize, AnchorDeserialize, Deserialize, Serialize)] // serde

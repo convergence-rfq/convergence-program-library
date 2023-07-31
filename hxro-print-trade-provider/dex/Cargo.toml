@@ -13,13 +13,13 @@ test-bpf = []
 agnostic-orderbook = { version = "0.1.0", path = "../agnostic-orderbook", features = [
   "no-entrypoint",
 ] }
-anchor-lang = "0.26.0"
-anchor-spl = "0.26.0"
+anchor-lang = "0.28.0"
+anchor-spl = "0.28.0"
 arrayref = "0.3.6"
 base64 = "0.13.0"
 bonfida-utils = "0.2"
 borsh = "0.9"
-bytemuck = { version = "1.7.2", features = ["derive"] }
+bytemuck = { version = "1.4.0", features = ["derive", "min_const_generics"] }
 pyth-client = { version = "0.3.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "1.0.3", features = [
   "no-entrypoint",

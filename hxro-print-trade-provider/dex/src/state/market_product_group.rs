@@ -31,8 +31,8 @@ use crate::{
 /// The highest level organizational unit of the Dex.
 /// Market product groups exist independently of each other.
 /// i.e. each trader, product etc, corresponds to exactly one market product group.
-#[account(zero_copy)]
-#[derive(AnchorSerialize, Deserialize, Serialize)] // serde
+#[account(zero_copy(unsafe))]
+#[derive(Deserialize, Serialize)] // serde
 pub struct MarketProductGroup {
     // TODO: add aaob program id
     pub tag: AccountTag,
@@ -91,10 +91,11 @@ impl MarketProductGroup {
         match product {
             Product::Outright { outright: o } => o.is_expired(),
             Product::Combo { combo: c } => c.legs().iter().any(|l| {
-                self.market_products[l.product_index]
-                    .try_to_outright()
-                    .unwrap()
-                    .is_expired()
+                // self.market_products[l.product_index]
+                //     .try_to_outright()
+                //     .unwrap()
+                //     .is_expired()
+                true
             }),
         }
     }
@@ -120,10 +121,11 @@ impl MarketProductGroup {
     }
 
     pub fn active_products(&self) -> impl Iterator<Item = (usize, &Product)> {
-        self.market_products
-            .iter()
-            .enumerate()
-            .filter(|(idx, _)| self.active_flags_products.contains(*idx))
+        // self.market_products
+        //     .iter()
+        //     .enumerate()
+        //     .filter(|(idx, _)| self.active_flags_products.contains(*idx))
+        vec![].into_iter()
     }
 
     pub fn active_outrights(&self) -> impl Iterator<Item = (usize, &Outright)> {
@@ -139,8 +141,8 @@ impl MarketProductGroup {
     pub fn deactivate_product(&mut self, key: Pubkey) -> DomainOrProgramResult {
         // todo: handle if Outright has Combos that reference it
         let (index, _) = self.find_product_index(&key)?;
-        self.active_flags_products.remove(index)?;
-        self.market_products[index] = Default::default();
+        // self.active_flags_products.remove(index)?;
+        // self.market_products[index] = Default::default();
         Ok(())
     }
 
@@ -149,17 +151,17 @@ impl MarketProductGroup {
             self.active_products().all(|(_, p)| p.name != product.name),
             DexError::DuplicateProductNameError,
         )?;
-        let idx = self
-            .active_flags_products
-            .find_idx_and_insert()
-            .map_err(|_| DexError::FullMarketProductGroup)?;
-        self.market_products[idx] = product;
+        // let idx = self
+        //     .active_flags_products
+        //     .find_idx_and_insert()
+        //     .map_err(|_| DexError::FullMarketProductGroup)?;
+        // self.market_products[idx] = product;
         Ok(())
     }
 
-    pub fn get_prices(&mut self, product_idx: usize) -> &mut PriceEwma {
-        &mut self.market_products[product_idx].prices
-    }
+    // pub fn get_prices(&mut self, product_idx: usize) -> &mut PriceEwma {
+    //     // &mut self.market_products[product_idx].prices
+    // }
 
     pub fn get_find_fees_discriminant(&self) -> Vec<u8> {
         self.find_fees_discriminant[..self.find_fees_discriminant_len as usize].to_vec()
@@ -179,7 +181,7 @@ impl MarketProductGroup {
 
 #[zero_copy]
 #[derive(
-    Pod, Default, Debug, Eq, PartialEq, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize,
+    Default, Debug, Eq, PartialEq, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize,
 )]
 pub struct PriceEwma {
     pub ewma_bid: [Fractional; 4],
@@ -190,8 +192,6 @@ pub struct PriceEwma {
     pub prev_bid: Fractional,
     pub prev_ask: Fractional,
 }
-
-unsafe impl Zeroable for PriceEwma {}
 
 impl PriceEwma {
     pub fn initialize(&mut self, slot: u64) {
@@ -210,7 +210,7 @@ impl PriceEwma {
 }
 
 #[account(zero_copy)]
-#[derive(AnchorSerialize, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[repr(transparent)]
 pub struct ProductArray {
     #[serde(with = "BigArray")]

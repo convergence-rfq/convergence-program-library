@@ -83,8 +83,8 @@ impl TraderRiskGroup {
     ) -> DomainOrProgramResult {
         let trader_position = &mut self.trader_positions[trader_position_index];
         let product_index = trader_position.product_index;
-        let market_product =
-            market_product_group.market_products[product_index].try_to_outright_mut()?;
+        // let market_product =
+        //     market_product_group.market_products[product_index].try_to_outright_mut()?;
         // if market_product.is_uninitialized() {
         //     msg!(
         //                 "Temporary solution: clearing TraderPosition and OpenOrders for product with index {}",
@@ -100,10 +100,10 @@ impl TraderRiskGroup {
         //     self.clear(product_key)?;
         //     return Ok(());
         // }
-        let funding_updated =
-            trader_position.last_cum_funding_snapshot != market_product.cum_funding_per_share;
-        let social_loss_updated =
-            trader_position.last_social_loss_snapshot != market_product.cum_social_loss_per_share;
+        // let funding_updated =
+        //     trader_position.last_cum_funding_snapshot != market_product.cum_funding_per_share;
+        // let social_loss_updated =
+        //     trader_position.last_social_loss_snapshot != market_product.cum_social_loss_per_share;
         // if funding_updated || social_loss_updated {
         //     if !market_product.is_fully_expired() {
         //         let amount_owed: Fractional = market_product
@@ -153,19 +153,19 @@ impl TraderRiskGroup {
     ) -> std::result::Result<Fractional, DomainOrProgramError> {
         let mut funding = ZERO_FRAC;
         for trader_index in 0..self.trader_positions.len() {
-            let position = self.trader_positions[trader_index];
-            if !position.is_initialized() {
-                continue;
-            }
-            let idx = position.product_index;
-            let market_product = market_product_group.market_products[idx].try_to_outright()?;
-            let amount_owed: Fractional = market_product
-                .cum_funding_per_share
-                .checked_sub(position.last_cum_funding_snapshot)?
-                .checked_add(position.last_social_loss_snapshot)?
-                .checked_sub(market_product.cum_social_loss_per_share)?
-                .checked_mul(position.position)?;
-            funding = funding.checked_add(amount_owed)?;
+            // let position = self.trader_positions[trader_index];
+            // if !position.is_initialized() {
+            //     continue;
+            // }
+            // let idx = position.product_index;
+            // // let market_product = market_product_group.market_products[idx].try_to_outright()?;
+            // let amount_owed: Fractional = market_product
+            //     .cum_funding_per_share
+            //     .checked_sub(position.last_cum_funding_snapshot)?
+            //     .checked_add(position.last_social_loss_snapshot)?
+            //     .checked_sub(market_product.cum_social_loss_per_share)?
+            //     .checked_mul(position.position)?;
+            // funding = funding.checked_add(amount_owed)?;
         }
         Ok(funding)
     }

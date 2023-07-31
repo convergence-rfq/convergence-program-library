@@ -1,10 +1,13 @@
 use anchor_lang::prelude::*;
 use anchor_lang::Id;
+use constants::CONFIG_SEED;
+use dex::state::market_product_group::MarketProductGroup;
+use state::Config;
 use std::str::FromStr;
 
 // use dex_cpi::instruction::*;
 
-use errors::HxroError;
+use errors::HxroPrintTradeProviderError;
 use rfq::state::{ProtocolState, Response, Rfq};
 use state::AuthoritySideDuplicate;
 
@@ -28,17 +31,36 @@ impl Id for Dex {
 pub mod hxro_print_trade_provider {
     use super::*;
 
+    pub fn initialize_config(
+        ctx: Context<InitializeConfigAccounts>,
+        valid_mpg: Pubkey,
+    ) -> Result<()> {
+        ctx.accounts.config.valid_mpg = valid_mpg;
+        Ok(())
+    }
+
+    pub fn modify_config(ctx: Context<ModifyConfigAccounts>, valid_mpg: Pubkey) -> Result<()> {
+        ctx.accounts.config.valid_mpg = valid_mpg;
+        Ok(())
+    }
+
     pub fn validate_print_trade(ctx: Context<ValidatePrintTradeAccounts>) -> Result<()> {
+        let ValidatePrintTradeAccounts {
+            rfq,
+            market_product_group,
+            ..
+        } = &ctx.accounts;
+
         require!(
-            ctx.accounts.rfq.legs.len() <= constants::MAX_PRODUCTS_PER_TRADE,
-            HxroError::TooManyLegs
+            rfq.legs.len() <= constants::MAX_PRODUCTS_PER_TRADE,
+            HxroPrintTradeProviderError::TooManyLegs
         );
 
-        for leg in ctx.accounts.rfq.legs.clone() {
-            helpers::validate_leg_data(&ctx, &leg.data)?;
+        let mut remaining_accounts = ctx.remaining_accounts;
+        let mpg = market_product_group.load()?;
+        for leg_index in 0..rfq.legs.len() {
+            helpers::validate_leg_data(&rfq, leg_index, &mpg, &mut remaining_accounts)?;
         }
-
-        helpers::validate_quote_data(&ctx, &ctx.accounts.rfq.quote_asset.data)?;
 
         Ok(())
     }
@@ -71,10 +93,40 @@ pub mod hxro_print_trade_provider {
 }
 
 #[derive(Accounts)]
+pub struct InitializeConfigAccounts<'info> {
+    #[account(mut, constraint = protocol.authority == authority.key() @ HxroPrintTradeProviderError::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Account<'info, ProtocolState>,
+    #[account(
+        init,
+        payer = authority,
+        seeds = [CONFIG_SEED.as_bytes()],
+        space = 8 + Config::INIT_SPACE,
+        bump
+    )]
+    pub config: Account<'info, Config>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ModifyConfigAccounts<'info> {
+    #[account(constraint = protocol.authority == authority.key() @ HxroPrintTradeProviderError::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Account<'info, ProtocolState>,
+    #[account(mut)]
+    pub config: Account<'info, Config>,
+}
+
+#[derive(Accounts)]
 pub struct ValidatePrintTradeAccounts<'info> {
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
     pub rfq: Account<'info, Rfq>,
+
+    pub config: Account<'info, Config>,
+    #[account(constraint = config.valid_mpg == market_product_group.key() @ HxroPrintTradeProviderError::NotAValidatedMpg)]
+    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
 }
 
 #[derive(Accounts)]

@@ -132,7 +132,7 @@ pub fn process<'info>(
 
     trader_risk_group.total_withdrawn += quantity;
     market_product_group.sequence_number += 1;
-    msg!("sequence: {}", market_product_group.sequence_number);
+    // msg!("sequence: {}", market_product_group.sequence_number);
     accts.market_product_group.key().log();
     Ok(())
 }
