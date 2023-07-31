@@ -1,7 +1,9 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": "."
+    "rootDir": ".",
+    "lib": ["es2019"],
+    "types": ["mocha", "chai", "node"],
   },
   "include": ["tests"]
 }

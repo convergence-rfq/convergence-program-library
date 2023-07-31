@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { expect } from "chai";
 import { attachImprovedLogDisplay } from "../utilities/helpers";
 import {
