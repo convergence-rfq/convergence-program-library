@@ -140,7 +140,7 @@ impl From<InstrumentType> for StoredInstrumentType {
 pub struct OptionCommonData {
     pub option_type: OptionType,
     pub underlying_amount_per_contract: u64,
-    pub underlying_amound_per_contract_decimals: u8,
+    pub underlying_amount_per_contract_decimals: u8,
     pub strike_price: u64,
     pub strike_price_decimals: u8,
     pub expiration_timestamp: i64,
@@ -156,7 +156,7 @@ impl OptionCommonData {
     pub fn get_underlying_amount_per_contract(&self) -> f64 {
         convert_fixed_point_to_f64(
             self.underlying_amount_per_contract,
-            self.underlying_amound_per_contract_decimals,
+            self.underlying_amount_per_contract_decimals,
         )
     }
 }
@@ -170,16 +170,16 @@ pub enum OptionType {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct FutureCommonData {
     pub underlying_amount_per_contract: u64,
-    pub underlying_amound_per_contract_decimals: u8,
+    pub underlying_amount_per_contract_decimals: u8,
 }
 
 impl FutureCommonData {
-    pub const SERIALIZED_SIZE: usize = 8;
+    pub const SERIALIZED_SIZE: usize = 9;
 
     pub fn get_underlying_amount_per_contract(&self) -> f64 {
         convert_fixed_point_to_f64(
             self.underlying_amount_per_contract,
-            self.underlying_amound_per_contract_decimals,
+            self.underlying_amount_per_contract_decimals,
         )
     }
 }

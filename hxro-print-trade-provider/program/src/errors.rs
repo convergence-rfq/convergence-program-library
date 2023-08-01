@@ -26,6 +26,12 @@ pub enum HxroPrintTradeProviderError {
     OracleDoesNotMatchWithBaseAsset,
     #[msg("Base asset account index doesn't match with leg info")]
     InvalidBaseAssetAccountIndex,
+    #[msg("Invalid leg instrument type")]
+    InvalidLegInstrumentType,
     #[msg("Hxro product can expire earlier that settment would end")]
     ProductExpiresToEarly,
+    #[msg("Instrument type does not match")]
+    InstrumentTypeDoesNotMatch,
+    #[msg("Leg data for risk engine does not match with hxro product")]
+    RiskEngineDataMismatch,
 }

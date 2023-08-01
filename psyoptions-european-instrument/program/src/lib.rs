@@ -65,7 +65,7 @@ pub mod psyoptions_european_instrument {
             PsyoptionsEuropeanError::PassedUnderlyingAmountPerContractDoesNotMatch
         );
         require_eq!(
-            option_common_data.underlying_amound_per_contract_decimals,
+            option_common_data.underlying_amount_per_contract_decimals,
             euro_meta.underlying_decimals,
             PsyoptionsEuropeanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
         );

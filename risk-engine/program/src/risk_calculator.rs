@@ -560,7 +560,7 @@ mod tests {
         let option_data = OptionCommonData {
             option_type: OptionType::Call,
             underlying_amount_per_contract: 1 * 10_u64.pow(8),
-            underlying_amound_per_contract_decimals: 9,
+            underlying_amount_per_contract_decimals: 9,
             strike_price: 22000 * 10_u64.pow(9),
             strike_price_decimals: 9,
             expiration_timestamp: 90 * 24 * 60 * 60,

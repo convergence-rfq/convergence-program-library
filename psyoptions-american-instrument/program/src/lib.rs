@@ -60,7 +60,7 @@ pub mod psyoptions_american_instrument {
             PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
         );
         require_eq!(
-            option_common_data.underlying_amound_per_contract_decimals,
+            option_common_data.underlying_amount_per_contract_decimals,
             mint_info.decimals,
             PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
         );

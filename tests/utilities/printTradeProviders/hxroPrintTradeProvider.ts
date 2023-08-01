@@ -1,12 +1,13 @@
 import { Program, Wallet, workspace, BN } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
-import { Context, Response, Rfq } from "../wrappers";
+import { Context, Response, Rfq, RiskEngine } from "../wrappers";
 import { HxroPrintTradeProvider as HxroPrintTradeProviderIdl } from "../../../target/types/hxro_print_trade_provider";
 import { AuthoritySide, InstrumentType, LegData, LegSide, QuoteData } from "../types";
 import dexterity from "@hxronetwork/dexterity-ts";
 import { executeInParallel } from "../helpers";
 import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE, DEFAULT_MINT_DECIMALS, SOLANA_BASE_ASSET_INDEX } from "../constants";
 import { getBaseAssetPda } from "../pdas";
+import { RiskEngine as RiskEngineIdl } from "../../../target/types/risk_engine";
 
 const configSeed = "config";
 
@@ -68,14 +69,19 @@ export class HxroPrintTradeProvider {
   }
 
   getLegData(): LegData[] {
-    return this.legs.map((leg) => ({
-      settlementTypeMetadata: { printTrade: { instrumentType: InstrumentType.Spot.index } },
-      baseAssetIndex: { value: leg.baseAssetIndex },
-      data: Buffer.from(Uint8Array.from([leg.productIndex])),
-      amount: new BN(leg.amount),
-      amountDecimals: leg.amountDecimals,
-      side: leg.side,
-    }));
+    return this.legs.map((leg) => {
+      const riskEngineData = serializeRiskEngineProduct(leg.productIndex);
+      const productData = Buffer.from(Uint8Array.from([leg.productIndex]));
+
+      return {
+        settlementTypeMetadata: { printTrade: { instrumentType: InstrumentType.PerpFuture.index } },
+        baseAssetIndex: { value: leg.baseAssetIndex },
+        data: Buffer.concat([riskEngineData, productData]),
+        amount: new BN(leg.amount),
+        amountDecimals: leg.amountDecimals,
+        side: leg.side,
+      };
+    });
   }
 
   getQuoteData(): QuoteData {
@@ -104,8 +110,7 @@ export class HxroPrintTradeProvider {
           isSigner: false,
           isWritable: false,
         };
-        console.log(productAccountInfo.pubkey.toString());
-        console.log(baseAssetAccountInfo.pubkey.toString());
+
         return [productAccountInfo, baseAssetAccountInfo];
       })
       .flat();
@@ -153,6 +158,28 @@ export class HxroPrintTradeProvider {
       // { pubkey: manifest.getRiskR(mpgPubkey), isSigner: false, isWritable: true },
       // { pubkey: manifest.getMarkPricesAccount(mpgPubkey), isSigner: false, isWritable: true },
     ];
+  }
+}
+
+function serializeRiskEngineProduct(productIndex: number) {
+  const program = workspace.RiskEngine as Program<RiskEngineIdl>;
+
+  if (productIndex == 0) {
+    return program.coder.types.encode("FutureCommonData", {
+      underlyingAmountPerContract: new BN(1),
+      underlyingAmountPerContractDecimals: 0,
+    });
+  } else if (productIndex == 1) {
+    return program.coder.types.encode("OptionCommonData", {
+      optionType: { call: {} },
+      underlyingAmountPerContract: new BN(1),
+      underlyingAmountPerContractDecimals: 0,
+      strikePrice: new BN(54323),
+      strikePriceDecimals: 2,
+      expirationTimestamp: new BN(1685404800 + 60 * 60 * 24 * 365 * 2),
+    });
+  } else {
+    throw Error("Product missing!");
   }
 }
 
