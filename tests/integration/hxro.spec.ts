@@ -119,7 +119,7 @@ describe("RFQ HXRO instrument integration tests", () => {
     });
     const response = await rfq.respond({ bid: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(21_333))) });
     await response.confirm();
-    // await response.preparePrintTradeSettlement(AuthoritySide.Taker);
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker);
     // await response.preparePrintTradeSettlement(AuthoritySide.Maker);
     // await response.settlePrintTrade();
 

@@ -34,4 +34,6 @@ pub enum HxroPrintTradeProviderError {
     InstrumentTypeDoesNotMatch,
     #[msg("Leg data for risk engine does not match with hxro product")]
     RiskEngineDataMismatch,
+    #[msg("Invalid user account passed")]
+    InvalidUserAccount,
 }

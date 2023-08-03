@@ -6,16 +6,12 @@ use dex::state::products::Product;
 use dex::utils::numeric::{Fractional, ZERO_FRAC};
 use instruments::state::derivative_metadata::DerivativeMetadata;
 use instruments::state::enums::{InstrumentType as HxroInstrumentType, OracleType};
-use rfq::state::{BaseAssetInfo, Leg, Rfq, SettlementTypeMetadata};
-use risk_engine::state::{FutureCommonData, InstrumentType, OptionCommonData, OptionType};
+use rfq::state::{BaseAssetInfo, Leg, Rfq};
+use risk_engine::state::{InstrumentType, OptionType};
 
-use super::super::errors::HxroPrintTradeProviderError;
-use super::super::state::ParsedLegData;
-
-enum ParsedRiskEngineData {
-    ForOption(OptionCommonData),
-    ForFuture(FutureCommonData),
-}
+use crate::errors::HxroPrintTradeProviderError;
+use crate::helpers::common::{get_leg_instrument_type, parse_leg_data, ParsedRiskEngineData};
+use crate::state::ParsedLegData;
 
 pub fn validate_leg_data(
     rfq: &Rfq,
@@ -24,7 +20,7 @@ pub fn validate_leg_data(
     remaining_accounts: &mut &[AccountInfo],
 ) -> Result<()> {
     let leg = &rfq.legs[leg_index];
-    // TODO instrument type matches with
+
     let instrument_type: InstrumentType = get_leg_instrument_type(leg)?;
     let (risk_engine_data, ParsedLegData { product_index }) = parse_leg_data(leg, instrument_type)?;
 
@@ -110,43 +106,6 @@ fn extract_base_asset_account_pyth_oracle(
     base_asset
         .get_pyth_oracle()
         .ok_or_else(|| error!(HxroPrintTradeProviderError::NoPythOracleForBaseAsset))
-}
-
-fn get_leg_instrument_type(leg: &Leg) -> Result<InstrumentType> {
-    let instrument_type_raw = match leg.settlement_type_metadata {
-        SettlementTypeMetadata::PrintTrade { instrument_type } => instrument_type,
-        SettlementTypeMetadata::Instrument {
-            instrument_index: _,
-        } => unreachable!(),
-    };
-    instrument_type_raw
-        .try_into()
-        .map_err(|_| HxroPrintTradeProviderError::InvalidLegInstrumentType.into())
-}
-
-fn parse_leg_data(
-    leg: &Leg,
-    instrument_type: InstrumentType,
-) -> Result<(ParsedRiskEngineData, ParsedLegData)> {
-    let mut data_slice = leg.data.as_slice();
-    let risk_engine_data = match instrument_type {
-        InstrumentType::Option => {
-            ParsedRiskEngineData::ForOption(AnchorDeserialize::deserialize(&mut data_slice)?)
-        }
-        InstrumentType::TermFuture | InstrumentType::PerpFuture => {
-            ParsedRiskEngineData::ForFuture(AnchorDeserialize::deserialize(&mut data_slice)?)
-        }
-        _ => err!(HxroPrintTradeProviderError::InvalidLegInstrumentType)?,
-    };
-    let parsed_leg_data = AnchorDeserialize::deserialize(&mut data_slice)?;
-
-    require_eq!(
-        data_slice.len(),
-        0,
-        HxroPrintTradeProviderError::InvalidDataSize
-    );
-
-    Ok((risk_engine_data, parsed_leg_data))
 }
 
 fn validate_product_as_option(

@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_lang::Id;
-use constants::CONFIG_SEED;
+use constants::{CONFIG_SEED, OPERATOR_SEED};
+use dex::program::Dex;
 use dex::state::market_product_group::MarketProductGroup;
 use state::Config;
-use std::str::FromStr;
 
 // use dex_cpi::instruction::*;
 
@@ -18,17 +17,16 @@ mod state;
 
 declare_id!("fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE");
 
-#[derive(Debug, Clone)]
-pub struct Dex;
-
-impl Id for Dex {
-    fn id() -> Pubkey {
-        Pubkey::from_str("FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL").unwrap()
-    }
-}
+// Hxro global TODOS
+// 2 points in the pinned message
+// 2 bugs from the chat
+// print trade address conflict
+// trgs checking
 
 #[program]
 pub mod hxro_print_trade_provider {
+    use crate::helpers::{create_print_trade, lock_collateral};
+
     use super::*;
 
     pub fn initialize_config(
@@ -66,17 +64,34 @@ pub mod hxro_print_trade_provider {
     }
 
     pub fn prepare_print_trade<'info>(
-        _ctx: Context<'_, '_, '_, 'info, PreparePrintTradeAccounts<'info>>,
-        _authority_side: AuthoritySideDuplicate,
+        ctx: Context<'_, '_, '_, 'info, PreparePrintTradeAccounts<'info>>,
+        authority_side: AuthoritySideDuplicate,
     ) -> Result<()> {
+        let PreparePrintTradeAccounts {
+            rfq,
+            response,
+            user,
+            ..
+        } = &ctx.accounts;
+
+        require!(
+            response.get_authority_side(rfq, user.key) == Some(authority_side.into()),
+            HxroPrintTradeProviderError::InvalidUserAccount
+        );
+
+        lock_collateral(&ctx)?;
+
+        if response.print_trade_initialized_by.is_some() { // if other side have already prepared
+             // sign print trade
+        } else {
+            create_print_trade(&ctx, authority_side.into())?;
+        }
         Ok(())
     }
 
     pub fn settle_print_trade<'info>(
-        ctx: Context<'_, '_, '_, 'info, SettlePrintTradeAccounts<'info>>,
+        _ctx: Context<'_, '_, '_, 'info, SettlePrintTradeAccounts<'info>>,
     ) -> Result<()> {
-        helpers::create_print_trade(&ctx)?;
-        helpers::sign_print_trade(&ctx)?;
         Ok(())
     }
 
@@ -135,6 +150,43 @@ pub struct PreparePrintTradeAccounts<'info> {
     pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Box<Account<'info, Response>>,
+
+    /// CHECK PDA account
+    #[account(seeds = [OPERATOR_SEED.as_bytes()], bump)]
+    pub operator: UncheckedAccount<'info>,
+    pub config: Account<'info, Config>,
+    pub dex: Program<'info, Dex>,
+    #[account(constraint = config.valid_mpg == market_product_group.key() @ HxroPrintTradeProviderError::NotAValidatedMpg)]
+    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
+    pub user: Signer<'info>,
+    /// CHECK done inside hxro CPI
+    pub user_trg: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub counterparty_trg: UncheckedAccount<'info>, // TODO security issue, taker can send invalid TRG here
+    /// CHECK done inside hxro CPI
+    pub operator_trg: UncheckedAccount<'info>, // TODO security issue, taker can send invalid TRG here
+    /// CHECK done inside hxro CPI
+    pub print_trade: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub fee_model_program: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub fee_model_configuration_acct: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub fee_output_register: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub risk_engine_program: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub risk_model_configuration_acct: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub risk_output_register: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub risk_and_fee_signer: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub fee_state_acct: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub risk_state_acct: UncheckedAccount<'info>,
+
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]

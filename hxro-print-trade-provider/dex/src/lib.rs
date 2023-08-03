@@ -726,7 +726,7 @@ pub struct InitializePrintTrade<'info> {
     #[account(init, owner = crate::ID, payer = user, space = 8 + PrintTrade::SIZE, seeds = [b"print_trade", creator.key().as_ref(), counterparty.key().as_ref()], bump)]
     pub print_trade: AccountLoader<'info, PrintTrade>,
     pub system_program: Program<'info, System>,
-    pub operator_owner: AccountInfo<'info>,
+    pub operator_owner: Signer<'info>,
 }
 
 #[repr(C)]

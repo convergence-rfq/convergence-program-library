@@ -1,6 +1,7 @@
 use dex::utils::numeric::Fractional;
 
 pub const CONFIG_SEED: &str = "config";
+pub const OPERATOR_SEED: &str = "operator";
 
 pub const MAX_PRODUCTS_PER_TRADE: usize = 1;
 

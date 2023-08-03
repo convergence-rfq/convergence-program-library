@@ -1,8 +1,11 @@
+mod common;
 mod conversions;
-mod print_trade_creation;
+mod create_print_trade;
+mod lock_collateral;
 mod print_trade_settlement;
 mod validation;
 
-pub use print_trade_creation::*;
+pub use create_print_trade::*;
+pub use lock_collateral::*;
 pub use print_trade_settlement::*;
 pub use validation::*;
