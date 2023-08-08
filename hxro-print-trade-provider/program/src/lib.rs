@@ -1,13 +1,16 @@
 use anchor_lang::prelude::*;
 use constants::{CONFIG_SEED, OPERATOR_SEED};
-use dex::program::Dex;
 use dex::state::market_product_group::MarketProductGroup;
+use dex::{program::Dex, state::trader_risk_group::TraderRiskGroup};
+use rfq::state::{ProtocolState, Response, Rfq};
 use state::Config;
 
 // use dex_cpi::instruction::*;
 
 use errors::HxroPrintTradeProviderError;
-use rfq::state::{ProtocolState, Response, Rfq};
+use helpers::{
+    initialize_print_trade, initialize_trader_risk_group, lock_collateral, sign_print_trade,
+};
 use state::AuthoritySideDuplicate;
 
 mod constants;
@@ -25,8 +28,6 @@ declare_id!("fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE");
 
 #[program]
 pub mod hxro_print_trade_provider {
-    use crate::helpers::{create_print_trade, lock_collateral};
-
     use super::*;
 
     pub fn initialize_config(
@@ -40,6 +41,12 @@ pub mod hxro_print_trade_provider {
     pub fn modify_config(ctx: Context<ModifyConfigAccounts>, valid_mpg: Pubkey) -> Result<()> {
         ctx.accounts.config.valid_mpg = valid_mpg;
         Ok(())
+    }
+
+    pub fn initialize_operator_trader_risk_group<'info>(
+        ctx: Context<'_, '_, '_, 'info, InitializeOperatorTraderRiskGroupAccounts<'info>>,
+    ) -> Result<()> {
+        initialize_trader_risk_group(ctx)
     }
 
     pub fn validate_print_trade(ctx: Context<ValidatePrintTradeAccounts>) -> Result<()> {
@@ -57,7 +64,7 @@ pub mod hxro_print_trade_provider {
         let mut remaining_accounts = ctx.remaining_accounts;
         let mpg = market_product_group.load()?;
         for leg_index in 0..rfq.legs.len() {
-            helpers::validate_leg_data(&rfq, leg_index, &mpg, &mut remaining_accounts)?;
+            helpers::validate_leg_data(rfq, leg_index, &mpg, &mut remaining_accounts)?;
         }
 
         Ok(())
@@ -71,6 +78,8 @@ pub mod hxro_print_trade_provider {
             rfq,
             response,
             user,
+            operator,
+            operator_trg,
             ..
         } = &ctx.accounts;
 
@@ -79,12 +88,20 @@ pub mod hxro_print_trade_provider {
             HxroPrintTradeProviderError::InvalidUserAccount
         );
 
+        let operator_trg_owner = operator_trg.load()?.owner;
+        require_keys_eq!(
+            operator.key(),
+            operator_trg_owner,
+            HxroPrintTradeProviderError::InvalidOperatorTRG
+        );
+
         lock_collateral(&ctx)?;
 
-        if response.print_trade_initialized_by.is_some() { // if other side have already prepared
-             // sign print trade
+        if response.print_trade_initialized_by.is_some() {
+            // if other side have already prepared
+            sign_print_trade(&ctx, authority_side.into())?;
         } else {
-            create_print_trade(&ctx, authority_side.into())?;
+            initialize_print_trade(&ctx, authority_side.into())?;
         }
         Ok(())
     }
@@ -134,6 +151,41 @@ pub struct ModifyConfigAccounts<'info> {
 }
 
 #[derive(Accounts)]
+pub struct InitializeOperatorTraderRiskGroupAccounts<'info> {
+    #[account(mut, constraint = protocol.authority == authority.key() @ HxroPrintTradeProviderError::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Account<'info, ProtocolState>,
+    #[account(mut)]
+    pub config: Account<'info, Config>,
+    #[account(constraint = config.valid_mpg == market_product_group.key() @ HxroPrintTradeProviderError::NotAValidatedMpg)]
+    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
+
+    /// CHECK PDA account
+    #[account(mut, seeds = [OPERATOR_SEED.as_bytes()], bump)]
+    pub operator: UncheckedAccount<'info>,
+    pub dex: Program<'info, Dex>,
+    /// CHECK done inside hxro CPI
+    #[account(mut)]
+    pub operator_trg: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub risk_and_fee_signer: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    #[account(mut)]
+    pub trader_risk_state_acct: Signer<'info>,
+    /// CHECK done inside hxro CPI
+    #[account(mut)]
+    pub trader_fee_state_acct: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub risk_engine_program: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub fee_model_config_acct: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub fee_model_program: UncheckedAccount<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct ValidatePrintTradeAccounts<'info> {
     #[account(signer)]
     pub protocol: Account<'info, ProtocolState>,
@@ -163,8 +215,7 @@ pub struct PreparePrintTradeAccounts<'info> {
     pub user_trg: UncheckedAccount<'info>,
     /// CHECK done inside hxro CPI
     pub counterparty_trg: UncheckedAccount<'info>, // TODO security issue, taker can send invalid TRG here
-    /// CHECK done inside hxro CPI
-    pub operator_trg: UncheckedAccount<'info>, // TODO security issue, taker can send invalid TRG here
+    pub operator_trg: AccountLoader<'info, TraderRiskGroup>,
     /// CHECK done inside hxro CPI
     pub print_trade: UncheckedAccount<'info>,
     /// CHECK done inside hxro CPI
@@ -182,9 +233,13 @@ pub struct PreparePrintTradeAccounts<'info> {
     /// CHECK done inside hxro CPI
     pub risk_and_fee_signer: UncheckedAccount<'info>,
     /// CHECK done inside hxro CPI
-    pub fee_state_acct: UncheckedAccount<'info>,
+    pub user_fee_state_acct: UncheckedAccount<'info>,
     /// CHECK done inside hxro CPI
-    pub risk_state_acct: UncheckedAccount<'info>,
+    pub user_risk_state_acct: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub counterparty_fee_state_acct: UncheckedAccount<'info>,
+    /// CHECK done inside hxro CPI
+    pub counterparty_risk_state_acct: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 }
@@ -195,61 +250,6 @@ pub struct SettlePrintTradeAccounts<'info> {
     pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Box<Account<'info, Response>>,
-
-    #[account(mut)]
-    pub taker: Signer<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub maker: AccountInfo<'info>,
-
-    pub dex: Program<'info, Dex>,
-    /// CHECK
-    #[account(mut)]
-    pub creator: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub counterparty: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub operator: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub market_product_group: AccountInfo<'info>,
-    /// CHECK
-    pub product: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub print_trade: AccountInfo<'info>,
-    /// CHECK
-    pub system_program: AccountInfo<'info>,
-    /// CHECK
-    pub fee_model_program: AccountInfo<'info>,
-    /// CHECK
-    pub fee_model_configuration_acct: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub fee_output_register: AccountInfo<'info>,
-    /// CHECK
-    pub risk_engine_program: AccountInfo<'info>,
-    /// CHECK
-    pub risk_model_configuration_acct: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub risk_output_register: AccountInfo<'info>,
-    /// CHECK
-    pub risk_and_fee_signer: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub creator_trader_fee_state_acct: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub creator_trader_risk_state_acct: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub counterparty_trader_fee_state_acct: AccountInfo<'info>,
-    /// CHECK
-    #[account(mut)]
-    pub counterparty_trader_risk_state_acct: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]

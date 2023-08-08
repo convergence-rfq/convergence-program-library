@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use dex::cpi::initialize_print_trade;
+use dex::cpi::initialize_print_trade as initialize_print_trade_cpi;
 use dex::utils::numeric::ZERO_FRAC;
 use dex::InitializePrintTradeParams;
 use dex::{cpi::accounts::InitializePrintTrade, state::print_trade::PrintTradeProductIndex};
@@ -15,7 +15,7 @@ use super::conversions::to_hxro_product;
 use super::conversions::to_hxro_side;
 use super::conversions::{to_hxro_price, ProductInfo};
 
-pub fn create_print_trade<'info>(
+pub fn initialize_print_trade<'info>(
     ctx: &Context<'_, '_, '_, 'info, PreparePrintTradeAccounts<'info>>,
     authority_side: AuthoritySide,
 ) -> Result<()> {
@@ -78,5 +78,5 @@ pub fn create_print_trade<'info>(
         signer_seeds: &[&[OPERATOR_SEED.as_bytes(), &[bump]]],
     };
 
-    initialize_print_trade(context, params)
+    initialize_print_trade_cpi(context, params)
 }

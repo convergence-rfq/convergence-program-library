@@ -36,4 +36,6 @@ pub enum HxroPrintTradeProviderError {
     RiskEngineDataMismatch,
     #[msg("Invalid user account passed")]
     InvalidUserAccount,
+    #[msg("Invalid operator trader risk group")]
+    InvalidOperatorTRG,
 }

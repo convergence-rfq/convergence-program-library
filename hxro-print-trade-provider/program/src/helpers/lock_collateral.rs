@@ -26,8 +26,8 @@ pub fn lock_collateral<'info>(
         risk_model_configuration_acct,
         risk_output_register,
         risk_and_fee_signer,
-        fee_state_acct,
-        risk_state_acct,
+        user_fee_state_acct,
+        user_risk_state_acct,
         ..
     } = &ctx.accounts;
 
@@ -61,13 +61,13 @@ pub fn lock_collateral<'info>(
         risk_model_configuration_acct: risk_model_configuration_acct.to_account_info(),
         risk_output_register: risk_output_register.to_account_info(),
         risk_and_fee_signer: risk_and_fee_signer.to_account_info(),
-        fee_state_acct: fee_state_acct.to_account_info(),
-        risk_state_acct: risk_state_acct.to_account_info(),
+        fee_state_acct: user_fee_state_acct.to_account_info(),
+        risk_state_acct: user_risk_state_acct.to_account_info(),
     };
 
     let context = CpiContext {
         accounts,
-        remaining_accounts: vec![],
+        remaining_accounts: ctx.remaining_accounts.to_vec(),
         program: dex.to_account_info(),
         signer_seeds: &[],
     };
