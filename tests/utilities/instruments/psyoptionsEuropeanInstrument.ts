@@ -1,4 +1,4 @@
-import { Program, web3, BN, workspace, AnchorProvider } from "@coral-xyz/anchor";
+import { Program, web3, BN, workspace } from "@coral-xyz/anchor";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
 import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
@@ -174,7 +174,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
   async getCleanUpAccounts(assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
-        pubkey: response.firstToPrepare,
+        pubkey: response.firstToPrepare!,
         isSigner: false,
         isWritable: true,
       },

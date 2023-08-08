@@ -1,5 +1,3 @@
-import { BN } from "@coral-xyz/anchor";
-import { SystemProgram } from "@solana/web3.js";
 import { Context, getContext } from "../utilities/wrappers";
 import {
   attachImprovedLogDisplay,
@@ -8,8 +6,11 @@ import {
   toLegMultiplier,
   withTokenDecimals,
 } from "../utilities/helpers";
-import dexterity from "@hxronetwork/dexterity-ts";
-import { HxroPrintTradeProvider, HxroProxy } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
+import {
+  HxroPrintTradeProvider,
+  HxroContext,
+  getHxroContext,
+} from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 import { AuthoritySide, FixedSize, LegSide, OrderType, Quote, QuoteSide } from "../utilities/types";
 import { BITCOIN_BASE_ASSET_INDEX, SOLANA_BASE_ASSET_INDEX } from "../utilities/constants";
 import { expect } from "chai";
@@ -20,11 +21,11 @@ describe("RFQ HXRO instrument integration tests", () => {
   });
 
   let context: Context;
-  let hxroProxy: HxroProxy;
+  let hxroContext: HxroContext;
 
   before(async () => {
     context = await getContext();
-    hxroProxy = await HxroProxy.create(context);
+    hxroContext = await getHxroContext(context);
   });
 
   it("HXRO direct calls work", async () => {
@@ -100,12 +101,12 @@ describe("RFQ HXRO instrument integration tests", () => {
 
   it.only("HXRO sell print trade works", async () => {
     const [takerBalanceBefore, makerBalanceBefore] = await executeInParallel(
-      () => hxroProxy.getBalance("taker"),
-      () => hxroProxy.getBalance("maker")
+      () => hxroContext.getBalance("taker"),
+      () => hxroContext.getBalance("maker")
     );
 
     const rfq = await context.createPrintTradeRfq({
-      printTradeProvider: new HxroPrintTradeProvider(context, hxroProxy, [
+      printTradeProvider: new HxroPrintTradeProvider(context, hxroContext, [
         {
           amount: 1_000,
           amountDecimals: 3,
@@ -120,28 +121,28 @@ describe("RFQ HXRO instrument integration tests", () => {
     const response = await rfq.respond({ bid: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(21_333))) });
     await response.confirm();
     await response.preparePrintTradeSettlement(AuthoritySide.Taker);
-    // await response.preparePrintTradeSettlement(AuthoritySide.Maker);
-    // await response.settlePrintTrade();
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker);
+    await response.settlePrintTrade();
 
-    // const [takerBalanceAfter, makerBalanceAfter] = await executeInParallel(
-    //   () => hxroProxy.getBalance("taker"),
-    //   () => hxroProxy.getBalance("maker")
-    // );
+    const [takerBalanceAfter, makerBalanceAfter] = await executeInParallel(
+      () => hxroContext.getBalance("taker"),
+      () => hxroContext.getBalance("maker")
+    );
 
-    // expect(takerBalanceAfter.positions[0] - takerBalanceBefore.positions[0]).to.be.equal(-2);
-    // expect(makerBalanceAfter.positions[0] - makerBalanceBefore.positions[0]).to.be.equal(2);
-    // expect(takerBalanceAfter.cashBalance - takerBalanceBefore.cashBalance).to.be.closeTo(21_333, 100);
-    // expect(makerBalanceAfter.cashBalance - makerBalanceBefore.cashBalance).to.be.closeTo(-21_333, 100);
+    expect(takerBalanceAfter.positions[0] - takerBalanceBefore.positions[0]).to.be.equal(-2);
+    expect(makerBalanceAfter.positions[0] - makerBalanceBefore.positions[0]).to.be.equal(2);
+    expect(takerBalanceAfter.cashBalance - takerBalanceBefore.cashBalance).to.be.closeTo(21_333, 100);
+    expect(makerBalanceAfter.cashBalance - makerBalanceBefore.cashBalance).to.be.closeTo(-21_333, 100);
   });
 
   it.skip("HXRO buy print trade works", async () => {
     const [takerBalanceBefore, makerBalanceBefore] = await executeInParallel(
-      () => hxroProxy.getBalance("taker"),
-      () => hxroProxy.getBalance("maker")
+      () => hxroContext.getBalance("taker"),
+      () => hxroContext.getBalance("maker")
     );
 
     const rfq = await context.createPrintTradeRfq({
-      printTradeProvider: new HxroPrintTradeProvider(context, hxroProxy, [
+      printTradeProvider: new HxroPrintTradeProvider(context, hxroContext, [
         {
           amount: 1_000_000,
           amountDecimals: 6,
@@ -160,8 +161,8 @@ describe("RFQ HXRO instrument integration tests", () => {
     await response.settlePrintTrade();
 
     const [takerBalanceAfter, makerBalanceAfter] = await executeInParallel(
-      () => hxroProxy.getBalance("taker"),
-      () => hxroProxy.getBalance("maker")
+      () => hxroContext.getBalance("taker"),
+      () => hxroContext.getBalance("maker")
     );
 
     expect(takerBalanceAfter.positions[0] - takerBalanceBefore.positions[0]).to.be.equal(1);

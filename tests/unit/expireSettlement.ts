@@ -1,11 +1,15 @@
 import { attachImprovedLogDisplay, executeInParallel, expectError, runInParallelWithWait } from "../utilities/helpers";
 import { AuthoritySide, OrderType } from "../utilities/types";
 import { Context, getContext } from "../utilities/wrappers";
-import { HxroPrintTradeProvider, HxroProxy } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
+import {
+  HxroPrintTradeProvider,
+  HxroContext,
+  getHxroContext,
+} from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 
 describe("Expire settlement", () => {
   let context: Context;
-  let hxroProxy: HxroProxy;
+  let hxroContext: HxroContext;
 
   beforeEach(function () {
     attachImprovedLogDisplay(this, context);
@@ -13,7 +17,7 @@ describe("Expire settlement", () => {
 
   before(async () => {
     context = await getContext();
-    hxroProxy = await HxroProxy.create(context);
+    hxroContext = await getHxroContext(context);
   });
 
   it("Can't expire unrelated response", async () => {
@@ -36,7 +40,7 @@ describe("Expire settlement", () => {
 
   it("Can't expire if not settling", async () => {
     const rfq = await context.createPrintTradeRfq({
-      printTradeProvider: new HxroPrintTradeProvider(context, hxroProxy),
+      printTradeProvider: new HxroPrintTradeProvider(context, hxroContext),
     });
     const response = await rfq.respond();
     await response.confirm();
@@ -46,7 +50,7 @@ describe("Expire settlement", () => {
 
   it("Can't expire if expiration buffer haven't ended", async () => {
     const rfq = await context.createPrintTradeRfq({
-      printTradeProvider: new HxroPrintTradeProvider(context, hxroProxy),
+      printTradeProvider: new HxroPrintTradeProvider(context, hxroContext),
       activeWindow: 2,
       settlingWindow: 1,
     });

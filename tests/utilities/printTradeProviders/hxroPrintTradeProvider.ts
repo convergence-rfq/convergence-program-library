@@ -1,5 +1,5 @@
 import { Program, Wallet, workspace, BN } from "@coral-xyz/anchor";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
 import { Context, Response, Rfq } from "../wrappers";
 import { HxroPrintTradeProvider as HxroPrintTradeProviderIdl } from "../../../target/types/hxro_print_trade_provider";
 import { AuthoritySide, InstrumentType, LegData, LegSide, QuoteData } from "../types";
@@ -8,9 +8,13 @@ import { executeInParallel } from "../helpers";
 import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE, DEFAULT_MINT_DECIMALS, SOLANA_BASE_ASSET_INDEX } from "../constants";
 import { getBaseAssetPda } from "../pdas";
 import { RiskEngine as RiskEngineIdl } from "../../../target/types/risk_engine";
+import { readHxroKeypair } from "../fixtures";
 
 const configSeed = "config";
 const operatorSeed = "operator";
+
+const trgSize = 64272;
+const trgLamports = 448224000;
 
 let hxroPrintTradeProviderProgram: Program<HxroPrintTradeProviderIdl> | null = null;
 export function getHxroInstrumentProgram(): Program<HxroPrintTradeProviderIdl> {
@@ -24,7 +28,7 @@ export function getHxroInstrumentProgram(): Program<HxroPrintTradeProviderIdl> {
 export class HxroPrintTradeProvider {
   constructor(
     private context: Context,
-    private proxy: HxroProxy,
+    private hxroContext: HxroContext,
     private legs: {
       amount: number;
       amountDecimals: number;
@@ -57,6 +61,60 @@ export class HxroPrintTradeProvider {
       })
       .signers([context.dao])
       .rpc();
+  }
+
+  static async initializeOperatorTraderRiskGroup(
+    context: Context,
+    nameToPubkey: { [name: string]: PublicKey },
+    trg: Keypair,
+    trgRiskState: Keypair
+  ) {
+    const mpg = nameToPubkey["mpg"];
+    const feeModelConfig = nameToPubkey["fee-config"];
+    const dexProgram = nameToPubkey["dex-program"];
+    const riskProgram = nameToPubkey["risk-program"];
+    const feesProgram = nameToPubkey["fees-program"];
+
+    const [traderFeeStateAcct] = PublicKey.findProgramAddressSync(
+      [Buffer.from("trader_fee_acct"), trg.publicKey.toBuffer(), mpg.toBuffer()],
+      feesProgram
+    );
+
+    const createAccountIx = SystemProgram.createAccount({
+      fromPubkey: context.dao.publicKey,
+      newAccountPubkey: trg.publicKey,
+      lamports: trgLamports,
+      space: trgSize,
+      programId: dexProgram,
+    });
+
+    const sendSolIx = SystemProgram.transfer({
+      fromPubkey: context.dao.publicKey,
+      toPubkey: this.getOperatorAddress(),
+      lamports: 1 * 10 ** 9, // 1 sol
+    });
+
+    await getHxroInstrumentProgram()
+      .methods.initializeOperatorTraderRiskGroup()
+      .accounts({
+        authority: context.dao.publicKey,
+        protocol: context.protocolPda,
+        config: this.getConfigAddress(),
+        marketProductGroup: mpg,
+        operator: this.getOperatorAddress(),
+        dex: dexProgram,
+        operatorTrg: trg.publicKey,
+        riskAndFeeSigner: dexterity.Manifest.GetRiskAndFeeSigner(mpg),
+        traderRiskStateAcct: trgRiskState.publicKey,
+        traderFeeStateAcct,
+        riskEngineProgram: riskProgram,
+        feeModelConfigAcct: feeModelConfig,
+        feeModelProgram: feesProgram,
+        systemProgram: SystemProgram.programId,
+      })
+      .preInstructions([createAccountIx, sendSolIx])
+      .signers([context.dao, trg, trgRiskState])
+      .rpc({ skipPreflight: true });
   }
 
   static getConfigAddress() {
@@ -125,17 +183,23 @@ export class HxroPrintTradeProvider {
     return [
       { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
       { pubkey: HxroPrintTradeProvider.getConfigAddress(), isSigner: false, isWritable: false },
-      { pubkey: this.proxy.hxroContext.mpg.publicKey, isSigner: false, isWritable: false },
+      { pubkey: this.hxroContext.mpg.publicKey, isSigner: false, isWritable: false },
       ...validationAccounts,
     ];
   }
 
   getPreparePrintTradeSettlementAccounts(side: AuthoritySide, rfq: Rfq, response: Response) {
-    const { mpg, trgTaker, trgMaker, trgDao, dexProgram, riskAndFeeSigner } = this.proxy.hxroContext;
+    const { mpg, trgTaker, trgMaker, trgOperator, dexProgram, riskAndFeeSigner } = this.hxroContext;
     const { taker, maker } = this.context;
     const user = side == AuthoritySide.Taker ? taker.publicKey : maker.publicKey;
     const [userTrg, counterpartyTrg] = side == AuthoritySide.Taker ? [trgTaker, trgMaker] : [trgMaker, trgTaker];
-    const printTrade = this.proxy.getPrintTradeAddress(userTrg.publicKey, counterpartyTrg.publicKey);
+
+    let printTrade;
+    if (response.firstToPrepare === null) {
+      printTrade = this.hxroContext.getPrintTradeAddress(userTrg.publicKey, counterpartyTrg.publicKey);
+    } else {
+      printTrade = this.hxroContext.getPrintTradeAddress(counterpartyTrg.publicKey, userTrg.publicKey);
+    }
 
     return [
       { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
@@ -146,7 +210,7 @@ export class HxroPrintTradeProvider {
       { pubkey: user, isSigner: true, isWritable: false },
       { pubkey: userTrg.publicKey, isSigner: false, isWritable: true },
       { pubkey: counterpartyTrg.publicKey, isSigner: false, isWritable: true },
-      { pubkey: trgDao.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgOperator.publicKey, isSigner: false, isWritable: true },
       { pubkey: printTrade, isSigner: false, isWritable: true },
       { pubkey: mpg.feeModelProgramId, isSigner: false, isWritable: false },
       { pubkey: mpg.feeModelConfigurationAcct, isSigner: false, isWritable: false },
@@ -157,41 +221,17 @@ export class HxroPrintTradeProvider {
       { pubkey: riskAndFeeSigner, isSigner: false, isWritable: false },
       { pubkey: userTrg.feeStateAccount, isSigner: false, isWritable: true },
       { pubkey: userTrg.riskStateAccount, isSigner: false, isWritable: true },
+      { pubkey: counterpartyTrg.feeStateAccount, isSigner: false, isWritable: true },
+      { pubkey: counterpartyTrg.riskStateAccount, isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: this.hxroContext.getCovarianceAddress(), isSigner: false, isWritable: true },
+      { pubkey: this.hxroContext.getCorrelationAddress(), isSigner: false, isWritable: true },
+      { pubkey: this.hxroContext.getMarkPricesAddress(), isSigner: false, isWritable: true },
     ];
   }
 
   getExecutePrintTradeSettlementAccounts(rfq: Rfq, response: Response) {
-    // const { trgTaker, trgMaker, trgDao, printTrade, dexProgram, mpg, riskAndFeeSigner, manifest } =
-    //   this.proxy.hxroContext;
-
-    return [
-      { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
-      // { pubkey: this.context.taker.publicKey, isSigner: true, isWritable: true },
-      // { pubkey: this.context.maker.publicKey, isSigner: false, isWritable: true },
-      // { pubkey: dexProgram.programId, isSigner: false, isWritable: false },
-      // { pubkey: trgTaker.publicKey, isSigner: false, isWritable: true },
-      // { pubkey: trgMaker.publicKey, isSigner: false, isWritable: true },
-      // { pubkey: trgDao.publicKey, isSigner: false, isWritable: true },
-      // { pubkey: mpgPubkey, isSigner: false, isWritable: true },
-      // { pubkey: productKey, isSigner: false, isWritable: false },
-      // { pubkey: printTrade, isSigner: false, isWritable: true },
-      // { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      // { pubkey: mpg.feeModelProgramId, isSigner: false, isWritable: false },
-      // { pubkey: mpg.feeModelConfigurationAcct, isSigner: false, isWritable: false },
-      // { pubkey: mpg.feeOutputRegister, isSigner: false, isWritable: true },
-      // { pubkey: mpg.riskEngineProgramId, isSigner: false, isWritable: false },
-      // { pubkey: mpg.riskModelConfigurationAcct, isSigner: false, isWritable: false },
-      // { pubkey: mpg.riskOutputRegister, isSigner: false, isWritable: true },
-      // { pubkey: riskAndFeeSigner, isSigner: false, isWritable: false },
-      // { pubkey: trgTaker.feeStateAccount, isSigner: false, isWritable: true },
-      // { pubkey: trgTaker.riskStateAccount, isSigner: false, isWritable: true },
-      // { pubkey: trgMaker.feeStateAccount, isSigner: false, isWritable: true },
-      // { pubkey: trgMaker.riskStateAccount, isSigner: false, isWritable: true },
-      // { pubkey: manifest.getRiskS(mpgPubkey), isSigner: false, isWritable: true },
-      // { pubkey: manifest.getRiskR(mpgPubkey), isSigner: false, isWritable: true },
-      // { pubkey: manifest.getMarkPricesAccount(mpgPubkey), isSigner: false, isWritable: true },
-    ];
+    return [{ pubkey: this.getProgramId(), isSigner: false, isWritable: false }];
   }
 }
 
@@ -217,77 +257,116 @@ function serializeRiskEngineProduct(productIndex: number) {
   }
 }
 
-export class HxroProxy {
-  private constructor(
-    private context: Context,
-    public hxroContext: {
-      manifest: any;
-      dexProgram: any;
-      mpg: { publicKey: PublicKey } & any;
-      trgTaker: { publicKey: PublicKey } & any;
-      trgMaker: { publicKey: PublicKey } & any;
-      trgDao: { publicKey: PublicKey } & any;
-      riskAndFeeSigner: PublicKey;
-    }
-  ) {}
+let trgOperatorKey: PublicKey | null = null;
 
-  static async create(context: Context) {
-    const manifest = await dexterity.getManifest(
-      context.provider.connection.rpcEndpoint,
-      true,
-      new Wallet(context.dao)
-    );
-    const dexProgram = manifest.fields.dexProgram;
+export async function initializeOperatorTraderRiskGroup(context: Context) {
+  const operatorTrg = await readHxroKeypair("operator-trg");
+  const operatorTrgRiskState = await readHxroKeypair("operator-trg-risk-state");
+  await HxroPrintTradeProvider.initializeOperatorTraderRiskGroup(
+    context,
+    context.nameToPubkey,
+    operatorTrg,
+    operatorTrgRiskState
+  );
 
-    const mpgPubkey = context.nameToPubkey["mpg"];
-    const trgDaoKey = context.nameToPubkey["operator-trg"];
-    const trgTakerKey = context.nameToPubkey["taker-trg"];
-    const trgMakerKey = context.nameToPubkey["maker-trg"];
-
-    const [mpg, trgTaker, trgMaker, trgDao] = await executeInParallel(
-      () => manifest.getMPG(mpgPubkey),
-      () => manifest.getTRG(trgTakerKey),
-      () => manifest.getTRG(trgMakerKey),
-      () => manifest.getTRG(trgDaoKey)
-    );
-
-    return new HxroProxy(context, {
-      manifest,
-      dexProgram,
-      mpg: { publicKey: mpgPubkey, ...mpg },
-      trgTaker: { publicKey: trgTakerKey, ...trgTaker },
-      trgMaker: { publicKey: trgMakerKey, ...trgMaker },
-      trgDao: { publicKey: trgDaoKey, ...trgDao },
-      riskAndFeeSigner: dexterity.Manifest.GetRiskAndFeeSigner(mpgPubkey),
-    });
-  }
-
-  async getBalance(party: "taker" | "maker" | "dao") {
-    const { manifest, trgTaker, trgMaker, trgDao } = this.hxroContext;
-    let trg;
-    if (party == "taker") {
-      trg = trgTaker;
-    } else if (party == "maker") {
-      trg = trgMaker;
-    } else {
-      trg = trgDao;
-    }
-    const updatedTrg = await manifest.getTRG(trg.publicKey);
-
-    return {
-      positions: updatedTrg.traderPositions.map((x: any) =>
-        dexterity.Fractional.From(x.position).toDecimal()
-      ) as number[],
-      cashBalance: dexterity.Fractional.From(updatedTrg.cashBalance).toDecimal(),
-    };
-  }
-
-  getPrintTradeAddress(creator: PublicKey, counterparty: PublicKey) {
-    const [result] = PublicKey.findProgramAddressSync(
-      [Buffer.from("print_trade"), creator.toBuffer(), counterparty.toBuffer()],
-      this.hxroContext.dexProgram.programId
-    );
-
-    return result;
-  }
+  trgOperatorKey = operatorTrg.publicKey;
 }
+
+export async function getHxroContext(context: Context) {
+  const manifest = await dexterity.getManifest(context.provider.connection.rpcEndpoint, true, new Wallet(context.dao));
+  const dexProgram = manifest.fields.dexProgram;
+
+  const mpgKey = context.nameToPubkey["mpg"];
+  const trgTakerKey = context.nameToPubkey["taker-trg"];
+  const trgMakerKey = context.nameToPubkey["maker-trg"];
+
+  if (trgOperatorKey === null) {
+    await initializeOperatorTraderRiskGroup(context);
+  }
+
+  const [mpg, trgTaker, trgMaker] = await executeInParallel(
+    () => manifest.getMPG(mpgKey),
+    () => manifest.getTRG(trgTakerKey),
+    () => manifest.getTRG(trgMakerKey)
+  );
+
+  return {
+    mpg: {
+      publicKey: mpgKey,
+      feeModelProgramId: mpg.feeModelProgramId,
+      feeModelConfigurationAcct: mpg.feeModelConfigurationAcct,
+      feeOutputRegister: mpg.feeOutputRegister,
+      riskEngineProgramId: mpg.riskEngineProgramId,
+      riskModelConfigurationAcct: mpg.riskModelConfigurationAcct,
+      riskOutputRegister: mpg.riskOutputRegister,
+    },
+    dexProgram: {
+      programId: dexProgram.programId,
+    },
+    trgTaker: {
+      publicKey: trgTakerKey,
+      feeStateAccount: trgTaker.feeStateAccount,
+      riskStateAccount: trgTaker.riskStateAccount,
+    },
+    trgMaker: {
+      publicKey: trgMakerKey,
+      feeStateAccount: trgMaker.feeStateAccount,
+      riskStateAccount: trgMaker.riskStateAccount,
+    },
+    trgOperator: {
+      publicKey: trgOperatorKey!,
+    },
+    riskAndFeeSigner: dexterity.Manifest.GetRiskAndFeeSigner(mpgKey),
+
+    getBalance: async (party: "taker" | "maker") => {
+      let trgKey: PublicKey;
+      if (party == "taker") {
+        trgKey = trgTakerKey;
+      } else {
+        trgKey = trgMakerKey;
+      }
+
+      const updatedTrg = await manifest.getTRG(trgKey);
+
+      return {
+        positions: updatedTrg.traderPositions.map((x: any) =>
+          dexterity.Fractional.From(x.position).toDecimal()
+        ) as number[],
+        cashBalance: dexterity.Fractional.From(updatedTrg.cashBalance).toDecimal(),
+      };
+    },
+
+    getPrintTradeAddress: (creator: PublicKey, counterparty: PublicKey) => {
+      const [result] = PublicKey.findProgramAddressSync(
+        [Buffer.from("print_trade"), creator.toBuffer(), counterparty.toBuffer()],
+        dexProgram.programId
+      );
+
+      return result;
+    },
+
+    getCovarianceAddress: () => {
+      const [result] = PublicKey.findProgramAddressSync([Buffer.from("s"), mpgKey.toBuffer()], mpg.riskEngineProgramId);
+
+      return result;
+    },
+
+    getCorrelationAddress: () => {
+      const [result] = PublicKey.findProgramAddressSync([Buffer.from("r"), mpgKey.toBuffer()], mpg.riskEngineProgramId);
+
+      return result;
+    },
+
+    getMarkPricesAddress: () => {
+      const [result] = PublicKey.findProgramAddressSync(
+        [Buffer.from("mark_prices"), mpgKey.toBuffer()],
+        mpg.riskEngineProgramId
+      );
+
+      return result;
+    },
+  };
+}
+
+type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
+export type HxroContext = UnwrapPromise<ReturnType<typeof getHxroContext>>;

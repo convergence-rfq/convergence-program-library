@@ -1,15 +1,5 @@
 import { BN, Program, workspace, AnchorProvider, setProvider } from "@coral-xyz/anchor";
-import {
-  PublicKey,
-  Keypair,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-  Transaction,
-  AccountMeta,
-  Signer,
-  ConfirmOptions,
-  TransactionSignature,
-} from "@solana/web3.js";
+import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, AccountMeta } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
@@ -1013,10 +1003,10 @@ export class Rfq {
 
 export class Response {
   //storing single here assumes all legs are prepared by the same single side
-  public firstToPrepare: PublicKey;
+  public firstToPrepare: PublicKey | null;
 
   constructor(public context: Context, public rfq: Rfq, public maker: Keypair, public account: PublicKey) {
-    this.firstToPrepare = PublicKey.default;
+    this.firstToPrepare = null;
   }
 
   async confirm({
@@ -1053,7 +1043,7 @@ export class Response {
     legAmount = legAmount || legs.length;
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
 
-    if (this.firstToPrepare.equals(PublicKey.default)) {
+    if (this.firstToPrepare === null) {
       this.firstToPrepare = caller.publicKey;
     }
     const quoteAccounts = await quote.getPrepareSettlementAccounts(side, "quote", this.rfq, this);
@@ -1087,7 +1077,7 @@ export class Response {
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
     const accounts = this.rfq.content.provider.getPreparePrintTradeSettlementAccounts(side, this.rfq, this);
 
-    if (this.firstToPrepare.equals(PublicKey.default)) {
+    if (this.firstToPrepare === null) {
       this.firstToPrepare = caller.publicKey;
     }
 
@@ -1101,6 +1091,7 @@ export class Response {
       })
       .signers([caller])
       .remainingAccounts(accounts)
+      .preInstructions([expandComputeUnits])
       .rpc();
   }
 
@@ -1181,7 +1172,6 @@ export class Response {
       })
       .remainingAccounts(accounts)
       .preInstructions([expandComputeUnits])
-      .signers([this.context.taker])
       .rpc();
   }
 

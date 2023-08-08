@@ -147,7 +147,7 @@ export class SpotInstrument implements Instrument {
   async getCleanUpAccounts(assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
-        pubkey: response.firstToPrepare,
+        pubkey: response.firstToPrepare!,
         isSigner: false,
         isWritable: true,
       },

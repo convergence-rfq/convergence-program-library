@@ -112,12 +112,14 @@ async function main() {
     async () => {
       await HxroPrintTradeProvider.addPrintTradeProvider(context);
 
-      const mpgAddress = inversePubkeyToName(await loadHxroPubkeyNaming())["mpg"];
+      const hxroAddresses = inversePubkeyToName(await loadHxroPubkeyNaming());
+      const mpgAddress = hxroAddresses["mpg"];
       await HxroPrintTradeProvider.initializeConfig(context, mpgAddress);
+
       const configAddress = HxroPrintTradeProvider.getConfigAddress();
       await saveAccountAsFixture(context, configAddress, "hxro-print-trade-provider-config");
     },
-    // initialize and fund collateral accounts
+    // initialize and fund collateral accounts`
     async () => {
       await context.initializeCollateral(context.taker);
       await context.fundCollateral(context.taker, DEFAULT_COLLATERAL_FUNDED);
