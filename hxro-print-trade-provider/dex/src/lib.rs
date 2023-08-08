@@ -147,22 +147,22 @@ pub mod dex {
     }
 
     pub fn lock_collateral<'info>(
-        ctx: Context<'_, '_, '_, 'info, LockCollateral<'info>>,
-        params: LockCollateralParams,
+        _ctx: Context<'_, '_, '_, 'info, LockCollateral<'info>>,
+        _params: LockCollateralParams,
     ) -> ProgramResult {
         Ok(())
     }
 
     pub fn initialize_print_trade(
-        ctx: Context<InitializePrintTrade>,
-        params: InitializePrintTradeParams,
+        _ctx: Context<InitializePrintTrade>,
+        _params: InitializePrintTradeParams,
     ) -> ProgramResult {
         Ok(())
     }
 
     pub fn sign_print_trade<'info>(
-        ctx: Context<'_, '_, '_, 'info, SignPrintTrade<'info>>,
-        params: SignPrintTradeParams,
+        _ctx: Context<'_, '_, '_, 'info, SignPrintTrade<'info>>,
+        _params: SignPrintTradeParams,
     ) -> ProgramResult {
         Ok(())
     }
@@ -775,5 +775,5 @@ pub struct SignPrintTrade<'info> {
     counterparty_trader_fee_state_acct: AccountInfo<'info>,
     #[account(mut)]
     counterparty_trader_risk_state_acct: AccountInfo<'info>,
-    pub operator_owner: AccountInfo<'info>,
+    pub operator_owner: Signer<'info>,
 }

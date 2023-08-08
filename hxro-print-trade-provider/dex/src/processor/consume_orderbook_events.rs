@@ -41,34 +41,34 @@ use crate::{
     validate_account_health_ix, ConsumeOrderbookEvents, ConsumeOrderbookEventsParams,
 };
 
-fn validate(accts: &ConsumeOrderbookEvents) -> DomainOrProgramResult {
-    let market_product_group = accts.market_product_group.load()?;
-    assert_keys_equal(
-        *accts.fee_model_configuration_acct.key,
-        market_product_group.fee_model_configuration_acct,
-    )?;
-    assert_keys_equal(
-        *accts.fee_model_program.key,
-        market_product_group.fee_model_program_id,
-    )?;
-    assert_keys_equal(
-        accts.fee_model_program.key(),
-        market_product_group.fee_model_program_id,
-    )?;
-    assert_keys_equal(
-        accts.fee_model_configuration_acct.key(),
-        market_product_group.fee_model_configuration_acct,
-    )?;
-    assert_keys_equal(
-        accts.fee_output_register.key(),
-        market_product_group.fee_output_register,
-    )?;
-    Ok(())
-}
+// fn validate(accts: &ConsumeOrderbookEvents) -> DomainOrProgramResult {
+//     let market_product_group = accts.market_product_group.load()?;
+//     assert_keys_equal(
+//         *accts.fee_model_configuration_acct.key,
+//         market_product_group.fee_model_configuration_acct,
+//     )?;
+//     assert_keys_equal(
+//         *accts.fee_model_program.key,
+//         market_product_group.fee_model_program_id,
+//     )?;
+//     assert_keys_equal(
+//         accts.fee_model_program.key(),
+//         market_product_group.fee_model_program_id,
+//     )?;
+//     assert_keys_equal(
+//         accts.fee_model_configuration_acct.key(),
+//         market_product_group.fee_model_configuration_acct,
+//     )?;
+//     assert_keys_equal(
+//         accts.fee_output_register.key(),
+//         market_product_group.fee_output_register,
+//     )?;
+//     Ok(())
+// }
 
 pub fn process<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, ConsumeOrderbookEvents<'info>>,
-    params: ConsumeOrderbookEventsParams,
+    _ctx: Context<'a, 'b, 'c, 'info, ConsumeOrderbookEvents<'info>>,
+    _params: ConsumeOrderbookEventsParams,
 ) -> DomainOrProgramResult {
     //     let accts = ctx.accounts;
     //     validate(accts)?;
@@ -480,26 +480,26 @@ pub fn process<'a, 'b, 'c, 'info>(
     ))
 }
 
-fn find_acct<'c, 'info>(
-    accounts: &'c [AccountInfo<'info>],
-    key: &Pubkey,
-) -> std::result::Result<&'c AccountInfo<'info>, DexError> {
-    let idx = accounts.binary_search_by_key(key, |a| *a.key);
-    match idx {
-        Ok(idx) => Ok(&accounts[idx]),
-        Err(_) => {
-            use itertools::Itertools;
-            let is_sorted = accounts.iter().tuple_windows().all(|(a, b)| a.key <= b.key);
-            if !is_sorted {
-                msg!("Trader and fee accounts must be sorted by client")
-            } else {
-                msg!(
-                    "Could not find {:?} in {:?}",
-                    key,
-                    accounts.iter().map(|a| a.key).collect::<Vec<_>>()
-                );
-            }
-            Err(DexError::MissingUserAccount)
-        }
-    }
-}
+// fn find_acct<'c, 'info>(
+//     accounts: &'c [AccountInfo<'info>],
+//     key: &Pubkey,
+// ) -> std::result::Result<&'c AccountInfo<'info>, DexError> {
+//     let idx = accounts.binary_search_by_key(key, |a| *a.key);
+//     match idx {
+//         Ok(idx) => Ok(&accounts[idx]),
+//         Err(_) => {
+//             use itertools::Itertools;
+//             let is_sorted = accounts.iter().tuple_windows().all(|(a, b)| a.key <= b.key);
+//             if !is_sorted {
+//                 msg!("Trader and fee accounts must be sorted by client")
+//             } else {
+//                 msg!(
+//                     "Could not find {:?} in {:?}",
+//                     key,
+//                     accounts.iter().map(|a| a.key).collect::<Vec<_>>()
+//                 );
+//             }
+//             Err(DexError::MissingUserAccount)
+//         }
+//     }
+// }

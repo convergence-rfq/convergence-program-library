@@ -21,7 +21,7 @@ use crate::{
     InitializeMarketProductGroup, InitializeMarketProductGroupParams,
 };
 
-const TOKEN_ACCOUNT_SIZE: u64 = spl_token::state::Account::LEN as u64;
+// const TOKEN_ACCOUNT_SIZE: u64 = spl_token::state::Account::LEN as u64;
 
 pub fn validate(ctx: &Context<InitializeMarketProductGroup>) -> DomainOrProgramResult {
     assert_keys_equal(
@@ -32,8 +32,8 @@ pub fn validate(ctx: &Context<InitializeMarketProductGroup>) -> DomainOrProgramR
 }
 
 pub fn process(
-    ctx: Context<InitializeMarketProductGroup>,
-    params: InitializeMarketProductGroupParams,
+    _ctx: Context<InitializeMarketProductGroup>,
+    _params: InitializeMarketProductGroupParams,
 ) -> DomainOrProgramResult {
     // validate(&ctx)?;
     // let accts = ctx.accounts;

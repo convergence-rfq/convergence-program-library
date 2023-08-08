@@ -45,64 +45,64 @@ use crate::{
     DomainOrProgramError, MarketProductGroup, NewOrder, NewOrderParams, TraderRiskGroup,
 };
 
-fn validate(ctx: &Context<NewOrder>) -> std::result::Result<(), DomainOrProgramError> {
-    let accts = &ctx.accounts;
-    let trader_risk_group = accts.trader_risk_group.load()?;
-    let market_product_group = accts.market_product_group.load()?;
+// fn validate(ctx: &Context<NewOrder>) -> std::result::Result<(), DomainOrProgramError> {
+//     let accts = &ctx.accounts;
+//     let trader_risk_group = accts.trader_risk_group.load()?;
+//     let market_product_group = accts.market_product_group.load()?;
 
-    assert_keys_equal(trader_risk_group.owner, *accts.user.key)?;
-    assert_keys_equal(
-        trader_risk_group.market_product_group,
-        accts.market_product_group.key(),
-    )?;
-    assert(
-        trader_risk_group.is_initialized(),
-        UtilError::AccountUninitialized,
-    )?;
-    assert(
-        market_product_group.is_initialized(),
-        UtilError::AccountUninitialized,
-    )?;
-    assert_keys_equal(
-        accts.fee_model_program.key(),
-        market_product_group.fee_model_program_id,
-    )?;
-    assert_keys_equal(
-        accts.fee_model_configuration_acct.key(),
-        market_product_group.fee_model_configuration_acct,
-    )?;
+//     assert_keys_equal(trader_risk_group.owner, *accts.user.key)?;
+//     assert_keys_equal(
+//         trader_risk_group.market_product_group,
+//         accts.market_product_group.key(),
+//     )?;
+//     assert(
+//         trader_risk_group.is_initialized(),
+//         UtilError::AccountUninitialized,
+//     )?;
+//     assert(
+//         market_product_group.is_initialized(),
+//         UtilError::AccountUninitialized,
+//     )?;
+//     assert_keys_equal(
+//         accts.fee_model_program.key(),
+//         market_product_group.fee_model_program_id,
+//     )?;
+//     assert_keys_equal(
+//         accts.fee_model_configuration_acct.key(),
+//         market_product_group.fee_model_configuration_acct,
+//     )?;
 
-    assert_keys_equal(
-        accts.trader_risk_state_acct.key(),
-        trader_risk_group.risk_state_account,
-    )?;
+//     assert_keys_equal(
+//         accts.trader_risk_state_acct.key(),
+//         trader_risk_group.risk_state_account,
+//     )?;
 
-    assert_keys_equal(
-        accts.trader_fee_state_acct.key(),
-        trader_risk_group.fee_state_account,
-    )?;
+//     assert_keys_equal(
+//         accts.trader_fee_state_acct.key(),
+//         trader_risk_group.fee_state_account,
+//     )?;
 
-    assert_keys_equal(
-        accts.risk_output_register.key(),
-        market_product_group.risk_output_register,
-    )?;
+//     assert_keys_equal(
+//         accts.risk_output_register.key(),
+//         market_product_group.risk_output_register,
+//     )?;
 
-    assert_keys_equal(
-        accts.fee_output_register.key(),
-        market_product_group.fee_output_register,
-    )?;
+//     assert_keys_equal(
+//         accts.fee_output_register.key(),
+//         market_product_group.fee_output_register,
+//     )?;
 
-    assert_keys_equal(
-        accts.risk_model_configuration_acct.key(),
-        market_product_group.risk_model_configuration_acct,
-    )?;
-    assert(accts.orderbook.is_writable, DexError::CombosNotRemoved)?;
-    Ok(())
-}
+//     assert_keys_equal(
+//         accts.risk_model_configuration_acct.key(),
+//         market_product_group.risk_model_configuration_acct,
+//     )?;
+//     assert(accts.orderbook.is_writable, DexError::CombosNotRemoved)?;
+//     Ok(())
+// }
 
 pub fn process<'info>(
-    ctx: Context<'_, '_, '_, 'info, NewOrder<'info>>,
-    params: NewOrderParams,
+    _ctx: Context<'_, '_, '_, 'info, NewOrder<'info>>,
+    _params: NewOrderParams,
 ) -> DomainOrProgramResult {
     // validate(&ctx)?;
     // let accts = ctx.accounts;
@@ -367,171 +367,171 @@ pub fn process<'info>(
     Ok(())
 }
 
-fn handle_fees(
-    accts: &NewOrder,
-    clock: &Clock,
-    market_product_group: &MarketProductGroup,
-    trader_risk_group: &mut TraderRiskGroup,
-    matched_quote_qty: Fractional,
-    matched_base_qty: Fractional,
-    product: Pubkey,
-    side: Side,
-) -> DomainOrProgramResult {
-    if trader_risk_group.valid_until <= clock.unix_timestamp {
-        let fee_params = TraderFeeParams {
-            side,
-            is_aggressor: true,
-            matched_base_qty,
-            matched_quote_qty,
-            product,
-        };
-        find_fees(
-            &accts.fee_model_program,
-            accts.market_product_group.as_ref(),
-            &accts.trader_risk_group,
-            &accts.trader_fee_state_acct,
-            &accts.fee_model_configuration_acct,
-            &accts.fee_output_register,
-            &accts.risk_and_fee_signer,
-            market_product_group.get_find_fees_discriminant(),
-            &fee_params,
-            market_product_group.risk_and_fee_bump as u8,
-        )?;
-    }
+// fn handle_fees(
+//     accts: &NewOrder,
+//     clock: &Clock,
+//     market_product_group: &MarketProductGroup,
+//     trader_risk_group: &mut TraderRiskGroup,
+//     matched_quote_qty: Fractional,
+//     matched_base_qty: Fractional,
+//     product: Pubkey,
+//     side: Side,
+// ) -> DomainOrProgramResult {
+//     if trader_risk_group.valid_until <= clock.unix_timestamp {
+//         let fee_params = TraderFeeParams {
+//             side,
+//             is_aggressor: true,
+//             matched_base_qty,
+//             matched_quote_qty,
+//             product,
+//         };
+//         find_fees(
+//             &accts.fee_model_program,
+//             accts.market_product_group.as_ref(),
+//             &accts.trader_risk_group,
+//             &accts.trader_fee_state_acct,
+//             &accts.fee_model_configuration_acct,
+//             &accts.fee_output_register,
+//             &accts.risk_and_fee_signer,
+//             market_product_group.get_find_fees_discriminant(),
+//             &fee_params,
+//             market_product_group.risk_and_fee_bump as u8,
+//         )?;
+//     }
 
-    let computed_fees = TraderFees::load(&accts.fee_output_register)?;
-    let taker_fees = computed_fees
-        .taker_fee_bps(Some(market_product_group))
-        .checked_mul(matched_quote_qty)?;
+//     let computed_fees = TraderFees::load(&accts.fee_output_register)?;
+//     let taker_fees = computed_fees
+//         .taker_fee_bps(Some(market_product_group))
+//         .checked_mul(matched_quote_qty)?;
 
-    trader_risk_group.pending_fees = trader_risk_group.pending_fees.checked_add(taker_fees)?;
-    trader_risk_group.valid_until = computed_fees.valid_until;
-    trader_risk_group.maker_fee_bps = computed_fees.maker_fee_bps;
-    trader_risk_group.taker_fee_bps = computed_fees.taker_fee_bps;
-    Ok(())
-}
+//     trader_risk_group.pending_fees = trader_risk_group.pending_fees.checked_add(taker_fees)?;
+//     trader_risk_group.valid_until = computed_fees.valid_until;
+//     trader_risk_group.maker_fee_bps = computed_fees.maker_fee_bps;
+//     trader_risk_group.taker_fee_bps = computed_fees.taker_fee_bps;
+//     Ok(())
+// }
 
-fn update_new_queue_events(
-    product: &Product,
-    product_index: usize,
-    market_product_group: &mut MarketProductGroup,
-    new_events: u64,
-) -> DomainOrProgramResult {
-    // for (_, i) in product.get_ratios_and_product_indices(product_index) {
-    //     let outright = market_product_group.market_products[i].try_to_outright_mut()?;
-    //     outright.num_queue_events = outright
-    //         .num_queue_events
-    //         .saturating_add(new_events as usize);
-    // }
-    Ok(())
-}
+// fn update_new_queue_events(
+//     product: &Product,
+//     product_index: usize,
+//     market_product_group: &mut MarketProductGroup,
+//     new_events: u64,
+// ) -> DomainOrProgramResult {
+//     // for (_, i) in product.get_ratios_and_product_indices(product_index) {
+//     //     let outright = market_product_group.market_products[i].try_to_outright_mut()?;
+//     //     outright.num_queue_events = outright
+//     //         .num_queue_events
+//     //         .saturating_add(new_events as usize);
+//     // }
+//     Ok(())
+// }
 
-fn update_metadata(
-    product: &Product,
-    trader_risk_group: &mut TraderRiskGroup,
-    market_product_group: &MarketProductGroup,
-    product_index: usize,
-    matched_base_qty_dex: Fractional,
-    side: Side,
-    crossed: bool,
-) -> DomainOrProgramResult {
-    for (ratio, i) in product.get_ratios_and_product_indices(product_index) {
-        // let outright = market_product_group.market_products[i].try_to_outright()?;
-        // // trader_risk_group.activate_if_uninitialized(
-        // //     i,
-        // //     &outright.product_key,
-        // //     outright.cum_funding_per_share,
-        // //     outright.cum_social_loss_per_share,
-        // //     market_product_group.active_combos(),
-        // // )?;
-        // if crossed {
-        //     let trader_position_index = trader_risk_group.active_products[i] as usize;
-        //     let trader_position = &mut trader_risk_group.trader_positions[trader_position_index];
-        //     match side {
-        //         Side::Bid => {
-        //             trader_position.pending_position = trader_position
-        //                 .pending_position
-        //                 .checked_add(matched_base_qty_dex.checked_mul(Fractional::from(ratio))?)?
-        //         }
-        //         Side::Ask => {
-        //             trader_position.pending_position = trader_position
-        //                 .pending_position
-        //                 .checked_sub(matched_base_qty_dex.checked_mul(Fractional::from(ratio))?)?
-        //         }
-        //     }
-        // }
-    }
-    Ok(())
-}
+// fn update_metadata(
+//     product: &Product,
+//     trader_risk_group: &mut TraderRiskGroup,
+//     market_product_group: &MarketProductGroup,
+//     product_index: usize,
+//     matched_base_qty_dex: Fractional,
+//     side: Side,
+//     crossed: bool,
+// ) -> DomainOrProgramResult {
+//     for (ratio, i) in product.get_ratios_and_product_indices(product_index) {
+//         // let outright = market_product_group.market_products[i].try_to_outright()?;
+//         // // trader_risk_group.activate_if_uninitialized(
+//         // //     i,
+//         // //     &outright.product_key,
+//         // //     outright.cum_funding_per_share,
+//         // //     outright.cum_social_loss_per_share,
+//         // //     market_product_group.active_combos(),
+//         // // )?;
+//         // if crossed {
+//         //     let trader_position_index = trader_risk_group.active_products[i] as usize;
+//         //     let trader_position = &mut trader_risk_group.trader_positions[trader_position_index];
+//         //     match side {
+//         //         Side::Bid => {
+//         //             trader_position.pending_position = trader_position
+//         //                 .pending_position
+//         //                 .checked_add(matched_base_qty_dex.checked_mul(Fractional::from(ratio))?)?
+//         //         }
+//         //         Side::Ask => {
+//         //             trader_position.pending_position = trader_position
+//         //                 .pending_position
+//         //                 .checked_sub(matched_base_qty_dex.checked_mul(Fractional::from(ratio))?)?
+//         //         }
+//         //     }
+//         // }
+//     }
+//     Ok(())
+// }
 
-#[inline(always)]
-pub fn get_limit_price_aob(
-    price: Fractional,
-    price_offset: Fractional,
-    tick_size: Fractional,
-) -> std::result::Result<u64, ProgramError> {
-    /*
-        Adjusts the passed-in limit price by adding a positive offset, dividing by the market tick
-        size and coercing the output to a u64.
-        This creates a remapping of the bytes such that the following property holds
+// #[inline(always)]
+// pub fn get_limit_price_aob(
+//     price: Fractional,
+//     price_offset: Fractional,
+//     tick_size: Fractional,
+// ) -> std::result::Result<u64, ProgramError> {
+//     /*
+//         Adjusts the passed-in limit price by adding a positive offset, dividing by the market tick
+//         size and coercing the output to a u64.
+//         This creates a remapping of the bytes such that the following property holds
 
-        (-price_offset) / tick_size maps to 0x00000000
-        (2^32 - 1 - price_offset) / tick_size maps to 0xFFFFFFFF
+//         (-price_offset) / tick_size maps to 0x00000000
+//         (2^32 - 1 - price_offset) / tick_size maps to 0xFFFFFFFF
 
-        Lexigraphical byte ordering of the integers (sorting by bytes) and numerical ordering
-        are both preserved in this representation.
-    */
-    let price_ticks_raw = price.checked_add(price_offset)?.checked_div(tick_size)?;
-    let price_ticks = price_ticks_raw.round_sf(0);
-    if price_ticks != price_ticks_raw {
-        msg!(
-            "Not exact tick, converting to nearest tick {} -> {}",
-            price_ticks_raw,
-            price_ticks,
-        );
-    }
-    // AOB price needs to be shifted up by 32 bits to create a fixec point representation
-    let limit_price = price_ticks.m << 32;
-    Ok(limit_price as u64)
-}
+//         Lexigraphical byte ordering of the integers (sorting by bytes) and numerical ordering
+//         are both preserved in this representation.
+//     */
+//     let price_ticks_raw = price.checked_add(price_offset)?.checked_div(tick_size)?;
+//     let price_ticks = price_ticks_raw.round_sf(0);
+//     if price_ticks != price_ticks_raw {
+//         msg!(
+//             "Not exact tick, converting to nearest tick {} -> {}",
+//             price_ticks_raw,
+//             price_ticks,
+//         );
+//     }
+//     // AOB price needs to be shifted up by 32 bits to create a fixec point representation
+//     let limit_price = price_ticks.m << 32;
+//     Ok(limit_price as u64)
+// }
 
-#[inline(always)]
-pub fn process_from_aob(
-    total_base_qty_aob: u64,
-    total_base_qty_posted_aob: u64,
-    total_quote_qty_aob: u64,
-    limit_price_aob: u64,
-    price_offset: Fractional,
-    tick_size: Fractional,
-    base_decimal: u64,
-) -> std::result::Result<[Fractional; 3], ProgramError> {
-    /*
-        When processing trades from the order book, the matched quantity (in cash)
-        is computed as sum((fill_price_i + price_offset) * base_size_i).
-        Our desired target is sum(fill_price_i * base_size_i), so we subtract out
-        price_offset * sum(base_size_i). The AAOB returns total_base_qty_posted - total_base_qty
-        as the matched_quantity = sum(base_size_i). So we perform the transformation and
-        convert the ticks back into prices.
-        Naming convention suffixes:
-        - AOB price space variables: _aob
-        - DEX price space variables: _dex
-    */
-    // Compute number of matched base fills (AOB-base space)
-    let matched_base_qty_aob = (total_base_qty_aob - total_base_qty_posted_aob) as i64;
-    let total_base_dex = Fractional::new(total_base_qty_aob as i64, base_decimal);
-    let total_base_matched_dex = Fractional::new(matched_base_qty_aob, base_decimal);
-    // Compute number of matched quote fills (AOB-quote space)
-    let total_quote_qty_posted_aob = fp32_mul(total_base_qty_posted_aob, limit_price_aob);
-    let matched_quote_qty_aob = total_quote_qty_aob - total_quote_qty_posted_aob;
-    // Undo tick size division (AOB -> DEX)
-    let match_quote_qty_with_offset_dex =
-        Fractional::new(matched_quote_qty_aob as i64, base_decimal).checked_mul(tick_size)?;
-    let quote_offset_dex = total_base_matched_dex.checked_mul(price_offset)?;
-    // Adjust DEX offset
-    let matched_quote_qty_dex = match_quote_qty_with_offset_dex.checked_sub(quote_offset_dex)?;
-    Ok([
-        total_base_dex,
-        total_base_matched_dex,
-        matched_quote_qty_dex,
-    ])
-}
+// #[inline(always)]
+// pub fn process_from_aob(
+//     total_base_qty_aob: u64,
+//     total_base_qty_posted_aob: u64,
+//     total_quote_qty_aob: u64,
+//     limit_price_aob: u64,
+//     price_offset: Fractional,
+//     tick_size: Fractional,
+//     base_decimal: u64,
+// ) -> std::result::Result<[Fractional; 3], ProgramError> {
+//     /*
+//         When processing trades from the order book, the matched quantity (in cash)
+//         is computed as sum((fill_price_i + price_offset) * base_size_i).
+//         Our desired target is sum(fill_price_i * base_size_i), so we subtract out
+//         price_offset * sum(base_size_i). The AAOB returns total_base_qty_posted - total_base_qty
+//         as the matched_quantity = sum(base_size_i). So we perform the transformation and
+//         convert the ticks back into prices.
+//         Naming convention suffixes:
+//         - AOB price space variables: _aob
+//         - DEX price space variables: _dex
+//     */
+//     // Compute number of matched base fills (AOB-base space)
+//     let matched_base_qty_aob = (total_base_qty_aob - total_base_qty_posted_aob) as i64;
+//     let total_base_dex = Fractional::new(total_base_qty_aob as i64, base_decimal);
+//     let total_base_matched_dex = Fractional::new(matched_base_qty_aob, base_decimal);
+//     // Compute number of matched quote fills (AOB-quote space)
+//     let total_quote_qty_posted_aob = fp32_mul(total_base_qty_posted_aob, limit_price_aob);
+//     let matched_quote_qty_aob = total_quote_qty_aob - total_quote_qty_posted_aob;
+//     // Undo tick size division (AOB -> DEX)
+//     let match_quote_qty_with_offset_dex =
+//         Fractional::new(matched_quote_qty_aob as i64, base_decimal).checked_mul(tick_size)?;
+//     let quote_offset_dex = total_base_matched_dex.checked_mul(price_offset)?;
+//     // Adjust DEX offset
+//     let matched_quote_qty_dex = match_quote_qty_with_offset_dex.checked_sub(quote_offset_dex)?;
+//     Ok([
+//         total_base_dex,
+//         total_base_matched_dex,
+//         matched_quote_qty_dex,
+//     ])
+// }

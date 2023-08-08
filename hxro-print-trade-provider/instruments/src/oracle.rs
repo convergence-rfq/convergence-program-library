@@ -1,5 +1,4 @@
 use crate::{error::DerivativeError, state::enums::OracleType};
-use borsh::BorshDeserialize;
 use dex::{error::UtilError, utils::numeric::Fractional};
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, msg,
@@ -28,7 +27,7 @@ pub fn validate_pyth_accounts(
         msg!("Pyth product price account is invalid");
         return Err(ProgramError::InvalidArgument);
     }
-    let pyth_price_pubkey = Pubkey::new(&pyth_product.px_acc.val);
+    let pyth_price_pubkey = Pubkey::new_from_array(pyth_product.px_acc.val);
     if &pyth_price_pubkey != pyth_price_info.key {
         msg!("Pyth product price account does not match the Pyth price provided");
         return Err(ProgramError::InvalidArgument);
@@ -59,7 +58,7 @@ pub fn get_pyth_price(
 }
 
 pub fn get_dummy_price(
-    price_info: &AccountInfo,
+    _price_info: &AccountInfo,
     _clock: &Clock,
 ) -> std::result::Result<Fractional, ProgramError> {
     // let price_data = OraclePrice::try_from_slice(&price_info.data.borrow_mut())?;

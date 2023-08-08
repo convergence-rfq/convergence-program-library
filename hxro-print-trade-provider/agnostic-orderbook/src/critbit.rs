@@ -789,15 +789,15 @@ impl<'a> Slab<'a> {
     }
 }
 
-trait CallbackInfo: Sized {
-    fn from_bytes(data: &[u8]) -> Self;
-}
+// trait CallbackInfo: Sized {
+//     fn from_bytes(data: &[u8]) -> Self;
+// }
 
-impl CallbackInfo for Pubkey {
-    fn from_bytes(data: &[u8]) -> Self {
-        Self::new(data)
-    }
-}
+// impl CallbackInfo for Pubkey {
+//     fn from_bytes(data: &[u8]) -> Self {
+//         Self::try_from(data)
+//     }
+// }
 
 impl<'slab> Slab<'slab> {
     /// Get a price ascending or price descending iterator over all the Slab's orders

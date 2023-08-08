@@ -23,46 +23,46 @@ use anchor_lang::{
     },
 };
 
-fn validate(
-    ctx: &Context<InitializeMarketProduct>,
-    params: &InitializeMarketProductParams,
-) -> std::result::Result<u8, DomainOrProgramError> {
-    let accts = &ctx.accounts;
-    let (market_authority_key, bump) =
-        Pubkey::find_program_address(&[accts.product.key().as_ref()], ctx.program_id);
-    msg!("seeds: {:?}", &[accts.product.as_ref()]);
-    let orderbook = load_orderbook(&accts.orderbook, &market_authority_key)?;
-    let market_product_group = accts.market_product_group.load()?;
+// fn validate(
+//     ctx: &Context<InitializeMarketProduct>,
+//     params: &InitializeMarketProductParams,
+// ) -> std::result::Result<u8, DomainOrProgramError> {
+//     let accts = &ctx.accounts;
+//     let (market_authority_key, bump) =
+//         Pubkey::find_program_address(&[accts.product.key().as_ref()], ctx.program_id);
+//     msg!("seeds: {:?}", &[accts.product.as_ref()]);
+//     let orderbook = load_orderbook(&accts.orderbook, &market_authority_key)?;
+//     let market_product_group = accts.market_product_group.load()?;
 
-    Fractional::from(orderbook.min_base_order_size as i64)
-        .checked_mul(params.tick_size)?
-        .round(market_product_group.decimals as u32)
-        .map_err(
-            |_| {
-                msg!("Orderbook minimum size and product tick size are incompatible with market decimals");
-                DexError::ProductDecimalPrecisionError
-            }
-        )?;
-    assert_with_msg(
-        market_product_group.active_outrights().count() < MAX_OUTRIGHTS,
-        ProgramError::InvalidArgument,
-        "MarketProductGroup is full",
-    )?;
-    if !market_product_group.is_initialized() {
-        msg!("MarketProductGroup account is not initialized");
-        return Err(UtilError::AccountUninitialized.into());
-    }
-    assert_keys_equal(accts.authority.key(), market_product_group.authority)?;
-    match market_product_group.find_product_index(&accts.product.key()) {
-        Ok(_) => return Err(UtilError::DuplicateProductKey.into()),
-        Err(_) => {}
-    }
-    Ok(bump)
-}
+//     Fractional::from(orderbook.min_base_order_size as i64)
+//         .checked_mul(params.tick_size)?
+//         .round(market_product_group.decimals as u32)
+//         .map_err(
+//             |_| {
+//                 msg!("Orderbook minimum size and product tick size are incompatible with market decimals");
+//                 DexError::ProductDecimalPrecisionError
+//             }
+//         )?;
+//     assert_with_msg(
+//         market_product_group.active_outrights().count() < MAX_OUTRIGHTS,
+//         ProgramError::InvalidArgument,
+//         "MarketProductGroup is full",
+//     )?;
+//     if !market_product_group.is_initialized() {
+//         msg!("MarketProductGroup account is not initialized");
+//         return Err(UtilError::AccountUninitialized.into());
+//     }
+//     assert_keys_equal(accts.authority.key(), market_product_group.authority)?;
+//     match market_product_group.find_product_index(&accts.product.key()) {
+//         Ok(_) => return Err(UtilError::DuplicateProductKey.into()),
+//         Err(_) => {}
+//     }
+//     Ok(bump)
+// }
 
 pub fn process(
-    ctx: Context<InitializeMarketProduct>,
-    params: InitializeMarketProductParams,
+    _ctx: Context<InitializeMarketProduct>,
+    _params: InitializeMarketProductParams,
 ) -> DomainOrProgramResult {
     // let bump = validate(&ctx, &params)?;
     // let accts = ctx.accounts;

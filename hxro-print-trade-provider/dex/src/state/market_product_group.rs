@@ -90,7 +90,7 @@ impl MarketProductGroup {
     pub fn is_expired(&self, product: &Product) -> bool {
         match product {
             Product::Outright { outright: o } => o.is_expired(),
-            Product::Combo { combo: c } => c.legs().iter().any(|l| {
+            Product::Combo { combo: c } => c.legs().iter().any(|_l| {
                 // self.market_products[l.product_index]
                 //     .try_to_outright()
                 //     .unwrap()
@@ -140,7 +140,7 @@ impl MarketProductGroup {
 
     pub fn deactivate_product(&mut self, key: Pubkey) -> DomainOrProgramResult {
         // todo: handle if Outright has Combos that reference it
-        let (index, _) = self.find_product_index(&key)?;
+        let (_index, _) = self.find_product_index(&key)?;
         // self.active_flags_products.remove(index)?;
         // self.market_products[index] = Default::default();
         Ok(())

@@ -4,7 +4,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 
-pub fn choose_successor(ctx: Context<ChooseSuccessor>) -> DomainOrProgramResult {
+pub fn choose_successor(_ctx: Context<ChooseSuccessor>) -> DomainOrProgramResult {
     // let accts = ctx.accounts;
     // let mut market_product_group = accts.market_product_group.load_mut()?;
     // assert_keys_equal(market_product_group.authority, *accts.authority.key)?;
@@ -15,7 +15,7 @@ pub fn choose_successor(ctx: Context<ChooseSuccessor>) -> DomainOrProgramResult 
     Ok(())
 }
 
-pub fn claim_authority(ctx: Context<ClaimAuthority>) -> DomainOrProgramResult {
+pub fn claim_authority(_ctx: Context<ClaimAuthority>) -> DomainOrProgramResult {
     // let accts = ctx.accounts;
     // let mut market_product_group = accts.market_product_group.load_mut()?;
     // assert_keys_equal(market_product_group.successor, *accts.new_authority.key)?;

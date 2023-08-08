@@ -37,9 +37,9 @@ pub struct WithAcct<'a, 'b, T> {
 }
 
 impl<'a, 'b, T> WithAcct<'a, 'b, T> {
-    pub(crate) fn new(acct: &'a AccountInfo<'b>, inner: T) -> Self {
-        WithAcct { acct, inner }
-    }
+    // pub(crate) fn new(acct: &'a AccountInfo<'b>, inner: T) -> Self {
+    //     WithAcct { acct, inner }
+    // }
 
     pub fn load_mut(
         acct: &'a AccountInfo<'b>,

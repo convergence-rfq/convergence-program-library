@@ -25,59 +25,59 @@ use crate::{
 };
 use ::std::cell::Ref;
 
-fn validate(accts: &TransferFullPosition) -> DomainOrProgramResult {
-    let liquidatee_risk_group = accts.liquidatee_risk_group.load()?;
-    let liquidator_risk_group = accts.liquidator_risk_group.load()?;
-    let market_product_group = accts.market_product_group.load()?;
-    assert_keys_equal(
-        accts.risk_engine_program.key(),
-        market_product_group.risk_engine_program_id,
-    )?;
-    assert_keys_equal(liquidator_risk_group.owner, *accts.liquidator.key)?;
-    assert_keys_equal(
-        liquidatee_risk_group.market_product_group,
-        accts.market_product_group.key(),
-    )?;
-    assert_keys_equal(
-        liquidator_risk_group.market_product_group,
-        accts.market_product_group.key(),
-    )?;
-    assert_keys_equal(
-        *accts.risk_engine_program.key,
-        market_product_group.risk_engine_program_id,
-    )?;
-    assert_keys_equal(
-        accts.liquidatee_risk_state_account_info.key(),
-        liquidatee_risk_group.risk_state_account,
-    )?;
-    assert_keys_equal(
-        accts.liquidator_risk_state_account_info.key(),
-        liquidator_risk_group.risk_state_account,
-    )?;
-    assert(
-        liquidatee_risk_group.is_initialized(),
-        UtilError::AccountUninitialized,
-    )?;
-    assert(
-        liquidator_risk_group.is_initialized(),
-        UtilError::AccountUninitialized,
-    )?;
-    assert_keys_equal(accts.liquidator.key(), liquidator_risk_group.owner)?;
-    assert_keys_equal(
-        accts.risk_model_configuration_acct.key(),
-        market_product_group.risk_model_configuration_acct,
-    )?;
-    assert(
-        liquidatee_risk_group.open_orders.total_open_orders == 0,
-        DexError::UserAccountStillActive,
-    )?;
-    Ok(())
-}
+// fn validate(accts: &TransferFullPosition) -> DomainOrProgramResult {
+//     let liquidatee_risk_group = accts.liquidatee_risk_group.load()?;
+//     let liquidator_risk_group = accts.liquidator_risk_group.load()?;
+//     let market_product_group = accts.market_product_group.load()?;
+//     assert_keys_equal(
+//         accts.risk_engine_program.key(),
+//         market_product_group.risk_engine_program_id,
+//     )?;
+//     assert_keys_equal(liquidator_risk_group.owner, *accts.liquidator.key)?;
+//     assert_keys_equal(
+//         liquidatee_risk_group.market_product_group,
+//         accts.market_product_group.key(),
+//     )?;
+//     assert_keys_equal(
+//         liquidator_risk_group.market_product_group,
+//         accts.market_product_group.key(),
+//     )?;
+//     assert_keys_equal(
+//         *accts.risk_engine_program.key,
+//         market_product_group.risk_engine_program_id,
+//     )?;
+//     assert_keys_equal(
+//         accts.liquidatee_risk_state_account_info.key(),
+//         liquidatee_risk_group.risk_state_account,
+//     )?;
+//     assert_keys_equal(
+//         accts.liquidator_risk_state_account_info.key(),
+//         liquidator_risk_group.risk_state_account,
+//     )?;
+//     assert(
+//         liquidatee_risk_group.is_initialized(),
+//         UtilError::AccountUninitialized,
+//     )?;
+//     assert(
+//         liquidator_risk_group.is_initialized(),
+//         UtilError::AccountUninitialized,
+//     )?;
+//     assert_keys_equal(accts.liquidator.key(), liquidator_risk_group.owner)?;
+//     assert_keys_equal(
+//         accts.risk_model_configuration_acct.key(),
+//         market_product_group.risk_model_configuration_acct,
+//     )?;
+//     assert(
+//         liquidatee_risk_group.open_orders.total_open_orders == 0,
+//         DexError::UserAccountStillActive,
+//     )?;
+//     Ok(())
+// }
 
 pub fn process<'info>(
-    ctx: Context<'_, '_, '_, 'info, TransferFullPosition<'info>>,
+    _ctx: Context<'_, '_, '_, 'info, TransferFullPosition<'info>>,
 ) -> DomainOrProgramResult {
-    let accts = ctx.accounts;
+    // let accts = ctx.accounts;
     // validate(accts)?;
     // let mut liquidatee_risk_group = accts.liquidatee_risk_group.load_mut()?;
     // let mut liquidator_risk_group = accts.liquidator_risk_group.load_mut()?;

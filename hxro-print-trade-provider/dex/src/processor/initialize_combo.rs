@@ -26,35 +26,35 @@ use crate::{
     InitializeCombo, InitializeComboParams,
 };
 
-fn validate(
-    ctx: &Context<InitializeCombo>,
-    params: &InitializeComboParams,
-) -> DomainOrProgramResult {
-    let accts = &ctx.accounts;
-    let market_product_group = accts.market_product_group.load()?;
-    if !market_product_group.is_initialized() {
-        msg!("MarketProductGroup account is not initialized");
-        return Err(UtilError::AccountUninitialized.into());
-    }
-    assert_keys_equal(accts.authority.key(), market_product_group.authority)?;
-    // Checks that the list of products is in strict lexicographic order by public key
-    assert(
-        ctx.remaining_accounts
-            .windows(2)
-            .all(|w| *w[0].key < *w[1].key),
-        ProgramError::InvalidAccountData,
-    )?;
-    assert_valid_ratios(&params.ratios)?;
-    if params.ratios.len() != ctx.remaining_accounts.len() {
-        msg!("Ratios and products have different lengths");
-        return Err(ProgramError::InvalidAccountData.into());
-    }
-    Ok(())
-}
+// fn validate(
+//     ctx: &Context<InitializeCombo>,
+//     params: &InitializeComboParams,
+// ) -> DomainOrProgramResult {
+//     let accts = &ctx.accounts;
+//     let market_product_group = accts.market_product_group.load()?;
+//     if !market_product_group.is_initialized() {
+//         msg!("MarketProductGroup account is not initialized");
+//         return Err(UtilError::AccountUninitialized.into());
+//     }
+//     assert_keys_equal(accts.authority.key(), market_product_group.authority)?;
+//     // Checks that the list of products is in strict lexicographic order by public key
+//     assert(
+//         ctx.remaining_accounts
+//             .windows(2)
+//             .all(|w| *w[0].key < *w[1].key),
+//         ProgramError::InvalidAccountData,
+//     )?;
+//     assert_valid_ratios(&params.ratios)?;
+//     if params.ratios.len() != ctx.remaining_accounts.len() {
+//         msg!("Ratios and products have different lengths");
+//         return Err(ProgramError::InvalidAccountData.into());
+//     }
+//     Ok(())
+// }
 
 pub fn process(
-    ctx: Context<InitializeCombo>,
-    params: InitializeComboParams,
+    _ctx: Context<InitializeCombo>,
+    _params: InitializeComboParams,
 ) -> DomainOrProgramResult {
     // validate(&ctx, &params)?;
     // let accts = ctx.accounts;
@@ -107,22 +107,22 @@ pub fn process(
     Ok(())
 }
 
-fn assert_valid_ratios(ratios: &Vec<i8>) -> ProgramResult {
-    if ratios.len() < 2 {
-        msg!("Combo must have at least 2 legs");
-        return Err(ProgramError::InvalidAccountData);
-    }
-    let mut gcd: i8 = -1;
-    for item in ratios.iter() {
-        if gcd != -1 {
-            gcd = item.gcd(&gcd);
-        } else {
-            gcd = *item;
-        }
-    }
-    if gcd != 1 {
-        msg!("Leg ratios have not been fully reduced");
-        return Err(ProgramError::InvalidAccountData);
-    }
-    Ok(())
-}
+// fn assert_valid_ratios(ratios: &Vec<i8>) -> ProgramResult {
+//     if ratios.len() < 2 {
+//         msg!("Combo must have at least 2 legs");
+//         return Err(ProgramError::InvalidAccountData);
+//     }
+//     let mut gcd: i8 = -1;
+//     for item in ratios.iter() {
+//         if gcd != -1 {
+//             gcd = item.gcd(&gcd);
+//         } else {
+//             gcd = *item;
+//         }
+//     }
+//     if gcd != 1 {
+//         msg!("Leg ratios have not been fully reduced");
+//         return Err(ProgramError::InvalidAccountData);
+//     }
+//     Ok(())
+// }

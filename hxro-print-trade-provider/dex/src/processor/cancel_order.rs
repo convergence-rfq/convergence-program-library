@@ -36,47 +36,47 @@ pub fn process_from_aob(base_size: u64, base_decimals: u64) -> Fractional {
     Fractional::new(base_size as i64, base_decimals)
 }
 
-fn validate(accts: &CancelOrder) -> DomainOrProgramResult {
-    let trader_risk_group = accts.trader_risk_group.load()?;
-    let market_product_group = accts.market_product_group.load_mut()?;
-    assert_keys_equal(
-        trader_risk_group.market_product_group,
-        accts.market_product_group.key(),
-    )?;
-    assert(
-        market_product_group.is_initialized(),
-        UtilError::AccountUninitialized,
-    )?;
-    assert(
-        trader_risk_group.is_initialized(),
-        UtilError::AccountUninitialized,
-    )?;
-    assert_keys_equal(
-        accts.risk_engine_program.key(),
-        market_product_group.risk_engine_program_id,
-    )?;
-    // Check if risk register keys are equal
-    assert_keys_equal(
-        accts.trader_risk_state_acct.key(),
-        trader_risk_group.risk_state_account,
-    )?;
+// fn validate(accts: &CancelOrder) -> DomainOrProgramResult {
+//     let trader_risk_group = accts.trader_risk_group.load()?;
+//     let market_product_group = accts.market_product_group.load_mut()?;
+//     assert_keys_equal(
+//         trader_risk_group.market_product_group,
+//         accts.market_product_group.key(),
+//     )?;
+//     assert(
+//         market_product_group.is_initialized(),
+//         UtilError::AccountUninitialized,
+//     )?;
+//     assert(
+//         trader_risk_group.is_initialized(),
+//         UtilError::AccountUninitialized,
+//     )?;
+//     assert_keys_equal(
+//         accts.risk_engine_program.key(),
+//         market_product_group.risk_engine_program_id,
+//     )?;
+//     // Check if risk register keys are equal
+//     assert_keys_equal(
+//         accts.trader_risk_state_acct.key(),
+//         trader_risk_group.risk_state_account,
+//     )?;
 
-    assert_keys_equal(
-        accts.risk_output_register.key(),
-        market_product_group.risk_output_register,
-    )?;
+//     assert_keys_equal(
+//         accts.risk_output_register.key(),
+//         market_product_group.risk_output_register,
+//     )?;
 
-    assert_keys_equal(
-        accts.risk_model_configuration_acct.key(),
-        market_product_group.risk_model_configuration_acct,
-    )?;
+//     assert_keys_equal(
+//         accts.risk_model_configuration_acct.key(),
+//         market_product_group.risk_model_configuration_acct,
+//     )?;
 
-    Ok(())
-}
+//     Ok(())
+// }
 
 pub fn process<'info>(
-    ctx: Context<'_, '_, '_, 'info, CancelOrder<'info>>,
-    params: CancelOrderParams,
+    _ctx: Context<'_, '_, '_, 'info, CancelOrder<'info>>,
+    _params: CancelOrderParams,
 ) -> DomainOrProgramResult {
     // let accts = ctx.accounts;
     // validate(accts)?;

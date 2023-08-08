@@ -14,24 +14,24 @@ use crate::{
     SweepFees,
 };
 
-fn validate(ctx: &Context<SweepFees>) -> DomainOrProgramResult {
-    let market_product_group = ctx.accounts.market_product_group.load()?;
-    assert(
-        market_product_group.is_initialized(),
-        UtilError::AccountUninitialized,
-    )?;
-    assert_keys_equal(
-        market_product_group.fee_collector,
-        ctx.accounts.fee_collector.key(),
-    )?;
-    assert_valid_token_account_owner(
-        ctx.accounts.fee_collector_token_account.as_ref(),
-        &ctx.accounts.fee_collector.key(),
-    )?;
-    Ok(())
-}
+// fn validate(ctx: &Context<SweepFees>) -> DomainOrProgramResult {
+//     let market_product_group = ctx.accounts.market_product_group.load()?;
+//     assert(
+//         market_product_group.is_initialized(),
+//         UtilError::AccountUninitialized,
+//     )?;
+//     assert_keys_equal(
+//         market_product_group.fee_collector,
+//         ctx.accounts.fee_collector.key(),
+//     )?;
+//     assert_valid_token_account_owner(
+//         ctx.accounts.fee_collector_token_account.as_ref(),
+//         &ctx.accounts.fee_collector.key(),
+//     )?;
+//     Ok(())
+// }
 
-pub fn process(ctx: Context<SweepFees>) -> DomainOrProgramResult {
+pub fn process(_ctx: Context<SweepFees>) -> DomainOrProgramResult {
     // validate(&ctx)?;
     // let accts = ctx.accounts;
     // let mut market_product_group = accts.market_product_group.load_mut()?;

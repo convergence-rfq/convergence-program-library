@@ -83,7 +83,7 @@ impl Product {
     ) -> impl Iterator<Item = (i64, usize)> + '_ {
         match self {
             Product::Outright { outright: _ } => TwoIterators::A(([(1, product_idx)]).into_iter()),
-            Product::Combo { combo: c } => TwoIterators::B(
+            Product::Combo { combo: _c } => TwoIterators::B(
                 // c.legs
                 //     .iter()
                 //     .take(c.num_legs)

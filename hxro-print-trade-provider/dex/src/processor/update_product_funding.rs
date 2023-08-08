@@ -11,8 +11,8 @@ use crate::{
 };
 
 pub fn process(
-    ctx: Context<UpdateProductFunding>,
-    params: UpdateProductFundingParams,
+    _ctx: Context<UpdateProductFunding>,
+    _params: UpdateProductFundingParams,
 ) -> DomainOrProgramResult {
     // let accts = ctx.accounts;
     // let mut market_product_group = accts.market_product_group.load_mut()?;
