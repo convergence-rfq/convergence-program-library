@@ -334,6 +334,12 @@ impl Response {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
+pub enum QuoteSide {
+    Bid,
+    Ask,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
 pub enum StoredResponseState {
     Active,
     Canceled,
@@ -386,12 +392,6 @@ pub enum DefaultingParty {
 pub enum AuthoritySide {
     Taker,
     Maker,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
-pub enum QuoteSide {
-    Bid,
-    Ask,
 }
 
 impl AuthoritySide {
