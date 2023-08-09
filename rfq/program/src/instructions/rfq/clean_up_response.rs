@@ -38,11 +38,6 @@ fn validate(ctx: &Context<CleanUpResponseAccounts>) -> Result<()> {
     }
 
     require!(
-        response.print_trade_initialized_by.is_none(),
-        ProtocolError::PrintTradeNotCleanedUp
-    );
-
-    require!(
         !response.have_locked_collateral(),
         ProtocolError::HaveCollateralLocked
     );

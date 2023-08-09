@@ -108,8 +108,6 @@ pub enum ProtocolError {
     InvalidSettlingFlow,
     #[msg("No print trade to clean up")]
     NoPrintTradeToCleanUp,
-    #[msg("Print trade not cleaned up")]
-    PrintTradeNotCleanedUp,
     #[msg("Amount of asset to transfer overflows")]
     AssetAmountOverflow,
     #[msg("Price should be positive for fixed quote asset amount RFQ")]

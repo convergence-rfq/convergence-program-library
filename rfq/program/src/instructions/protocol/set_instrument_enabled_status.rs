@@ -32,9 +32,7 @@ pub fn set_instrument_enabled_status_instruction(
 
     validate(instrument, enabled_status_to_set)?;
 
-    protocol
-        .get_instrument_parameters_mut(instrument_key)?
-        .enabled = enabled_status_to_set;
+    instrument.enabled = enabled_status_to_set;
 
     Ok(())
 }

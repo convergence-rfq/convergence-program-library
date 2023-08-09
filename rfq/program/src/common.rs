@@ -8,8 +8,8 @@ use crate::{
     interfaces::instrument::validate_leg_instrument_data,
     seeds::COLLATERAL_SEED,
     state::{
-        rfq::SettlementTypeMetadata, AuthoritySide, BaseAssetInfo, CollateralInfo, Leg,
-        ProtocolState, Response, Rfq, StoredResponseState,
+        AuthoritySide, BaseAssetInfo, CollateralInfo, Leg, ProtocolState, Response, Rfq,
+        SettlementTypeMetadata, StoredResponseState,
     },
 };
 

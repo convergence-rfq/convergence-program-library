@@ -25,6 +25,11 @@ fn validate(
 ) -> Result<()> {
     let PartlyRevertEscrowSettlementPreparationAccounts { rfq, response, .. } = &ctx.accounts;
 
+    require!(
+        !rfq.is_settled_as_print_trade(),
+        ProtocolError::InvalidSettlingFlow
+    );
+
     response
         .get_state(rfq)?
         .assert_state_in([ResponseState::Defaulted])?;

@@ -20,6 +20,11 @@ pub struct ValidateRfqByPrintTradeProviderAccounts<'info> {
 fn validate(ctx: &Context<ValidateRfqByPrintTradeProviderAccounts>) -> Result<()> {
     let ValidateRfqByPrintTradeProviderAccounts { rfq, .. } = &ctx.accounts;
 
+    require!(
+        rfq.is_settled_as_print_trade(),
+        ProtocolError::InvalidSettlingFlow
+    );
+
     rfq.get_state()?.assert_state_in([RfqState::Constructed])?;
 
     let serialized_legs = rfq.legs.try_to_vec()?;

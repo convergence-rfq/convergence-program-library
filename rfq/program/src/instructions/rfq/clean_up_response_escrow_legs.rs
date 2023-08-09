@@ -21,6 +21,11 @@ fn validate(
 ) -> Result<()> {
     let CleanUpResponseEscrowLegsAccounts { rfq, response, .. } = &ctx.accounts;
 
+    require!(
+        !rfq.is_settled_as_print_trade(),
+        ProtocolError::InvalidSettlingFlow
+    );
+
     let response_state = response.get_state(rfq)?;
     response_state.assert_state_in([
         ResponseState::Canceled,
