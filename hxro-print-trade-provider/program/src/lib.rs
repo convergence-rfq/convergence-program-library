@@ -95,7 +95,7 @@ pub mod hxro_print_trade_provider {
             HxroPrintTradeProviderError::InvalidOperatorTRG
         );
 
-        lock_collateral(&ctx)?;
+        lock_collateral(&ctx, authority_side.into())?;
 
         if response.print_trade_initialized_by.is_some() {
             // if other side have already prepared

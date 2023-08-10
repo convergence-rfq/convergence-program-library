@@ -47,10 +47,6 @@ export async function executeInParallel<T extends Array<() => Promise<any>>>(...
   return Promise.all(fns.map((x) => x())) as unknown as InferredOutputs<T>;
 }
 
-// export function executeInParallel(...fns: (() => Promise<any>)[]) {
-//   return Promise.all(fns.map((x) => x()));
-// }
-
 /**
  * Runs a promise in parallel with wait promise, awaiting both of them.
  *

@@ -128,7 +128,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     // create a sell RFQ specifying 5 bitcoin bid and 1000 sol ask
     const rfq = await context.createEscrowRfq({
       legs: [
-        SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Short }),
+        SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Long }),
         SpotInstrument.createForLeg(context, {
           mint: context.solToken,
           amount: withTokenDecimals(1000),

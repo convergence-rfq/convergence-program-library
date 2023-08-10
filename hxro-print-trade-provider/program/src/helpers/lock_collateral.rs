@@ -4,6 +4,7 @@ use dex::cpi::lock_collateral as hxro_lock_collateral;
 use dex::state::trader_risk_group::LockedCollateralProductIndex;
 use dex::utils::numeric::ZERO_FRAC;
 use dex::LockCollateralParams;
+use rfq::state::AuthoritySide;
 
 use crate::PreparePrintTradeAccounts;
 
@@ -11,6 +12,7 @@ use super::conversions::{to_hxro_product, ProductInfo};
 
 pub fn lock_collateral<'info>(
     ctx: &Context<'_, '_, '_, 'info, PreparePrintTradeAccounts<'info>>,
+    authority_side: AuthoritySide,
 ) -> Result<()> {
     let PreparePrintTradeAccounts {
         rfq,
@@ -38,8 +40,13 @@ pub fn lock_collateral<'info>(
     for i in 0..rfq.legs.len() {
         let ProductInfo {
             product_index,
-            size,
+            mut size,
         } = to_hxro_product(rfq, response, i as u8)?;
+
+        if authority_side == AuthoritySide::Maker {
+            size.m = -size.m;
+        }
+
         products[i] = LockedCollateralProductIndex {
             product_index: product_index as usize,
             size,

@@ -135,11 +135,11 @@ export class HxroPrintTradeProvider {
 
   getLegData(): LegData[] {
     return this.legs.map((leg) => {
-      const riskEngineData = serializeRiskEngineProduct(leg.productIndex);
+      const { data: riskEngineData, instrumentType } = getProductInfo(leg.productIndex);
       const productData = Buffer.from(Uint8Array.from([leg.productIndex]));
 
       return {
-        settlementTypeMetadata: { printTrade: { instrumentType: InstrumentType.PerpFuture.index } },
+        settlementTypeMetadata: { printTrade: { instrumentType: instrumentType.index } },
         baseAssetIndex: { value: leg.baseAssetIndex },
         data: Buffer.concat([riskEngineData, productData]),
         amount: new BN(leg.amount),
@@ -235,23 +235,29 @@ export class HxroPrintTradeProvider {
   }
 }
 
-function serializeRiskEngineProduct(productIndex: number) {
+function getProductInfo(productIndex: number) {
   const program = workspace.RiskEngine as Program<RiskEngineIdl>;
 
   if (productIndex == 0) {
-    return program.coder.types.encode("FutureCommonData", {
-      underlyingAmountPerContract: new BN(1),
-      underlyingAmountPerContractDecimals: 0,
-    });
+    return {
+      instrumentType: InstrumentType.PerpFuture,
+      data: program.coder.types.encode("FutureCommonData", {
+        underlyingAmountPerContract: new BN(1),
+        underlyingAmountPerContractDecimals: 0,
+      }),
+    };
   } else if (productIndex == 1) {
-    return program.coder.types.encode("OptionCommonData", {
-      optionType: { call: {} },
-      underlyingAmountPerContract: new BN(1),
-      underlyingAmountPerContractDecimals: 0,
-      strikePrice: new BN(54323),
-      strikePriceDecimals: 2,
-      expirationTimestamp: new BN(1685404800 + 60 * 60 * 24 * 365 * 2),
-    });
+    return {
+      instrumentType: InstrumentType.Option,
+      data: program.coder.types.encode("OptionCommonData", {
+        optionType: { put: {} },
+        underlyingAmountPerContract: new BN(1),
+        underlyingAmountPerContractDecimals: 0,
+        strikePrice: new BN(122345),
+        strikePriceDecimals: 4,
+        expirationTimestamp: new BN(1685404800 + 60 * 60 * 24 * 365 * 2),
+      }),
+    };
   } else {
     throw Error("Product missing!");
   }
@@ -273,7 +279,12 @@ export async function initializeOperatorTraderRiskGroup(context: Context) {
 }
 
 export async function getHxroContext(context: Context) {
+  // Disable console.debug to clean up clutter in the console
+  const debug = console.debug;
+  console.debug = () => {};
   const manifest = await dexterity.getManifest(context.provider.connection.rpcEndpoint, true, new Wallet(context.dao));
+  console.debug = debug;
+
   const dexProgram = manifest.fields.dexProgram;
 
   const mpgKey = context.nameToPubkey["mpg"];
