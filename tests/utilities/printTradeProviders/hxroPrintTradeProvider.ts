@@ -5,16 +5,21 @@ import { HxroPrintTradeProvider as HxroPrintTradeProviderIdl } from "../../../ta
 import { AuthoritySide, InstrumentType, LegData, LegSide, QuoteData } from "../types";
 import dexterity from "@hxronetwork/dexterity-ts";
 import { executeInParallel } from "../helpers";
-import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE, DEFAULT_MINT_DECIMALS, SOLANA_BASE_ASSET_INDEX } from "../constants";
+import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE, SOLANA_BASE_ASSET_INDEX } from "../constants";
 import { getBaseAssetPda } from "../pdas";
 import { RiskEngine as RiskEngineIdl } from "../../../target/types/risk_engine";
 import { readHxroKeypair } from "../fixtures";
+import BigNumber from "bignumber.js";
+
+export const hxroDecimals = 9;
 
 const configSeed = "config";
 const operatorSeed = "operator";
 
 const trgSize = 64272;
 const trgLamports = 448224000;
+
+export const toHxroAmount = (value: number) => value * 10 ** hxroDecimals;
 
 let hxroPrintTradeProviderProgram: Program<HxroPrintTradeProviderIdl> | null = null;
 export function getHxroInstrumentProgram(): Program<HxroPrintTradeProviderIdl> {
@@ -31,14 +36,12 @@ export class HxroPrintTradeProvider {
     private hxroContext: HxroContext,
     private legs: {
       amount: number;
-      amountDecimals: number;
       side: LegSide;
       baseAssetIndex: number;
       productIndex: number;
     }[] = [
       {
         amount: DEFAULT_LEG_AMOUNT,
-        amountDecimals: DEFAULT_MINT_DECIMALS,
         side: DEFAULT_LEG_SIDE,
         baseAssetIndex: SOLANA_BASE_ASSET_INDEX,
         productIndex: 0,
@@ -142,8 +145,8 @@ export class HxroPrintTradeProvider {
         settlementTypeMetadata: { printTrade: { instrumentType: instrumentType.index } },
         baseAssetIndex: { value: leg.baseAssetIndex },
         data: Buffer.concat([riskEngineData, productData]),
-        amount: new BN(leg.amount),
-        amountDecimals: leg.amountDecimals,
+        amount: new BN(toHxroAmount(leg.amount)),
+        amountDecimals: hxroDecimals,
         side: leg.side,
       };
     });
@@ -153,7 +156,7 @@ export class HxroPrintTradeProvider {
     return {
       settlementTypeMetadata: { printTrade: { instrumentType: Number(InstrumentType.Spot) } },
       data: Buffer.from([]),
-      decimals: DEFAULT_MINT_DECIMALS,
+      decimals: hxroDecimals,
     };
   }
 
@@ -231,6 +234,10 @@ export class HxroPrintTradeProvider {
   }
 
   getExecutePrintTradeSettlementAccounts(rfq: Rfq, response: Response) {
+    return [{ pubkey: this.getProgramId(), isSigner: false, isWritable: false }];
+  }
+
+  getCleanUpPrintTradeSettlementAccounts(rfq: Rfq, response: Response) {
     return [{ pubkey: this.getProgramId(), isSigner: false, isWritable: false }];
   }
 }
@@ -340,10 +347,10 @@ export async function getHxroContext(context: Context) {
       const updatedTrg = await manifest.getTRG(trgKey);
 
       return {
-        positions: updatedTrg.traderPositions.map((x: any) =>
-          dexterity.Fractional.From(x.position).toDecimal()
-        ) as number[],
-        cashBalance: dexterity.Fractional.From(updatedTrg.cashBalance).toDecimal(),
+        positions: updatedTrg.traderPositions.map(
+          (x: any) => new BigNumber(dexterity.Fractional.From(x.position).toString())
+        ) as BigNumber[],
+        cashBalance: new BigNumber(dexterity.Fractional.From(updatedTrg.cashBalance).toString()),
       };
     },
 
@@ -381,3 +388,33 @@ export async function getHxroContext(context: Context) {
 
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
 export type HxroContext = UnwrapPromise<ReturnType<typeof getHxroContext>>;
+
+export async function getPositionChangeMeasurer(hxroContext: HxroContext) {
+  const takeSnapshot = () => Promise.all([hxroContext.getBalance("taker"), hxroContext.getBalance("maker")]);
+  const [takerSnapshot, makerSnapshot] = await takeSnapshot();
+
+  const measureDifference = async () => {
+    const [newTakerSnapshot, newMakerSnapshot] = await takeSnapshot();
+
+    return {
+      taker: {
+        positions: newTakerSnapshot.positions
+          .slice(0, 2)
+          .map((value, index) => value.minus(takerSnapshot.positions[index]).toString()),
+        cashBalance: newTakerSnapshot.cashBalance.minus(takerSnapshot.cashBalance).toString(),
+      },
+      maker: {
+        positions: newMakerSnapshot.positions
+          .slice(0, 2)
+          .map((value, index) => value.minus(makerSnapshot.positions[index]).toString()),
+        cashBalance: newMakerSnapshot.cashBalance.minus(makerSnapshot.cashBalance).toString(),
+      },
+    };
+  };
+
+  return {
+    takerSnapshot,
+    makerSnapshot,
+    measureDifference,
+  };
+}

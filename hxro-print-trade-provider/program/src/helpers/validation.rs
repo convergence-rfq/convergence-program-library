@@ -9,6 +9,7 @@ use instruments::state::enums::{InstrumentType as HxroInstrumentType, OracleType
 use rfq::state::{BaseAssetInfo, Leg, Rfq};
 use risk_engine::state::{InstrumentType, OptionType};
 
+use crate::constants::EXPECTED_DECIMALS;
 use crate::errors::HxroPrintTradeProviderError;
 use crate::helpers::common::{get_leg_instrument_type, parse_leg_data, ParsedRiskEngineData};
 use crate::state::ParsedLegData;
@@ -20,6 +21,11 @@ pub fn validate_leg_data(
     remaining_accounts: &mut &[AccountInfo],
 ) -> Result<()> {
     let leg = &rfq.legs[leg_index];
+    require_eq!(
+        leg.amount_decimals,
+        EXPECTED_DECIMALS,
+        HxroPrintTradeProviderError::InvalidDecimals
+    );
 
     let instrument_type: InstrumentType = get_leg_instrument_type(leg)?;
     let (risk_engine_data, ParsedLegData { product_index }) = parse_leg_data(leg, instrument_type)?;

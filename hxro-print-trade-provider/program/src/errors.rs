@@ -16,6 +16,8 @@ pub enum HxroPrintTradeProviderError {
     CombosAreNotSupported,
     #[msg("Not enough accounts")]
     NotEnoughAccounts,
+    #[msg("Invalid decimals amount")]
+    InvalidDecimals,
     #[msg("Passed product account does not match the one in leg")]
     ProductAccountDoesNotMatch,
     #[msg("Invalid Hxro oracle type")]

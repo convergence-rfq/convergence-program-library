@@ -61,6 +61,12 @@ pub mod hxro_print_trade_provider {
             HxroPrintTradeProviderError::TooManyLegs
         );
 
+        require_eq!(
+            rfq.quote_asset.decimals,
+            constants::EXPECTED_DECIMALS,
+            HxroPrintTradeProviderError::InvalidDecimals
+        );
+
         let mut remaining_accounts = ctx.remaining_accounts;
         let mpg = market_product_group.load()?;
         for leg_index in 0..rfq.legs.len() {

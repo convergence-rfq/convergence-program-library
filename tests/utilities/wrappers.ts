@@ -1364,25 +1364,25 @@ export class Response {
   }
 
   async cleanUp(preparedLegs?: number) {
-    if (this.rfq.content.type != "instrument") {
-      throw Error("Not settled by instruments!");
-    }
-
-    const { legs, quote } = this.rfq.content;
-    preparedLegs = preparedLegs || legs.length;
-
     let remainingAccounts: AccountMeta[] = [];
     if (this.firstToPrepare) {
-      const quoteAccounts = await quote.getCleanUpAccounts("quote", this.rfq, this);
-      const legAccounts = await (
-        await Promise.all(
-          legs
-            .slice(0, preparedLegs)
-            .map(async (x, index) => await x.getCleanUpAccounts({ legIndex: index }, this.rfq, this))
-        )
-      ).flat();
+      const content = this.rfq.content;
+      if (content.type === "instrument") {
+        const { legs, quote } = content;
+        preparedLegs = preparedLegs || legs.length;
+        const quoteAccounts = await quote.getCleanUpAccounts("quote", this.rfq, this);
+        const legAccounts = await (
+          await Promise.all(
+            legs
+              .slice(0, preparedLegs)
+              .map(async (x, index) => await x.getCleanUpAccounts({ legIndex: index }, this.rfq, this))
+          )
+        ).flat();
 
-      remainingAccounts = [...legAccounts, ...quoteAccounts];
+        remainingAccounts = [...legAccounts, ...quoteAccounts];
+      } else {
+        remainingAccounts = content.provider.getCleanUpPrintTradeSettlementAccounts(this.rfq, this);
+      }
     }
 
     await this.context.program.methods
