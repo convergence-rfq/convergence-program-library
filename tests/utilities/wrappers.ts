@@ -415,6 +415,7 @@ export class Context {
       fixedSize,
       activeWindow,
       settlingWindow,
+      true,
       finalize
     );
   }
@@ -425,6 +426,7 @@ export class Context {
     fixedSize = FixedSize.None,
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
+    verify = true,
     finalize = true,
   }: {
     printTradeProvider: HxroPrintTradeProvider;
@@ -432,6 +434,7 @@ export class Context {
     fixedSize?: FixedSize;
     activeWindow?: number;
     settlingWindow?: number;
+    verify?: boolean;
     finalize?: boolean;
   }) {
     const baseAssetIndecies = printTradeProvider.getBaseAssetIndexes();
@@ -447,6 +450,7 @@ export class Context {
       fixedSize,
       activeWindow,
       settlingWindow,
+      verify,
       finalize
     );
   }
@@ -461,6 +465,7 @@ export class Context {
     fixedSize: FixedSize,
     activeWindow: number,
     settlingWindow: number,
+    verify: boolean,
     finalize: boolean
   ) {
     const serializedLegData = serializeLegData(allLegData, this.program);
@@ -505,9 +510,14 @@ export class Context {
 
     const rfqObject = new Rfq(this, rfq, rfqContent);
 
-    if (finalize) {
-      txConstructor = txConstructor.postInstructions(await rfqObject.getFinalizeRfqInstructions());
+    const postInstructions = [];
+    if (verify && rfqContent.type == "printTradeProvider") {
+      postInstructions.push(await rfqObject.getValidateByPrintTradeProviderInstruction());
     }
+    if (finalize) {
+      postInstructions.push(await rfqObject.getFinalizeConstructionInstruction());
+    }
+    txConstructor.postInstructions(postInstructions);
 
     await txConstructor.rpc();
 
@@ -928,21 +938,18 @@ export class Rfq {
     await txConstructor.rpc();
   }
 
-  async finalizeRfq() {
+  async validatePrintTradeRfq() {
     let tx = new Transaction();
-    let ixs = await this.getFinalizeRfqInstructions();
-    tx.add(...ixs);
+    let ix = await this.getValidateByPrintTradeProviderInstruction();
+    tx.add(ix);
     await this.context.provider.sendAndConfirm(tx, [this.context.taker]);
   }
 
-  async getFinalizeRfqInstructions() {
-    const ixs = [];
-    if (this.content.type === "printTradeProvider") {
-      ixs.push(await this.getValidateByPrintTradeProviderInstruction());
-    }
-    ixs.push(await this.getFinalizeConstructionInstruction());
-
-    return ixs;
+  async finalizeRfq() {
+    let tx = new Transaction();
+    let ix = await this.getFinalizeConstructionInstruction();
+    tx.add(ix);
+    await this.context.provider.sendAndConfirm(tx, [this.context.taker]);
   }
 
   getFinalizeConstructionInstruction() {
@@ -1237,6 +1244,28 @@ export class Response {
 
     await this.context.program.methods
       .revertEscrowSettlementPreparation(side)
+      .accounts({
+        protocol: this.context.protocolPda,
+        rfq: this.rfq.account,
+        response: this.account,
+      })
+      .remainingAccounts(remainingAccounts)
+      .preInstructions([expandComputeUnits])
+      .rpc();
+  }
+
+  async revertPrintTradeSettlementPreparation(side: { taker: {} } | { maker: {} }) {
+    if (this.rfq.content.type != "printTradeProvider") {
+      throw Error("Not settled by print trade!");
+    }
+
+    const remainingAccounts = this.rfq.content.provider.getRevertPrintTradeSettlementPreparationAccounts(
+      this.rfq,
+      this
+    );
+
+    await this.context.program.methods
+      .revertPrintTradeSettlementPreparationPreparation(side)
       .accounts({
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,

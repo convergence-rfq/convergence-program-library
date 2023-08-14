@@ -4,6 +4,7 @@ import { OptionType } from "@mithraic-labs/tokenized-euros";
 import {
   DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
   DEFAULT_MIN_COLLATERAL_REQUIREMENT,
+  SOLANA_BASE_ASSET_INDEX,
 } from "../utilities/constants";
 import {
   attachImprovedLogDisplay,
@@ -16,9 +17,15 @@ import { EuroOptionsFacade, PsyoptionsEuropeanInstrument } from "../utilities/in
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { FixedSize, LegSide, OrderType, Quote, QuoteSide } from "../utilities/types";
 import { Context, getContext } from "../utilities/wrappers";
+import {
+  HxroContext,
+  HxroPrintTradeProvider,
+  getHxroContext,
+} from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 
 describe("Required collateral calculation and lock", () => {
   let context: Context;
+  let hxroContext: HxroContext;
   let taker: PublicKey;
   let maker: PublicKey;
 
@@ -28,6 +35,7 @@ describe("Required collateral calculation and lock", () => {
 
   before(async () => {
     context = await getContext();
+    hxroContext = await getHxroContext(context);
     taker = context.taker.publicKey;
     maker = context.maker.publicKey;
   });
@@ -300,5 +308,25 @@ describe("Required collateral calculation and lock", () => {
         delta: DEFAULT_MIN_COLLATERAL_REQUIREMENT.neg(),
       },
     ]);
+  });
+
+  it("Correct collateral locked for fix base asset Hxro rfq creation", async () => {
+    let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker]);
+
+    await context.createPrintTradeRfq({
+      printTradeProvider: new HxroPrintTradeProvider(context, hxroContext, [
+        {
+          amount: 20,
+          baseAssetIndex: SOLANA_BASE_ASSET_INDEX,
+          side: LegSide.Long,
+          productIndex: 0,
+        },
+      ]),
+      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
+      orderType: OrderType.Buy,
+      settlingWindow: 90 * 24 * 60 * 60, // 90 days
+    });
+
+    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-600.6) }]);
   });
 });

@@ -26,6 +26,7 @@ fn validate(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
         RfqState::Settling,
         RfqState::SettlingEnded,
         RfqState::Constructed,
+        RfqState::ValidatedByPrintTradeProvider,
     ])?;
 
     require!(

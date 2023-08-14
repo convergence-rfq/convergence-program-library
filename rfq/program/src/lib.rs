@@ -43,6 +43,7 @@ use instructions::rfq::prepare_more_escrow_legs_settlement::*;
 use instructions::rfq::prepare_print_trade_settlement::*;
 use instructions::rfq::respond_to_rfq::*;
 use instructions::rfq::revert_escrow_settlement_preparation::*;
+use instructions::rfq::revert_print_trade_settlement_preparation::*;
 use instructions::rfq::settle_escrow::*;
 use instructions::rfq::settle_one_party_default::*;
 use instructions::rfq::settle_print_trade::*;
@@ -306,6 +307,13 @@ pub mod rfq {
         leg_amount_to_revert: u8,
     ) -> Result<()> {
         partly_revert_escrow_settlement_preparation_instruction(ctx, side, leg_amount_to_revert)
+    }
+
+    pub fn revert_print_trade_settlement_preparation_preparation<'info>(
+        ctx: Context<'_, '_, '_, 'info, RevertPrintTradeSettlementPreparationAccounts<'info>>,
+        side: AuthoritySide,
+    ) -> Result<()> {
+        revert_print_trade_settlement_preparation_instruction(ctx, side)
     }
 
     pub fn unlock_response_collateral(

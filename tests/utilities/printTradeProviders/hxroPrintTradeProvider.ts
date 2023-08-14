@@ -5,7 +5,7 @@ import { HxroPrintTradeProvider as HxroPrintTradeProviderIdl } from "../../../ta
 import { AuthoritySide, InstrumentType, LegData, LegSide, QuoteData } from "../types";
 import dexterity from "@hxronetwork/dexterity-ts";
 import { executeInParallel } from "../helpers";
-import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE, SOLANA_BASE_ASSET_INDEX } from "../constants";
+import { DEFAULT_LEG_SIDE, SOLANA_BASE_ASSET_INDEX } from "../constants";
 import { getBaseAssetPda } from "../pdas";
 import { RiskEngine as RiskEngineIdl } from "../../../target/types/risk_engine";
 import { readHxroKeypair } from "../fixtures";
@@ -41,7 +41,7 @@ export class HxroPrintTradeProvider {
       productIndex: number;
     }[] = [
       {
-        amount: DEFAULT_LEG_AMOUNT,
+        amount: 10,
         side: DEFAULT_LEG_SIDE,
         baseAssetIndex: SOLANA_BASE_ASSET_INDEX,
         productIndex: 0,
@@ -234,6 +234,10 @@ export class HxroPrintTradeProvider {
   }
 
   getExecutePrintTradeSettlementAccounts(rfq: Rfq, response: Response) {
+    return [{ pubkey: this.getProgramId(), isSigner: false, isWritable: false }];
+  }
+
+  getRevertPrintTradeSettlementPreparationAccounts(rfq: Rfq, response: Response) {
     return [{ pubkey: this.getProgramId(), isSigner: false, isWritable: false }];
   }
 
