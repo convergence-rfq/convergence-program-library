@@ -1,4 +1,4 @@
-import { BN, Program, Provider, workspace, AnchorProvider, setProvider } from "@project-serum/anchor";
+import { BN, Program, Provider, workspace, AnchorProvider, setProvider } from "@coral-xyz/anchor";
 import {
   PublicKey,
   Keypair,
@@ -59,14 +59,11 @@ import {
   QuoteSide,
   FixedSize,
   RiskCategory,
-  riskCategoryToObject,
   InstrumentType,
-  instrumentTypeToObject,
   RiskCategoryInfo,
   OrderType,
   FeeParams,
   OracleSource,
-  oracleSourceToObject,
 } from "./types";
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
@@ -220,8 +217,8 @@ export class Context {
       .addBaseAsset(
         { value: baseAssetIndex },
         ticker,
-        riskCategoryToObject(riskCategory),
-        oracleSourceToObject(oracleSource),
+        riskCategory,
+        oracleSource,
         switchboardOracle,
         pythOracle,
         inPlacePrice
@@ -314,8 +311,8 @@ export class Context {
     await this.program.methods
       .changeBaseAssetParameters(
         enabled,
-        riskCategory && riskCategoryToObject(riskCategory),
-        oracleSource && oracleSourceToObject(oracleSource),
+        riskCategory,
+        oracleSource,
         wrapInCustomOption(switchboardOracle),
         wrapInCustomOption(pythOracle),
         wrapInCustomOption(inPlacePrice)
@@ -590,13 +587,8 @@ export class RiskEngine {
   }
 
   async setInstrumentType(program: PublicKey, instrumentType: InstrumentType | null) {
-    let idlInstrumentType = null;
-    if (instrumentType !== null) {
-      idlInstrumentType = instrumentTypeToObject(instrumentType);
-    }
-
     await this.program.methods
-      .setInstrumentType(program, idlInstrumentType)
+      .setInstrumentType(program, instrumentType)
       .accounts({
         authority: this.context.dao.publicKey,
         protocol: this.context.protocolPda,
@@ -614,7 +606,7 @@ export class RiskEngine {
   ) {
     let changesForInstruction = changes.map((x) => {
       return {
-        riskCategoryIndex: x.riskCategory.valueOf(),
+        riskCategoryIndex: x.riskCategory.index,
         newValue: x.newValue,
       };
     });

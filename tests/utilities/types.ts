@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import { BN } from "@coral-xyz/anchor";
 
 export type OrderType = { buy: {} } | { sell: {} } | { twoWay: {} };
 
@@ -29,24 +29,26 @@ export const AuthoritySide = {
   Maker: { maker: {} },
 };
 
-export enum RiskCategory {
-  VeryLow,
-  Low,
-  Medium,
-  High,
-  VeryHigh,
-  Custom1,
-  Custom2,
-  Custom3,
-}
+export type RiskCategory =
+  | { veryLow: {}; index: number }
+  | { low: {}; index: number }
+  | { medium: {}; index: number }
+  | { high: {}; index: number }
+  | { veryHigh: {}; index: number }
+  | { custom1: {}; index: number }
+  | { custom2: {}; index: number }
+  | { custom3: {}; index: number };
 
-export function riskCategoryToObject(value: RiskCategory) {
-  const stringValue = RiskCategory[value];
-  const uncapitalizedValue = stringValue.charAt(0).toLowerCase() + stringValue.slice(1);
-  return {
-    [uncapitalizedValue]: {},
-  };
-}
+export const RiskCategory = {
+  VeryLow: { veryLow: {}, index: 0 },
+  Low: { low: {}, index: 1 },
+  Medium: { medium: {}, index: 2 },
+  High: { high: {}, index: 3 },
+  VeryHigh: { veryHigh: {}, index: 4 },
+  Custom1: { custom1: {}, index: 5 },
+  Custom2: { custom2: {}, index: 6 },
+  Custom3: { custom3: {}, index: 7 },
+};
 
 export type Scenario = {
   baseAssetPriceChange: number;
@@ -59,20 +61,14 @@ export type RiskCategoryInfo = {
   scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario];
 };
 
-export enum InstrumentType {
-  Spot,
-  Option,
-  TermFuture,
-  PerpFuture,
-}
+export type InstrumentType = { spot: {} } | { option: {} } | { termFuture: {} } | { perpFuture: {} };
 
-export function instrumentTypeToObject(value: InstrumentType) {
-  const stringValue = InstrumentType[value];
-  const uncapitalizedValue = stringValue.charAt(0).toLowerCase() + stringValue.slice(1);
-  return {
-    [uncapitalizedValue]: {},
-  };
-}
+export const InstrumentType = {
+  Spot: { spot: {} },
+  Option: { option: {} },
+  TermFuture: { termFuture: {} },
+  PerpFuture: { perpFuture: {} },
+};
 
 export type Quote =
   | {
@@ -176,16 +172,10 @@ export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
 
 export type FeeParams = { taker: number; maker: number };
 
-export enum OracleSource {
-  Switchboard,
-  Pyth,
-  InPlace,
-}
+export type OracleSource = { switchboard: {} } | { pyth: {} } | { inPlace: {} };
 
-export function oracleSourceToObject(value: OracleSource) {
-  const stringValue = OracleSource[value];
-  const uncapitalizedValue = stringValue.charAt(0).toLowerCase() + stringValue.slice(1);
-  return {
-    [uncapitalizedValue]: {},
-  };
-}
+export const OracleSource = {
+  Switchboard: { switchboard: {} },
+  Pyth: { pyth: {} },
+  InPlace: { inPlace: {} },
+};

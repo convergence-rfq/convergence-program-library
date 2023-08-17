@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { attachImprovedLogDisplay, calculateLegsHash, expectError } from "../utilities/helpers";
 import { getSpotInstrumentProgram, SpotInstrument } from "../utilities/instruments/spotInstrument";
 

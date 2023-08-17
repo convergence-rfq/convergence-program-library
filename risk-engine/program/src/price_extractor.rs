@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+use std::{cell::Ref, collections::HashMap};
 
 use anchor_lang::prelude::*;
 use pyth_sdk_solana::{load_price_feed_from_account_info, Price, PriceFeed};
 use rfq::state::{BaseAssetIndex, BaseAssetInfo, OracleSource};
-use switchboard_v2::{AggregatorAccountData, SwitchboardDecimal};
+use switchboard_solana::{AggregatorAccountData, SwitchboardDecimal, SWITCHBOARD_PROGRAM_ID};
 
 use crate::{errors::Error, state::Config, utils::convert_fixed_point_to_f64};
 
@@ -84,17 +84,39 @@ fn extract_oracle_price(
     }
 }
 
+// some of the code in this method is copied from AggregatorAccountData::new() as it has incompatible lifetime requirements
 fn extract_switchboard_price(account: &AccountInfo, config: &Config) -> Result<f64> {
-    let loader = AccountLoader::<AggregatorAccountData>::try_from(account)?;
-    let feed = loader.load()?;
+    use switchboard_solana::prelude::Discriminator;
+    let owner = *account.owner;
+    if owner != SWITCHBOARD_PROGRAM_ID {
+        return Err(ProgramError::IncorrectProgramId.into());
+    }
 
+    let data = account.try_borrow_data()?;
+    if data.len() < AggregatorAccountData::discriminator().len() {
+        return Err(ErrorCode::AccountDiscriminatorNotFound.into());
+    }
+
+    let mut disc_bytes = [0u8; 8];
+    disc_bytes.copy_from_slice(&data[..8]);
+    if disc_bytes != AggregatorAccountData::discriminator() {
+        return Err(ErrorCode::AccountDiscriminatorMismatch.into());
+    }
+
+    let feed: Ref<AggregatorAccountData> = Ref::map(data, |data| {
+        bytemuck::from_bytes(&data[8..std::mem::size_of::<AggregatorAccountData>() + 8])
+    });
     feed.check_staleness(
         Clock::get()?.unix_timestamp,
         config.accepted_oracle_staleness as i64,
     )
     .map_err(|_| error!(Error::StaleOracle))?;
 
-    let price = feed.get_result()?.try_into()?;
+    let price = feed
+        .get_result()
+        .map_err(|_| error!(Error::InvalidOracleData))?
+        .try_into()
+        .map_err(|_| error!(Error::InvalidOracleData))?;
 
     let confidence_interval = price * config.accepted_oracle_confidence_interval_portion;
     feed.check_confidence_interval(SwitchboardDecimal::from_f64(confidence_interval))
@@ -104,7 +126,8 @@ fn extract_switchboard_price(account: &AccountInfo, config: &Config) -> Result<f
 }
 
 fn extract_pyth_price(account: &AccountInfo, config: &Config) -> Result<f64> {
-    let price_feed: PriceFeed = load_price_feed_from_account_info(account).unwrap();
+    let price_feed: PriceFeed =
+        load_price_feed_from_account_info(account).map_err(|_| error!(Error::InvalidOracle))?;
     let current_timestamp = Clock::get()?.unix_timestamp;
     let current_data: Price = price_feed
         .get_price_no_older_than(current_timestamp, config.accepted_oracle_staleness)
