@@ -30,9 +30,9 @@ jobs:
       - name: Install AVM
         run: cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
       - name: Install Anchor
-        run: avm install 0.25.0
+        run: avm install 0.28.0
       - name: Use Anchor
-        run: avm use 0.25.0
+        run: avm use 0.28.0
       - name: Install Solana
         uses: ./.github/actions/install-solana
         with:
