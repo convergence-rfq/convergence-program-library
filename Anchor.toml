@@ -15,11 +15,11 @@ psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
 psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
 
 [programs.mainnet]
-rfq = "AVNAM79VZBogmQLQWWgryaqrWXqooWP9UqUQvo3JRDUx"
-risk_engine = "7Frguj6Q6pwwq9xU5UdUqShRx8E6Mj555BNccrpXvuxo"
-spot_instrument = "HNHBtGzS58xJarSbz5XbEjTTEFbAQUHdP8TjQmwjx1gW"
-psyoptions_european_instrument = "HmJ8K5xb6kXbVbvRriq1Z7oPdEaPmKXpEM4Un9nr5b1"
-psyoptions_american_instrument = "7GcKLyM73RRJshRLQqX8yw9K3hTHkx1Ei14mKoKxi3ZR"
+rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
+risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
+spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
+psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
+psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
 
 [registry]
 url = "https://anchor.projectserum.com"
