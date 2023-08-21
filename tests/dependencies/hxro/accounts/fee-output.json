@@ -3,7 +3,7 @@
   "account": {
     "lamports": 1002240,
     "data": [
-      "AAAAAAAAAAAAAAAAAAAAAA",
+      "AAAAAAAAAAAAAAAAAAAAAA==",
       "base64"
     ],
     "owner": "5T9gt3frWPAvu1hxEULbsKrP2WF4ggqSxCMqpJvtWXHV",
