@@ -18,7 +18,7 @@ mod errors;
 mod helpers;
 mod state;
 
-declare_id!("fZ8jq8MYbf2a2Eu3rYFcFKmnxqvo8X9g5E8otAx48ZE");
+declare_id!("GyRW7qvzx6UTVW9DkQGMy5f1rp9XK2x53FvWSjUUF7BJ");
 
 // Hxro global TODOS
 // 2 points in the pinned message
