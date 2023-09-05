@@ -2,7 +2,7 @@ name: Solita NPM Publish
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, hxro-print-trade-provider]
 
 jobs:
   publish:
