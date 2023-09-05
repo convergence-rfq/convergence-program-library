@@ -109,6 +109,11 @@ fn extract_base_asset_account_pyth_oracle(
         HxroPrintTradeProviderError::InvalidBaseAssetAccountIndex
     );
 
+    require!(
+        base_asset.enabled,
+        HxroPrintTradeProviderError::DisabledBaseAsset
+    );
+
     base_asset
         .get_pyth_oracle()
         .ok_or_else(|| error!(HxroPrintTradeProviderError::NoPythOracleForBaseAsset))
