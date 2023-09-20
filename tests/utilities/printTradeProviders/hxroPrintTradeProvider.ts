@@ -79,7 +79,7 @@ export class HxroPrintTradeProvider {
     const feesProgram = nameToPubkey["fees-program"];
 
     const [traderFeeStateAcct] = PublicKey.findProgramAddressSync(
-      [Buffer.from("trader_fee_acct"), trg.publicKey.toBuffer(), mpg.toBuffer()],
+      [mpg.toBuffer(), trg.publicKey.toBuffer(), feeModelConfig.toBuffer()],
       feesProgram
     );
 
