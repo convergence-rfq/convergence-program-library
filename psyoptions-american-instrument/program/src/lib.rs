@@ -20,6 +20,8 @@ const ESCROW_SEED: &str = "escrow";
 #[program]
 pub mod psyoptions_american_instrument {
 
+    use risk_engine::state::OptionType;
+
     use super::*;
 
     pub fn validate_data(
@@ -30,8 +32,8 @@ pub mod psyoptions_american_instrument {
     ) -> Result<()> {
         let ValidateData {
             american_meta,
-            mint_info,
-            quote_mint,
+            underlying_asset_mint,
+            stabel_asset_mint,
             ..
         } = &ctx.accounts;
 
@@ -49,30 +51,58 @@ pub mod psyoptions_american_instrument {
             american_meta_address == american_meta.key(),
             PsyoptionsAmericanError::PassedAmericanMetaDoesNotMatch
         );
+
+        let option_type = option_common_data.option_type;
+        let underlying_amount_per_contract: u64;
+        let strike_price: u64;
         let expected_mint = american_meta.option_mint;
+
+        match option_type {
+            OptionType::Call => {
+                underlying_amount_per_contract = 10_u64.pow(underlying_asset_mint.decimals as u32);
+                strike_price = option_common_data.strike_price;
+                require_eq!(
+                    option_common_data.strike_price_decimals,
+                    stabel_asset_mint.decimals,
+                    PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
+                );
+                require_eq!(
+                    option_common_data.underlying_amound_per_contract_decimals,
+                    underlying_asset_mint.decimals,
+                    PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
+                );
+            }
+            OptionType::Put => {
+                underlying_amount_per_contract = option_common_data.strike_price;
+                strike_price = 10_u64.pow(underlying_asset_mint.decimals as u32);
+                require_eq!(
+                    option_common_data.strike_price_decimals,
+                    underlying_asset_mint.decimals,
+                    PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
+                );
+                require_eq!(
+                    option_common_data.underlying_amound_per_contract_decimals,
+                    stabel_asset_mint.decimals,
+                    PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
+                );
+            }
+        }
+
+        // add checks here
         require!(
             mint_address == expected_mint,
             PsyoptionsAmericanError::PassedMintDoesNotMatch
         );
         require!(
-            option_common_data.underlying_amount_per_contract
-                == american_meta.underlying_amount_per_contract,
+            underlying_amount_per_contract == american_meta.underlying_amount_per_contract,
             PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
         );
-        require_eq!(
-            option_common_data.underlying_amound_per_contract_decimals,
-            mint_info.decimals,
-            PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
-        );
+
         require!(
-            option_common_data.strike_price == american_meta.quote_amount_per_contract,
+            strike_price == american_meta.quote_amount_per_contract,
             PsyoptionsAmericanError::PassedStrikePriceDoesNotMatch
         );
-        require_eq!(
-            option_common_data.strike_price_decimals,
-            quote_mint.decimals,
-            PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
-        );
+
         require!(
             option_common_data.expiration_timestamp == american_meta.expiration_unix_timestamp,
             PsyoptionsAmericanError::PassedExpirationTimestampDoesNotMatch
@@ -84,7 +114,7 @@ pub mod psyoptions_american_instrument {
         );
 
         if let (Some(passed_base_asset_index), MintType::AssetWithRisk { base_asset_index }) =
-            (base_asset_index, mint_info.mint_type)
+            (base_asset_index, underlying_asset_mint.mint_type)
         {
             require!(
                 passed_base_asset_index == u16::from(base_asset_index),
