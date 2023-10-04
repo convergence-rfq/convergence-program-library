@@ -62,14 +62,14 @@ pub mod psyoptions_american_instrument {
             OptionType::Call => {
                 underlying_amount_per_contract = 10_u64.pow(underlying_asset_mint.decimals as u32);
                 strike_price = option_common_data.strike_price;
-                stable_mint = stable_asset_mint.key();
-                underlying_mint = underlying_asset_mint.key();
+                stable_mint = stable_asset_mint.mint_address;
+                underlying_mint = underlying_asset_mint.mint_address;
             }
             OptionType::Put => {
                 underlying_amount_per_contract = option_common_data.strike_price;
                 strike_price = 10_u64.pow(underlying_asset_mint.decimals as u32);
-                stable_mint = underlying_asset_mint.key();
-                underlying_mint = stable_asset_mint.key();
+                stable_mint = underlying_asset_mint.mint_address;
+                underlying_mint = stable_asset_mint.mint_address;
             }
         }
 
