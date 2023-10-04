@@ -17,7 +17,7 @@ pub struct ValidateData<'info> {
     /// user provided
     pub american_meta: Account<'info, OptionMarket>,
     pub underlying_asset_mint: Account<'info, MintInfo>,
-    pub stabel_asset_mint: Account<'info, MintInfo>,
+    pub stable_asset_mint: Account<'info, MintInfo>,
 }
 
 #[derive(Accounts)]

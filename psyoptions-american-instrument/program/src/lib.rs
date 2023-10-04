@@ -6,6 +6,7 @@ use errors::PsyoptionsAmericanError;
 use instructions::*;
 use rfq::state::MintType;
 use rfq::state::{AssetIdentifier, AuthoritySide};
+use risk_engine::state::OptionType;
 use state::{AssetIdentifierDuplicate, ParsedLegData};
 use state::{AuthoritySideDuplicate, TOKEN_DECIMALS};
 
@@ -20,8 +21,6 @@ const ESCROW_SEED: &str = "escrow";
 #[program]
 pub mod psyoptions_american_instrument {
 
-    use risk_engine::state::OptionType;
-
     use super::*;
 
     pub fn validate_data(
@@ -33,7 +32,7 @@ pub mod psyoptions_american_instrument {
         let ValidateData {
             american_meta,
             underlying_asset_mint,
-            stabel_asset_mint,
+            stable_asset_mint,
             ..
         } = &ctx.accounts;
 
@@ -55,16 +54,22 @@ pub mod psyoptions_american_instrument {
         let option_type = option_common_data.option_type;
         let underlying_amount_per_contract: u64;
         let strike_price: u64;
+        let underlying_mint: Pubkey;
+        let stable_mint: Pubkey;
         let expected_mint = american_meta.option_mint;
 
         match option_type {
             OptionType::Call => {
                 underlying_amount_per_contract = 10_u64.pow(underlying_asset_mint.decimals as u32);
                 strike_price = option_common_data.strike_price;
+                stable_mint = stable_asset_mint.key();
+                underlying_mint = underlying_asset_mint.key();
             }
             OptionType::Put => {
                 underlying_amount_per_contract = option_common_data.strike_price;
                 strike_price = 10_u64.pow(underlying_asset_mint.decimals as u32);
+                stable_mint = underlying_asset_mint.key();
+                underlying_mint = stable_asset_mint.key();
             }
         }
 
@@ -73,6 +78,17 @@ pub mod psyoptions_american_instrument {
             mint_address == expected_mint,
             PsyoptionsAmericanError::PassedMintDoesNotMatch
         );
+
+        require!(
+            underlying_mint == american_meta.underlying_asset_mint,
+            PsyoptionsAmericanError::PassedMintDoesNotMatch
+        );
+
+        require!(
+            stable_mint == american_meta.quote_asset_mint,
+            PsyoptionsAmericanError::PassedMintDoesNotMatch
+        );
+
         require!(
             underlying_amount_per_contract == american_meta.underlying_amount_per_contract,
             PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDoesNotMatch
@@ -84,7 +100,7 @@ pub mod psyoptions_american_instrument {
         );
         require_eq!(
             option_common_data.strike_price_decimals,
-            stabel_asset_mint.decimals,
+            stable_asset_mint.decimals,
             PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
         );
         require_eq!(
