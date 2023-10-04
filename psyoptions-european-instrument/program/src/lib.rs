@@ -33,7 +33,7 @@ pub mod psyoptions_european_instrument {
     ) -> Result<()> {
         let ValidateData {
             euro_meta,
-            mint_info,
+            underlying_asset_mint,
             ..
         } = &ctx.accounts;
 
@@ -89,7 +89,7 @@ pub mod psyoptions_european_instrument {
         );
 
         if let (Some(passed_base_asset_index), MintType::AssetWithRisk { base_asset_index }) =
-            (base_asset_index, mint_info.mint_type)
+            (base_asset_index, underlying_asset_mint.mint_type)
         {
             require!(
                 passed_base_asset_index == u16::from(base_asset_index),
@@ -331,8 +331,8 @@ pub struct ValidateData<'info> {
 
     /// user provided
     pub euro_meta: Account<'info, EuroMeta>,
-    #[account(constraint = euro_meta.underlying_mint == mint_info.mint_address @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
-    pub mint_info: Account<'info, MintInfo>,
+    #[account(constraint = euro_meta.underlying_mint == underlying_asset_mint.mint_address @ PsyoptionsEuropeanError::PassedMintDoesNotMatch)]
+    pub underlying_asset_mint: Account<'info, MintInfo>,
 }
 
 #[derive(Accounts)]
