@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.13] - 2023-10-04
+
+### Fixes
+
+- psyoptions-american: Refactored PsyOptions American instrument to handle call and put logic. See PR ([#166](https://github.com/convergence-rfq/convergence-program-library/pull/166)) for full details.
+    
 ## [2.2.12] - 2023-08-17
 
 ### Fixes
