@@ -55,25 +55,24 @@ pub mod psyoptions_american_instrument {
         let underlying_amount_per_contract: u64;
         let strike_price: u64;
         let underlying_mint: Pubkey;
-        let stable_mint: Pubkey;
+        let quote_mint: Pubkey;
         let expected_mint = american_meta.option_mint;
 
         match option_type {
             OptionType::Call => {
                 underlying_amount_per_contract = 10_u64.pow(underlying_asset_mint.decimals as u32);
                 strike_price = option_common_data.strike_price;
-                stable_mint = stable_asset_mint.mint_address;
+                quote_mint = stable_asset_mint.mint_address;
                 underlying_mint = underlying_asset_mint.mint_address;
             }
             OptionType::Put => {
                 underlying_amount_per_contract = option_common_data.strike_price;
                 strike_price = 10_u64.pow(underlying_asset_mint.decimals as u32);
-                stable_mint = underlying_asset_mint.mint_address;
+                quote_mint = underlying_asset_mint.mint_address;
                 underlying_mint = stable_asset_mint.mint_address;
             }
         }
 
-        // add checks here
         require!(
             mint_address == expected_mint,
             PsyoptionsAmericanError::PassedMintDoesNotMatch
@@ -85,7 +84,7 @@ pub mod psyoptions_american_instrument {
         );
 
         require!(
-            stable_mint == american_meta.quote_asset_mint,
+            quote_mint == american_meta.quote_asset_mint,
             PsyoptionsAmericanError::PassedMintDoesNotMatch
         );
 
