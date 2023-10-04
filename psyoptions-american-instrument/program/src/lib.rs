@@ -61,30 +61,10 @@ pub mod psyoptions_american_instrument {
             OptionType::Call => {
                 underlying_amount_per_contract = 10_u64.pow(underlying_asset_mint.decimals as u32);
                 strike_price = option_common_data.strike_price;
-                require_eq!(
-                    option_common_data.strike_price_decimals,
-                    stabel_asset_mint.decimals,
-                    PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
-                );
-                require_eq!(
-                    option_common_data.underlying_amound_per_contract_decimals,
-                    underlying_asset_mint.decimals,
-                    PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
-                );
             }
             OptionType::Put => {
                 underlying_amount_per_contract = option_common_data.strike_price;
                 strike_price = 10_u64.pow(underlying_asset_mint.decimals as u32);
-                require_eq!(
-                    option_common_data.strike_price_decimals,
-                    underlying_asset_mint.decimals,
-                    PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
-                );
-                require_eq!(
-                    option_common_data.underlying_amound_per_contract_decimals,
-                    stabel_asset_mint.decimals,
-                    PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
-                );
             }
         }
 
@@ -101,6 +81,16 @@ pub mod psyoptions_american_instrument {
         require!(
             strike_price == american_meta.quote_amount_per_contract,
             PsyoptionsAmericanError::PassedStrikePriceDoesNotMatch
+        );
+        require_eq!(
+            option_common_data.strike_price_decimals,
+            stabel_asset_mint.decimals,
+            PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
+        );
+        require_eq!(
+            option_common_data.underlying_amound_per_contract_decimals,
+            underlying_asset_mint.decimals,
+            PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
         );
 
         require!(
