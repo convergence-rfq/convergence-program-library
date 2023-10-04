@@ -16,10 +16,8 @@ pub struct ValidateData<'info> {
 
     /// user provided
     pub american_meta: Account<'info, OptionMarket>,
-    #[account(constraint = american_meta.underlying_asset_mint == mint_info.mint_address @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
-    pub mint_info: Account<'info, MintInfo>,
-    #[account(constraint = american_meta.quote_asset_mint == quote_mint.mint_address @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
-    pub quote_mint: Account<'info, MintInfo>,
+    pub underlying_asset_mint: Account<'info, MintInfo>,
+    pub stable_asset_mint: Account<'info, MintInfo>,
 }
 
 #[derive(Accounts)]
