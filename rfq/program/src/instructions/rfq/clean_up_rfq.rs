@@ -20,17 +20,8 @@ pub struct CleanUpRfqAccounts<'info> {
 fn validate(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
     let CleanUpRfqAccounts { rfq, .. } = &ctx.accounts;
 
-    rfq.get_state()?.assert_state_in([
-        RfqState::Canceled,
-        RfqState::Expired,
-        RfqState::Settling,
-        RfqState::SettlingEnded,
-    ])?;
-
-    require!(
-        rfq.total_taker_collateral_locked == 0,
-        ProtocolError::HaveCollateralLocked
-    );
+    rfq.get_state()?
+        .assert_state_in([RfqState::Canceled, RfqState::Expired, RfqState::Settled])?;
 
     require!(
         rfq.total_responses == rfq.cleared_responses,

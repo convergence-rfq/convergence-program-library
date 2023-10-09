@@ -1,11 +1,5 @@
 [workspace]
-members = [
-    "rfq/program",
-    "risk-engine/program",
-    "spot-instrument/program",
-    "psyoptions-american-instrument/program",
-    "psyoptions-european-instrument/program"
-]
+members = ["rfq/program"]
 
 [profile.release]
 overflow-checks = true

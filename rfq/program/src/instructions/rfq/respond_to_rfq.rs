@@ -2,15 +2,10 @@ use std::mem;
 
 use crate::{
     errors::ProtocolError,
-    interfaces::risk_engine::calculate_required_collateral_for_response,
-    seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED, RESPONSE_SEED},
-    state::{
-        CollateralInfo, FixedSize, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
-        StoredResponseState,
-    },
+    seeds::RESPONSE_SEED,
+    state::{OrderType, Quote, Response, Rfq, RfqState, StoredResponseState},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
 
 #[derive(Accounts)]
 #[instruction(bid: Option<Quote>, ask: Option<Quote>, pda_distinguisher: u16)]
@@ -18,12 +13,10 @@ pub struct RespondToRfqAccounts<'info> {
     #[account(mut)]
     pub maker: Signer<'info>,
 
-    #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     // rfq legs additional storage for first_to_prepare_legs field
-    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>() + rfq.legs.len(), seeds = [
+    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>(), seeds = [
         RESPONSE_SEED.as_bytes(),
         rfq.key().as_ref(),
         maker.key().as_ref(),
@@ -32,17 +25,6 @@ pub struct RespondToRfqAccounts<'info> {
         &pda_distinguisher.to_le_bytes(),
     ], bump)]
     pub response: Account<'info, Response>,
-    #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
-                bump = collateral_info.bump)]
-    pub collateral_info: Account<'info, CollateralInfo>,
-    #[account(seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), maker.key().as_ref()],
-                bump = collateral_info.token_account_bump)]
-    pub collateral_token: Account<'info, TokenAccount>,
-
-    /// CHECK: is a valid risk engine program id
-    #[account(constraint = risk_engine.key() == protocol.risk_engine
-        @ ProtocolError::NotARiskEngine)]
-    pub risk_engine: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 }
@@ -88,22 +70,6 @@ fn validate(
         );
     }
 
-    // check that in case the rfq is fixed in quote asset amount, prices provided are positive
-    if let FixedSize::QuoteAsset { quote_amount: _ } = rfq.fixed_size {
-        if let Some(quote) = bid {
-            require!(
-                quote.get_price_bps() > 0,
-                ProtocolError::PriceShouldBePositive
-            );
-        }
-        if let Some(quote) = ask {
-            require!(
-                quote.get_price_bps() > 0,
-                ProtocolError::PriceShouldBePositive
-            );
-        }
-    }
-
     Ok(())
 }
 
@@ -119,9 +85,6 @@ pub fn respond_to_rfq_instruction<'info>(
         maker,
         rfq,
         response,
-        collateral_info,
-        collateral_token,
-        risk_engine,
         ..
     } = ctx.accounts;
 
@@ -129,28 +92,11 @@ pub fn respond_to_rfq_instruction<'info>(
         maker: maker.key(),
         rfq: rfq.key(),
         creation_timestamp: Clock::get()?.unix_timestamp,
-        maker_collateral_locked: 0,
-        taker_collateral_locked: 0,
         state: StoredResponseState::Active,
-        taker_prepared_legs: 0,
-        maker_prepared_legs: 0,
-        settled_legs: 0,
         confirmed: None,
-        defaulting_party: None,
-        leg_preparations_initialized_by: vec![],
         bid,
         ask,
     });
-    response.exit(ctx.program_id)?;
-
-    let required_collateral = calculate_required_collateral_for_response(
-        rfq.to_account_info(),
-        response.to_account_info(),
-        risk_engine,
-        ctx.remaining_accounts,
-    )?;
-    collateral_info.lock_collateral(collateral_token, required_collateral)?;
-    response.maker_collateral_locked = required_collateral;
 
     rfq.total_responses += 1;
 

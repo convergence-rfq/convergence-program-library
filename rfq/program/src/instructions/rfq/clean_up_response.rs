@@ -1,19 +1,16 @@
+use anchor_lang::prelude::*;
+
 use crate::{
     errors::ProtocolError,
-    interfaces::instrument::clean_up,
-    seeds::PROTOCOL_SEED,
-    state::{AssetIdentifier, ProtocolState, Response, ResponseState, Rfq},
+    state::{Response, ResponseState, Rfq},
 };
-use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct CleanUpResponseAccounts<'info> {
-    /// CHECK: is a maker address in this response
+    /// CHECK: Is actually a maker
     #[account(mut, constraint = maker.key() == response.maker @ ProtocolError::NotAMaker)]
     pub maker: UncheckedAccount<'info>,
 
-    #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     #[account(mut, close = maker, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
@@ -27,20 +24,8 @@ fn validate(ctx: &Context<CleanUpResponseAccounts>) -> Result<()> {
     response_state.assert_state_in([
         ResponseState::Canceled,
         ResponseState::Settled,
-        ResponseState::Defaulted,
         ResponseState::Expired,
     ])?;
-    if let ResponseState::Defaulted = response_state {
-        require!(
-            response.taker_prepared_legs == 0 && response.maker_prepared_legs == 0,
-            ProtocolError::PendingPreparations
-        );
-    }
-
-    require!(
-        !response.have_locked_collateral(),
-        ProtocolError::HaveCollateralLocked
-    );
 
     Ok(())
 }
@@ -50,35 +35,7 @@ pub fn clean_up_response_instruction<'info>(
 ) -> Result<()> {
     validate(&ctx)?;
 
-    let CleanUpResponseAccounts {
-        protocol,
-        rfq,
-        response,
-        ..
-    } = ctx.accounts;
-
-    if !response.leg_preparations_initialized_by.is_empty() {
-        let mut remaining_accounts = ctx.remaining_accounts.iter();
-
-        let legs_to_revert = response.leg_preparations_initialized_by.len() as u8;
-        for leg_index in 0..legs_to_revert {
-            clean_up(
-                AssetIdentifier::Leg { leg_index },
-                protocol,
-                rfq,
-                response,
-                &mut remaining_accounts,
-            )?;
-        }
-
-        clean_up(
-            AssetIdentifier::Quote,
-            protocol,
-            rfq,
-            response,
-            &mut remaining_accounts,
-        )?;
-    }
+    let CleanUpResponseAccounts { rfq, .. } = ctx.accounts;
 
     rfq.cleared_responses += 1;
 

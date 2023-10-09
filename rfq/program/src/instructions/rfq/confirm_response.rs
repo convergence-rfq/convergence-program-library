@@ -1,46 +1,47 @@
 use crate::{
     errors::ProtocolError,
-    interfaces::risk_engine::calculate_required_collateral_for_confirmation,
-    seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED},
+    seeds::{LEG_ESCROW_SEED, QUOTE_ESCROW_SEED},
     state::{
-        CollateralInfo, Confirmation, ProtocolState, Quote, QuoteSide, Response, ResponseState,
-        Rfq, RfqState, StoredResponseState,
+        AuthoritySide, Confirmation, Quote, QuoteSide, Response, ResponseState, Rfq, RfqState,
+        StoredResponseState,
     },
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
+use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 
 #[derive(Accounts)]
 pub struct ConfirmResponseAccounts<'info> {
-    #[account(constraint = taker.key() == rfq.taker @ ProtocolError::NotATaker)]
+    #[account(mut, constraint = taker.key() == rfq.taker @ ProtocolError::NotATaker)]
     pub taker: Signer<'info>,
 
-    #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
-    #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     #[account(mut, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
-    pub response: Account<'info, Response>,
-    #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), taker.key().as_ref()],
-                bump = collateral_info.bump)]
-    pub collateral_info: Account<'info, CollateralInfo>,
-    #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), response.maker.as_ref()],
-                bump = maker_collateral_info.bump)]
-    pub maker_collateral_info: Account<'info, CollateralInfo>,
-    #[account(seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), taker.key().as_ref()],
-                bump = collateral_info.token_account_bump)]
-    pub collateral_token: Account<'info, TokenAccount>,
+    pub response: Box<Account<'info, Response>>,
 
-    /// CHECK: is a valid risk engine program id
-    #[account(constraint = risk_engine.key() == protocol.risk_engine
-        @ ProtocolError::NotARiskEngine)]
-    pub risk_engine: UncheckedAccount<'info>,
+    #[account(mut, constraint = leg_tokens.mint == leg_mint.key() @ ProtocolError::InvalidTokenAccountMint)]
+    pub leg_tokens: Box<Account<'info, TokenAccount>>,
+    #[account(init, payer = taker, token::mint = leg_mint, token::authority = leg_escrow,
+        seeds = [LEG_ESCROW_SEED.as_bytes(), response.key().as_ref()], bump)]
+    pub leg_escrow: Account<'info, TokenAccount>,
+    #[account(constraint = leg_mint.key() == rfq.leg_asset @ ProtocolError::InvalidLegMint)]
+    pub leg_mint: Account<'info, Mint>,
+
+    #[account(mut, constraint = quote_tokens.mint == quote_mint.key() @ ProtocolError::InvalidTokenAccountMint)]
+    pub quote_tokens: Account<'info, TokenAccount>,
+    #[account(init, payer = taker, token::mint = quote_mint, token::authority = quote_escrow,
+        seeds = [QUOTE_ESCROW_SEED.as_bytes(), response.key().as_ref()], bump)]
+    pub quote_escrow: Account<'info, TokenAccount>,
+    #[account(constraint = quote_mint.key() == rfq.quote_asset @ ProtocolError::InvalidQuoteMint)]
+    pub quote_mint: Account<'info, Mint>,
+
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
 }
 
 fn validate(
     ctx: &Context<ConfirmResponseAccounts>,
     side: QuoteSide,
-    override_leg_multiplier_bps: Option<u64>,
+    override_leg_amount: Option<u64>,
 ) -> Result<()> {
     let ConfirmResponseAccounts { rfq, response, .. } = &ctx.accounts;
 
@@ -59,13 +60,13 @@ fn validate(
 
     if rfq.is_fixed_size() {
         require!(
-            override_leg_multiplier_bps.is_none(),
+            override_leg_amount.is_none(),
             ProtocolError::NoLegMultiplierForFixedSize
         );
     }
 
     // make sure new leg multiplier is not bigger than provided
-    if let Some(override_leg_multiplier_bps) = override_leg_multiplier_bps {
+    if let Some(override_leg_amount) = override_leg_amount {
         let quote: Quote = match side {
             QuoteSide::Bid => response.bid.unwrap(),
             QuoteSide::Ask => response.ask.unwrap(),
@@ -74,10 +75,10 @@ fn validate(
         match quote {
             Quote::Standard {
                 price_quote: _,
-                legs_multiplier_bps,
+                leg_amount,
             } => {
                 require!(
-                    override_leg_multiplier_bps <= legs_multiplier_bps,
+                    override_leg_amount <= leg_amount,
                     ProtocolError::LegMultiplierHigherThanInQuote
                 );
             }
@@ -91,51 +92,70 @@ fn validate(
 pub fn confirm_response_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, ConfirmResponseAccounts<'info>>,
     side: QuoteSide,
-    override_leg_multiplier_bps: Option<u64>,
+    override_leg_amount: Option<u64>,
 ) -> Result<()> {
-    validate(&ctx, side, override_leg_multiplier_bps)?;
+    validate(&ctx, side, override_leg_amount)?;
 
-    let ConfirmResponseAccounts {
-        rfq,
-        response,
-        collateral_info,
-        collateral_token,
-        maker_collateral_info,
-        risk_engine,
-        ..
-    } = ctx.accounts;
+    let ConfirmResponseAccounts { response, .. } = ctx.accounts;
 
     response.confirmed = Some(Confirmation {
         side,
-        override_leg_multiplier_bps,
+        override_leg_amount,
     });
-    response.state = StoredResponseState::SettlingPreparations;
-    response.exit(ctx.program_id)?;
+    response.state = StoredResponseState::Confirmed;
 
-    let (taker_collateral, maker_collateral) = calculate_required_collateral_for_confirmation(
-        rfq.to_account_info(),
-        response.to_account_info(),
-        risk_engine,
-        ctx.remaining_accounts,
-    )?;
-
-    let collateral_from_already_deposited =
-        u64::min(taker_collateral, rfq.non_response_taker_collateral_locked);
-    let additional_collateral = taker_collateral - collateral_from_already_deposited;
-    rfq.non_response_taker_collateral_locked -= collateral_from_already_deposited;
-    if additional_collateral > 0 {
-        collateral_info.lock_collateral(collateral_token, additional_collateral)?;
-        rfq.total_taker_collateral_locked += additional_collateral;
-    }
-    response.taker_collateral_locked = taker_collateral;
-
-    if maker_collateral < response.maker_collateral_locked {
-        let to_unlock = response.maker_collateral_locked - maker_collateral;
-        maker_collateral_info.unlock_collateral(to_unlock);
-        response.maker_collateral_locked -= to_unlock;
-    }
-
-    rfq.confirmed_responses += 1;
+    deposit_leg_asset(ctx.accounts)?;
+    deposit_quote_asset(ctx.accounts)?;
 
     Ok(())
+}
+
+fn deposit_leg_asset(accs: &ConfirmResponseAccounts) -> Result<()> {
+    let ConfirmResponseAccounts {
+        taker,
+        rfq,
+        response,
+        leg_tokens,
+        leg_escrow,
+        token_program,
+        ..
+    } = accs;
+
+    if response.get_leg_asset_receiver() == AuthoritySide::Taker {
+        return Ok(());
+    }
+
+    let token_amount = response.get_leg_amount_to_transfer(rfq);
+    let transfer_accounts = Transfer {
+        from: leg_tokens.to_account_info(),
+        to: leg_escrow.to_account_info(),
+        authority: taker.to_account_info(),
+    };
+    let transfer_ctx = CpiContext::new(token_program.to_account_info(), transfer_accounts);
+    transfer(transfer_ctx, token_amount)
+}
+
+fn deposit_quote_asset(accs: &ConfirmResponseAccounts) -> Result<()> {
+    let ConfirmResponseAccounts {
+        taker,
+        rfq,
+        response,
+        quote_tokens,
+        quote_escrow,
+        token_program,
+        ..
+    } = accs;
+
+    if response.get_quote_asset_receiver() == AuthoritySide::Taker {
+        return Ok(());
+    };
+
+    let token_amount = response.get_quote_amount_to_transfer(rfq);
+    let transfer_accounts = Transfer {
+        from: quote_tokens.to_account_info(),
+        to: quote_escrow.to_account_info(),
+        authority: taker.to_account_info(),
+    };
+    let transfer_ctx = CpiContext::new(token_program.to_account_info(), transfer_accounts);
+    transfer(transfer_ctx, token_amount)
 }

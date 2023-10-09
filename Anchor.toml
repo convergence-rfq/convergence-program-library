@@ -2,24 +2,12 @@ anchor_version = "0.25.0"
 
 [programs.localnet]
 rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
-risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
-spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
-psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
-psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
 
 [programs.devnet]
 rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
-risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
-spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
-psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
-psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
 
 [programs.mainnet]
 rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
-risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
-spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
-psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
-psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -29,13 +17,7 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
-members = [
-    "rfq/program",
-    "risk-engine/program",
-    "spot-instrument/program",
-    "psyoptions-european-instrument/program",
-    "psyoptions-american-instrument/program",
-]
+members = ["rfq/program"]
 
 [scripts]
 generate-test-fixtures = "yarn ts-node -T tests/scripts/fixturesGenerator.ts"

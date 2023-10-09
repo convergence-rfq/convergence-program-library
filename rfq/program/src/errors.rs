@@ -112,4 +112,10 @@ pub enum ProtocolError {
     DefaultValueIsNotPermitted,
     #[msg("Specified oracle source is missing")]
     OracleSourceIsMissing,
+    #[msg("Invalid leg asset mint passed")]
+    InvalidLegMint,
+    #[msg("Invalid quote asset mint passed")]
+    InvalidQuoteMint,
+    #[msg("Invalid token account mint passed")]
+    InvalidTokenAccountMint,
 }
