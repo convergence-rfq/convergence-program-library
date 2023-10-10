@@ -1,14 +1,11 @@
 import { AnchorError, BN, Program } from "@coral-xyz/anchor";
-import { sha256 } from "@noble/hashes/sha256";
 import { BigNumber } from "bignumber.js";
 import { PublicKey, ComputeBudgetProgram, SendTransactionError } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
-import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, FEE_BPS_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
+import { ABSOLUTE_PRICE_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
-import { InstrumentController } from "./instrument";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
-import { FeeParams } from "./types";
 
 chai.use(chaiBn(BN));
 
@@ -30,11 +27,6 @@ export const sleep = (seconds: number) => {
 
 export function toAbsolutePrice(value: BN) {
   return new BN(10).pow(new BN(ABSOLUTE_PRICE_DECIMALS)).mul(value);
-}
-
-export function toLegMultiplier(value: number) {
-  let bignumber = new BigNumber(value).multipliedBy(new BigNumber(10).pow(LEG_MULTIPLIER_DECIMALS));
-  return new BN(bignumber.toString());
 }
 
 export function withTokenDecimals(value: number) {
@@ -61,26 +53,7 @@ export async function runInParallelWithWait<T>(promiseGetter: () => Promise<T>, 
   return result;
 }
 
-export function calculateLegsSize(legs: InstrumentController[]) {
-  return legs.map((leg) => EMPTY_LEG_SIZE + leg.getInstrumendDataSize()).reduce((x, y) => x + y, 4);
-}
-
-export function calculateLegsHash(legs: InstrumentController[], program: Program<RfqIdl>) {
-  const serializedLegsData = legs.map((leg) => program.coder.types.encode("Leg", leg.toLegData()));
-  const lengthBuffer = Buffer.alloc(4);
-  lengthBuffer.writeInt32LE(legs.length);
-  const fullLegDataBuffer = Buffer.concat([lengthBuffer, ...serializedLegsData]);
-  return sha256(fullLegDataBuffer);
-}
-
-type MeasuredToken =
-  | "quote"
-  | "asset"
-  | "additionalAsset"
-  | "walletCollateral"
-  | "unlockedCollateral"
-  | "totalCollateral"
-  | Mint;
+type MeasuredToken = "btc" | "sol" | "eth" | "usdc" | Mint;
 
 export class TokenChangeMeasurer {
   private constructor(
@@ -93,10 +66,14 @@ export class TokenChangeMeasurer {
   ) {}
 
   static takeDefaultSnapshot(context: Context) {
-    return this.takeSnapshot(context, ["quote", "asset"], [context.taker.publicKey, context.maker.publicKey]);
+    return this.takeSnapshot(context, ["btc", "usdc"], [context.taker.publicKey, context.maker.publicKey]);
   }
 
-  static async takeSnapshot(context: Context, tokens: MeasuredToken[], users: PublicKey[]) {
+  static async takeSnapshot(
+    context: Context,
+    tokens: MeasuredToken[],
+    users: PublicKey[] = [context.taker.publicKey, context.maker.publicKey]
+  ) {
     const snapshots = await Promise.all(
       tokens.map(async (token) => {
         return await Promise.all(
@@ -116,18 +93,14 @@ export class TokenChangeMeasurer {
   }
 
   private static getValue(context: Context, token: MeasuredToken, user: PublicKey) {
-    if (token == "quote") {
-      return context.quoteToken.getAssociatedBalance(user);
-    } else if (token == "asset") {
+    if (token == "btc") {
       return context.btcToken.getAssociatedBalance(user);
-    } else if (token == "additionalAsset") {
+    } else if (token == "sol") {
       return context.solToken.getAssociatedBalance(user);
-    } else if (token == "unlockedCollateral") {
-      return context.collateralToken.getUnlockedCollateral(user);
-    } else if (token == "totalCollateral") {
-      return context.collateralToken.getTotalCollateral(user);
-    } else if (token == "walletCollateral") {
-      return context.collateralToken.getAssociatedBalance(user);
+    } else if (token == "eth") {
+      return context.ethToken.getAssociatedBalance(user);
+    } else if (token == "usdc") {
+      return context.quoteToken.getAssociatedBalance(user);
     } else {
       return token.getAssociatedBalance(user);
     }
@@ -187,18 +160,6 @@ export function serializeOptionQuote(quote: any | null, program: Program<RfqIdl>
 
   const serializedQuote = program.coder.types.encode("Quote", quote);
   return Buffer.concat([Buffer.from([1]), serializedQuote]);
-}
-
-export function calculateFeesValue(value: BN, fee: number): BN {
-  const bignumValue = new BigNumber(value.toString());
-  return new BN(bignumValue.multipliedBy(fee).toString());
-}
-
-export function toApiFeeParams(params: FeeParams) {
-  return {
-    takerBps: new BN(params.taker * 10 ** FEE_BPS_DECIMALS),
-    makerBps: new BN(params.maker * 10 ** FEE_BPS_DECIMALS),
-  };
 }
 
 // call this function from mocha beforeAll hook

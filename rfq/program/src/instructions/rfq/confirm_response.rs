@@ -77,9 +77,10 @@ fn validate(
                 price_quote: _,
                 leg_amount,
             } => {
-                require!(
-                    override_leg_amount <= leg_amount,
-                    ProtocolError::LegMultiplierHigherThanInQuote
+                require_gte!(
+                    leg_amount,
+                    override_leg_amount,
+                    ProtocolError::LegAmountHigherThanInQuote
                 );
             }
             _ => unreachable!(),

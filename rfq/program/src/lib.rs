@@ -74,9 +74,9 @@ pub mod rfq {
     pub fn confirm_response<'info>(
         ctx: Context<'_, '_, '_, 'info, ConfirmResponseAccounts<'info>>,
         side: QuoteSide,
-        override_leg_multiplier_bps: Option<u64>,
+        override_leg_amount: Option<u64>,
     ) -> Result<()> {
-        confirm_response_instruction(ctx, side, override_leg_multiplier_bps)
+        confirm_response_instruction(ctx, side, override_leg_amount)
     }
 
     pub fn settle<'info>(ctx: Context<'_, '_, '_, 'info, SettleAccounts<'info>>) -> Result<()> {

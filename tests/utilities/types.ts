@@ -15,13 +15,6 @@ export const QuoteSide = {
   Ask: { ask: {} },
 };
 
-export type LegSide = { long: {} } | { short: {} };
-
-export const LegSide = {
-  Long: { long: {} },
-  Short: { short: {} },
-};
-
 export type AuthoritySide = { taker: {} } | { maker: {} };
 
 export const AuthoritySide = {
@@ -29,52 +22,11 @@ export const AuthoritySide = {
   Maker: { maker: {} },
 };
 
-export type RiskCategory =
-  | { veryLow: {}; index: number }
-  | { low: {}; index: number }
-  | { medium: {}; index: number }
-  | { high: {}; index: number }
-  | { veryHigh: {}; index: number }
-  | { custom1: {}; index: number }
-  | { custom2: {}; index: number }
-  | { custom3: {}; index: number };
-
-export const RiskCategory = {
-  VeryLow: { veryLow: {}, index: 0 },
-  Low: { low: {}, index: 1 },
-  Medium: { medium: {}, index: 2 },
-  High: { high: {}, index: 3 },
-  VeryHigh: { veryHigh: {}, index: 4 },
-  Custom1: { custom1: {}, index: 5 },
-  Custom2: { custom2: {}, index: 6 },
-  Custom3: { custom3: {}, index: 7 },
-};
-
-export type Scenario = {
-  baseAssetPriceChange: number;
-  volatilityChange: number;
-};
-
-export type RiskCategoryInfo = {
-  interestRate: number;
-  annualized30DayVolatility: number;
-  scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario];
-};
-
-export type InstrumentType = { spot: {} } | { option: {} } | { termFuture: {} } | { perpFuture: {} };
-
-export const InstrumentType = {
-  Spot: { spot: {} },
-  Option: { option: {} },
-  TermFuture: { termFuture: {} },
-  PerpFuture: { perpFuture: {} },
-};
-
 export type Quote =
   | {
       standard: {
         priceQuote: { absolutePrice: { amountBps: BN } };
-        legsMultiplierBps: BN;
+        legAmount: BN;
       };
     }
   | {
@@ -84,7 +36,7 @@ export type Quote =
     };
 
 export const Quote = {
-  getStandard: (priceBps: BN, legsMultiplierBps: BN): Quote => {
+  getStandard: (priceBps: BN, legAmount: BN): Quote => {
     return {
       standard: {
         priceQuote: {
@@ -92,7 +44,7 @@ export const Quote = {
             amountBps: priceBps,
           },
         },
-        legsMultiplierBps,
+        legAmount,
       },
     };
   },
@@ -113,7 +65,7 @@ export type FixedSize =
   | { none: { padding: BN } }
   | {
       baseAsset: {
-        legsMultiplierBps: BN;
+        legAmount: BN;
       };
     }
   | {
@@ -128,10 +80,10 @@ export const FixedSize = {
       padding: new BN(0),
     },
   },
-  getBaseAsset: (legsMultiplierBps: BN) => {
+  getBaseAsset: (legAmount: BN) => {
     return {
       baseAsset: {
-        legsMultiplierBps,
+        legAmount,
       },
     };
   },
@@ -142,40 +94,4 @@ export const FixedSize = {
       },
     };
   },
-};
-
-export function toScenario(baseAssetPriceChange: number, volatilityChange: number): Scenario {
-  return { baseAssetPriceChange, volatilityChange };
-}
-
-export function toRiskCategoryInfo(
-  interestRate: number,
-  annualized30DayVolatility: number,
-  scenarioPerSettlementPeriod: [Scenario, Scenario, Scenario, Scenario, Scenario, Scenario]
-): RiskCategoryInfo {
-  return {
-    interestRate,
-    annualized30DayVolatility,
-    scenarioPerSettlementPeriod: scenarioPerSettlementPeriod,
-  };
-}
-
-export type AssetIdentifier = "quote" | { legIndex: number };
-
-export function assetIdentifierToSeedBytes(assetIdentifier: AssetIdentifier) {
-  if (assetIdentifier == "quote") {
-    return Buffer.from([1, 0]);
-  } else {
-    return Buffer.from([0, assetIdentifier.legIndex]);
-  }
-}
-
-export type FeeParams = { taker: number; maker: number };
-
-export type OracleSource = { switchboard: {} } | { pyth: {} } | { inPlace: {} };
-
-export const OracleSource = {
-  Switchboard: { switchboard: {} },
-  Pyth: { pyth: {} },
-  InPlace: { inPlace: {} },
 };

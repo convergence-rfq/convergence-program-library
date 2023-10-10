@@ -101,7 +101,7 @@ impl Response {
         }
 
         let quote = self.get_confirmed_quote().unwrap();
-        let legs_amount = match quote {
+        let leg_amount = match quote {
             Quote::Standard {
                 price_quote: _,
                 leg_amount,
@@ -118,10 +118,9 @@ impl Response {
         let price_bps = quote.get_price_bps();
 
         let result_with_more_decimals =
-            legs_amount as u128 * price_bps / 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS);
+            leg_amount as u128 * price_bps / 10_u128.pow(PriceQuote::ABSOLUTE_PRICE_DECIMALS);
 
-        let decimals_factor = Quote::LEG_MULTIPLIER_FACTOR;
-        let result = result_with_more_decimals / decimals_factor;
+        let result = result_with_more_decimals / 10_u128.pow(rfq.leg_asset_decimals.into());
 
         result
             .try_into()
@@ -164,7 +163,6 @@ impl Response {
                 }
                 .unwrap();
 
-                // apply overriden leg multiplier
                 if let Some(override_leg_amount) = confirmation.override_leg_amount {
                     match &mut quote {
                         Quote::Standard {
@@ -278,9 +276,6 @@ pub enum Quote {
 }
 
 impl Quote {
-    pub const LEG_MULTIPLIER_DECIMALS: u32 = 9;
-    pub const LEG_MULTIPLIER_FACTOR: u128 = 10_u128.pow(Quote::LEG_MULTIPLIER_DECIMALS);
-
     pub fn get_price_bps(&self) -> u128 {
         match self {
             Quote::Standard {

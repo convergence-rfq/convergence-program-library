@@ -17,7 +17,7 @@ pub struct SettleAccounts<'info> {
 
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
-    #[account(mut, close = maker, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
+    #[account(mut, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
     pub response: Box<Account<'info, Response>>,
 
     #[account(mut, constraint = taker_leg_tokens.mint == rfq.leg_asset @ ProtocolError::InvalidTokenAccountMint)]
@@ -139,7 +139,7 @@ fn send_leg_asset(accs: &SettleAccounts) -> Result<()> {
 
 fn send_quote_asset(accs: &SettleAccounts) -> Result<()> {
     let SettleAccounts {
-        taker,
+        maker,
         rfq,
         response,
         maker_quote_tokens,
@@ -148,7 +148,7 @@ fn send_quote_asset(accs: &SettleAccounts) -> Result<()> {
         ..
     } = accs;
 
-    if response.get_quote_asset_receiver() == AuthoritySide::Taker {
+    if response.get_quote_asset_receiver() == AuthoritySide::Maker {
         return Ok(());
     };
 
@@ -156,7 +156,7 @@ fn send_quote_asset(accs: &SettleAccounts) -> Result<()> {
     let transfer_accounts = Transfer {
         from: maker_quote_tokens.to_account_info(),
         to: taker_quote_tokens.to_account_info(),
-        authority: taker.to_account_info(),
+        authority: maker.to_account_info(),
     };
     let transfer_ctx = CpiContext::new(token_program.to_account_info(), transfer_accounts);
     transfer(transfer_ctx, token_amount)

@@ -2,7 +2,7 @@ use crate::{
     common::{transfer_from_escrow_and_close_it, EscrowType},
     errors::ProtocolError,
     seeds::{LEG_ESCROW_SEED, QUOTE_ESCROW_SEED},
-    state::{Response, ResponseState, Rfq, StoredResponseState},
+    state::{AuthoritySide, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
@@ -32,11 +32,31 @@ pub struct UnlockResponseCollateralAccounts<'info> {
 }
 
 fn validate(ctx: &Context<UnlockResponseCollateralAccounts>) -> Result<()> {
-    let UnlockResponseCollateralAccounts { rfq, response, .. } = &ctx.accounts;
+    let UnlockResponseCollateralAccounts {
+        rfq,
+        response,
+        taker_leg_tokens,
+        taker_quote_tokens,
+        ..
+    } = &ctx.accounts;
 
     response
         .get_state(rfq)?
         .assert_state_in([ResponseState::ConfirmedExpired])?;
+
+    AuthoritySide::Taker.validate_is_associated_token_account(
+        rfq,
+        response,
+        rfq.leg_asset,
+        taker_leg_tokens.key(),
+    )?;
+
+    AuthoritySide::Taker.validate_is_associated_token_account(
+        rfq,
+        response,
+        rfq.quote_asset,
+        taker_quote_tokens.key(),
+    )?;
 
     Ok(())
 }

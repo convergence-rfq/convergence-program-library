@@ -26,6 +26,8 @@ pub struct CreateRfqAccounts<'info> {
         taker.key().as_ref(),
         &[order_type as u8],
         &fixed_size.try_to_vec().unwrap(),
+        &leg_mint.key().as_ref(),
+        &quote_mint.key().as_ref(),
         &active_window.to_le_bytes(),
         &recent_timestamp.to_le_bytes(),
     ], bump)]

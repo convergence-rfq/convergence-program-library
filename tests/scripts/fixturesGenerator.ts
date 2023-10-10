@@ -8,21 +8,8 @@ import { rimraf } from "rimraf";
 import { PublicKey, Keypair, Connection, Version } from "@solana/web3.js";
 import { Wallet } from "@coral-xyz/anchor";
 import { executeInParallel, sleep } from "../utilities/helpers";
-import { CollateralMint, Context, Mint } from "../utilities/wrappers";
-import { SpotInstrument } from "../utilities/instruments/spotInstrument";
-import { PsyoptionsAmericanInstrumentClass } from "../utilities/instruments/psyoptionsAmericanInstrument";
-import { PsyoptionsEuropeanInstrument } from "../utilities/instruments/psyoptionsEuropeanInstrument";
-import {
-  BITCOIN_BASE_ASSET_INDEX,
-  DEFAULT_COLLATERAL_FUNDED,
-  DEFAULT_SOL_FOR_SIGNERS,
-  ETH_BASE_ASSET_INDEX,
-  ETH_IN_PLACE_PRICE,
-  PYTH_SOL_ORACLE,
-  SOLANA_BASE_ASSET_INDEX,
-  SWITCHBOARD_BTC_ORACLE,
-} from "../utilities/constants";
-import { OracleSource, RiskCategory } from "../utilities/types";
+import { Context, Mint } from "../utilities/wrappers";
+import { DEFAULT_SOL_FOR_SIGNERS } from "../utilities/constants";
 import { fixtureAccountsPath, getKeypairPath, pubkeyNamingFilePath, readKeypair } from "../utilities/fixtures";
 
 const ledgerPath = path.join(".anchor", "test-ledger");
@@ -66,122 +53,32 @@ async function main() {
   // create and save mints and related token accounts
   await executeInParallel(
     async () => {
-      const btcToken = await Mint.create(context, await readOrCreateKeypair("mint-btc"));
+      const btcToken = await Mint.create(context, 8, await readOrCreateKeypair("mint-btc"));
       context.btcToken = btcToken;
       await saveMint(context, context.btcToken, "btc");
     },
     async () => {
-      const solToken = await Mint.create(context, await readOrCreateKeypair("mint-sol"));
+      const solToken = await Mint.create(context, 12, await readOrCreateKeypair("mint-sol"));
       context.solToken = solToken;
       await saveMint(context, context.solToken, "sol");
     },
     async () => {
-      const ethToken = await Mint.create(context, await readOrCreateKeypair("mint-eth"));
+      const ethToken = await Mint.create(context, 4, await readOrCreateKeypair("mint-eth"));
       context.ethToken = ethToken;
       await saveMint(context, context.ethToken, "eth");
     },
     async () => {
-      const quoteToken = await Mint.create(context, await readOrCreateKeypair("mint-usd-quote"));
+      const quoteToken = await Mint.create(context, 6, await readOrCreateKeypair("mint-usd-quote"));
       context.quoteToken = quoteToken;
       await saveMint(context, context.quoteToken, "usd-quote");
-    },
-    async () => {
-      const collateralToken = await CollateralMint.create(context, await readOrCreateKeypair("mint-usd-collateral"));
-      context.collateralToken = collateralToken;
-      await saveMint(context, context.collateralToken, "usd-collateral");
     }
   );
 
   await context.initializeProtocol();
 
-  await executeInParallel(
-    async () => {
-      await context.riskEngine.initializeDefaultConfig();
-    },
-    // add instruments
-    async () => {
-      await SpotInstrument.addInstrument(context);
-    },
-    async () => {
-      await PsyoptionsEuropeanInstrument.addInstrument(context);
-    },
-    async () => {
-      await PsyoptionsAmericanInstrumentClass.addInstrument(context);
-    },
-    // initialize and fund collateral accounts
-    async () => {
-      await context.initializeCollateral(context.taker);
-      await context.fundCollateral(context.taker, DEFAULT_COLLATERAL_FUNDED);
-      await saveCollateralPdas(context, context.taker.publicKey, "taker");
-    },
-    async () => {
-      await context.initializeCollateral(context.maker);
-      await context.fundCollateral(context.maker, DEFAULT_COLLATERAL_FUNDED);
-      await saveCollateralPdas(context, context.maker.publicKey, "maker");
-    },
-    async () => {
-      await context.initializeCollateral(context.dao);
-      await saveCollateralPdas(context, context.dao.publicKey, "dao");
-    },
-    // add base assets, register mints and save accounts
-    async () => {
-      const { baseAssetPda } = await context.addBaseAsset(
-        BITCOIN_BASE_ASSET_INDEX,
-        "BTC",
-        RiskCategory.VeryLow,
-        OracleSource.Switchboard,
-        SWITCHBOARD_BTC_ORACLE,
-        null,
-        null
-      );
-      await context.btcToken.register(BITCOIN_BASE_ASSET_INDEX);
-
-      await saveAccountAsFixture(context, baseAssetPda, "rfq-base-asset-btc");
-      await saveAccountAsFixture(context, context.btcToken.mintInfoAddress as PublicKey, "rfq-mint-info-btc");
-    },
-    async () => {
-      const { baseAssetPda } = await context.addBaseAsset(
-        SOLANA_BASE_ASSET_INDEX,
-        "SOL",
-        RiskCategory.Medium,
-        OracleSource.Pyth,
-        null,
-        PYTH_SOL_ORACLE,
-        null
-      );
-      await context.solToken.register(SOLANA_BASE_ASSET_INDEX);
-
-      await saveAccountAsFixture(context, baseAssetPda, "rfq-base-asset-sol");
-      await saveAccountAsFixture(context, context.solToken.mintInfoAddress as PublicKey, "rfq-mint-info-sol");
-    },
-    async () => {
-      const { baseAssetPda } = await context.addBaseAsset(
-        ETH_BASE_ASSET_INDEX,
-        "ETH",
-        RiskCategory.Low,
-        OracleSource.InPlace,
-        null,
-        null,
-        ETH_IN_PLACE_PRICE
-      );
-      await context.ethToken.register(ETH_BASE_ASSET_INDEX);
-
-      await saveAccountAsFixture(context, baseAssetPda, "rfq-base-asset-eth");
-      await saveAccountAsFixture(context, context.ethToken.mintInfoAddress as PublicKey, "rfq-mint-info-eth");
-    },
-    async () => {
-      await context.quoteToken.register(null);
-
-      await saveAccountAsFixture(context, context.quoteToken.mintInfoAddress as PublicKey, "rfq-mint-info-usd-quote");
-    }
-  );
-
   // postpone saving protocol and risk engine config after all initialization
   // to capture all internal changes in those accounts
-  await executeInParallel(
-    () => saveAccountAsFixture(context, context.protocolPda, "rfq-protocol"),
-    () => saveAccountAsFixture(context, context.riskEngine.configAddress, "risk-engine-config")
-  );
+  await executeInParallel(() => saveAccountAsFixture(context, context.protocolPda, "rfq-protocol"));
 
   await savePubkeyNaming();
   process.exit();
@@ -294,19 +191,6 @@ async function readOrCreateKeypair(name: string) {
 
     return keypair;
   }
-}
-
-async function saveCollateralPdas(context: Context, owner: PublicKey, ownerName: string) {
-  await saveAccountAsFixture(
-    context,
-    await context.collateralToken.getTokenPda(owner),
-    `rfq-collateral-token-${ownerName}`
-  );
-  await saveAccountAsFixture(
-    context,
-    await context.collateralToken.getInfoPda(owner),
-    `rfq-collateral-info-${ownerName}`
-  );
 }
 
 async function savePayer(context: Context, keypair: Keypair, name: string) {
