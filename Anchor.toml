@@ -1,13 +1,13 @@
 anchor_version = "0.25.0"
 
 [programs.localnet]
-rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
+rfq = "BThK6bNFeBkMHphJ5bcUKi1tXWPyFqbFN4FKB7WoiJEU"
 
 [programs.devnet]
-rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
+rfq = "BThK6bNFeBkMHphJ5bcUKi1tXWPyFqbFN4FKB7WoiJEU"
 
 [programs.mainnet]
-rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
+rfq = "BThK6bNFeBkMHphJ5bcUKi1tXWPyFqbFN4FKB7WoiJEU"
 
 [registry]
 url = "https://anchor.projectserum.com"

@@ -11,6 +11,7 @@ pub struct Rfq {
     pub leg_asset: Pubkey,
     pub leg_asset_decimals: u8,
     pub quote_asset: Pubkey,
+    pub quote_asset_decimals: u8,
 
     pub creation_timestamp: i64,
     pub active_window: u32,

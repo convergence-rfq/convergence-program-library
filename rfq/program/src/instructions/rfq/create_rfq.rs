@@ -76,6 +76,7 @@ pub fn create_rfq_instruction<'info>(
         leg_asset: leg_mint.key(),
         leg_asset_decimals: leg_mint.decimals,
         quote_asset: quote_mint.key(),
+        quote_asset_decimals: quote_mint.decimals,
         creation_timestamp: Clock::get()?.unix_timestamp,
         active_window,
         state: StoredRfqState::Active,

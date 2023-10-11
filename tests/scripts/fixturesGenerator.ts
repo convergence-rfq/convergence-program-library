@@ -58,7 +58,7 @@ async function main() {
       await saveMint(context, context.btcToken, "btc");
     },
     async () => {
-      const solToken = await Mint.create(context, 12, await readOrCreateKeypair("mint-sol"));
+      const solToken = await Mint.create(context, 10, await readOrCreateKeypair("mint-sol"));
       context.solToken = solToken;
       await saveMint(context, context.solToken, "sol");
     },

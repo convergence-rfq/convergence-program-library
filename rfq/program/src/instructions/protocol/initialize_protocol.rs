@@ -9,7 +9,7 @@ pub struct InitializeProtocolAccounts<'info> {
         init,
         payer = signer,
         seeds = [PROTOCOL_SEED.as_bytes()],
-        space = ProtocolState::INIT_SPACE,
+        space = 8 + ProtocolState::INIT_SPACE,
         bump
     )]
     pub protocol: Account<'info, ProtocolState>,
