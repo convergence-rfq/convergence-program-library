@@ -13,7 +13,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
 
 #[derive(Accounts)]
-#[instruction(bid: Option<Quote>, ask: Option<Quote>, pda_distinguisher: u16)]
+#[instruction(bid: Option<Quote>, ask: Option<Quote>, active_window:u32,pda_distinguisher: u16)]
 pub struct RespondToRfqAccounts<'info> {
     #[account(mut)]
     pub maker: Signer<'info>,
@@ -29,6 +29,7 @@ pub struct RespondToRfqAccounts<'info> {
         maker.key().as_ref(),
         &bid.try_to_vec().unwrap(),
         &ask.try_to_vec().unwrap(),
+        &active_window.to_le_bytes(),
         &pda_distinguisher.to_le_bytes(),
     ], bump)]
     pub response: Account<'info, Response>,
@@ -111,6 +112,7 @@ pub fn respond_to_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, RespondToRfqAccounts<'info>>,
     bid: Option<Quote>,
     ask: Option<Quote>,
+    active_window: u32,
     _pda_distinguisher: u16,
 ) -> Result<()> {
     validate(&ctx, bid, ask)?;
@@ -140,6 +142,7 @@ pub fn respond_to_rfq_instruction<'info>(
         leg_preparations_initialized_by: vec![],
         bid,
         ask,
+        active_window,
     });
     response.exit(ctx.program_id)?;
 
