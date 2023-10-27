@@ -939,7 +939,6 @@ export class Rfq {
         Date.now() / 1000 + DEFAULT_ACTIVE_WINDOW - 6
       );
     }
-    console.log("expirationTimestamp", expirationTimestamp);
 
     const response = await getResponsePda(
       this.account,
