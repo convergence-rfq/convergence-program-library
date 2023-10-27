@@ -13,7 +13,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
 
 #[derive(Accounts)]
-#[instruction(bid: Option<Quote>, ask: Option<Quote>,pda_distinguisher: u16)]
+#[instruction(bid: Option<Quote>, ask: Option<Quote>, pda_distinguisher: u16)]
 pub struct RespondToRfqAccounts<'info> {
     #[account(mut)]
     pub maker: Signer<'info>,
