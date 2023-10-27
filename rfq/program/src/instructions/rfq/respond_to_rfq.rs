@@ -13,7 +13,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
 
 #[derive(Accounts)]
-#[instruction(bid: Option<Quote>, ask: Option<Quote>, active_window:u32,pda_distinguisher: u16)]
+#[instruction(bid: Option<Quote>, ask: Option<Quote>,pda_distinguisher: u16)]
 pub struct RespondToRfqAccounts<'info> {
     #[account(mut)]
     pub maker: Signer<'info>,
@@ -29,7 +29,6 @@ pub struct RespondToRfqAccounts<'info> {
         maker.key().as_ref(),
         &bid.try_to_vec().unwrap(),
         &ask.try_to_vec().unwrap(),
-        &active_window.to_le_bytes(),
         &pda_distinguisher.to_le_bytes(),
     ], bump)]
     pub response: Account<'info, Response>,
@@ -52,8 +51,23 @@ fn validate(
     ctx: &Context<RespondToRfqAccounts>,
     bid: Option<Quote>,
     ask: Option<Quote>,
+    expiration_timestamp: Option<i64>,
 ) -> Result<()> {
     let RespondToRfqAccounts { maker, rfq, .. } = &ctx.accounts;
+    //checks for expiration timestamp
+    if let Some(response_expiration_timestamp) = expiration_timestamp {
+        let current_timestamp = Clock::get()?.unix_timestamp;
+        let rfq_expiration_timestamp = rfq.creation_timestamp + rfq.active_window as i64;
+        require!(
+            response_expiration_timestamp > current_timestamp,
+            ProtocolError::InvalidExpirationTimestamp
+        );
+
+        require!(
+            response_expiration_timestamp <= rfq_expiration_timestamp,
+            ProtocolError::InvalidExpirationTimestamp
+        )
+    }
 
     require!(maker.key() != rfq.taker, ProtocolError::TakerCanNotRespond);
 
@@ -112,10 +126,10 @@ pub fn respond_to_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, RespondToRfqAccounts<'info>>,
     bid: Option<Quote>,
     ask: Option<Quote>,
-    active_window: u32,
     _pda_distinguisher: u16,
+    expiration_timestamp: Option<i64>,
 ) -> Result<()> {
-    validate(&ctx, bid, ask)?;
+    validate(&ctx, bid, ask, expiration_timestamp)?;
 
     let RespondToRfqAccounts {
         maker,
@@ -142,7 +156,7 @@ pub fn respond_to_rfq_instruction<'info>(
         leg_preparations_initialized_by: vec![],
         bid,
         ask,
-        active_window,
+        expiration_timestamp,
     });
     response.exit(ctx.program_id)?;
 

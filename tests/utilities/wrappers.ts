@@ -925,11 +925,21 @@ export class Rfq {
   async respond({
     bid = null,
     ask = null,
-    activeWindow = DEFAULT_ACTIVE_WINDOW,
-  }: { bid?: Quote | null; ask?: Quote | null; activeWindow?: number } = {}) {
+    expirationTimestamp = null,
+  }: {
+    bid?: Quote | null;
+    ask?: Quote | null;
+    expirationTimestamp?: BN | null;
+  } = {}) {
     if (bid === null && ask === null) {
       bid = Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
     }
+    if (expirationTimestamp === null) {
+      expirationTimestamp = new BN(
+        Date.now() / 1000 + DEFAULT_ACTIVE_WINDOW - 6
+      );
+    }
+    console.log("expirationTimestamp", expirationTimestamp);
 
     const response = await getResponsePda(
       this.account,
@@ -937,12 +947,11 @@ export class Rfq {
       this.context.program.programId,
       serializeOptionQuote(bid, this.context.program),
       serializeOptionQuote(ask, this.context.program),
-      activeWindow,
       0
     );
 
     await this.context.program.methods
-      .respondToRfq(bid as any, ask as any, activeWindow, 0)
+      .respondToRfq(bid as any, ask as any, 0, expirationTimestamp)
       .accounts({
         maker: this.context.maker.publicKey,
         protocol: this.context.protocolPda,

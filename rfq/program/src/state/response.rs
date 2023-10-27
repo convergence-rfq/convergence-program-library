@@ -16,7 +16,7 @@ pub struct Response {
     pub rfq: Pubkey,
 
     pub creation_timestamp: i64,
-    pub active_window: u32,
+    pub expiration_timestamp: Option<i64>,
     pub maker_collateral_locked: u64,
     pub taker_collateral_locked: u64,
     pub state: StoredResponseState,
@@ -44,9 +44,7 @@ impl Response {
 
     pub fn get_state(&self, rfq: &Rfq) -> Result<ResponseState> {
         let current_time = Clock::get()?.unix_timestamp;
-        let rfq_active_window_ended = rfq.active_window_ended(current_time);
-        let response_active_window_ended = self.active_window_ended(current_time);
-        let active_window_ended = rfq_active_window_ended || response_active_window_ended;
+        let active_window_ended = self.active_window_ended(current_time, rfq);
         let settle_window_ended = rfq.settle_window_ended(current_time);
         let state = match self.state {
             StoredResponseState::Active => {
@@ -84,8 +82,11 @@ impl Response {
         Ok(state)
     }
 
-    pub fn active_window_ended(&self, current_time: i64) -> bool {
-        current_time >= self.creation_timestamp + self.active_window as i64
+    pub fn active_window_ended(&self, current_time: i64, rfq: &Rfq) -> bool {
+        match self.expiration_timestamp {
+            Some(expiration_timestamp) => current_time >= expiration_timestamp,
+            None => rfq.active_window_ended(current_time),
+        }
     }
 
     pub fn get_asset_amount_to_transfer(

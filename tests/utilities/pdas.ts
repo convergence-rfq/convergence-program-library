@@ -75,7 +75,6 @@ export async function getResponsePda(
   programId: PublicKey,
   bidBuffer: Buffer,
   askBuffer: Buffer,
-  activeWindow: number,
   pdaDistinguisher: number
 ) {
   const [pda] = await PublicKey.findProgramAddress(
@@ -85,7 +84,6 @@ export async function getResponsePda(
       maker.toBuffer(),
       bidBuffer,
       askBuffer,
-      toLittleEndian(activeWindow, 4),
       toLittleEndian(pdaDistinguisher, 2),
     ],
     programId
