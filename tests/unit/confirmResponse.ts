@@ -1,9 +1,5 @@
 import { DEFAULT_ACTIVE_WINDOW } from "../utilities/constants";
-import {
-  attachImprovedLogDisplay,
-  expectError,
-  sleep,
-} from "../utilities/helpers";
+import { attachImprovedLogDisplay, expectError, sleep } from "../utilities/helpers";
 
 import { Context, getContext } from "../utilities/wrappers";
 import { expect } from "chai";

@@ -10,23 +10,10 @@ import {
   toLegMultiplier,
   withTokenDecimals,
 } from "../utilities/helpers";
-import {
-  PsyoptionsEuropeanInstrument,
-  EuroOptionsFacade,
-} from "../utilities/instruments/psyoptionsEuropeanInstrument";
-import {
-  AuthoritySide,
-  OracleSource,
-  Quote,
-  RiskCategory,
-  QuoteSide,
-  LegSide,
-} from "../utilities/types";
+import { PsyoptionsEuropeanInstrument, EuroOptionsFacade } from "../utilities/instruments/psyoptionsEuropeanInstrument";
+import { AuthoritySide, OracleSource, Quote, RiskCategory, QuoteSide, LegSide } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
-import {
-  CONTRACT_DECIMALS_BN,
-  OptionType,
-} from "@mithraic-labs/tokenized-euros";
+import { CONTRACT_DECIMALS_BN, OptionType } from "@mithraic-labs/tokenized-euros";
 import { SWITCHBOARD_BTC_ORACLE } from "../utilities/constants";
 
 describe("Psyoptions European instrument integration tests", () => {
@@ -69,14 +56,8 @@ describe("Psyoptions European instrument integration tests", () => {
     });
     // response with agreeing to sell 2 options for 500$ or buy 5 for 450$
     const response = await rfq.respond({
-      bid: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(450)),
-        toLegMultiplier(5)
-      ),
-      ask: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(500)),
-        toLegMultiplier(2)
-      ),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
     });
     // taker confirms to buy 1 option
     await response.confirm({
@@ -123,10 +104,7 @@ describe("Psyoptions European instrument integration tests", () => {
     const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
       // response with agreeing to buy 5 options for 450$
       const response = await rfq.respond({
-        bid: Quote.getStandard(
-          toAbsolutePrice(withTokenDecimals(450)),
-          toLegMultiplier(5)
-        ),
+        bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
         expirationTimestamp: Date.now() / 1000 + 1,
       });
       // taker confirms to sell 2 options
@@ -137,11 +115,7 @@ describe("Psyoptions European instrument integration tests", () => {
 
       await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
 
-      let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
-        context,
-        [options.putMint],
-        [taker]
-      );
+      let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.putMint], [taker]);
       await response.prepareSettlement(AuthoritySide.Taker);
 
       return [response, tokenMeasurer];
@@ -150,9 +124,7 @@ describe("Psyoptions European instrument integration tests", () => {
     await response.revertSettlementPreparation(AuthoritySide.Taker);
 
     // taker have returned his assets
-    await tokenMeasurer.expectChange([
-      { token: options.putMint, user: taker, delta: new BN(0) },
-    ]);
+    await tokenMeasurer.expectChange([{ token: options.putMint, user: taker, delta: new BN(0) }]);
 
     await response.settleOnePartyDefault();
     await response.cleanUp();
@@ -205,14 +177,8 @@ describe("Psyoptions European instrument integration tests", () => {
     await rfq.addLegs([...legs.slice(5)]);
 
     const response = await rfq.respond({
-      bid: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(450)),
-        toLegMultiplier(5)
-      ),
-      ask: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(500)),
-        toLegMultiplier(2)
-      ),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
     });
     await response.confirm({
       side: QuoteSide.Ask,
@@ -220,24 +186,12 @@ describe("Psyoptions European instrument integration tests", () => {
     });
 
     // mint options
-    await Promise.all(
-      options.map(async (option) =>
-        option.mintOptions(context.maker, new BN(2), OptionType.CALL)
-      )
-    );
+    await Promise.all(options.map(async (option) => option.mintOptions(context.maker, new BN(2), OptionType.CALL)));
 
     await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
-    await response.prepareMoreLegsSettlement(
-      AuthoritySide.Taker,
-      legAmount / 2,
-      legAmount / 2
-    );
+    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
     await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
-    await response.prepareMoreLegsSettlement(
-      AuthoritySide.Maker,
-      legAmount / 2,
-      legAmount / 2
-    );
+    await response.prepareMoreLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
 
     await response.settle(
       maker,

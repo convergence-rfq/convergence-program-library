@@ -10,13 +10,7 @@ import {
 } from "../utilities/helpers";
 import * as anchor from "@coral-xyz/anchor";
 import { Context, getContext } from "../utilities/wrappers";
-import {
-  AuthoritySide,
-  Quote,
-  LegSide,
-  QuoteSide,
-  OrderType,
-} from "../utilities/types";
+import { AuthoritySide, Quote, LegSide, QuoteSide, OrderType } from "../utilities/types";
 import {
   PsyoptionsAmericanInstrumentClass,
   AmericanPsyoptions,
@@ -39,15 +33,8 @@ describe("Psyoptions American instrument integration tests", async () => {
   });
 
   it("Create buy RFQ for 1 option [CALL]", async () => {
-    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(
-      context,
-      context.maker
-    );
-    await options.mintPsyOptions(
-      context.maker,
-      new anchor.BN(1),
-      OptionType.CALL
-    );
+    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker);
+    await options.mintPsyOptions(context.maker, new anchor.BN(1), OptionType.CALL);
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
@@ -57,28 +44,17 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     const rfq = await context.createRfq({
       legs: [
-        PsyoptionsAmericanInstrumentClass.create(
-          context,
-          options,
-          OptionType.CALL,
-          {
-            amount: new BN(1),
-            side: LegSide.Long,
-          }
-        ),
+        PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
+          amount: new BN(1),
+          side: LegSide.Long,
+        }),
       ],
     });
 
     // Response with agreeing to sell 2 options for 50$ or buy 5 for 45$
     const response = await rfq.respond({
-      bid: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(45)),
-        toLegMultiplier(5)
-      ),
-      ask: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(50)),
-        toLegMultiplier(2)
-      ),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
     });
 
     // Taker confirms to buy 1 option
@@ -104,18 +80,10 @@ describe("Psyoptions American instrument integration tests", async () => {
   });
 
   it("Create buy RFQ for 1 option [PUT]", async () => {
-    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(
-      context,
-      context.maker,
-      {
-        optionType: OptionType.PUT,
-      }
-    );
-    await options.mintPsyOptions(
-      context.maker,
-      new anchor.BN(1),
-      OptionType.PUT
-    );
+    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker, {
+      optionType: OptionType.PUT,
+    });
+    await options.mintPsyOptions(context.maker, new anchor.BN(1), OptionType.PUT);
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
@@ -125,28 +93,17 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     const rfq = await context.createRfq({
       legs: [
-        PsyoptionsAmericanInstrumentClass.create(
-          context,
-          options,
-          OptionType.PUT,
-          {
-            amount: new BN(1),
-            side: LegSide.Long,
-          }
-        ),
+        PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.PUT, {
+          amount: new BN(1),
+          side: LegSide.Long,
+        }),
       ],
     });
 
     // Response with agreeing to sell 2 options for 50$ or buy 5 for 45$
     const response = await rfq.respond({
-      bid: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(45)),
-        toLegMultiplier(5)
-      ),
-      ask: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(50)),
-        toLegMultiplier(2)
-      ),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
     });
 
     // Taker confirms to buy 1 option
@@ -172,15 +129,8 @@ describe("Psyoptions American instrument integration tests", async () => {
   });
 
   it("Create sell RFQ where taker wants 2 options", async () => {
-    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(
-      context,
-      context.taker
-    );
-    await options.mintPsyOptions(
-      context.taker,
-      new anchor.BN(2),
-      OptionType.CALL
-    );
+    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
+    await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL);
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
       ["asset", "quote", options.optionMint],
@@ -190,24 +140,16 @@ describe("Psyoptions American instrument integration tests", async () => {
     // Create a two way RFQ specifying 1 option call as a leg
     const rfq = await context.createRfq({
       legs: [
-        PsyoptionsAmericanInstrumentClass.create(
-          context,
-          options,
-          OptionType.CALL,
-          {
-            amount: new BN(1),
-            side: LegSide.Long,
-          }
-        ),
+        PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
+          amount: new BN(1),
+          side: LegSide.Long,
+        }),
       ],
     });
 
     // Response with agreeing to buy 2 options for 45$
     const response = await rfq.respond({
-      bid: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(45)),
-        toLegMultiplier(2)
-      ),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(2)),
     });
     await response.confirm({
       side: QuoteSide.Bid,
@@ -245,29 +187,17 @@ describe("Psyoptions American instrument integration tests", async () => {
 
   it("Create two-way RFQ with one Psyoptions American option leg, respond but maker defaults on settlement", async () => {
     // Create a two way RFQ specifying 1 option put as a leg
-    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(
-      context,
-      context.taker
-    );
-    await options.mintPsyOptions(
-      context.taker,
-      new anchor.BN(2),
-      OptionType.CALL
-    );
+    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
+    await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL);
 
     const rfq = await context.createRfq({
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
-        PsyoptionsAmericanInstrumentClass.create(
-          context,
-          options,
-          OptionType.CALL,
-          {
-            amount: new BN(1),
-            side: LegSide.Long,
-          }
-        ),
+        PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
+          amount: new BN(1),
+          side: LegSide.Long,
+        }),
       ],
       orderType: OrderType.TwoWay,
     });
@@ -275,10 +205,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
       // response with agreeing to buy 5 options for 45$
       const response = await rfq.respond({
-        bid: Quote.getStandard(
-          toAbsolutePrice(withTokenDecimals(45)),
-          toLegMultiplier(5)
-        ),
+        bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(5)),
         expirationTimestamp: Date.now() / 1000 + 1,
       });
 
@@ -287,11 +214,7 @@ describe("Psyoptions American instrument integration tests", async () => {
         side: QuoteSide.Bid,
         legMultiplierBps: toLegMultiplier(2),
       });
-      const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
-        context,
-        [options.optionMint],
-        [taker]
-      );
+      const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.optionMint], [taker]);
       await response.prepareSettlement(AuthoritySide.Taker);
 
       return [response, tokenMeasurer];
@@ -300,9 +223,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await response.revertSettlementPreparation(AuthoritySide.Taker);
 
     // taker have returned his assets
-    await tokenMeasurer.expectChange([
-      { token: options.optionMint, user: taker, delta: new BN(0) },
-    ]);
+    await tokenMeasurer.expectChange([{ token: options.optionMint, user: taker, delta: new BN(0) }]);
 
     await response.settleOnePartyDefault();
     await response.cleanUp();
@@ -311,28 +232,16 @@ describe("Psyoptions American instrument integration tests", async () => {
 
   it("Create two-way RFQ with one Psyoptions American option leg, respond but taker defaults on settlement", async () => {
     // create a two way RFQ specifying 1 option put as a leg
-    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(
-      context,
-      context.taker
-    );
-    await options.mintPsyOptions(
-      context.taker,
-      new anchor.BN(2),
-      OptionType.CALL
-    );
+    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
+    await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL);
     const rfq = await context.createRfq({
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
-        PsyoptionsAmericanInstrumentClass.create(
-          context,
-          options,
-          OptionType.CALL,
-          {
-            amount: new BN(1),
-            side: LegSide.Long,
-          }
-        ),
+        PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
+          amount: new BN(1),
+          side: LegSide.Long,
+        }),
       ],
       orderType: OrderType.TwoWay,
     });
@@ -340,10 +249,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
       // response with agreeing to buy 5 options for 45$
       const response = await rfq.respond({
-        bid: Quote.getStandard(
-          toAbsolutePrice(withTokenDecimals(45)),
-          toLegMultiplier(5)
-        ),
+        bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(45)), toLegMultiplier(5)),
         expirationTimestamp: Date.now() / 1000 + 1,
       });
 
@@ -352,15 +258,9 @@ describe("Psyoptions American instrument integration tests", async () => {
         side: QuoteSide.Bid,
         legMultiplierBps: toLegMultiplier(2),
       });
-      const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
-        context,
-        ["quote"],
-        [maker]
-      );
+      const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote"], [maker]);
       await response.prepareSettlement(AuthoritySide.Maker);
-      await tokenMeasurer.expectChange([
-        { token: "quote", user: maker, delta: withTokenDecimals(new BN(-90)) },
-      ]);
+      await tokenMeasurer.expectChange([{ token: "quote", user: maker, delta: withTokenDecimals(new BN(-90)) }]);
 
       return [response, tokenMeasurer];
     }, 3.5);
@@ -369,23 +269,14 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     // taker have returned his assets
     await response.settleOnePartyDefault();
-    await tokenMeasurer.expectChange([
-      { token: "quote", user: maker, delta: new BN(0) },
-    ]);
+    await tokenMeasurer.expectChange([{ token: "quote", user: maker, delta: new BN(0) }]);
     await response.cleanUp();
     await rfq.cleanUp();
   });
 
   it("With fractional leg multiplier, rounds option amount to a bigger amount for a maker at settlement", async () => {
-    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(
-      context,
-      context.taker
-    );
-    await options.mintPsyOptions(
-      context.taker,
-      new anchor.BN(1),
-      OptionType.CALL
-    );
+    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
+    await options.mintPsyOptions(context.taker, new anchor.BN(1), OptionType.CALL);
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
@@ -395,28 +286,17 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     const rfq = await context.createRfq({
       legs: [
-        PsyoptionsAmericanInstrumentClass.create(
-          context,
-          options,
-          OptionType.CALL,
-          {
-            amount: new BN(1),
-            side: LegSide.Long,
-          }
-        ),
+        PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
+          amount: new BN(1),
+          side: LegSide.Long,
+        }),
       ],
     });
 
     // Response with agreeing to sell 2 options for 50$ or buy 5 for 40$
     const response = await rfq.respond({
-      bid: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(40)),
-        toLegMultiplier(5)
-      ),
-      ask: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(50)),
-        toLegMultiplier(2)
-      ),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(40)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
     });
 
     // Taker confirms to sell 0.4 option
@@ -441,15 +321,8 @@ describe("Psyoptions American instrument integration tests", async () => {
   });
 
   it("With fractional leg multiplier, rounds option amount to a lower amount for a taker at settlement", async () => {
-    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(
-      context,
-      context.maker
-    );
-    await options.mintPsyOptions(
-      context.maker,
-      new anchor.BN(2),
-      OptionType.CALL
-    );
+    const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker);
+    await options.mintPsyOptions(context.maker, new anchor.BN(2), OptionType.CALL);
 
     const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
@@ -459,28 +332,17 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     const rfq = await context.createRfq({
       legs: [
-        PsyoptionsAmericanInstrumentClass.create(
-          context,
-          options,
-          OptionType.CALL,
-          {
-            amount: new BN(1),
-            side: LegSide.Long,
-          }
-        ),
+        PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
+          amount: new BN(1),
+          side: LegSide.Long,
+        }),
       ],
     });
 
     // Response with agreeing to sell 2 options for 50$ or buy 5 for 40$
     const response = await rfq.respond({
-      bid: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(40)),
-        toLegMultiplier(5)
-      ),
-      ask: Quote.getStandard(
-        toAbsolutePrice(withTokenDecimals(50)),
-        toLegMultiplier(2)
-      ),
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(40)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(50)), toLegMultiplier(2)),
     });
 
     // Taker confirms to buy 1.4 option
