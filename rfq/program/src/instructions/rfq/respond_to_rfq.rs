@@ -51,23 +51,21 @@ fn validate(
     ctx: &Context<RespondToRfqAccounts>,
     bid: Option<Quote>,
     ask: Option<Quote>,
-    expiration_timestamp: Option<i64>,
+    expiration_timestamp: i64,
 ) -> Result<()> {
     let RespondToRfqAccounts { maker, rfq, .. } = &ctx.accounts;
     //checks for expiration timestamp
-    if let Some(response_expiration_timestamp) = expiration_timestamp {
-        let current_timestamp = Clock::get()?.unix_timestamp;
-        let rfq_expiration_timestamp = rfq.creation_timestamp + rfq.active_window as i64;
-        require!(
-            response_expiration_timestamp > current_timestamp,
-            ProtocolError::InvalidExpirationTimestamp
-        );
+    let current_timestamp = Clock::get()?.unix_timestamp;
+    let rfq_expiration_timestamp = rfq.creation_timestamp + rfq.active_window as i64;
+    require!(
+        expiration_timestamp > current_timestamp,
+        ProtocolError::InvalidExpirationTimestamp
+    );
 
-        require!(
-            response_expiration_timestamp <= rfq_expiration_timestamp,
-            ProtocolError::InvalidExpirationTimestamp
-        )
-    }
+    require!(
+        expiration_timestamp <= rfq_expiration_timestamp,
+        ProtocolError::InvalidExpirationTimestamp
+    );
 
     require!(maker.key() != rfq.taker, ProtocolError::TakerCanNotRespond);
 
@@ -127,7 +125,7 @@ pub fn respond_to_rfq_instruction<'info>(
     bid: Option<Quote>,
     ask: Option<Quote>,
     _pda_distinguisher: u16,
-    expiration_timestamp: Option<i64>,
+    expiration_timestamp: i64,
 ) -> Result<()> {
     validate(&ctx, bid, ask, expiration_timestamp)?;
 

@@ -215,7 +215,7 @@ pub mod rfq {
         bid: Option<Quote>,
         ask: Option<Quote>,
         pda_distinguisher: u16, // allows creation of the same response multiple times specifying a different distinguisher
-        expiration_timestamp: Option<i64>,
+        expiration_timestamp: i64,
     ) -> Result<()> {
         respond_to_rfq_instruction(ctx, bid, ask, pda_distinguisher, expiration_timestamp)
     }
