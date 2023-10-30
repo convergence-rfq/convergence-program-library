@@ -37,7 +37,12 @@ describe("RFQ Spot instrument integration tests", () => {
 
     // create a two way RFQ specifying 1 bitcoin as a leg
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Long })],
+      legs: [
+        SpotInstrument.createForLeg(context, {
+          amount: withTokenDecimals(1),
+          side: LegSide.Long,
+        }),
+      ],
     });
     // response with agreeing to sell 2 bitcoins for 22k$ or buy 5 for 21900$
     const response = await rfq.respond({
@@ -45,7 +50,10 @@ describe("RFQ Spot instrument integration tests", () => {
       ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
     });
     // taker confirms to buy 1 bitcoin
-    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({
+      side: QuoteSide.Ask,
+      legMultiplierBps: toLegMultiplier(1),
+    });
     await response.prepareSettlement(AuthoritySide.Taker);
     await response.prepareSettlement(AuthoritySide.Maker);
     // taker should receive 1 bitcoins, maker should receive 22k$
@@ -66,7 +74,12 @@ describe("RFQ Spot instrument integration tests", () => {
 
     // create a two way RFQ specifying 1 bitcoin ask as a leg
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Short })],
+      legs: [
+        SpotInstrument.createForLeg(context, {
+          amount: withTokenDecimals(1),
+          side: LegSide.Short,
+        }),
+      ],
     });
     // response with agreeing to sell 5 bitcoins for 22k$ or buy 2 for 20000$
     const response = await rfq.respond({
@@ -74,7 +87,10 @@ describe("RFQ Spot instrument integration tests", () => {
       ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(-20_000)), toLegMultiplier(2)),
     });
     // taker confirms to sell 1.5 bitcoin
-    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1.5) });
+    await response.confirm({
+      side: QuoteSide.Ask,
+      legMultiplierBps: toLegMultiplier(1.5),
+    });
     await response.prepareSettlement(AuthoritySide.Taker);
     await response.prepareSettlement(AuthoritySide.Maker);
     // taker should receive 30k$, maker should receive 1.5 bitcoin
@@ -94,7 +110,10 @@ describe("RFQ Spot instrument integration tests", () => {
     // create a sell RFQ specifying 5 bitcoin bid and 1000 sol ask
     const rfq = await context.createRfq({
       legs: [
-        SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Long }),
+        SpotInstrument.createForLeg(context, {
+          amount: withTokenDecimals(5),
+          side: LegSide.Long,
+        }),
         SpotInstrument.createForLeg(context, {
           mint: context.solToken,
           amount: withTokenDecimals(1000),
@@ -113,7 +132,10 @@ describe("RFQ Spot instrument integration tests", () => {
     });
 
     // taker confirms first response, but only half of it
-    await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(0.25) });
+    await response.confirm({
+      side: QuoteSide.Bid,
+      legMultiplierBps: toLegMultiplier(0.25),
+    });
     const firstMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
       ["asset", "quote", "additionalAsset"],
@@ -149,7 +171,11 @@ describe("RFQ Spot instrument integration tests", () => {
       { token: "asset", user: taker, delta: withTokenDecimals(-10) },
       { token: "asset", user: maker, delta: withTokenDecimals(10) },
       { token: "additionalAsset", user: taker, delta: withTokenDecimals(2000) },
-      { token: "additionalAsset", user: maker, delta: withTokenDecimals(-2000) },
+      {
+        token: "additionalAsset",
+        user: maker,
+        delta: withTokenDecimals(-2000),
+      },
       { token: "quote", user: taker, delta: withTokenDecimals(142_000) },
       { token: "quote", user: maker, delta: withTokenDecimals(-142_000) },
     ]);
@@ -160,7 +186,12 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create fixed leg size buy RFQ, respond and settle response", async () => {
     // create a buy RFQ specifying 15 bitcoin as a leg(5 in leg with multiplier of 3)
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Long })],
+      legs: [
+        SpotInstrument.createForLeg(context, {
+          amount: withTokenDecimals(5),
+          side: LegSide.Long,
+        }),
+      ],
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(3)),
       orderType: OrderType.Buy,
     });
@@ -188,7 +219,12 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create fixed quote size sell RFQ, respond and settle response", async () => {
     // create a sell RFQ specifying 0.5 bitcoin in leg and fixed quote of 38.5k$
     const rfq = await context.createRfq({
-      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(0.5), side: LegSide.Long })],
+      legs: [
+        SpotInstrument.createForLeg(context, {
+          amount: withTokenDecimals(0.5),
+          side: LegSide.Long,
+        }),
+      ],
       fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(38_500)),
       orderType: OrderType.Sell,
     });
@@ -217,7 +253,9 @@ describe("RFQ Spot instrument integration tests", () => {
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
 
     const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 1.5,
+      });
       await response.confirm();
 
       let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
@@ -243,7 +281,9 @@ describe("RFQ Spot instrument integration tests", () => {
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
 
     const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 1,
+      });
       await response.confirm();
 
       let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
@@ -270,7 +310,9 @@ describe("RFQ Spot instrument integration tests", () => {
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
 
     const response = await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 1,
+      });
       await response.confirm();
 
       return response;
@@ -280,9 +322,21 @@ describe("RFQ Spot instrument integration tests", () => {
     await response.cleanUp();
     await rfq.cleanUp();
     await tokenMeasurer.expectChange([
-      { token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-660) },
-      { token: "unlockedCollateral", user: maker, delta: withTokenDecimals(-660) },
-      { token: "unlockedCollateral", user: dao, delta: withTokenDecimals(1320) },
+      {
+        token: "unlockedCollateral",
+        user: taker,
+        delta: withTokenDecimals(-660),
+      },
+      {
+        token: "unlockedCollateral",
+        user: maker,
+        delta: withTokenDecimals(-660),
+      },
+      {
+        token: "unlockedCollateral",
+        user: dao,
+        delta: withTokenDecimals(1320),
+      },
     ]);
   });
 
@@ -290,7 +344,9 @@ describe("RFQ Spot instrument integration tests", () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     const rfq = await context.createRfq({ activeWindow: 2, settlingWindow: 1 });
     await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 1,
+      });
       await response.cancel();
       await response.unlockResponseCollateral();
       await response.cleanUp();
@@ -380,7 +436,9 @@ describe("RFQ Spot instrument integration tests", () => {
     await rfq.addLegs(legs.slice(legAmount / 2));
 
     const response = await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 2,
+      });
       await response.confirm();
       await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
       await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
