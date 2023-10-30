@@ -1,5 +1,9 @@
 import { DEFAULT_ACTIVE_WINDOW } from "../utilities/constants";
-import { attachImprovedLogDisplay, sleep } from "../utilities/helpers";
+import {
+  attachImprovedLogDisplay,
+  expectError,
+  sleep,
+} from "../utilities/helpers";
 
 import { Context, getContext } from "../utilities/wrappers";
 import { expect } from "chai";
@@ -27,16 +31,13 @@ describe("Create RFQ", () => {
   });
 
   it("Cannot Approve Response after Response is expired", async () => {
-    const rfq = await context.createRfq();
-    const response = await rfq.respond({
-      expirationTimestamp: Date.now() / 1000 + DEFAULT_ACTIVE_WINDOW - 5,
+    const rfq = await context.createRfq({
+      activeWindow: 2,
     });
-
-    await sleep(6);
-    try {
-      await response.confirm();
-    } catch (e) {
-      console.error("error");
-    }
+    const response = await rfq.respond({
+      expirationTimestamp: Date.now() / 1000 + 1,
+    });
+    await sleep(2);
+    await expectError(response.confirm(), "ResponseNotInExpectedState");
   });
 });
