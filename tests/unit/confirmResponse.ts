@@ -32,12 +32,12 @@ describe("Create RFQ", () => {
 
   it("Cannot Approve Response after Response is expired", async () => {
     const rfq = await context.createRfq({
-      activeWindow: 2,
+      activeWindow: 3,
     });
     const response = await rfq.respond({
       expirationTimestamp: Date.now() / 1000 + 1,
     });
     await sleep(2);
-    await expectError(response.confirm(), "ResponseNotInExpectedState");
+    await expectError(response.confirm(), "ResponseIsNotInRequiredState");
   });
 });
