@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [2.2.14] - 2023-10-31
+
+### Features
+
+- response: added response expiration timestamp field to Response state and validation to check response expiration. See PR ([#170](https://github.com/convergence-rfq/convergence-program-library/pull/170)) for full details.
+
 ## [2.2.13] - 2023-10-04
 
 ### Fixes
