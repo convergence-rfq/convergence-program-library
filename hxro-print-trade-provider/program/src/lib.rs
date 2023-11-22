@@ -53,8 +53,11 @@ pub mod hxro_print_trade_provider {
         let ValidatePrintTradeAccounts {
             rfq,
             market_product_group,
+            trader_risk_group,
             ..
         } = &ctx.accounts;
+
+        helpers::validate_taker_trg(rfq, market_product_group.key(), trader_risk_group)?;
 
         require!(
             rfq.legs.len() <= constants::MAX_PRODUCTS_PER_TRADE,
@@ -74,6 +77,17 @@ pub mod hxro_print_trade_provider {
         }
 
         Ok(())
+    }
+
+    pub fn validate_response(ctx: Context<ValidateResponseAccounts>) -> Result<()> {
+        let ValidateResponseAccounts {
+            response,
+            config,
+            trader_risk_group,
+            ..
+        } = &ctx.accounts;
+
+        helpers::validate_maker_trg(&response, config.valid_mpg, trader_risk_group)
     }
 
     pub fn prepare_print_trade<'info>(
@@ -200,6 +214,18 @@ pub struct ValidatePrintTradeAccounts<'info> {
     pub config: Account<'info, Config>,
     #[account(constraint = config.valid_mpg == market_product_group.key() @ HxroPrintTradeProviderError::NotAValidatedMpg)]
     pub market_product_group: AccountLoader<'info, MarketProductGroup>,
+    pub trader_risk_group: AccountLoader<'info, TraderRiskGroup>,
+}
+
+#[derive(Accounts)]
+pub struct ValidateResponseAccounts<'info> {
+    #[account(signer)]
+    pub protocol: Account<'info, ProtocolState>,
+    pub rfq: Account<'info, Rfq>,
+    pub response: Account<'info, Response>,
+
+    pub config: Account<'info, Config>,
+    pub trader_risk_group: AccountLoader<'info, TraderRiskGroup>,
 }
 
 #[derive(Accounts)]

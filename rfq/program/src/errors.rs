@@ -130,4 +130,6 @@ pub enum ProtocolError {
     DefaultValueIsNotPermitted,
     #[msg("Specified oracle source is missing")]
     OracleSourceIsMissing,
+    #[msg("Additional data is not supported for escrow rfqs")]
+    AdditionalDataIsNotSupported,
 }

@@ -3,16 +3,64 @@ use std::cell::Ref;
 use anchor_lang::prelude::*;
 use dex::state::market_product_group::MarketProductGroup;
 use dex::state::products::Product;
+use dex::state::trader_risk_group::TraderRiskGroup;
 use dex::utils::numeric::{Fractional, ZERO_FRAC};
 use instruments::state::derivative_metadata::DerivativeMetadata;
 use instruments::state::enums::{InstrumentType as HxroInstrumentType, OracleType};
-use rfq::state::{BaseAssetInfo, Leg, Rfq};
+use rfq::state::{BaseAssetInfo, Leg, Response, Rfq};
 use risk_engine::state::{InstrumentType, OptionType};
 
 use crate::constants::EXPECTED_DECIMALS;
 use crate::errors::HxroPrintTradeProviderError;
 use crate::helpers::common::{get_leg_instrument_type, parse_leg_data, ParsedRiskEngineData};
 use crate::state::ParsedLegData;
+
+pub fn validate_taker_trg(
+    rfq: &Rfq,
+    expected_mpg: Pubkey,
+    trg: &AccountLoader<TraderRiskGroup>,
+) -> Result<()> {
+    let trg_key: Pubkey = AnchorDeserialize::try_from_slice(&rfq.quote_asset.data)?;
+    validate_trg(trg_key, rfq.taker, expected_mpg, trg)
+}
+
+pub fn validate_maker_trg(
+    response: &Response,
+    expected_mpg: Pubkey,
+    trg: &AccountLoader<TraderRiskGroup>,
+) -> Result<()> {
+    let trg_key: Pubkey = AnchorDeserialize::try_from_slice(&response.additional_data)?;
+    validate_trg(trg_key, response.maker, expected_mpg, trg)
+}
+
+fn validate_trg(
+    expected_trg: Pubkey,
+    expected_creator: Pubkey,
+    expected_mpg: Pubkey,
+    trg: &AccountLoader<TraderRiskGroup>,
+) -> Result<()> {
+    require_keys_eq!(
+        expected_trg,
+        trg.key(),
+        HxroPrintTradeProviderError::InvalidTRGAddress
+    );
+
+    let trg = trg.load()?;
+
+    require_keys_eq!(
+        expected_mpg,
+        trg.market_product_group,
+        HxroPrintTradeProviderError::InvalidTRGMarket
+    );
+
+    require_keys_eq!(
+        expected_creator,
+        trg.owner,
+        HxroPrintTradeProviderError::InvalidTRGOwner
+    );
+
+    Ok(())
+}
 
 pub fn validate_leg_data(
     rfq: &Rfq,

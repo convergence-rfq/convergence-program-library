@@ -9,6 +9,7 @@ use crate::{
 };
 
 const VALIDATE_PRINT_TRADE_SELECTOR: [u8; 8] = [196, 101, 141, 125, 6, 132, 232, 195];
+const VALIDATE_RESPONSE_SELECTOR: [u8; 8] = [63, 7, 249, 157, 255, 112, 203, 43];
 const PREPARE_PRINT_TRADE_SELECTOR: [u8; 8] = [240, 73, 86, 183, 80, 149, 180, 158];
 const SETTLE_PRINT_TRADE_SELECTOR: [u8; 8] = [188, 110, 242, 145, 117, 203, 30, 239];
 const REVERT_PRINT_TRADE_PREPARATION_SELECTOR: [u8; 8] = [242, 33, 96, 69, 184, 244, 78, 6];
@@ -29,8 +30,33 @@ pub fn validate_print_trade<'a, 'info: 'a>(
         data,
         protocol,
         &print_trade_provider_key,
+        AccountsToTake::All,
         Some(rfq),
         None,
+        remaining_accounts,
+    )
+}
+
+pub fn validate_response<'a, 'info: 'a>(
+    rfq: &Account<'info, Rfq>,
+    response: &Account<'info, Response>,
+    protocol: &Account<'info, ProtocolState>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
+    let data = VALIDATE_RESPONSE_SELECTOR.to_vec();
+
+    let print_trade_provider_key = rfq
+        .print_trade_provider
+        .ok_or(error!(ProtocolError::NoPrintTradeProvider))?;
+    let params = protocol.get_print_trade_provider_parameters(print_trade_provider_key)?;
+
+    call_instrument(
+        data,
+        protocol,
+        &print_trade_provider_key,
+        AccountsToTake::Amount(params.validate_response_account_amount as usize),
+        Some(rfq),
+        Some(response),
         remaining_accounts,
     )
 }
@@ -53,6 +79,7 @@ pub fn prepare_print_trade<'a, 'info: 'a>(
         data,
         protocol,
         &print_trade_provider_key,
+        AccountsToTake::All,
         Some(rfq),
         Some(response),
         remaining_accounts,
@@ -75,6 +102,7 @@ pub fn settle_print_trade<'a, 'info: 'a>(
         data,
         protocol,
         &print_trade_provider_key,
+        AccountsToTake::All,
         Some(rfq),
         Some(response),
         remaining_accounts,
@@ -99,6 +127,7 @@ pub fn revert_print_trade_preparation<'a, 'info: 'a>(
         data,
         protocol,
         &print_trade_provider_key,
+        AccountsToTake::All,
         Some(rfq),
         Some(response),
         remaining_accounts,
@@ -121,16 +150,23 @@ pub fn clean_up_print_trade<'a, 'info: 'a>(
         data,
         protocol,
         &print_trade_provider_key,
+        AccountsToTake::All,
         Some(rfq),
         Some(response),
         remaining_accounts,
     )
 }
 
+enum AccountsToTake {
+    Amount(usize),
+    All,
+}
+
 fn call_instrument<'a, 'info: 'a>(
     data: Vec<u8>,
     protocol: &Account<'info, ProtocolState>,
     provider_key: &Pubkey,
+    accounts_to_take: AccountsToTake,
     rfq: Option<&Account<'info, Rfq>>,
     response: Option<&Account<'info, Response>>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
@@ -153,7 +189,16 @@ fn call_instrument<'a, 'info: 'a>(
         accounts.push(acc.to_account_info());
     }
 
-    accounts.extend(remaining_accounts.cloned());
+    if let AccountsToTake::Amount(accounts_number) = accounts_to_take {
+        let accounts_number_before = accounts.len();
+        accounts.extend(remaining_accounts.take(accounts_number).cloned());
+        require!(
+            accounts.len() == (accounts_number) + accounts_number_before,
+            ProtocolError::NotEnoughAccounts
+        );
+    } else {
+        accounts.extend(remaining_accounts.cloned());
+    }
 
     let account_metas: Vec<AccountMeta> = accounts.iter().map(|x| x.to_account_meta()).collect();
 

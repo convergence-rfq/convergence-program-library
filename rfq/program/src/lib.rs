@@ -100,9 +100,14 @@ pub mod rfq {
 
     pub fn add_print_trade_provider(
         ctx: Context<AddPrintTradeProviderAccounts>,
+        validate_response_account_amount: u8,
         settlement_can_expire: bool,
     ) -> Result<()> {
-        add_print_trade_provider_instruction(ctx, settlement_can_expire)
+        add_print_trade_provider_instruction(
+            ctx,
+            validate_response_account_amount,
+            settlement_can_expire,
+        )
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -237,8 +242,16 @@ pub mod rfq {
         ask: Option<Quote>,
         pda_distinguisher: u16, // allows creation of the same response multiple times specifying a different distinguisher
         expiration_timestamp: i64,
+        additional_data: Vec<u8>,
     ) -> Result<()> {
-        respond_to_rfq_instruction(ctx, bid, ask, pda_distinguisher, expiration_timestamp)
+        respond_to_rfq_instruction(
+            ctx,
+            bid,
+            ask,
+            pda_distinguisher,
+            expiration_timestamp,
+            additional_data,
+        )
     }
 
     pub fn confirm_response<'info>(

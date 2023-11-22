@@ -2,7 +2,10 @@ use std::mem;
 
 use crate::{
     errors::ProtocolError,
-    interfaces::risk_engine::calculate_required_collateral_for_response,
+    interfaces::{
+        print_trade_provider::validate_response,
+        risk_engine::calculate_required_collateral_for_response,
+    },
     seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED, RESPONSE_SEED},
     state::{
         CollateralInfo, FixedSize, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
@@ -52,6 +55,7 @@ fn validate(
     bid: Option<Quote>,
     ask: Option<Quote>,
     expiration_timestamp: i64,
+    additional_data: &Vec<u8>,
 ) -> Result<()> {
     let RespondToRfqAccounts { maker, rfq, .. } = &ctx.accounts;
     //checks for expiration timestamp
@@ -117,6 +121,13 @@ fn validate(
         }
     }
 
+    if !rfq.is_settled_as_print_trade() {
+        require!(
+            additional_data.len() == 0,
+            ProtocolError::AdditionalDataIsNotSupported
+        );
+    }
+
     Ok(())
 }
 
@@ -126,11 +137,13 @@ pub fn respond_to_rfq_instruction<'info>(
     ask: Option<Quote>,
     _pda_distinguisher: u16,
     expiration_timestamp: i64,
+    additional_data: Vec<u8>,
 ) -> Result<()> {
-    validate(&ctx, bid, ask, expiration_timestamp)?;
+    validate(&ctx, bid, ask, expiration_timestamp, &additional_data)?;
 
     let RespondToRfqAccounts {
         maker,
+        protocol,
         rfq,
         response,
         collateral_info,
@@ -156,14 +169,21 @@ pub fn respond_to_rfq_instruction<'info>(
         bid,
         ask,
         expiration_timestamp,
+        additional_data,
     });
     response.exit(ctx.program_id)?;
+
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
+
+    if rfq.is_settled_as_print_trade() {
+        validate_response(rfq, response, protocol, &mut remaining_accounts)?;
+    }
 
     let required_collateral = calculate_required_collateral_for_response(
         rfq.to_account_info(),
         response.to_account_info(),
         risk_engine,
-        ctx.remaining_accounts,
+        &mut remaining_accounts,
     )?;
     collateral_info.lock_collateral(collateral_token, required_collateral)?;
     response.maker_collateral_locked = required_collateral;

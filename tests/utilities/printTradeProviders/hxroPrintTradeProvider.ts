@@ -50,7 +50,7 @@ export class HxroPrintTradeProvider {
   ) {}
 
   static async addPrintTradeProvider(context: Context) {
-    await context.addPrintTradeProvider(getHxroInstrumentProgram().programId, true);
+    await context.addPrintTradeProvider(getHxroInstrumentProgram().programId, 2, true);
   }
 
   static async initializeConfig(context: Context, validMpg: PublicKey) {
@@ -155,9 +155,13 @@ export class HxroPrintTradeProvider {
   getQuoteData(): QuoteData {
     return {
       settlementTypeMetadata: { printTrade: { instrumentType: Number(InstrumentType.Spot) } },
-      data: Buffer.from([]),
+      data: Buffer.from(this.hxroContext.trgTaker.publicKey.toBytes()),
       decimals: hxroDecimals,
     };
+  }
+
+  getResponseData(): Buffer {
+    return Buffer.from(this.hxroContext.trgMaker.publicKey.toBytes());
   }
 
   getBaseAssetIndexes(): number[] {
@@ -187,7 +191,16 @@ export class HxroPrintTradeProvider {
       { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
       { pubkey: HxroPrintTradeProvider.getConfigAddress(), isSigner: false, isWritable: false },
       { pubkey: this.hxroContext.mpg.publicKey, isSigner: false, isWritable: false },
+      { pubkey: this.hxroContext.trgTaker.publicKey, isSigner: false, isWritable: false },
       ...validationAccounts,
+    ];
+  }
+
+  getValidateResponseAccounts() {
+    return [
+      { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
+      { pubkey: HxroPrintTradeProvider.getConfigAddress(), isSigner: false, isWritable: false },
+      { pubkey: this.hxroContext.trgMaker.publicKey, isSigner: false, isWritable: false },
     ];
   }
 

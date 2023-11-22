@@ -34,16 +34,16 @@ pub fn calculate_required_collateral_for_rfq<'a, 'info: 'a>(
     Ok(u64::try_from_slice(&data).unwrap())
 }
 
-pub fn calculate_required_collateral_for_response<'info>(
+pub fn calculate_required_collateral_for_response<'a, 'info: 'a>(
     rfq: AccountInfo<'info>,
     response: AccountInfo<'info>,
     risk_engine: &AccountInfo<'info>,
-    remaining_accounts: &[AccountInfo<'info>],
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<u64> {
     let data = CALCULATE_REQUIRED_COLLATERAL_FOR_RESPONSE_SELECTOR.to_vec();
 
     let mut accounts = vec![rfq, response];
-    accounts.extend(remaining_accounts.iter().cloned());
+    accounts.extend(remaining_accounts.cloned());
     let accounts_meta: Vec<_> = accounts.iter().map(|x| x.to_account_meta()).collect();
     let instruction = Instruction {
         program_id: risk_engine.key(),

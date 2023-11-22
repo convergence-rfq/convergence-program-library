@@ -33,6 +33,9 @@ pub struct Response {
     pub escrow_leg_preparations_initialized_by: Vec<AuthoritySide>,
     pub bid: Option<Quote>,
     pub ask: Option<Quote>,
+
+    // currently only used for print trades
+    pub additional_data: Vec<u8>,
 }
 
 impl Response {

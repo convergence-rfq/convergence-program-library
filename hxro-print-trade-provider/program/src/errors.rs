@@ -42,4 +42,10 @@ pub enum HxroPrintTradeProviderError {
     InvalidUserAccount,
     #[msg("Invalid operator trader risk group")]
     InvalidOperatorTRG,
+    #[msg("Invalid trader risk group address")]
+    InvalidTRGAddress,
+    #[msg("Invalid trader risk group owner")]
+    InvalidTRGOwner,
+    #[msg("Invalid trader risk group market")]
+    InvalidTRGMarket,
 }

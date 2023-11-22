@@ -184,9 +184,13 @@ export class Context {
       .rpc();
   }
 
-  async addPrintTradeProvider(programId: PublicKey, settlementCanExpire: boolean) {
+  async addPrintTradeProvider(
+    programId: PublicKey,
+    validateResponseAccountAmount: number,
+    settlementCanExpire: boolean
+  ) {
     await this.program.methods
-      .addPrintTradeProvider(settlementCanExpire)
+      .addPrintTradeProvider(validateResponseAccountAmount, settlementCanExpire)
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -906,8 +910,15 @@ export class Rfq {
       0
     );
 
+    const additionalData =
+      this.content.type === "instrument" ? Buffer.from([]) : this.content.provider.getResponseData();
+
+    const responseValidateAccounts =
+      this.content.type === "instrument" ? [] : this.content.provider.getValidateResponseAccounts();
+    const riskEngineAccounts = await this.getRiskEngineAccounts();
+
     await this.context.program.methods
-      .respondToRfq(bid as any, ask as any, 0, new BN(expirationTimestamp))
+      .respondToRfq(bid as any, ask as any, 0, new BN(expirationTimestamp), additionalData)
       .accounts({
         maker: this.context.maker.publicKey,
         protocol: this.context.protocolPda,
@@ -918,7 +929,7 @@ export class Rfq {
         riskEngine: this.context.riskEngine.programId,
         systemProgram: SystemProgram.programId,
       })
-      .remainingAccounts(await this.getRiskEngineAccounts())
+      .remainingAccounts([...responseValidateAccounts, ...riskEngineAccounts])
       .signers([this.context.maker])
       .preInstructions([expandComputeUnits])
       .rpc();
