@@ -869,7 +869,17 @@ type RfqContent =
   | { type: "printTradeProvider"; provider: HxroPrintTradeProvider };
 
 export class Rfq {
+  private activeWindowExpiration?: number;
   public constructor(public context: Context, public account: PublicKey, public content: RfqContent) {}
+
+  async getActiveWindowExpiration() {
+    if (this.activeWindowExpiration === undefined) {
+      const data = await this.getData();
+      this.activeWindowExpiration = (data.creationTimestamp.toNumber() as number) + data.activeWindow;
+    }
+
+    return this.activeWindowExpiration;
+  }
 
   async respond({
     bid = null,
@@ -884,7 +894,7 @@ export class Rfq {
       bid = Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
     }
     if (expirationTimestamp === null) {
-      expirationTimestamp = Date.now() / 1000 + DEFAULT_ACTIVE_WINDOW - 5;
+      expirationTimestamp = await this.getActiveWindowExpiration();
     }
 
     const response = await getResponsePda(
