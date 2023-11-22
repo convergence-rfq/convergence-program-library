@@ -42,6 +42,7 @@ describe("Settle one party default", () => {
     const [response, takerCollateralLocked, makerCollateralLocked] = await runInParallelWithWait(async () => {
       const response = await rfq.respond({
         bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(5)),
+        expirationTimestamp: Date.now() / 1000 + 1,
       });
 
       await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(1) });
@@ -57,8 +58,16 @@ describe("Settle one party default", () => {
     );
 
     await tokenMeasurer.expectChange([
-      { token: "unlockedCollateral", user: taker, delta: takerCollateralLocked.neg() },
-      { token: "unlockedCollateral", user: maker, delta: takerCollateralLocked.sub(totalFees) },
+      {
+        token: "unlockedCollateral",
+        user: taker,
+        delta: takerCollateralLocked.neg(),
+      },
+      {
+        token: "unlockedCollateral",
+        user: maker,
+        delta: takerCollateralLocked.sub(totalFees),
+      },
       { token: "unlockedCollateral", user: dao, delta: totalFees },
     ]);
   });
@@ -80,6 +89,7 @@ describe("Settle one party default", () => {
     const [response, takerCollateralLocked, makerCollateralLocked] = await runInParallelWithWait(async () => {
       const response = await rfq.respond({
         ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(30)), toLegMultiplier(1000)),
+        expirationTimestamp: Date.now() / 1000 + 1,
       });
 
       await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(500) });
@@ -95,8 +105,16 @@ describe("Settle one party default", () => {
     );
 
     await tokenMeasurer.expectChange([
-      { token: "unlockedCollateral", user: taker, delta: makerCollateralLocked.sub(totalFees) },
-      { token: "unlockedCollateral", user: maker, delta: makerCollateralLocked.neg() },
+      {
+        token: "unlockedCollateral",
+        user: taker,
+        delta: makerCollateralLocked.sub(totalFees),
+      },
+      {
+        token: "unlockedCollateral",
+        user: maker,
+        delta: makerCollateralLocked.neg(),
+      },
       { token: "unlockedCollateral", user: dao, delta: totalFees },
     ]);
   });

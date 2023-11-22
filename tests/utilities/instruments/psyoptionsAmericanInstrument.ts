@@ -34,8 +34,8 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
 
   static create(
     context: Context,
-    OptionMarket: AmericanPsyoptions,
-    Optiontype: OptionType,
+    optionMarket: AmericanPsyoptions,
+    optionType: OptionType,
     {
       amount = DEFAULT_LEG_AMOUNT,
       side = DEFAULT_LEG_SIDE,
@@ -44,11 +44,24 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
       side?: LegSide;
     } = {}
   ): InstrumentController {
-    const instrument = new PsyoptionsAmericanInstrumentClass(context, OptionMarket, Optiontype);
-    OptionMarket.underlyingMint.assertRegisteredAsBaseAsset();
+    const optionInfoClone: OptionMarketWithKey = Object.assign({}, optionMarket.OptionInfo);
+    if (optionType === OptionType.PUT) {
+      optionInfoClone.underlyingAmountPerContract = optionMarket.OptionInfo.quoteAmountPerContract;
+      optionInfoClone.quoteAmountPerContract = optionMarket.OptionInfo.underlyingAmountPerContract;
+      optionInfoClone.underlyingAssetMint = optionMarket.OptionInfo.quoteAssetMint;
+      optionInfoClone.quoteAssetMint = optionMarket.OptionInfo.underlyingAssetMint;
+    }
+    const optionMarketClone: AmericanPsyoptions = Object.assign({}, optionMarket);
+    optionMarketClone.OptionInfo = optionInfoClone;
+    const instrument = new PsyoptionsAmericanInstrumentClass(context, optionMarketClone, optionType);
+    optionMarketClone.underlyingMint.assertRegisteredAsBaseAsset();
     return new InstrumentController(
       instrument as Instrument,
-      { amount, side: side, baseAssetIndex: OptionMarket.underlyingMint.baseAssetIndex },
+      {
+        amount,
+        side: side,
+        baseAssetIndex: optionMarketClone.underlyingMint.baseAssetIndex,
+      },
       0
     );
   }
@@ -67,7 +80,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
 
   serializeInstrumentData(): Buffer {
     const op = this.OptionMarket.OptionInfo;
-    const mint = this.OptionMarket.callMint.publicKey.toBytes();
+    const mint = this.OptionMarket.optionMint.publicKey.toBytes();
     const optionMarket = this.OptionMarket.optionMarketKey.toBytes();
 
     const underlyingamountPerContract = op.underlyingAmountPerContract.toBuffer("le", 8);
@@ -101,9 +114,21 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     this.OptionMarket.underlyingMint.assertRegistered();
     this.OptionMarket.quoteMint.assertRegistered();
     return [
-      { pubkey: this.OptionMarket.optionMarketKey, isSigner: false, isWritable: false },
-      { pubkey: this.OptionMarket.underlyingMint.mintInfoAddress, isSigner: false, isWritable: false },
-      { pubkey: this.OptionMarket.quoteMint.mintInfoAddress, isSigner: false, isWritable: false },
+      {
+        pubkey: this.OptionMarket.optionMarketKey,
+        isSigner: false,
+        isWritable: false,
+      },
+      {
+        pubkey: this.OptionMarket.underlyingMint.mintInfoAddress,
+        isSigner: false,
+        isWritable: false,
+      },
+      {
+        pubkey: this.OptionMarket.quoteMint.mintInfoAddress,
+        isSigner: false,
+        isWritable: false,
+      },
     ];
   }
 
@@ -118,11 +143,15 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     return [
       { pubkey: caller.publicKey, isSigner: true, isWritable: true },
       {
-        pubkey: await getAssociatedTokenAddress(this.OptionMarket.callMint.publicKey, caller.publicKey),
+        pubkey: await getAssociatedTokenAddress(this.OptionMarket.optionMint.publicKey, caller.publicKey),
         isSigner: false,
         isWritable: true,
       },
-      { pubkey: this.OptionMarket.callMint.publicKey, isSigner: false, isWritable: false },
+      {
+        pubkey: this.OptionMarket.optionMint.publicKey,
+        isSigner: false,
+        isWritable: false,
+      },
       {
         pubkey: await getInstrumentEscrowPda(response.account, assetIndentifier, this.getProgramId()),
         isSigner: false,
@@ -142,7 +171,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.OptionMarket.callMint.getAssociatedAddress(assetReceiver),
+        pubkey: await this.OptionMarket.optionMint.getAssociatedAddress(assetReceiver),
         isSigner: false,
         isWritable: true,
       },
@@ -165,7 +194,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.OptionMarket.callMint.getAssociatedAddress(caller.publicKey),
+        pubkey: await this.OptionMarket.optionMint.getAssociatedAddress(caller.publicKey),
         isSigner: false,
         isWritable: true,
       },
@@ -186,7 +215,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.OptionMarket.callMint.getAssociatedAddress(this.context.dao.publicKey),
+        pubkey: await this.OptionMarket.optionMint.getAssociatedAddress(this.context.dao.publicKey),
         isSigner: false,
         isWritable: true,
       },
@@ -199,13 +228,11 @@ export class AmericanPsyoptions {
   private constructor(
     public context: Context,
     private program = AmericanPsyoptions.createProgramWithProvider(context.maker, context),
-    public optionMint: PublicKey,
-    public writerMint: PublicKey,
+    public optionMint: Mint,
+    public writerMint: Mint,
     public optionMarketKey: PublicKey,
     public underlyingMint: Mint,
     public quoteMint: Mint,
-    public callMint: Mint,
-    public callWriterMint: Mint,
     public OptionInfo: OptionMarketWithKey
   ) {}
 
@@ -251,12 +278,13 @@ export class AmericanPsyoptions {
       underlyingMint = context.btcToken,
       quoteMint = context.quoteToken,
       underlyingAmountPerContract = withTokenDecimals(1),
-      quoteAmountPerContract = withTokenDecimals(100),
+      quoteAmountPerContract = withTokenDecimals(30),
+      optionType = OptionType.CALL,
     } = {}
   ) {
     const program = this.createProgramWithProvider(user, context);
     const expiration = new BN(Date.now() / 1000 + 360000); // 1 hour in the future
-    const psyOptMarket = await this.initializeMarket(
+    let psyOptMarket = await this.initializeMarket(
       program,
       expiration,
       quoteMint.publicKey,
@@ -264,8 +292,18 @@ export class AmericanPsyoptions {
       underlyingAmountPerContract,
       underlyingMint.publicKey
     );
+    if (optionType == OptionType.PUT) {
+      psyOptMarket = await this.initializeMarket(
+        program,
+        expiration,
+        underlyingMint.publicKey,
+        underlyingAmountPerContract,
+        quoteAmountPerContract,
+        quoteMint.publicKey
+      );
+    }
 
-    const [callMint, callWriterMint] = await executeInParallel(
+    const [optionMint, writerMint] = await executeInParallel(
       () => Mint.wrap(context, psyOptMarket.optionMintKey),
       () => Mint.wrap(context, psyOptMarket.writerMintKey)
     );
@@ -278,27 +316,35 @@ export class AmericanPsyoptions {
     return new AmericanPsyoptions(
       context,
       program,
-      psyOptMarket.optionMintKey,
-      psyOptMarket.writerMintKey,
+      optionMint,
+      writerMint,
       psyOptMarket.optionMarketKey,
       underlyingMint,
       quoteMint,
-      callMint,
-      callWriterMint,
       market
     );
   }
 
-  public async mintPsyOptions(mintBy: Signer, amount: anchor.BN) {
+  public async mintPsyOptions(mintBy: Signer, amount: anchor.BN, optionType: OptionType) {
     let ix = await instructions.mintOptionV2Instruction(
       this.program,
-      await this.callMint.getAssociatedAddress(mintBy.publicKey),
-      await this.callWriterMint.getAssociatedAddress(mintBy.publicKey),
+      await this.optionMint.getAssociatedAddress(mintBy.publicKey),
+      await this.writerMint.getAssociatedAddress(mintBy.publicKey),
       await this.underlyingMint.getAssociatedAddress(mintBy.publicKey),
       amount,
       this.OptionInfo
     );
 
+    if (optionType == OptionType.PUT) {
+      ix = await instructions.mintOptionV2Instruction(
+        this.program,
+        await this.optionMint.getAssociatedAddress(mintBy.publicKey),
+        await this.writerMint.getAssociatedAddress(mintBy.publicKey),
+        await this.quoteMint.getAssociatedAddress(mintBy.publicKey),
+        amount,
+        this.OptionInfo
+      );
+    }
     let tx = new anchor.web3.Transaction();
     ix.signers.push(mintBy);
     tx.add(ix.ix);

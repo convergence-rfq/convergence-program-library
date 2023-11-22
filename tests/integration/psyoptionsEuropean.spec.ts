@@ -58,7 +58,10 @@ describe("Psyoptions European instrument integration tests", () => {
       ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
     });
     // taker confirms to buy 1 option
-    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({
+      side: QuoteSide.Ask,
+      legMultiplierBps: toLegMultiplier(1),
+    });
 
     await response.prepareEscrowSettlement(AuthoritySide.Taker);
 
@@ -68,7 +71,11 @@ describe("Psyoptions European instrument integration tests", () => {
     // taker should receive 1 option, maker should receive 500$ and lose 1 bitcoin as option collateral
     await response.settleEscrow(maker, [taker]);
     await tokenMeasurer.expectChange([
-      { token: options.callMint, user: taker, delta: new BN(1).mul(CONTRACT_DECIMALS_BN) },
+      {
+        token: options.callMint,
+        user: taker,
+        delta: new BN(1).mul(CONTRACT_DECIMALS_BN),
+      },
       { token: "quote", user: taker, delta: withTokenDecimals(-500) },
       { token: "quote", user: maker, delta: withTokenDecimals(500) },
       { token: "asset", user: maker, delta: withTokenDecimals(-1) },
@@ -96,9 +103,13 @@ describe("Psyoptions European instrument integration tests", () => {
       // response with agreeing to buy 5 options for 450$
       const response = await rfq.respond({
         bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
+        expirationTimestamp: Date.now() / 1000 + 1,
       });
       // taker confirms to sell 2 options
-      await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(2) });
+      await response.confirm({
+        side: QuoteSide.Bid,
+        legMultiplierBps: toLegMultiplier(2),
+      });
 
       await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
 
@@ -166,7 +177,10 @@ describe("Psyoptions European instrument integration tests", () => {
       bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(450)), toLegMultiplier(5)),
       ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(500)), toLegMultiplier(2)),
     });
-    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1) });
+    await response.confirm({
+      side: QuoteSide.Ask,
+      legMultiplierBps: toLegMultiplier(1),
+    });
 
     // mint options
     await Promise.all(options.map(async (option) => option.mintOptions(context.maker, new BN(2), OptionType.CALL)));

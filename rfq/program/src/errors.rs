@@ -22,6 +22,8 @@ pub enum ProtocolError {
     NotARiskEngine,
     #[msg("Recent timestamp is too different from on-chain time")]
     InvalidRecentTimestamp,
+    #[msg("Expiration timestamp is invalid")]
+    InvalidExpirationTimestamp,
     #[msg("An Rfq without legs is not supported")]
     EmptyLegsNotSupported,
     #[msg("Legs size does not match specified expected leg size")]

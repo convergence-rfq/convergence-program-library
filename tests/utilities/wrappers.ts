@@ -134,8 +134,12 @@ export class Context {
         (this.collateralToken = await CollateralMint.loadExisting(this, this.nameToPubkey["mint-usd-collateral"]))
     );
 
-    this.baseAssets[BITCOIN_BASE_ASSET_INDEX] = { oracleAddress: SWITCHBOARD_BTC_ORACLE };
-    this.baseAssets[SOLANA_BASE_ASSET_INDEX] = { oracleAddress: PYTH_SOL_ORACLE };
+    this.baseAssets[BITCOIN_BASE_ASSET_INDEX] = {
+      oracleAddress: SWITCHBOARD_BTC_ORACLE,
+    };
+    this.baseAssets[SOLANA_BASE_ASSET_INDEX] = {
+      oracleAddress: PYTH_SOL_ORACLE,
+    };
     this.baseAssets[ETH_BASE_ASSET_INDEX] = { oracleAddress: null };
   }
 
@@ -575,22 +579,46 @@ export class RiskEngine {
     await executeInParallel(
       async () => {
         await this.setRiskCategoriesInfo([
-          { riskCategory: RiskCategory.VeryLow, newValue: DEFAULT_RISK_CATEGORIES_INFO[0] },
-          { riskCategory: RiskCategory.Low, newValue: DEFAULT_RISK_CATEGORIES_INFO[1] },
-          { riskCategory: RiskCategory.Medium, newValue: DEFAULT_RISK_CATEGORIES_INFO[2] },
+          {
+            riskCategory: RiskCategory.VeryLow,
+            newValue: DEFAULT_RISK_CATEGORIES_INFO[0],
+          },
+          {
+            riskCategory: RiskCategory.Low,
+            newValue: DEFAULT_RISK_CATEGORIES_INFO[1],
+          },
+          {
+            riskCategory: RiskCategory.Medium,
+            newValue: DEFAULT_RISK_CATEGORIES_INFO[2],
+          },
         ]);
       },
       async () => {
         await this.setRiskCategoriesInfo([
-          { riskCategory: RiskCategory.High, newValue: DEFAULT_RISK_CATEGORIES_INFO[3] },
-          { riskCategory: RiskCategory.VeryHigh, newValue: DEFAULT_RISK_CATEGORIES_INFO[4] },
-          { riskCategory: RiskCategory.Custom1, newValue: DEFAULT_RISK_CATEGORIES_INFO[5] },
+          {
+            riskCategory: RiskCategory.High,
+            newValue: DEFAULT_RISK_CATEGORIES_INFO[3],
+          },
+          {
+            riskCategory: RiskCategory.VeryHigh,
+            newValue: DEFAULT_RISK_CATEGORIES_INFO[4],
+          },
+          {
+            riskCategory: RiskCategory.Custom1,
+            newValue: DEFAULT_RISK_CATEGORIES_INFO[5],
+          },
         ]);
       },
       async () => {
         await this.setRiskCategoriesInfo([
-          { riskCategory: RiskCategory.Custom2, newValue: DEFAULT_RISK_CATEGORIES_INFO[6] },
-          { riskCategory: RiskCategory.Custom3, newValue: DEFAULT_RISK_CATEGORIES_INFO[7] },
+          {
+            riskCategory: RiskCategory.Custom2,
+            newValue: DEFAULT_RISK_CATEGORIES_INFO[6],
+          },
+          {
+            riskCategory: RiskCategory.Custom3,
+            newValue: DEFAULT_RISK_CATEGORIES_INFO[7],
+          },
         ]);
       },
       async () => {
@@ -790,7 +818,10 @@ export class Mint {
     return new BN(account.amount);
   }
 
-  public assertRegisteredAsBaseAsset(): asserts this is { baseAssetIndex: number; mintInfoAddress: PublicKey } {
+  public assertRegisteredAsBaseAsset(): asserts this is {
+    baseAssetIndex: number;
+    mintInfoAddress: PublicKey;
+  } {
     if (this.baseAssetIndex === null || this.mintInfoAddress === null) {
       throw new Error(`Mint ${this.publicKey.toString()} is not registered as base asset!`);
     }
@@ -840,9 +871,20 @@ type RfqContent =
 export class Rfq {
   public constructor(public context: Context, public account: PublicKey, public content: RfqContent) {}
 
-  async respond({ bid = null, ask = null }: { bid?: Quote | null; ask?: Quote | null } = {}) {
+  async respond({
+    bid = null,
+    ask = null,
+    expirationTimestamp = null,
+  }: {
+    bid?: Quote | null;
+    ask?: Quote | null;
+    expirationTimestamp?: BN | null;
+  } = {}) {
     if (bid === null && ask === null) {
       bid = Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER);
+    }
+    if (expirationTimestamp === null) {
+      expirationTimestamp = Date.now() / 1000 + DEFAULT_ACTIVE_WINDOW - 5;
     }
 
     const response = await getResponsePda(
@@ -855,7 +897,7 @@ export class Rfq {
     );
 
     await this.context.program.methods
-      .respondToRfq(bid as any, ask as any, 0)
+      .respondToRfq(bid as any, ask as any, 0, new BN(expirationTimestamp))
       .accounts({
         maker: this.context.maker.publicKey,
         protocol: this.context.protocolPda,
@@ -1001,7 +1043,11 @@ export class Rfq {
       .map((index) => this.context.baseAssets[index].oracleAddress)
       .filter((address) => address !== null)
       .map((address) => {
-        return { pubkey: address as PublicKey, isSigner: false, isWritable: false };
+        return {
+          pubkey: address as PublicKey,
+          isSigner: false,
+          isWritable: false,
+        };
       });
 
     return [config, ...baseAssets, ...oracles];

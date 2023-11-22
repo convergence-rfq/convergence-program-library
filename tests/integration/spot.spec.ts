@@ -128,7 +128,10 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     // create a sell RFQ specifying 5 bitcoin bid and 1000 sol ask
     const rfq = await context.createEscrowRfq({
       legs: [
-        SpotInstrument.createForLeg(context, { amount: withTokenDecimals(5), side: LegSide.Long }),
+        SpotInstrument.createForLeg(context, {
+          amount: withTokenDecimals(5),
+          side: LegSide.Long,
+        }),
         SpotInstrument.createForLeg(context, {
           mint: context.solToken,
           amount: withTokenDecimals(1000),
@@ -147,7 +150,10 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     });
 
     // taker confirms first response, but only half of it
-    await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(0.25) });
+    await response.confirm({
+      side: QuoteSide.Bid,
+      legMultiplierBps: toLegMultiplier(0.25),
+    });
     const firstMeasurer = await TokenChangeMeasurer.takeSnapshot(
       context,
       ["asset", "quote", "additionalAsset"],
@@ -183,7 +189,11 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "asset", user: taker, delta: withTokenDecimals(-10) },
       { token: "asset", user: maker, delta: withTokenDecimals(10) },
       { token: "additionalAsset", user: taker, delta: withTokenDecimals(2000) },
-      { token: "additionalAsset", user: maker, delta: withTokenDecimals(-2000) },
+      {
+        token: "additionalAsset",
+        user: maker,
+        delta: withTokenDecimals(-2000),
+      },
       { token: "quote", user: taker, delta: withTokenDecimals(142_000) },
       { token: "quote", user: maker, delta: withTokenDecimals(-142_000) },
     ]);
@@ -268,7 +278,9 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     const rfq = await context.createEscrowRfq({ activeWindow: 2, settlingWindow: 1 });
 
     const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 1,
+      });
       await response.confirm();
 
       let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
@@ -322,7 +334,9 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     const rfq = await context.createEscrowRfq({ activeWindow: 2, settlingWindow: 1 });
 
     const [response, tokenMeasurer] = await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 1,
+      });
       await response.confirm();
 
       let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
@@ -377,7 +391,9 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     const rfq = await context.createEscrowRfq({ activeWindow: 2, settlingWindow: 1 });
 
     const response = await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 1,
+      });
       await response.confirm();
 
       return response;
@@ -387,9 +403,21 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await response.cleanUp();
     await rfq.cleanUp();
     await tokenMeasurer.expectChange([
-      { token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-660) },
-      { token: "unlockedCollateral", user: maker, delta: withTokenDecimals(-660) },
-      { token: "unlockedCollateral", user: dao, delta: withTokenDecimals(1320) },
+      {
+        token: "unlockedCollateral",
+        user: taker,
+        delta: withTokenDecimals(-660),
+      },
+      {
+        token: "unlockedCollateral",
+        user: maker,
+        delta: withTokenDecimals(-660),
+      },
+      {
+        token: "unlockedCollateral",
+        user: dao,
+        delta: withTokenDecimals(1320),
+      },
     ]);
   });
 
@@ -422,7 +450,9 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     const rfq = await context.createEscrowRfq({ activeWindow: 2, settlingWindow: 1 });
     await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 1,
+      });
       await response.cancel();
       await response.unlockResponseCollateral();
       await response.cleanUp();
@@ -509,7 +539,9 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await rfq.addLegs(legs.slice(legAmount / 2));
 
     const response = await runInParallelWithWait(async () => {
-      const response = await rfq.respond();
+      const response = await rfq.respond({
+        expirationTimestamp: Date.now() / 1000 + 2,
+      });
       await response.confirm();
       await response.prepareEscrowSettlement(AuthoritySide.Taker, legAmount / 2);
       await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);

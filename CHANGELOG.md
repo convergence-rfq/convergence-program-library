@@ -14,6 +14,25 @@ The minor version will be incremented upon a breaking change and the patch versi
 
 - all: Added HXRO print trade provider and instrument for futures. See PR ([#163](https://github.com/convergence-rfq/convergence-program-library/pull/163)) for full details.
 
+## [2.2.14] - 2023-10-31
+
+### Features
+
+- response: added response expiration timestamp field to Response state and validation to check response expiration. See PR ([#170](https://github.com/convergence-rfq/convergence-program-library/pull/170)) for full details.
+
+## [2.2.13] - 2023-10-04
+
+### Fixes
+
+- psyoptions-american: Refactored PsyOptions American instrument to handle call and put logic. See PR ([#166](https://github.com/convergence-rfq/convergence-program-library/pull/166)) for full details.
+    
+## [2.2.12] - 2023-08-17
+
+### Fixes
+
+- all: Updated Solana libraries and Anchor version. See PR ([#157](https://github.com/convergence-rfq/convergence-program-library/pull/157)) for full details.
+- solita: Update Solita NPM package version to 0.16.0
+
 ## [2.2.11] - 2023-07-17
 
 ### Fixes
