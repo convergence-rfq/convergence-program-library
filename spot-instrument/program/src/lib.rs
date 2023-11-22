@@ -1,7 +1,6 @@
 #![allow(clippy::result_large_err)]
 
 use crate::errors::SpotError;
-use crate::state::{AssetIdentifierDuplicate, AuthoritySideDuplicate};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
@@ -11,7 +10,6 @@ use rfq::state::{
 };
 
 mod errors;
-mod state;
 
 declare_id!("2LmfeVxwy5CqF5ufqfa6PVGRGjxJizEawQF1SngACufT");
 
@@ -59,11 +57,7 @@ pub mod spot_instrument {
         Ok(())
     }
 
-    pub fn prepare_to_settle(
-        ctx: Context<PrepareToSettle>,
-        asset_identifier: AssetIdentifierDuplicate,
-        side: AuthoritySideDuplicate,
-    ) -> Result<()> {
+    pub fn prepare_to_settle(ctx: Context<PrepareToSettle>, input: [u8; 3]) -> Result<()> {
         let PrepareToSettle {
             caller,
             caller_tokens,
@@ -74,7 +68,11 @@ pub mod spot_instrument {
             token_program,
             ..
         } = &ctx.accounts;
-        let asset_data = rfq.get_asset_instrument_data(asset_identifier.into());
+
+        let (asset_identifier, side): (AssetIdentifier, AuthoritySide) =
+            AnchorDeserialize::try_from_slice(&input)?;
+
+        let asset_data = rfq.get_asset_instrument_data(asset_identifier);
         let expected_mint: Pubkey = AnchorDeserialize::try_from_slice(asset_data)?;
         require!(
             expected_mint == mint.key(),
@@ -82,10 +80,10 @@ pub mod spot_instrument {
         );
 
         let side = AuthoritySide::from(side);
-        let asset_receiver = response.get_assets_receiver(rfq, asset_identifier.into());
+        let asset_receiver = response.get_assets_receiver(rfq, asset_identifier);
         let asset_sender = asset_receiver.inverse();
         if side == asset_sender {
-            let token_amount = response.get_asset_amount_to_transfer(rfq, asset_identifier.into());
+            let token_amount = response.get_asset_amount_to_transfer(rfq, asset_identifier);
             let transfer_accounts = Transfer {
                 from: caller_tokens.to_account_info(),
                 to: escrow.to_account_info(),
@@ -98,7 +96,7 @@ pub mod spot_instrument {
         Ok(())
     }
 
-    pub fn settle(ctx: Context<Settle>, asset_identifier: AssetIdentifierDuplicate) -> Result<()> {
+    pub fn settle(ctx: Context<Settle>, input: [u8; 2]) -> Result<()> {
         let Settle {
             rfq,
             response,
@@ -108,8 +106,10 @@ pub mod spot_instrument {
             ..
         } = &ctx.accounts;
 
+        let asset_identifier = AnchorDeserialize::try_from_slice(&input)?;
+
         response
-            .get_assets_receiver(rfq, asset_identifier.into())
+            .get_assets_receiver(rfq, asset_identifier)
             .validate_is_associated_token_account(
                 rfq,
                 response,
@@ -121,7 +121,7 @@ pub mod spot_instrument {
             escrow,
             receiver_tokens,
             response.key(),
-            asset_identifier.into(),
+            asset_identifier,
             *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
@@ -129,11 +129,7 @@ pub mod spot_instrument {
         Ok(())
     }
 
-    pub fn revert_preparation(
-        ctx: Context<RevertPreparation>,
-        asset_identifier: AssetIdentifierDuplicate,
-        side: AuthoritySideDuplicate,
-    ) -> Result<()> {
+    pub fn revert_preparation(ctx: Context<RevertPreparation>, input: [u8; 3]) -> Result<()> {
         let RevertPreparation {
             rfq,
             response,
@@ -143,19 +139,21 @@ pub mod spot_instrument {
             ..
         } = &ctx.accounts;
 
-        let side: AuthoritySide = side.into();
+        let (asset_identifier, side): (AssetIdentifier, AuthoritySide) =
+            AnchorDeserialize::try_from_slice(&input)?;
+
         side.validate_is_associated_token_account(rfq, response, escrow.mint, tokens.key())?;
 
         if side
             == response
-                .get_assets_receiver(rfq, asset_identifier.into())
+                .get_assets_receiver(rfq, asset_identifier)
                 .inverse()
         {
             transfer_from_an_escrow(
                 escrow,
                 tokens,
                 response.key(),
-                asset_identifier.into(),
+                asset_identifier,
                 *ctx.bumps.get("escrow").unwrap(),
                 token_program,
             )?;
@@ -164,10 +162,7 @@ pub mod spot_instrument {
         Ok(())
     }
 
-    pub fn clean_up(
-        ctx: Context<CleanUp>,
-        asset_identifier: AssetIdentifierDuplicate,
-    ) -> Result<()> {
+    pub fn clean_up(ctx: Context<CleanUp>, input: [u8; 2]) -> Result<()> {
         let CleanUp {
             rfq,
             response,
@@ -178,8 +173,10 @@ pub mod spot_instrument {
             ..
         } = &ctx.accounts;
 
+        let asset_identifier = AnchorDeserialize::try_from_slice(&input)?;
+
         let expected_first_to_prepare = response
-            .get_preparation_initialized_by(asset_identifier.into())
+            .get_preparation_initialized_by(asset_identifier)
             .unwrap()
             .to_public_key(rfq, response);
         require!(
@@ -194,7 +191,7 @@ pub mod spot_instrument {
                 escrow,
                 &backup_receiver,
                 response.key(),
-                asset_identifier.into(),
+                asset_identifier,
                 *ctx.bumps.get("escrow").unwrap(),
                 token_program,
             )?;
@@ -204,7 +201,7 @@ pub mod spot_instrument {
             escrow,
             first_to_prepare,
             response.key(),
-            asset_identifier.into(),
+            asset_identifier,
             *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
@@ -228,7 +225,7 @@ fn transfer_from_an_escrow<'info>(
         authority: escrow.to_account_info(),
     };
     let response_key = response.key();
-    let leg_index_seed = asset_identifier.to_seed_bytes();
+    let leg_index_seed = asset_identifier.to_bytes();
     let bump_seed = [bump];
     let escrow_seed = &[&[
         ESCROW_SEED.as_bytes(),
@@ -261,7 +258,7 @@ fn close_escrow_account<'info>(
     };
 
     let response_key = response.key();
-    let leg_index_seed = asset_identifier.to_seed_bytes();
+    let leg_index_seed = asset_identifier.to_bytes();
     let bump_seed = [bump];
     let escrow_seed = &[&[
         ESCROW_SEED.as_bytes(),
@@ -307,7 +304,7 @@ pub struct PrepareToSettle<'info> {
     pub mint: Account<'info, Mint>,
 
     #[account(init_if_needed, payer = caller, token::mint = mint, token::authority = escrow,
-        seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
+        seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
 
     pub system_program: Program<'info, System>,
@@ -325,7 +322,7 @@ pub struct Settle<'info> {
     pub response: Account<'info, Response>,
 
     /// user provided
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
     pub receiver_tokens: Account<'info, TokenAccount>,
@@ -343,7 +340,7 @@ pub struct RevertPreparation<'info> {
     pub response: Account<'info, Response>,
 
     /// user provided
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
     pub tokens: Account<'info, TokenAccount>,
@@ -364,7 +361,7 @@ pub struct CleanUp<'info> {
     /// CHECK: is an authority first to prepare for settlement
     #[account(mut)]
     pub first_to_prepare: UncheckedAccount<'info>,
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     /// CHECK: if there are tokens still in the escrow, send them to this account
     #[account(mut)]

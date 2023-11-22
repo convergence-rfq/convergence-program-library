@@ -38,7 +38,7 @@ pub struct PrepareToSettle<'info> {
     pub mint: Account<'info, Mint>,
 
     #[account(init_if_needed,payer = caller, token::mint = mint, token::authority = escrow,
-        seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
+        seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -55,7 +55,7 @@ pub struct Settle<'info> {
     pub response: Account<'info, Response>,
 
     /// user provided
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(),  &asset_identifier.to_seed_bytes()], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(),  &asset_identifier.to_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = receiver_token_account.mint == escrow.mint  @PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub receiver_token_account: Account<'info, TokenAccount>,
@@ -73,7 +73,7 @@ pub struct RevertPreparation<'info> {
     pub response: Account<'info, Response>,
 
     /// user provided
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()],bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_bytes()],bump)]
     pub escrow: Account<'info, TokenAccount>,
     #[account(mut, constraint = tokens.mint == escrow.mint @ PsyoptionsAmericanError::PassedMintDoesNotMatch)]
     pub tokens: Account<'info, TokenAccount>,
@@ -94,7 +94,7 @@ pub struct CleanUp<'info> {
     /// CHECK: is an authority first to prepare for settlement
     #[account(mut)]
     pub first_to_prepare: UncheckedAccount<'info>,
-    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_seed_bytes()], bump)]
+    #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_bytes()], bump)]
     pub escrow: Account<'info, TokenAccount>,
     /// CHECK: if there are tokens still in the escrow, send them to this account
     #[account(mut)]

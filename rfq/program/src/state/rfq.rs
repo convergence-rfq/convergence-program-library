@@ -1,3 +1,5 @@
+use std::io;
+
 use anchor_lang::prelude::*;
 
 use crate::errors::ProtocolError;
@@ -183,17 +185,41 @@ pub enum LegSide {
     Short,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub enum AssetIdentifier {
     Leg { leg_index: u8 },
     Quote,
 }
 
 impl AssetIdentifier {
-    pub fn to_seed_bytes(self) -> [u8; 2] {
+    pub fn to_bytes(self) -> [u8; 2] {
         match self {
             AssetIdentifier::Leg { leg_index } => [0, leg_index],
             AssetIdentifier::Quote => [1, 0],
         }
+    }
+}
+
+impl AnchorSerialize for AssetIdentifier {
+    fn serialize<W: std::io::prelude::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        writer.write(&self.to_bytes())?;
+
+        Ok(())
+    }
+}
+
+impl AnchorDeserialize for AssetIdentifier {
+    fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
+        let bytes: (u8, u8) = AnchorDeserialize::deserialize(buf)?;
+        let value = match bytes {
+            (0, leg_index) => AssetIdentifier::Leg { leg_index },
+            (1, 0) => AssetIdentifier::Quote,
+            _ => {
+                let msg = format!("Unexpected bytes: {:?}", bytes);
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+            }
+        };
+
+        Ok(value)
     }
 }
