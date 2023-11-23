@@ -204,7 +204,6 @@ fn call_instrument<'a, 'info: 'a>(
 
     let account_metas: Vec<AccountMeta> = accounts.iter().map(|x| x.to_account_meta()).collect();
 
-    msg!("Data: {:?}", data);
     let instruction = Instruction {
         program_id: program.key(),
         accounts: account_metas,

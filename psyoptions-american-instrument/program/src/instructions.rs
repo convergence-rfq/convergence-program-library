@@ -25,7 +25,7 @@ pub struct ValidateData<'info> {
 pub struct PrepareToSettle<'info> {
     /// protocol provided
     #[account(signer)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
