@@ -13,7 +13,7 @@ use rfq::state::{
 mod errors;
 mod state;
 
-declare_id!("HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH");
+declare_id!("CjQCEjXtG3QNBuT5Z1sctaAYCo5Mt6edftqHQetEPo9w");
 
 const ESCROW_SEED: &str = "escrow";
 
