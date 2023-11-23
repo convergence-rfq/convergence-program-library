@@ -2,6 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_lang::AnchorDeserialize;
 
 use rfq::state::Leg;
+use rfq::state::Response;
+use rfq::state::Rfq;
 use rfq::state::SettlementTypeMetadata;
 use risk_engine::state::{FutureCommonData, InstrumentType, OptionCommonData};
 
@@ -48,4 +50,12 @@ pub(crate) fn parse_leg_data(
     );
 
     Ok((risk_engine_data, parsed_leg_data))
+}
+
+pub(crate) fn parse_taker_trg(rfq: &Rfq) -> Result<Pubkey> {
+    AnchorDeserialize::try_from_slice(&rfq.quote_asset.data).map_err(Into::into)
+}
+
+pub(crate) fn parse_maker_trg(response: &Response) -> Result<Pubkey> {
+    AnchorDeserialize::try_from_slice(&response.additional_data).map_err(Into::into)
 }

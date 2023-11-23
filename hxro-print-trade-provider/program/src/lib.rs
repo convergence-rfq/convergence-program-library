@@ -9,6 +9,7 @@ use state::Config;
 
 use errors::HxroPrintTradeProviderError;
 use helpers::{
+    common::{parse_maker_trg, parse_taker_trg},
     initialize_print_trade, initialize_trader_risk_group, lock_collateral, sign_print_trade,
 };
 use state::AuthoritySideDuplicate;
@@ -98,6 +99,8 @@ pub mod hxro_print_trade_provider {
             rfq,
             response,
             user,
+            user_trg,
+            counterparty_trg,
             operator,
             operator_trg,
             ..
@@ -106,6 +109,22 @@ pub mod hxro_print_trade_provider {
         require!(
             response.get_authority_side(rfq, user.key) == Some(authority_side.into()),
             HxroPrintTradeProviderError::InvalidUserAccount
+        );
+
+        let (taker_trg, maker_trg) = if authority_side == AuthoritySideDuplicate::Taker {
+            (user_trg, counterparty_trg)
+        } else {
+            (counterparty_trg, user_trg)
+        };
+        require_keys_eq!(
+            taker_trg.key(),
+            parse_taker_trg(&rfq)?,
+            HxroPrintTradeProviderError::UnexpectedTRG
+        );
+        require_keys_eq!(
+            maker_trg.key(),
+            parse_maker_trg(&response)?,
+            HxroPrintTradeProviderError::UnexpectedTRG
         );
 
         let operator_trg_owner = operator_trg.load()?.owner;
@@ -246,7 +265,7 @@ pub struct PreparePrintTradeAccounts<'info> {
     /// CHECK done inside hxro CPI
     pub user_trg: UncheckedAccount<'info>,
     /// CHECK done inside hxro CPI
-    pub counterparty_trg: UncheckedAccount<'info>, // TODO security issue, taker can send invalid TRG here
+    pub counterparty_trg: UncheckedAccount<'info>,
     pub operator_trg: AccountLoader<'info, TraderRiskGroup>,
     /// CHECK done inside hxro CPI
     pub print_trade: UncheckedAccount<'info>,

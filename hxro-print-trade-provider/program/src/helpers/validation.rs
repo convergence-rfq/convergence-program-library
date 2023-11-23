@@ -15,12 +15,14 @@ use crate::errors::HxroPrintTradeProviderError;
 use crate::helpers::common::{get_leg_instrument_type, parse_leg_data, ParsedRiskEngineData};
 use crate::state::ParsedLegData;
 
+use super::common::{parse_maker_trg, parse_taker_trg};
+
 pub fn validate_taker_trg(
     rfq: &Rfq,
     expected_mpg: Pubkey,
     trg: &AccountLoader<TraderRiskGroup>,
 ) -> Result<()> {
-    let trg_key: Pubkey = AnchorDeserialize::try_from_slice(&rfq.quote_asset.data)?;
+    let trg_key = parse_taker_trg(rfq)?;
     validate_trg(trg_key, rfq.taker, expected_mpg, trg)
 }
 
@@ -29,7 +31,7 @@ pub fn validate_maker_trg(
     expected_mpg: Pubkey,
     trg: &AccountLoader<TraderRiskGroup>,
 ) -> Result<()> {
-    let trg_key: Pubkey = AnchorDeserialize::try_from_slice(&response.additional_data)?;
+    let trg_key = parse_maker_trg(response)?;
     validate_trg(trg_key, response.maker, expected_mpg, trg)
 }
 

@@ -1,4 +1,4 @@
-mod common;
+pub mod common;
 mod conversions;
 mod create_print_trade;
 mod initialize_trader_risk_group;

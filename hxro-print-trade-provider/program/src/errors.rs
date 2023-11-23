@@ -48,4 +48,6 @@ pub enum HxroPrintTradeProviderError {
     InvalidTRGOwner,
     #[msg("Invalid trader risk group market")]
     InvalidTRGMarket,
+    #[msg("Another TRG is expected for this operation")]
+    UnexpectedTRG,
 }
