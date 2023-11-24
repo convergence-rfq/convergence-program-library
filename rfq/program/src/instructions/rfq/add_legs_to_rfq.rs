@@ -2,7 +2,7 @@ use crate::{
     common::validate_legs,
     errors::ProtocolError,
     seeds::PROTOCOL_SEED,
-    state::{Leg, ProtocolState, Rfq, RfqState},
+    state::{ApiLeg, ProtocolState, Rfq, RfqState},
 };
 use anchor_lang::prelude::*;
 
@@ -12,14 +12,14 @@ pub struct AddLegsToRfqAccounts<'info> {
     pub taker: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
 }
 
 fn validate<'info>(
     ctx: &Context<'_, '_, '_, 'info, AddLegsToRfqAccounts<'info>>,
-    legs: &Vec<Leg>,
+    legs: &Vec<ApiLeg>,
 ) -> Result<()> {
     let AddLegsToRfqAccounts { protocol, rfq, .. } = &ctx.accounts;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
@@ -39,13 +39,15 @@ fn validate<'info>(
 
 pub fn add_legs_to_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, AddLegsToRfqAccounts<'info>>,
-    mut legs: Vec<Leg>,
+    legs: Vec<ApiLeg>,
 ) -> Result<()> {
     validate(&ctx, &legs)?;
 
     let AddLegsToRfqAccounts { rfq, .. } = ctx.accounts;
 
-    rfq.legs.append(&mut legs);
+    for leg in legs {
+        rfq.legs.push(leg.into());
+    }
 
     Ok(())
 }

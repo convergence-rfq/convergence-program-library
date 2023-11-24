@@ -10,7 +10,7 @@ pub struct AddInstrumentAccounts<'info> {
     #[account(constraint = protocol.authority == authority.key() @ ProtocolError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
     #[account(mut, seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     /// CHECK: is a valid instrument program id
     #[account(executable)]
     pub instrument_program: UncheckedAccount<'info>,
@@ -60,6 +60,7 @@ pub fn add_instrument_instruction(
         settle_account_amount,
         revert_preparation_account_amount,
         clean_up_account_amount,
+        reserved: [0; 32],
     });
 
     Ok(())

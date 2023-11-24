@@ -24,6 +24,8 @@ pub struct ProtocolState {
     pub risk_engine: Pubkey,
     pub collateral_mint: Pubkey,
     pub instruments: Vec<Instrument>,
+
+    pub reserved: [u8; 1024],
 }
 
 impl ProtocolState {
@@ -63,6 +65,8 @@ pub struct Instrument {
     pub settle_account_amount: u8,
     pub revert_preparation_account_amount: u8,
     pub clean_up_account_amount: u8,
+
+    pub reserved: [u8; 32],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

@@ -9,6 +9,8 @@ pub struct CollateralInfo {
     pub user: Pubkey,
     pub token_account_bump: u8,
     pub locked_tokens_amount: u64,
+
+    pub reserved: [u8; 256],
 }
 
 impl CollateralInfo {

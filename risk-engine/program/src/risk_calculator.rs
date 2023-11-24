@@ -329,6 +329,7 @@ mod tests {
             overall_safety_factor: 0.1,
             accepted_oracle_staleness: 300,
             accepted_oracle_confidence_interval_portion: 0.01,
+            reserved: [0; 256],
             risk_categories_info: [RiskCategoryInfo {
                 interest_rate: 0.05,
                 annualized_30_day_volatility: 0.5,
@@ -359,6 +360,7 @@ mod tests {
             base_asset_index: BTC_INDEX,
             instrument_program: Default::default(),
             instrument_data: Default::default(),
+            reserved: [0; 64],
         };
         let legs_with_meta = vec![LegWithMetadata {
             leg: &leg,
@@ -411,6 +413,7 @@ mod tests {
                 base_asset_index: BTC_INDEX,
                 instrument_program: Default::default(),
                 instrument_data: Default::default(),
+                reserved: [0; 64],
             },
             Leg {
                 instrument_amount: 2 * 10_u64.pow(6),
@@ -419,6 +422,7 @@ mod tests {
                 base_asset_index: BTC_INDEX,
                 instrument_program: Default::default(),
                 instrument_data: Default::default(),
+                reserved: [0; 64],
             },
         ];
         let legs_with_meta = vec![
@@ -479,6 +483,7 @@ mod tests {
                 base_asset_index: BTC_INDEX,
                 instrument_program: Default::default(),
                 instrument_data: Default::default(),
+                reserved: [0; 64],
             },
             Leg {
                 instrument_amount: 100 * 10_u64.pow(9),
@@ -487,6 +492,7 @@ mod tests {
                 base_asset_index: SOL_INDEX,
                 instrument_program: Default::default(),
                 instrument_data: Default::default(),
+                reserved: [0; 64],
             },
         ];
         let legs_with_meta = vec![
@@ -562,6 +568,7 @@ mod tests {
             base_asset_index: BTC_INDEX,
             instrument_program: Default::default(),
             instrument_data: option_data.try_to_vec().unwrap(),
+            reserved: [0; 64],
         };
         let legs_with_meta = vec![LegWithMetadata {
             leg: &leg,

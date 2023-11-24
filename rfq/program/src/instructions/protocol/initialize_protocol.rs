@@ -16,7 +16,7 @@ pub struct InitializeProtocolAccounts<'info> {
         space = ProtocolState::get_allocated_size(),
         bump
     )]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     /// CHECK: is a valid risk engine program id
     #[account(executable)]
     pub risk_engine: AccountInfo<'info>,
@@ -53,6 +53,7 @@ pub fn initialize_protocol_instruction(
         risk_engine: risk_engine.key(),
         collateral_mint: collateral_mint.key(),
         instruments: Default::default(),
+        reserved: [0; 1024],
     });
 
     Ok(())
