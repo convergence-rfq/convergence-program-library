@@ -175,7 +175,7 @@ pub mod rfq {
         ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
         expected_legs_size: u16,
         expected_legs_hash: [u8; 32],
-        legs: Vec<Leg>,
+        legs: Vec<ApiLeg>,
         order_type: OrderType,
         quote_asset: QuoteAsset,
         fixed_size: FixedSize,
@@ -199,7 +199,7 @@ pub mod rfq {
 
     pub fn add_legs_to_rfq<'info>(
         ctx: Context<'_, '_, '_, 'info, AddLegsToRfqAccounts<'info>>,
-        legs: Vec<Leg>,
+        legs: Vec<ApiLeg>,
     ) -> Result<()> {
         add_legs_to_rfq_instruction(ctx, legs)
     }

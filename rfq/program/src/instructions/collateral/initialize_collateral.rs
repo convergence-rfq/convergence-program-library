@@ -14,7 +14,7 @@ pub struct InitializeCollateralAccounts<'info> {
     pub user: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(init, payer = user, space = 8 + mem::size_of::<CollateralInfo>(),
                 seeds = [COLLATERAL_SEED.as_bytes(), user.key().as_ref()], bump)]
     pub collateral_info: Account<'info, CollateralInfo>,
@@ -43,6 +43,7 @@ pub fn initialize_collateral_instruction(ctx: Context<InitializeCollateralAccoun
         user: user.key(),
         token_account_bump: *ctx.bumps.get("collateral_token").unwrap(),
         locked_tokens_amount: 0,
+        reserved: [0; 256],
     });
 
     Ok(())

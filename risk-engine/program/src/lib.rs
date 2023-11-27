@@ -389,7 +389,7 @@ fn construct_risk_calculator<'a>(
 pub struct InitializeConfigAccounts<'info> {
     #[account(mut, constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(
         init,
         payer = authority,
@@ -406,7 +406,7 @@ pub struct InitializeConfigAccounts<'info> {
 pub struct CloseConfigAccounts<'info> {
     #[account(mut, constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(
         mut,
         close = authority,
@@ -420,7 +420,7 @@ pub struct CloseConfigAccounts<'info> {
 pub struct SetRiskCategoryInfo<'info> {
     #[account(constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump)]
     pub config: AccountLoader<'info, Config>,
 }
@@ -429,7 +429,7 @@ pub struct SetRiskCategoryInfo<'info> {
 pub struct UpdateConfigAccounts<'info> {
     #[account(constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump)]
     pub config: AccountLoader<'info, Config>,
 }
@@ -438,7 +438,7 @@ pub struct UpdateConfigAccounts<'info> {
 pub struct SetInstrumentTypeAccounts<'info> {
     #[account(constraint = protocol.authority == authority.key() @ Error::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut, seeds = [CONFIG_SEED.as_bytes()], bump)]
     pub config: AccountLoader<'info, Config>,
 }

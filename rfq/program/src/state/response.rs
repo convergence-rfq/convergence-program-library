@@ -24,6 +24,8 @@ pub struct Response {
     pub maker_prepared_legs: u8,
     pub settled_legs: u8,
 
+    pub reserved: [u8; 256],
+
     pub confirmed: Option<Confirmation>,
     pub defaulting_party: Option<DefaultingParty>,
     pub leg_preparations_initialized_by: Vec<AuthoritySide>,

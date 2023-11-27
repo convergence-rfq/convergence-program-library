@@ -13,7 +13,7 @@ use anchor_spl::token::{Token, TokenAccount};
 #[derive(Accounts)]
 pub struct SettleTwoPartyDefaultAccounts<'info> {
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     #[account(mut, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
@@ -21,10 +21,10 @@ pub struct SettleTwoPartyDefaultAccounts<'info> {
 
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), rfq.taker.key().as_ref()],
                 bump = taker_collateral_info.bump)]
-    pub taker_collateral_info: Account<'info, CollateralInfo>,
+    pub taker_collateral_info: Box<Account<'info, CollateralInfo>>,
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), response.maker.as_ref()],
                 bump = maker_collateral_info.bump)]
-    pub maker_collateral_info: Account<'info, CollateralInfo>,
+    pub maker_collateral_info: Box<Account<'info, CollateralInfo>>,
     #[account(mut, seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), rfq.taker.as_ref()],
                 bump = taker_collateral_info.token_account_bump)]
     pub taker_collateral_tokens: Account<'info, TokenAccount>,
