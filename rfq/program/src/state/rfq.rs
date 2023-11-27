@@ -25,6 +25,8 @@ pub struct Rfq {
     pub cleared_responses: u32,
     pub confirmed_responses: u32,
 
+    pub reserved: [u8; 256],
+
     pub legs: Vec<Leg>, // TODO add limit for this size
 }
 
@@ -95,6 +97,41 @@ pub struct Leg {
     pub instrument_amount: u64,
     pub instrument_decimals: u8,
     pub side: LegSide,
+
+    pub reserved: [u8; 64],
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct ApiLeg {
+    pub instrument_program: Pubkey,
+    pub base_asset_index: BaseAssetIndex,
+    pub instrument_data: Vec<u8>,
+    pub instrument_amount: u64,
+    pub instrument_decimals: u8,
+    pub side: LegSide,
+}
+
+impl From<ApiLeg> for Leg {
+    fn from(value: ApiLeg) -> Self {
+        let ApiLeg {
+            instrument_program,
+            base_asset_index,
+            instrument_data,
+            instrument_amount,
+            instrument_decimals,
+            side,
+        } = value;
+
+        Self {
+            instrument_program,
+            base_asset_index,
+            instrument_data,
+            instrument_amount,
+            instrument_decimals,
+            side,
+            reserved: [0; 64],
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

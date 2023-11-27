@@ -8,7 +8,7 @@ use crate::{
     interfaces::instrument::validate_leg_instrument_data,
     seeds::COLLATERAL_SEED,
     state::{
-        AuthoritySide, BaseAssetInfo, CollateralInfo, Leg, ProtocolState, Response, Rfq,
+        ApiLeg, AuthoritySide, BaseAssetInfo, CollateralInfo, ProtocolState, Response, Rfq,
         StoredResponseState,
     },
 };
@@ -86,7 +86,7 @@ pub fn update_state_after_preparation(
 }
 
 pub fn validate_legs<'a, 'info: 'a>(
-    legs: &[Leg],
+    legs: &[ApiLeg],
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {

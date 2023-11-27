@@ -13,7 +13,7 @@ pub struct AddBaseAssetAccounts<'info> {
     #[account(mut, constraint = protocol.authority == authority.key() @ ProtocolError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(init, payer = authority, space = 8 + mem::size_of::<BaseAssetInfo>() + ticker.as_bytes().len(),
                 seeds = [BASE_ASSET_INFO_SEED.as_bytes(), &u16::from(index).to_le_bytes()], bump)]
     pub base_asset: Account<'info, BaseAssetInfo>,

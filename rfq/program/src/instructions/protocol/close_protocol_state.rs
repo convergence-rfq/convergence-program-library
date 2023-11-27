@@ -15,5 +15,5 @@ pub struct CloseProtocolStateAccounts<'info> {
         seeds = [PROTOCOL_SEED.as_bytes()],
         bump
     )]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
 }

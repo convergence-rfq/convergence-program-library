@@ -283,7 +283,7 @@ fn close_escrow_account<'info>(
 pub struct ValidateData<'info> {
     /// protocol provided
     #[account(signer)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
 
     /// user provided
     pub mint_info: Account<'info, MintInfo>,
@@ -294,9 +294,9 @@ pub struct ValidateData<'info> {
 pub struct PrepareToSettle<'info> {
     /// protocol provided
     #[account(signer)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
-    pub response: Account<'info, Response>,
+    pub response: Box<Account<'info, Response>>,
 
     /// user provided
     #[account(mut)]
@@ -320,7 +320,7 @@ pub struct PrepareToSettle<'info> {
 pub struct Settle<'info> {
     /// protocol provided
     #[account(signer)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
@@ -338,7 +338,7 @@ pub struct Settle<'info> {
 pub struct RevertPreparation<'info> {
     /// protocol provided
     #[account(signer)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
@@ -356,7 +356,7 @@ pub struct RevertPreparation<'info> {
 pub struct CleanUp<'info> {
     /// protocol provided
     #[account(signer)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Account<'info, Response>,
 
