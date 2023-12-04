@@ -42,10 +42,14 @@ pub fn to_hxro_product(rfq: &Rfq, response: &Response, leg_index: u8) -> Result<
 }
 
 pub fn to_hxro_price(rfq: &Rfq, response: &Response) -> Fractional {
-    let full_amount = response.get_quote_amount_to_transfer(rfq) as i64;
+    let mut full_amount = response.get_quote_amount_to_transfer(rfq) as i64;
+
+    if response.get_quote_tokens_receiver() == AuthoritySide::Taker {
+        full_amount = -full_amount;
+    }
 
     Fractional {
         m: full_amount,
         exp: rfq.quote_asset.decimals as u64,
-    } // missing division by the amount in leg
+    }
 }

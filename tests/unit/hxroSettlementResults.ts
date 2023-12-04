@@ -5,10 +5,11 @@ import {
   HxroContext,
   getHxroContext,
   getPositionChangeMeasurer,
+  inverseExpectedSettlement,
+  assertSettlementOutcome,
 } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 import { AuthoritySide, FixedSize, LegSide, OrderType, Quote, QuoteSide } from "../utilities/types";
 import { SOLANA_BASE_ASSET_INDEX } from "../utilities/constants";
-import { expect } from "chai";
 
 describe("RFQ HXRO settlement result tests", () => {
   beforeEach(function () {
@@ -47,20 +48,16 @@ describe("RFQ HXRO settlement result tests", () => {
       bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(123)), toLegMultiplier(5)),
     });
     await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(3) });
-    await response.preparePrintTradeSettlement(AuthoritySide.Taker);
-    await response.preparePrintTradeSettlement(AuthoritySide.Maker);
+
+    const expectedOutcome = { legs: ["-60", "4.5"], price: "369" };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedOutcome);
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedOutcome);
     await response.settlePrintTrade();
 
     const difference = await positionMeasurer.measureDifference();
-
-    expect(difference.taker).to.deep.include({
-      positions: ["-60", "4.5"],
-      // cashBalance: "369",
-    });
-    expect(difference.maker).to.deep.include({
-      positions: ["60", "-4.5"],
-      // cashBalance: "-369",
-    });
+    assertSettlementOutcome(expectedOutcome, difference.taker);
+    assertSettlementOutcome(inverseExpectedSettlement(expectedOutcome), difference.maker);
   });
 
   it("HXRO open size two way, taker buys, maker prepares first", async () => {
@@ -87,20 +84,16 @@ describe("RFQ HXRO settlement result tests", () => {
       ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(3)), toLegMultiplier(2.5)),
     });
     await response.confirm({ side: QuoteSide.Ask });
-    await response.preparePrintTradeSettlement(AuthoritySide.Maker);
-    await response.preparePrintTradeSettlement(AuthoritySide.Taker);
+
+    const expectedOutcome = { legs: ["0.25", "-3.75"], price: "-7.5" };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedOutcome);
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedOutcome);
     await response.settlePrintTrade();
 
     const difference = await positionMeasurer.measureDifference();
-
-    expect(difference.taker).to.deep.include({
-      positions: ["0.25", "-3.75"],
-      // cashBalance: "-7.5",
-    });
-    expect(difference.maker).to.deep.include({
-      positions: ["-0.25", "3.75"],
-      // cashBalance: "7.5",
-    });
+    assertSettlementOutcome(expectedOutcome, difference.taker);
+    assertSettlementOutcome(inverseExpectedSettlement(expectedOutcome), difference.maker);
   });
 
   it("HXRO fixed base size, duplicated legs, taker buys, taker prepares first", async () => {
@@ -139,20 +132,17 @@ describe("RFQ HXRO settlement result tests", () => {
       ask: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(1.234))),
     });
     await response.confirm({ side: QuoteSide.Ask });
-    await response.preparePrintTradeSettlement(AuthoritySide.Taker);
-    await response.preparePrintTradeSettlement(AuthoritySide.Maker);
+
+    const expectedOutcome = { legs: ["0.01", "-0.15", "0.11", "0.4"], price: "-0.1234" };
+    const dedupExpectedOutcome = { legs: ["0.12", "0.25"], price: "-0.1234" };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedOutcome);
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedOutcome);
     await response.settlePrintTrade();
 
     const difference = await positionMeasurer.measureDifference();
-
-    expect(difference.taker).to.deep.include({
-      positions: ["0.12", "0.25"],
-      // cashBalance: "-0.1234",
-    });
-    expect(difference.maker).to.deep.include({
-      positions: ["-0.12", "-0.25"],
-      // cashBalance: "0.1234",
-    });
+    assertSettlementOutcome(dedupExpectedOutcome, difference.taker);
+    assertSettlementOutcome(inverseExpectedSettlement(dedupExpectedOutcome), difference.maker);
   });
 
   it("HXRO fixed size, taker sells, negative, maker prepares first", async () => {
@@ -179,20 +169,16 @@ describe("RFQ HXRO settlement result tests", () => {
       bid: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(-23_000))),
     });
     await response.confirm({ side: QuoteSide.Bid });
-    await response.preparePrintTradeSettlement(AuthoritySide.Maker);
-    await response.preparePrintTradeSettlement(AuthoritySide.Taker);
+
+    const expectedOutcome = { legs: ["1", "15"], price: "-230000" };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedOutcome);
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedOutcome);
     await response.settlePrintTrade();
 
     const difference = await positionMeasurer.measureDifference();
-
-    expect(difference.taker).to.deep.include({
-      positions: ["1", "15"],
-      // cashBalance: "-230000",
-    });
-    expect(difference.maker).to.deep.include({
-      positions: ["-1", "-15"],
-      // cashBalance: "230000",
-    });
+    assertSettlementOutcome(expectedOutcome, difference.taker);
+    assertSettlementOutcome(inverseExpectedSettlement(expectedOutcome), difference.maker);
   });
 
   it("HXRO fixed quote, taker sells, taker prepares first", async () => {
@@ -219,20 +205,16 @@ describe("RFQ HXRO settlement result tests", () => {
       bid: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(2_500))),
     });
     await response.confirm({ side: QuoteSide.Bid });
-    await response.preparePrintTradeSettlement(AuthoritySide.Taker);
-    await response.preparePrintTradeSettlement(AuthoritySide.Maker);
+
+    const expectedOutcome = { legs: ["-40", "12"], price: "20000" };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedOutcome);
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedOutcome);
     await response.settlePrintTrade();
 
     const difference = await positionMeasurer.measureDifference();
-
-    expect(difference.taker).to.deep.include({
-      positions: ["-40", "12"],
-      // cashBalance: "20000",
-    });
-    expect(difference.maker).to.deep.include({
-      positions: ["40", "-12"],
-      // cashBalance: "-20000",
-    });
+    assertSettlementOutcome(expectedOutcome, difference.taker);
+    assertSettlementOutcome(inverseExpectedSettlement(expectedOutcome), difference.maker);
   });
 
   it("HXRO fixed quote, taker buys, maker prepares first", async () => {
@@ -259,19 +241,15 @@ describe("RFQ HXRO settlement result tests", () => {
       ask: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(2_500))),
     });
     await response.confirm({ side: QuoteSide.Ask });
-    await response.preparePrintTradeSettlement(AuthoritySide.Maker);
-    await response.preparePrintTradeSettlement(AuthoritySide.Taker);
+
+    const expectedOutcome = { legs: ["1", "-0.3"], price: "-500" };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedOutcome);
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedOutcome);
     await response.settlePrintTrade();
 
     const difference = await positionMeasurer.measureDifference();
-
-    expect(difference.taker).to.deep.include({
-      positions: ["1", "-0.3"],
-      // cashBalance: "-500",
-    });
-    expect(difference.maker).to.deep.include({
-      positions: ["-1", "0.3"],
-      // cashBalance: "500",
-    });
+    assertSettlementOutcome(expectedOutcome, difference.taker);
+    assertSettlementOutcome(inverseExpectedSettlement(expectedOutcome), difference.maker);
   });
 });

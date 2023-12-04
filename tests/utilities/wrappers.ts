@@ -71,7 +71,7 @@ import {
 import { loadPubkeyNaming, readKeypair } from "./fixtures";
 import { PsyoptionsEuropeanInstrument } from "./instruments/psyoptionsEuropeanInstrument";
 import { PsyoptionsAmericanInstrumentClass } from "./instruments/psyoptionsAmericanInstrument";
-import { HxroPrintTradeProvider } from "./printTradeProviders/hxroPrintTradeProvider";
+import { SettlementOutcome, HxroPrintTradeProvider } from "./printTradeProviders/hxroPrintTradeProvider";
 
 export class Context {
   public program: Program<RfqIdl>;
@@ -1143,9 +1143,17 @@ export class Response {
       .rpc();
   }
 
-  async preparePrintTradeSettlement(side: AuthoritySide) {
+  async preparePrintTradeSettlement(
+    side: AuthoritySide,
+    expectedSettlement: SettlementOutcome,
+    { skipPreStep = false } = {}
+  ) {
     if (this.rfq.content.type != "printTradeProvider") {
       throw Error("Not settled by print trade provider!");
+    }
+
+    if (!skipPreStep) {
+      await this.rfq.content.provider.executePrePreparePrintTradeSettlement(side, this.rfq, this, expectedSettlement);
     }
 
     const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;

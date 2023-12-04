@@ -166,6 +166,12 @@ pub mod dex {
     ) -> ProgramResult {
         Ok(())
     }
+
+    pub fn execute_print_trade<'info>(
+        _ctx: Context<'_, '_, '_, 'info, ExecutePrintTrade<'info>>,
+    ) -> Result<()> {
+        Ok(())
+    }
 }
 
 fn log_errors(e: DomainOrProgramError) -> ProgramError {
@@ -718,15 +724,16 @@ pub struct InitializePrintTradeParams {
 pub struct InitializePrintTrade<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    pub creator: AccountLoader<'info, TraderRiskGroup>, // user owns creator trg
-    pub counterparty: AccountLoader<'info, TraderRiskGroup>,
-    pub operator: AccountLoader<'info, TraderRiskGroup>,
+    pub creator: AccountInfo<'info>,
+    pub counterparty: AccountInfo<'info>,
+    pub operator: AccountInfo<'info>,
     #[account(mut)]
-    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
-    #[account(init, owner = crate::ID, payer = user, space = 8 + PrintTrade::SIZE, seeds = [b"print_trade", creator.key().as_ref(), counterparty.key().as_ref()], bump)]
-    pub print_trade: AccountLoader<'info, PrintTrade>,
-    pub system_program: Program<'info, System>,
+    pub market_product_group: AccountInfo<'info>,
+    #[account(mut)]
+    pub print_trade: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
     pub operator_owner: Signer<'info>,
+    pub seed: AccountInfo<'info>,
 }
 
 #[repr(C)]
@@ -734,27 +741,62 @@ pub struct InitializePrintTrade<'info> {
 pub struct SignPrintTradeParams {
     pub num_products: usize,
     pub products: PrintTradeProductIndexes,
-    pub price: Fractional, // quantity of quote (e.g., USDC) per base
-    pub side: Side,        // side that counter party is taking
-    pub operator_creator_fee_proportion: Fractional, // force counterparty to pass in operator fees to avoid rugging via operator fees
-    pub operator_counterparty_fee_proportion: Fractional, // force counterparty to pass in operator fees to avoid rugging via operator fees
+    pub price: Fractional,
+    pub side: Side,
+    pub operator_creator_fee_proportion: Fractional,
+    pub operator_counterparty_fee_proportion: Fractional,
     pub use_locked_collateral: bool,
 }
 
 #[derive(Accounts)]
 pub struct SignPrintTrade<'info> {
     #[account(mut)]
-    pub user: Signer<'info>, // user owns counterparty trg
+    pub user: Signer<'info>,
     #[account(mut)]
-    pub creator: AccountLoader<'info, TraderRiskGroup>,
+    pub creator: AccountInfo<'info>,
     #[account(mut)]
-    pub counterparty: AccountLoader<'info, TraderRiskGroup>,
+    pub counterparty: AccountInfo<'info>,
     #[account(mut)]
-    pub operator: AccountLoader<'info, TraderRiskGroup>,
+    pub operator: AccountInfo<'info>,
     #[account(mut)]
-    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
-    #[account(mut, close=creator)]
-    pub print_trade: AccountLoader<'info, PrintTrade>,
+    pub market_product_group: AccountInfo<'info>,
+    #[account(mut)]
+    pub print_trade: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
+    pub fee_model_program: AccountInfo<'info>,
+    pub fee_model_configuration_acct: AccountInfo<'info>,
+    #[account(mut)]
+    pub fee_output_register: AccountInfo<'info>,
+    pub risk_engine_program: AccountInfo<'info>,
+    pub risk_model_configuration_acct: AccountInfo<'info>,
+    #[account(mut)]
+    pub risk_output_register: AccountInfo<'info>,
+    pub risk_and_fee_signer: AccountInfo<'info>,
+    #[account(mut)]
+    pub creator_trader_fee_state_acct: AccountInfo<'info>,
+    #[account(mut)]
+    pub creator_trader_risk_state_acct: AccountInfo<'info>,
+    #[account(mut)]
+    pub counterparty_trader_fee_state_acct: AccountInfo<'info>,
+    #[account(mut)]
+    pub counterparty_trader_risk_state_acct: AccountInfo<'info>,
+    pub seed: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct ExecutePrintTrade<'info> {
+    #[account(mut)]
+    pub op: Signer<'info>,
+    #[account(mut)]
+    pub creator: AccountInfo<'info>,
+    #[account(mut)]
+    pub counterparty: AccountInfo<'info>,
+    #[account(mut)]
+    pub operator: AccountInfo<'info>,
+    #[account(mut)]
+    pub market_product_group: AccountInfo<'info>,
+    #[account(mut)]
+    pub print_trade: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
     #[account(executable)]
     fee_model_program: AccountInfo<'info>,
@@ -775,5 +817,7 @@ pub struct SignPrintTrade<'info> {
     counterparty_trader_fee_state_acct: AccountInfo<'info>,
     #[account(mut)]
     counterparty_trader_risk_state_acct: AccountInfo<'info>,
-    pub operator_owner: Signer<'info>,
+    pub seed: AccountInfo<'info>,
+    #[account(mut)]
+    pub execution_output: AccountInfo<'info>,
 }

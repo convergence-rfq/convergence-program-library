@@ -3,7 +3,7 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
-    "@hxronetwork/dexterity-ts": "^1.5.36",
+    "@hxronetwork/dexterity-ts": "^1.6.8",
     "@coral-xyz/anchor": "0.28.0",
     "@mithraic-labs/psy-american": "^0.2.3",
     "@mithraic-labs/tokenized-euros": "^0.2.3",

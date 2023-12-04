@@ -50,4 +50,10 @@ pub enum HxroPrintTradeProviderError {
     InvalidTRGMarket,
     #[msg("Another TRG is expected for this operation")]
     UnexpectedTRG,
+    #[msg("Print trade account expected to be signed by counterparty")]
+    ExpectedSignedPrintTrade,
+    #[msg("Invalid print trade address")]
+    InvalidPrintTradeAddress,
+    #[msg("Invalid print trade parameters")]
+    InvalidPrintTradeParams,
 }

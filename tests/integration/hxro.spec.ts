@@ -4,6 +4,7 @@ import {
   HxroPrintTradeProvider,
   HxroContext,
   getHxroContext,
+  DEFAULT_SETTLEMENT_OUTCOME,
 } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 import { AuthoritySide } from "../utilities/types";
 
@@ -71,14 +72,27 @@ describe("RFQ HXRO instrument integration tests", () => {
     await rfq.cleanUp();
   });
 
+  it("HXRO maker forgets to sign a print trade and preparations fail", async () => {
+    const rfq = await context.createPrintTradeRfq({
+      printTradeProvider: new HxroPrintTradeProvider(context, hxroContext),
+    });
+    const response = await rfq.respond();
+    await response.confirm();
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, DEFAULT_SETTLEMENT_OUTCOME);
+    await expectError(
+      response.preparePrintTradeSettlement(AuthoritySide.Maker, DEFAULT_SETTLEMENT_OUTCOME, { skipPreStep: true }),
+      "ExpectedSignedPrintTrade"
+    );
+  });
+
   it("HXRO successful settlement flow", async () => {
     const rfq = await context.createPrintTradeRfq({
       printTradeProvider: new HxroPrintTradeProvider(context, hxroContext),
     });
     const response = await rfq.respond();
     await response.confirm();
-    await response.preparePrintTradeSettlement(AuthoritySide.Taker);
-    await response.preparePrintTradeSettlement(AuthoritySide.Maker);
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, DEFAULT_SETTLEMENT_OUTCOME);
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, DEFAULT_SETTLEMENT_OUTCOME);
     await response.settlePrintTrade();
     await response.unlockResponseCollateral();
     await response.cleanUp();
@@ -89,17 +103,17 @@ describe("RFQ HXRO instrument integration tests", () => {
   it("Create a Hxrp RFQ, respond, confirm, but settle after settling period ends", async () => {
     const rfq = await context.createPrintTradeRfq({
       printTradeProvider: new HxroPrintTradeProvider(context, hxroContext),
-      activeWindow: 2,
+      activeWindow: 3,
       settlingWindow: 1,
     });
     const response = await runInParallelWithWait(async () => {
       const response = await rfq.respond();
       await response.confirm();
 
-      await response.preparePrintTradeSettlement(AuthoritySide.Taker);
-      await response.preparePrintTradeSettlement(AuthoritySide.Maker);
+      await response.preparePrintTradeSettlement(AuthoritySide.Taker, DEFAULT_SETTLEMENT_OUTCOME);
+      await response.preparePrintTradeSettlement(AuthoritySide.Maker, DEFAULT_SETTLEMENT_OUTCOME);
       return response;
-    }, 3.5);
+    }, 4.5);
 
     await response.settlePrintTrade();
     await response.unlockResponseCollateral();
@@ -118,7 +132,7 @@ describe("RFQ HXRO instrument integration tests", () => {
       const response = await rfq.respond();
       await response.confirm();
 
-      await response.preparePrintTradeSettlement(AuthoritySide.Maker);
+      await response.preparePrintTradeSettlement(AuthoritySide.Maker, DEFAULT_SETTLEMENT_OUTCOME);
 
       return response;
     }, 3.5);
@@ -141,7 +155,7 @@ describe("RFQ HXRO instrument integration tests", () => {
       const response = await rfq.respond();
       await response.confirm();
 
-      await response.preparePrintTradeSettlement(AuthoritySide.Taker);
+      await response.preparePrintTradeSettlement(AuthoritySide.Taker, DEFAULT_SETTLEMENT_OUTCOME);
 
       return response;
     }, 3.5);

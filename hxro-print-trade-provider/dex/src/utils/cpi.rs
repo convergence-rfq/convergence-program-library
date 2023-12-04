@@ -23,7 +23,7 @@ use crate::{
     find_fees_ix,
     state::{
         fee_model::TraderFeeParams,
-        risk_engine_register::{HealthResult, OrderInfo, RiskOutputRegister},
+        risk_engine_register::{HealthInfo, HealthResult, OrderInfo, RiskOutputRegister},
     },
     utils::{
         loadable::Loadable,

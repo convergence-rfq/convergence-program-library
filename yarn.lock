@@ -138,10 +138,10 @@
   dependencies:
     "@hapi/hoek" "^9.0.0"
 
-"@hxronetwork/dexterity-ts@^1.5.36":
-  version "1.5.36"
-  resolved "https://registry.yarnpkg.com/@hxronetwork/dexterity-ts/-/dexterity-ts-1.5.36.tgz#86509bb35b4a805afad5e4942542dea0a77d706b"
-  integrity sha512-dQpCzndbiSC8LspsFxC1sYnhtb1iH6WJ4fBtQMwi3+DcqilCMQY5o3uqeqU3z3twADes52Q7QGL++j/ec6/ruw==
+"@hxronetwork/dexterity-ts@^1.6.8":
+  version "1.6.8"
+  resolved "https://registry.yarnpkg.com/@hxronetwork/dexterity-ts/-/dexterity-ts-1.6.8.tgz#cefa51848a3aef66d15763b741219ae3edceb9c1"
+  integrity sha512-LPjCNvEDmyWX5cYsbH4uczq7cvzRQ+A3+7BzLXLSzOk79AQb9WGCN/DuBymst2O7I4xGLQvGhyLr1jWGGN6PFg==
   dependencies:
     "@bonfida/aaob" "0.0.3"
     "@project-serum/anchor" "^0.24.2"

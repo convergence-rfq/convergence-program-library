@@ -14,6 +14,7 @@ export const MINT_INFO_SEED = "mint_info";
 export const LEG_MULTIPLIER_DECIMALS = 9;
 export const ABSOLUTE_PRICE_DECIMALS = 9;
 export const FEE_BPS_DECIMALS = 9;
+export const DEFAULT_MINT_DECIMALS = 9;
 
 export const DEFAULT_SOL_FOR_SIGNERS = 100_000_000_000;
 export const DEFAULT_TOKEN_AMOUNT = new BN(10_000_000).mul(new BN(10).pow(new BN(9)));
@@ -24,11 +25,10 @@ export const DEFAULT_DEFAULT_FEES = { taker: 0.1, maker: 0.5 };
 export const DEFAULT_ORDER_TYPE = OrderType.TwoWay;
 export const DEFAULT_LEG_AMOUNT = new BN(1_000_000_000);
 export const DEFAULT_LEG_SIDE = LegSide.Long;
-export const DEFAULT_PRICE = new BN(100).mul(new BN(10).pow(new BN(ABSOLUTE_PRICE_DECIMALS)));
+export const DEFAULT_PRICE = new BN(100).mul(new BN(10).pow(new BN(DEFAULT_MINT_DECIMALS + ABSOLUTE_PRICE_DECIMALS)));
 export const DEFAULT_LEG_MULTIPLIER = new BN(1).mul(new BN(10).pow(new BN(LEG_MULTIPLIER_DECIMALS)));
 export const DEFAULT_ACTIVE_WINDOW = 10;
 export const DEFAULT_SETTLING_WINDOW = 60;
-export const DEFAULT_MINT_DECIMALS = 9;
 
 export const INSTRUMENT_ESCROW_SEED = "escrow";
 

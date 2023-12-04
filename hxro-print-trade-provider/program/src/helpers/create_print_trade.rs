@@ -68,6 +68,7 @@ pub fn initialize_print_trade<'info>(
         print_trade: print_trade.to_account_info(),
         system_program: system_program.to_account_info(),
         operator_owner: operator.to_account_info(),
+        seed: response.to_account_info(),
     };
 
     let bump: u8 = *ctx.bumps.get("operator").unwrap();

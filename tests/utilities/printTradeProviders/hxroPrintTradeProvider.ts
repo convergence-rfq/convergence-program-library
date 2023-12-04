@@ -10,14 +10,16 @@ import { getBaseAssetPda } from "../pdas";
 import { RiskEngine as RiskEngineIdl } from "../../../target/types/risk_engine";
 import { readHxroKeypair } from "../fixtures";
 import BigNumber from "bignumber.js";
+import { expect } from "chai";
 
 export const hxroDecimals = 9;
+
+export const DEFAULT_SETTLEMENT_OUTCOME = { price: "100", legs: ["-10"] };
 
 const configSeed = "config";
 const operatorSeed = "operator";
 
-const trgSize = 64272;
-const trgLamports = 448224000;
+const trgSize = 64336;
 
 export const toHxroAmount = (value: number) => value * 10 ** hxroDecimals;
 
@@ -83,10 +85,11 @@ export class HxroPrintTradeProvider {
       feesProgram
     );
 
+    const lamports = await context.provider.connection.getMinimumBalanceForRentExemption(trgSize);
     const createAccountIx = SystemProgram.createAccount({
       fromPubkey: context.dao.publicKey,
       newAccountPubkey: trg.publicKey,
-      lamports: trgLamports,
+      lamports,
       space: trgSize,
       programId: dexProgram,
     });
@@ -204,17 +207,151 @@ export class HxroPrintTradeProvider {
     ];
   }
 
+  async executePrePreparePrintTradeSettlement(
+    side: AuthoritySide,
+    rfq: Rfq,
+    response: Response,
+    expectedSettlement: SettlementOutcome
+  ) {
+    await this.manageCollateral("lock", side, expectedSettlement);
+
+    if (response.firstToPrepare !== null) {
+      await this.signPrintTrade(side, response, expectedSettlement);
+    }
+  }
+
+  async manageCollateral(action: "lock" | "unlock", side: AuthoritySide, expectedSettlement: SettlementOutcome) {
+    const { taker, maker } = this.context;
+    const { mpg, trgTaker, trgMaker, dexProgram, riskAndFeeSigner } = this.hxroContext;
+    const [user, userTrg] = side == AuthoritySide.Taker ? [taker, trgTaker] : [maker, trgMaker];
+
+    if (side === AuthoritySide.Maker) {
+      expectedSettlement = inverseExpectedSettlement(expectedSettlement);
+    }
+
+    const fractionalSettlement = convertExpectedSettlementToFractional(expectedSettlement);
+
+    const products = [];
+    for (let i = 0; i < 6; i++) {
+      if (i < this.legs.length) {
+        const leg = this.legs[i];
+        products.push({
+          productIndex: new BN(leg.productIndex),
+          size: fractionalSettlement.legs[i],
+        });
+      } else {
+        products.push({ productIndex: new BN(0), size: { m: new BN(0), exp: new BN(0) } });
+      }
+    }
+
+    const method = action === "lock" ? "lockCollateral" : "unlockCollateral";
+    await dexProgram.methods[method]({
+      numProducts: new BN(this.legs.length),
+      products,
+    })
+      .accounts({
+        user: user.publicKey,
+        traderRiskGroup: userTrg.publicKey,
+        marketProductGroup: mpg.publicKey,
+        feeModelProgram: mpg.feeModelProgramId,
+        feeModelConfigurationAcct: mpg.feeModelConfigurationAcct,
+        feeOutputRegister: mpg.feeOutputRegister,
+        riskEngineProgram: mpg.riskEngineProgramId,
+        riskModelConfigurationAcct: mpg.riskModelConfigurationAcct,
+        riskOutputRegister: mpg.riskOutputRegister,
+        riskAndFeeSigner,
+        feeStateAcct: userTrg.feeStateAccount,
+        riskStateAcct: userTrg.riskStateAccount,
+      })
+      .remainingAccounts([
+        { pubkey: this.hxroContext.getCovarianceAddress(), isSigner: false, isWritable: true },
+        { pubkey: this.hxroContext.getCorrelationAddress(), isSigner: false, isWritable: true },
+        { pubkey: this.hxroContext.getMarkPricesAddress(), isSigner: false, isWritable: true },
+      ])
+      .signers([user])
+      .rpc();
+  }
+
+  async signPrintTrade(side: AuthoritySide, response: Response, expectedSettlement: SettlementOutcome) {
+    const { taker, maker } = this.context;
+    const { mpg, trgTaker, trgMaker, latestDexProgram, trgOperator, riskAndFeeSigner } = this.hxroContext;
+
+    const [user, userTrg, creatorTrg] =
+      side === AuthoritySide.Taker ? [taker, trgTaker, trgMaker] : [maker, trgMaker, trgTaker];
+
+    const printTrade = this.hxroContext.getPrintTradeAddress(response.account, creatorTrg.publicKey, userTrg.publicKey);
+
+    const fractionalSettlement = convertExpectedSettlementToFractional(expectedSettlement);
+    fractionalSettlement.price.m = fractionalSettlement.price.m.neg();
+
+    const products = [];
+    for (let i = 0; i < 6; i++) {
+      if (i < this.legs.length) {
+        const leg = this.legs[i];
+        products.push({
+          productIndex: new BN(leg.productIndex),
+          size: fractionalSettlement.legs[i],
+        });
+      } else {
+        products.push({ productIndex: new BN(0), size: { m: new BN(0), exp: new BN(0) } });
+      }
+    }
+
+    const printTradeSide = side === AuthoritySide.Taker ? { bid: {} } : { ask: {} };
+
+    await latestDexProgram.methods
+      .signPrintTrade({
+        numProducts: new BN(this.legs.length),
+        products,
+        operatorCounterpartyFeeProportion: { m: new BN(0), exp: new BN(0) },
+        operatorCreatorFeeProportion: { m: new BN(0), exp: new BN(0) },
+        price: fractionalSettlement.price,
+        side: printTradeSide,
+      })
+      .accountsStrict({
+        user: user.publicKey,
+        creator: creatorTrg.publicKey,
+        counterparty: userTrg.publicKey,
+        operator: trgOperator.publicKey,
+        marketProductGroup: mpg.publicKey,
+        printTrade: printTrade,
+        systemProgram: SystemProgram.programId,
+        feeModelProgram: mpg.feeModelProgramId,
+        feeModelConfigurationAcct: mpg.feeModelConfigurationAcct,
+        feeOutputRegister: mpg.feeOutputRegister,
+        riskEngineProgram: mpg.riskEngineProgramId,
+        riskModelConfigurationAcct: mpg.riskModelConfigurationAcct,
+        riskOutputRegister: mpg.riskOutputRegister,
+        riskAndFeeSigner,
+        creatorTraderFeeStateAcct: creatorTrg.feeStateAccount,
+        creatorTraderRiskStateAcct: creatorTrg.riskStateAccount,
+        counterpartyTraderFeeStateAcct: userTrg.feeStateAccount,
+        counterpartyTraderRiskStateAcct: userTrg.riskStateAccount,
+        seed: response.account,
+      })
+      .signers([user])
+      .rpc();
+  }
+
   getPreparePrintTradeSettlementAccounts(side: AuthoritySide, rfq: Rfq, response: Response) {
-    const { mpg, trgTaker, trgMaker, trgOperator, dexProgram, riskAndFeeSigner } = this.hxroContext;
+    const { mpg, trgTaker, trgMaker, trgOperator, dexProgram } = this.hxroContext;
     const { taker, maker } = this.context;
     const user = side == AuthoritySide.Taker ? taker.publicKey : maker.publicKey;
     const [userTrg, counterpartyTrg] = side == AuthoritySide.Taker ? [trgTaker, trgMaker] : [trgMaker, trgTaker];
 
     let printTrade;
     if (response.firstToPrepare === null) {
-      printTrade = this.hxroContext.getPrintTradeAddress(userTrg.publicKey, counterpartyTrg.publicKey);
+      printTrade = this.hxroContext.getPrintTradeAddress(
+        response.account,
+        userTrg.publicKey,
+        counterpartyTrg.publicKey
+      );
     } else {
-      printTrade = this.hxroContext.getPrintTradeAddress(counterpartyTrg.publicKey, userTrg.publicKey);
+      printTrade = this.hxroContext.getPrintTradeAddress(
+        response.account,
+        counterpartyTrg.publicKey,
+        userTrg.publicKey
+      );
     }
 
     return [
@@ -228,6 +365,33 @@ export class HxroPrintTradeProvider {
       { pubkey: counterpartyTrg.publicKey, isSigner: false, isWritable: true },
       { pubkey: trgOperator.publicKey, isSigner: false, isWritable: true },
       { pubkey: printTrade, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ];
+  }
+
+  getExecutePrintTradeSettlementAccounts(rfq: Rfq, response: Response) {
+    const { mpg, trgTaker, trgMaker, trgOperator, dexProgram, executionOutput, riskAndFeeSigner } = this.hxroContext;
+
+    const [creatorTrg, counterpartyTrg] = response.firstToPrepare?.equals(this.context.taker.publicKey)
+      ? [trgTaker, trgMaker]
+      : [trgMaker, trgTaker];
+    let printTrade = this.hxroContext.getPrintTradeAddress(
+      response.account,
+      creatorTrg.publicKey,
+      counterpartyTrg.publicKey
+    );
+
+    return [
+      { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
+      { pubkey: HxroPrintTradeProvider.getOperatorAddress(), isSigner: false, isWritable: true },
+      { pubkey: HxroPrintTradeProvider.getConfigAddress(), isSigner: false, isWritable: false },
+      { pubkey: dexProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: mpg.publicKey, isSigner: false, isWritable: true },
+      { pubkey: creatorTrg.publicKey, isSigner: false, isWritable: true },
+      { pubkey: counterpartyTrg.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgOperator.publicKey, isSigner: false, isWritable: true },
+      { pubkey: printTrade, isSigner: false, isWritable: true },
+      { pubkey: executionOutput, isSigner: false, isWritable: true },
       { pubkey: mpg.feeModelProgramId, isSigner: false, isWritable: false },
       { pubkey: mpg.feeModelConfigurationAcct, isSigner: false, isWritable: false },
       { pubkey: mpg.feeOutputRegister, isSigner: false, isWritable: true },
@@ -235,19 +399,12 @@ export class HxroPrintTradeProvider {
       { pubkey: mpg.riskModelConfigurationAcct, isSigner: false, isWritable: false },
       { pubkey: mpg.riskOutputRegister, isSigner: false, isWritable: true },
       { pubkey: riskAndFeeSigner, isSigner: false, isWritable: false },
-      { pubkey: userTrg.feeStateAccount, isSigner: false, isWritable: true },
-      { pubkey: userTrg.riskStateAccount, isSigner: false, isWritable: true },
+      { pubkey: creatorTrg.feeStateAccount, isSigner: false, isWritable: true },
+      { pubkey: creatorTrg.riskStateAccount, isSigner: false, isWritable: true },
       { pubkey: counterpartyTrg.feeStateAccount, isSigner: false, isWritable: true },
       { pubkey: counterpartyTrg.riskStateAccount, isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: this.hxroContext.getCovarianceAddress(), isSigner: false, isWritable: true },
-      { pubkey: this.hxroContext.getCorrelationAddress(), isSigner: false, isWritable: true },
-      { pubkey: this.hxroContext.getMarkPricesAddress(), isSigner: false, isWritable: true },
     ];
-  }
-
-  getExecutePrintTradeSettlementAccounts(rfq: Rfq, response: Response) {
-    return [{ pubkey: this.getProgramId(), isSigner: false, isWritable: false }];
   }
 
   getRevertPrintTradeSettlementPreparationAccounts(rfq: Rfq, response: Response) {
@@ -272,16 +429,23 @@ function getProductInfo(productIndex: number) {
     };
   } else if (productIndex == 1) {
     return {
-      instrumentType: InstrumentType.Option,
-      data: program.coder.types.encode("OptionCommonData", {
-        optionType: { put: {} },
+      instrumentType: InstrumentType.PerpFuture,
+      data: program.coder.types.encode("FutureCommonData", {
         underlyingAmountPerContract: new BN(1),
         underlyingAmountPerContractDecimals: 0,
-        strikePrice: new BN(122345),
-        strikePriceDecimals: 4,
-        expirationTimestamp: new BN(1685404800 + 60 * 60 * 24 * 365 * 2),
       }),
     };
+    // return {
+    //   instrumentType: InstrumentType.Option,
+    //   data: program.coder.types.encode("OptionCommonData", {
+    //     optionType: { put: {} },
+    //     underlyingAmountPerContract: new BN(1),
+    //     underlyingAmountPerContractDecimals: 0,
+    //     strikePrice: new BN(122345),
+    //     strikePriceDecimals: 4,
+    //     expirationTimestamp: new BN(1685404800 + 60 * 60 * 24 * 365 * 2),
+    //   }),
+    // };
   } else {
     throw Error("Product missing!");
   }
@@ -311,9 +475,15 @@ export async function getHxroContext(context: Context) {
 
   const dexProgram = manifest.fields.dexProgram;
 
+  const idl = await import("../../dependencies/hxro/dex.json");
+  // @ts-ignore
+  const RISK_IDL: Idl = idl;
+  const latestDexProgram = new Program(RISK_IDL, dexProgram.programId, context.provider);
+
   const mpgKey = context.nameToPubkey["mpg"];
   const trgTakerKey = context.nameToPubkey["taker-trg"];
   const trgMakerKey = context.nameToPubkey["maker-trg"];
+  const executionOutput = context.nameToPubkey["execution-output"];
 
   if (trgOperatorKey === null) {
     await initializeOperatorTraderRiskGroup(context);
@@ -335,9 +505,8 @@ export async function getHxroContext(context: Context) {
       riskModelConfigurationAcct: mpg.riskModelConfigurationAcct,
       riskOutputRegister: mpg.riskOutputRegister,
     },
-    dexProgram: {
-      programId: dexProgram.programId,
-    },
+    dexProgram,
+    latestDexProgram,
     trgTaker: {
       publicKey: trgTakerKey,
       feeStateAccount: trgTaker.feeStateAccount,
@@ -352,6 +521,7 @@ export async function getHxroContext(context: Context) {
       publicKey: trgOperatorKey!,
     },
     riskAndFeeSigner: dexterity.Manifest.GetRiskAndFeeSigner(mpgKey),
+    executionOutput,
 
     getBalance: async (party: "taker" | "maker") => {
       let trgKey: PublicKey;
@@ -371,9 +541,9 @@ export async function getHxroContext(context: Context) {
       };
     },
 
-    getPrintTradeAddress: (creator: PublicKey, counterparty: PublicKey) => {
+    getPrintTradeAddress: (response: PublicKey, creator: PublicKey, counterparty: PublicKey) => {
       const [result] = PublicKey.findProgramAddressSync(
-        [Buffer.from("print_trade"), creator.toBuffer(), counterparty.toBuffer()],
+        [Buffer.from("print_trade"), creator.toBuffer(), counterparty.toBuffer(), response.toBuffer()],
         dexProgram.programId
       );
 
@@ -415,16 +585,16 @@ export async function getPositionChangeMeasurer(hxroContext: HxroContext) {
 
     return {
       taker: {
-        positions: newTakerSnapshot.positions
+        legs: newTakerSnapshot.positions
           .slice(0, 2)
           .map((value, index) => value.minus(takerSnapshot.positions[index]).toString()),
-        cashBalance: newTakerSnapshot.cashBalance.minus(takerSnapshot.cashBalance).toString(),
+        price: newTakerSnapshot.cashBalance.minus(takerSnapshot.cashBalance).toString(),
       },
       maker: {
-        positions: newMakerSnapshot.positions
+        legs: newMakerSnapshot.positions
           .slice(0, 2)
           .map((value, index) => value.minus(makerSnapshot.positions[index]).toString()),
-        cashBalance: newMakerSnapshot.cashBalance.minus(makerSnapshot.cashBalance).toString(),
+        price: newMakerSnapshot.cashBalance.minus(makerSnapshot.cashBalance).toString(),
       },
     };
   };
@@ -435,3 +605,37 @@ export async function getPositionChangeMeasurer(hxroContext: HxroContext) {
     measureDifference,
   };
 }
+
+export type SettlementOutcome = {
+  price: string;
+  legs: string[];
+};
+
+export const inverseExpectedSettlement = (value: SettlementOutcome): SettlementOutcome => {
+  return {
+    price: new BigNumber(value.price).negated().toString(),
+    legs: value.legs.map((x) => new BigNumber(x).negated().toString()),
+  };
+};
+
+export const convertExpectedSettlementToFractional = (value: SettlementOutcome) => {
+  const toFractional = (val: string) => {
+    const multiplier = new BigNumber(10).pow(9);
+    const m = new BigNumber(val).multipliedBy(multiplier).toString();
+
+    return {
+      m: new BN(m),
+      exp: new BN(9),
+    };
+  };
+
+  return {
+    price: toFractional(value.price),
+    legs: value.legs.map((x) => toFractional(x)),
+  };
+};
+
+export const assertSettlementOutcome = (expected: SettlementOutcome, received: SettlementOutcome) => {
+  expect(expected.legs).to.deep.equal(received.legs);
+  expect(Number(expected.price)).to.be.approximately(Number(received.price), Math.abs(Number(received.price) / 100));
+};
