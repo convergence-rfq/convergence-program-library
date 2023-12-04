@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
-use solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::{
+    instruction::Instruction,
+    program::{get_return_data, invoke_signed},
+};
 
 use crate::{
     errors::ProtocolError,
@@ -14,6 +17,14 @@ const PREPARE_PRINT_TRADE_SELECTOR: [u8; 8] = [240, 73, 86, 183, 80, 149, 180, 1
 const SETTLE_PRINT_TRADE_SELECTOR: [u8; 8] = [188, 110, 242, 145, 117, 203, 30, 239];
 const REVERT_PRINT_TRADE_PREPARATION_SELECTOR: [u8; 8] = [242, 33, 96, 69, 184, 244, 78, 6];
 const CLEAN_UP_PRINT_TRADE_SELECTOR: [u8; 8] = [246, 29, 115, 215, 20, 227, 25, 57];
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub enum SettlementResult {
+    Success,
+    TakerDefaults,
+    MakerDefaults,
+    BothPartiesDefault,
+}
 
 pub fn validate_print_trade<'a, 'info: 'a>(
     rfq: &Account<'info, Rfq>,
@@ -91,7 +102,7 @@ pub fn settle_print_trade<'a, 'info: 'a>(
     rfq: &Account<'info, Rfq>,
     response: &Account<'info, Response>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
-) -> Result<()> {
+) -> Result<SettlementResult> {
     let data = SETTLE_PRINT_TRADE_SELECTOR.to_vec();
 
     let print_trade_provider_key = rfq
@@ -106,7 +117,16 @@ pub fn settle_print_trade<'a, 'info: 'a>(
         Some(rfq),
         Some(response),
         remaining_accounts,
-    )
+    )?;
+
+    let (return_data_emitter, data) = get_return_data().unwrap();
+    require_keys_eq!(
+        return_data_emitter,
+        print_trade_provider_key,
+        ProtocolError::InvalidReturnDataEmitter
+    );
+
+    Ok(<SettlementResult>::try_from_slice(&data).unwrap())
 }
 
 pub fn revert_print_trade_preparation<'a, 'info: 'a>(

@@ -222,7 +222,7 @@ export class HxroPrintTradeProvider {
 
   async manageCollateral(action: "lock" | "unlock", side: AuthoritySide, expectedSettlement: SettlementOutcome) {
     const { taker, maker } = this.context;
-    const { mpg, trgTaker, trgMaker, dexProgram, riskAndFeeSigner } = this.hxroContext;
+    const { mpg, trgTaker, trgMaker, latestDexProgram, riskAndFeeSigner } = this.hxroContext;
     const [user, userTrg] = side == AuthoritySide.Taker ? [taker, trgTaker] : [maker, trgMaker];
 
     if (side === AuthoritySide.Maker) {
@@ -245,7 +245,7 @@ export class HxroPrintTradeProvider {
     }
 
     const method = action === "lock" ? "lockCollateral" : "unlockCollateral";
-    await dexProgram.methods[method]({
+    await latestDexProgram.methods[method]({
       numProducts: new BN(this.legs.length),
       products,
     })
@@ -268,6 +268,40 @@ export class HxroPrintTradeProvider {
         { pubkey: this.hxroContext.getCorrelationAddress(), isSigner: false, isWritable: true },
         { pubkey: this.hxroContext.getMarkPricesAddress(), isSigner: false, isWritable: true },
       ])
+      .signers([user])
+      .rpc();
+  }
+
+  async cancelPrintTrade(response: Response, canceler: AuthoritySide) {
+    const { taker, maker } = this.context;
+    const { mpg, trgTaker, trgMaker, trgOperator, latestDexProgram } = this.hxroContext;
+    const user = canceler == AuthoritySide.Taker ? taker : maker;
+
+    if (response.firstToPrepare === null) {
+      throw new Error("Print trade not yet created");
+    }
+    const [creatorTrg, counterpartyTrg] = response.firstToPrepare.equals(taker.publicKey)
+      ? [trgTaker, trgMaker]
+      : [trgMaker, trgTaker];
+
+    const printTrade = this.hxroContext.getPrintTradeAddress(
+      response.account,
+      creatorTrg.publicKey,
+      counterpartyTrg.publicKey
+    );
+
+    await latestDexProgram.methods
+      .cancelPrintTrade()
+      .accounts({
+        user: user.publicKey,
+        creator: creatorTrg.publicKey,
+        counterparty: counterpartyTrg.publicKey,
+        operator: trgOperator.publicKey,
+        marketProductGroup: mpg.publicKey,
+        printTrade: printTrade,
+        systemProgram: SystemProgram.programId,
+        seed: response.account,
+      })
       .signers([user])
       .rpc();
   }

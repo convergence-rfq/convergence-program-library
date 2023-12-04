@@ -1,13 +1,16 @@
 use anchor_lang::prelude::*;
 use dex::cpi::accounts::ExecutePrintTrade;
 use dex::cpi::execute_print_trade as execute_print_trade_cpi;
+use dex::state::print_trade::PrintTradeExecutionResult;
+use rfq::interfaces::print_trade_provider::SettlementResult;
+use rfq::state::AuthoritySide;
 
 use crate::constants::OPERATOR_SEED;
 use crate::SettlePrintTradeAccounts;
 
 pub fn execute_print_trade<'info>(
     ctx: &Context<'_, '_, '_, 'info, SettlePrintTradeAccounts<'info>>,
-) -> Result<()> {
+) -> Result<SettlementResult> {
     let SettlePrintTradeAccounts {
         response,
         dex,
@@ -64,5 +67,28 @@ pub fn execute_print_trade<'info>(
         signer_seeds: &[&[OPERATOR_SEED.as_bytes(), &[bump]]],
     };
 
-    execute_print_trade_cpi(context)
+    execute_print_trade_cpi(context)?;
+
+    let outcome_data = execution_output.load()?;
+
+    let (creator_defaults, counterparty_defaults) = match response.print_trade_initialized_by {
+        Some(AuthoritySide::Taker) => (
+            SettlementResult::TakerDefaults,
+            SettlementResult::MakerDefaults,
+        ),
+        Some(AuthoritySide::Maker) => (
+            SettlementResult::MakerDefaults,
+            SettlementResult::TakerDefaults,
+        ),
+        None => unreachable!(),
+    };
+
+    Ok(match outcome_data.result {
+        PrintTradeExecutionResult::CounterpartyHasntSigned => unreachable!(),
+        PrintTradeExecutionResult::CreatorCancelled => creator_defaults,
+        PrintTradeExecutionResult::CounterpartyCancelled => counterparty_defaults,
+        PrintTradeExecutionResult::CreatorNotEnoughLockedCollateral => creator_defaults,
+        PrintTradeExecutionResult::CounterpartyNotEnoughLockedCollateral => counterparty_defaults,
+        PrintTradeExecutionResult::Success => SettlementResult::Success,
+    })
 }

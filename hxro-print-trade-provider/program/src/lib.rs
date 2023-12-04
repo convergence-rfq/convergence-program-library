@@ -3,6 +3,7 @@ use constants::{CONFIG_SEED, OPERATOR_SEED};
 use dex::state::market_product_group::MarketProductGroup;
 use dex::state::print_trade::{PrintTrade, PrintTradeExecutionOutput};
 use dex::{program::Dex, state::trader_risk_group::TraderRiskGroup, ID as DexID};
+use rfq::interfaces::print_trade_provider::SettlementResult;
 use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
 use state::Config;
 
@@ -188,7 +189,7 @@ pub mod hxro_print_trade_provider {
 
     pub fn settle_print_trade<'info>(
         ctx: Context<'_, '_, '_, 'info, SettlePrintTradeAccounts<'info>>,
-    ) -> Result<()> {
+    ) -> Result<SettlementResult> {
         let SettlePrintTradeAccounts {
             rfq,
             response,
@@ -239,9 +240,7 @@ pub mod hxro_print_trade_provider {
             HxroPrintTradeProviderError::InvalidPrintTradeAddress
         );
 
-        execute_print_trade(&ctx)?;
-
-        Ok(())
+        execute_print_trade(&ctx)
     }
 
     pub fn revert_print_trade_preparation<'info>(

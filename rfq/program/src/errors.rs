@@ -132,4 +132,6 @@ pub enum ProtocolError {
     OracleSourceIsMissing,
     #[msg("Additional data is not supported for escrow rfqs")]
     AdditionalDataIsNotSupported,
+    #[msg("Invalid return data emitter")]
+    InvalidReturnDataEmitter,
 }

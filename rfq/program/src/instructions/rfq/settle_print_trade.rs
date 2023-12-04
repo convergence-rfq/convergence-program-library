@@ -1,8 +1,8 @@
 use crate::{
     errors::ProtocolError,
-    interfaces::print_trade_provider::settle_print_trade,
+    interfaces::print_trade_provider::{settle_print_trade, SettlementResult},
     seeds::PROTOCOL_SEED,
-    state::{ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
+    state::{DefaultingParty, ProtocolState, Response, ResponseState, Rfq, StoredResponseState},
 };
 use anchor_lang::prelude::*;
 
@@ -43,9 +43,23 @@ pub fn settle_print_trade_instruction<'info>(
     } = ctx.accounts;
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-    settle_print_trade(protocol, rfq, response, &mut remaining_accounts)?;
+    let settlement_result = settle_print_trade(protocol, rfq, response, &mut remaining_accounts)?;
 
-    response.state = StoredResponseState::Settled;
+    match settlement_result {
+        SettlementResult::Success => response.state = StoredResponseState::Settled,
+        SettlementResult::TakerDefaults => {
+            response.state = StoredResponseState::Defaulted;
+            response.defaulting_party = Some(DefaultingParty::Taker);
+        }
+        SettlementResult::MakerDefaults => {
+            response.state = StoredResponseState::Defaulted;
+            response.defaulting_party = Some(DefaultingParty::Maker);
+        }
+        SettlementResult::BothPartiesDefault => {
+            response.state = StoredResponseState::Defaulted;
+            response.defaulting_party = Some(DefaultingParty::Both);
+        }
+    }
 
     Ok(())
 }

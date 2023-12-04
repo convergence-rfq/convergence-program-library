@@ -6,7 +6,14 @@ import {
   getHxroContext,
   DEFAULT_SETTLEMENT_OUTCOME,
 } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
-import { AuthoritySide } from "../utilities/types";
+import { AuthoritySide, Quote, QuoteSide } from "../utilities/types";
+import {
+  DEFAULT_LEG_MULTIPLIER,
+  DEFAULT_LEG_SIDE,
+  DEFAULT_PRICE,
+  SOLANA_BASE_ASSET_INDEX,
+} from "../utilities/constants";
+import { expect } from "chai";
 
 describe("RFQ HXRO instrument integration tests", () => {
   beforeEach(function () {
@@ -184,5 +191,117 @@ describe("RFQ HXRO instrument integration tests", () => {
     await response.settleTwoPartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
+  });
+
+  it("Create a Hxro RFQ, both parties prepare but taker does not have enough collateral", async () => {
+    const printTradeProvider = new HxroPrintTradeProvider(context, hxroContext, [
+      { amount: 100, side: DEFAULT_LEG_SIDE, baseAssetIndex: SOLANA_BASE_ASSET_INDEX, productIndex: 0 },
+    ]);
+    const rfq = await context.createPrintTradeRfq({
+      printTradeProvider,
+    });
+
+    const response = await rfq.respond({ ask: Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER) });
+    await response.confirm({ side: QuoteSide.Ask });
+
+    const expectedSettlement = { price: "-100", legs: ["100"] };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedSettlement);
+    await printTradeProvider.manageCollateral("unlock", AuthoritySide.Taker, expectedSettlement);
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedSettlement);
+
+    await response.settlePrintTrade();
+
+    const responseData = await response.getData();
+    expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Taker);
+
+    await response.settleOnePartyDefault();
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
+    await response.cleanUp();
+  });
+
+  it("Create a Hxro RFQ, both parties prepare but maker does not have enough collateral", async () => {
+    const printTradeProvider = new HxroPrintTradeProvider(context, hxroContext, [
+      { amount: 200, side: DEFAULT_LEG_SIDE, baseAssetIndex: SOLANA_BASE_ASSET_INDEX, productIndex: 0 },
+    ]);
+    const rfq = await context.createPrintTradeRfq({
+      printTradeProvider,
+    });
+
+    const response = await rfq.respond({ ask: Quote.getStandard(DEFAULT_PRICE, DEFAULT_LEG_MULTIPLIER) });
+    await response.confirm({ side: QuoteSide.Ask });
+
+    const expectedSettlement = { price: "-100", legs: ["200"] };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedSettlement);
+    await printTradeProvider.manageCollateral("unlock", AuthoritySide.Maker, expectedSettlement);
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedSettlement);
+
+    await response.settlePrintTrade();
+
+    const responseData = await response.getData();
+    expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Maker);
+
+    await response.settleOnePartyDefault();
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
+    await response.cleanUp();
+  });
+
+  it("Create a Hxro RFQ, both parties prepare but taker cancels print trade and defauls", async () => {
+    const printTradeProvider = new HxroPrintTradeProvider(context, hxroContext);
+    const rfq = await context.createPrintTradeRfq({
+      printTradeProvider,
+    });
+
+    const response = await rfq.respond();
+    await response.confirm();
+
+    const expectedSettlement = { price: "100", legs: ["-10"] };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedSettlement);
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedSettlement);
+
+    await printTradeProvider.cancelPrintTrade(response, AuthoritySide.Taker);
+
+    await response.settlePrintTrade();
+
+    const responseData = await response.getData();
+    expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Taker);
+
+    await response.settleOnePartyDefault();
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
+    await response.cleanUp();
+  });
+
+  it("Create a Hxro RFQ, both parties prepare but maker cancels print trade and defauls", async () => {
+    const printTradeProvider = new HxroPrintTradeProvider(context, hxroContext);
+    const rfq = await context.createPrintTradeRfq({
+      printTradeProvider,
+    });
+
+    const response = await rfq.respond();
+    await response.confirm();
+
+    const expectedSettlement = { price: "100", legs: ["-10"] };
+
+    await response.preparePrintTradeSettlement(AuthoritySide.Taker, expectedSettlement);
+    await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedSettlement);
+
+    await printTradeProvider.cancelPrintTrade(response, AuthoritySide.Maker);
+
+    await response.settlePrintTrade();
+
+    const responseData = await response.getData();
+    expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Maker);
+
+    await response.settleOnePartyDefault();
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
+    await response.cleanUp();
   });
 });

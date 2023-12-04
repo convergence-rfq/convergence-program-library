@@ -4,7 +4,7 @@ use solana_program::{
     program::{get_return_data, invoke},
 };
 
-use crate::utils::ToAccountMeta;
+use crate::{errors::ProtocolError, utils::ToAccountMeta};
 
 const CALCULATE_REQUIRED_COLLATERAL_FOR_RFQ_SELECTOR: [u8; 8] =
     [3, 154, 182, 192, 204, 235, 214, 151];
@@ -30,7 +30,12 @@ pub fn calculate_required_collateral_for_rfq<'a, 'info: 'a>(
     };
     invoke(&instruction, &accounts)?;
 
-    let (_key, data) = get_return_data().unwrap();
+    let (return_data_emitter, data) = get_return_data().unwrap();
+    require_keys_eq!(
+        return_data_emitter,
+        risk_engine.key(),
+        ProtocolError::InvalidReturnDataEmitter
+    );
     Ok(u64::try_from_slice(&data).unwrap())
 }
 
@@ -52,7 +57,12 @@ pub fn calculate_required_collateral_for_response<'a, 'info: 'a>(
     };
     invoke(&instruction, &accounts)?;
 
-    let (_key, data) = get_return_data().unwrap();
+    let (return_data_emitter, data) = get_return_data().unwrap();
+    require_keys_eq!(
+        return_data_emitter,
+        risk_engine.key(),
+        ProtocolError::InvalidReturnDataEmitter
+    );
     Ok(u64::try_from_slice(&data).unwrap())
 }
 
@@ -74,6 +84,11 @@ pub fn calculate_required_collateral_for_confirmation<'info>(
     };
     invoke(&instruction, &accounts)?;
 
-    let (_key, data) = get_return_data().unwrap();
+    let (return_data_emitter, data) = get_return_data().unwrap();
+    require_keys_eq!(
+        return_data_emitter,
+        risk_engine.key(),
+        ProtocolError::InvalidReturnDataEmitter
+    );
     Ok(<(u64, u64)>::try_from_slice(&data).unwrap())
 }
