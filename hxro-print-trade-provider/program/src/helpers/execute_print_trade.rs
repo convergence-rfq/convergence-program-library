@@ -16,8 +16,8 @@ pub fn execute_print_trade<'info>(
         dex,
         operator,
         market_product_group,
-        creator_trg,
-        counterparty_trg,
+        taker_trg,
+        maker_trg,
         operator_trg,
         print_trade,
         execution_output,
@@ -35,6 +35,13 @@ pub fn execute_print_trade<'info>(
         system_program,
         ..
     } = &ctx.accounts;
+
+    let (creator_trg, counterparty_trg) =
+        if response.print_trade_initialized_by.unwrap() == AuthoritySide::Taker {
+            (taker_trg, maker_trg)
+        } else {
+            (maker_trg, taker_trg)
+        };
 
     let accounts = ExecutePrintTrade {
         op: operator.to_account_info(),

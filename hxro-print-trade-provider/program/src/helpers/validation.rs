@@ -5,9 +5,10 @@ use dex::state::market_product_group::MarketProductGroup;
 use dex::state::products::Product;
 use dex::state::trader_risk_group::TraderRiskGroup;
 use dex::utils::numeric::{Fractional, ZERO_FRAC};
+use dex::ID as DexID;
 use instruments::state::derivative_metadata::DerivativeMetadata;
 use instruments::state::enums::{InstrumentType as HxroInstrumentType, OracleType};
-use rfq::state::{BaseAssetInfo, Leg, Response, Rfq};
+use rfq::state::{AuthoritySide, BaseAssetInfo, Leg, Response, Rfq};
 use risk_engine::state::{InstrumentType, OptionType};
 
 use crate::constants::EXPECTED_DECIMALS;
@@ -266,6 +267,72 @@ fn validate_underlying_amount_per_contract(risk_engine_data: &ParsedRiskEngineDa
         underlying_amount_per_contract,
         Fractional::new(1, 0),
         HxroPrintTradeProviderError::RiskEngineDataMismatch
+    );
+
+    Ok(())
+}
+
+pub struct ValidationInput<'a, 'info: 'a> {
+    pub first_to_prepare: AuthoritySide,
+
+    pub rfq: &'a Box<Account<'info, Rfq>>,
+    pub response: &'a Box<Account<'info, Response>>,
+
+    pub operator: &'a UncheckedAccount<'info>,
+    pub taker_trg: &'a AccountLoader<'info, TraderRiskGroup>,
+    pub maker_trg: &'a AccountLoader<'info, TraderRiskGroup>,
+    pub operator_trg: &'a AccountLoader<'info, TraderRiskGroup>,
+    pub print_trade_key: Pubkey,
+}
+
+pub fn validate_print_trade_accounts(input: ValidationInput) -> Result<()> {
+    let ValidationInput {
+        first_to_prepare,
+        rfq,
+        response,
+        operator,
+        taker_trg,
+        maker_trg,
+        operator_trg,
+        print_trade_key,
+    } = input;
+
+    require_keys_eq!(
+        taker_trg.key(),
+        parse_taker_trg(&rfq)?,
+        HxroPrintTradeProviderError::UnexpectedTRG
+    );
+    require_keys_eq!(
+        maker_trg.key(),
+        parse_maker_trg(&response)?,
+        HxroPrintTradeProviderError::UnexpectedTRG
+    );
+
+    let operator_trg_owner = operator_trg.load()?.owner;
+    require_keys_eq!(
+        operator.key(),
+        operator_trg_owner,
+        HxroPrintTradeProviderError::InvalidOperatorTRG
+    );
+
+    let (creator, counterparty) = if first_to_prepare == AuthoritySide::Taker {
+        (taker_trg, maker_trg)
+    } else {
+        (maker_trg, taker_trg)
+    };
+    let (expected_print_trade_address, _) = Pubkey::find_program_address(
+        &[
+            b"print_trade",
+            creator.key().as_ref(),
+            counterparty.key().as_ref(),
+            response.key().as_ref(),
+        ],
+        &DexID,
+    );
+    require_keys_eq!(
+        print_trade_key,
+        expected_print_trade_address,
+        HxroPrintTradeProviderError::InvalidPrintTradeAddress
     );
 
     Ok(())

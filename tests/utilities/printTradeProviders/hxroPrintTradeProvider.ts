@@ -395,8 +395,8 @@ export class HxroPrintTradeProvider {
       { pubkey: dexProgram.programId, isSigner: false, isWritable: false },
       { pubkey: mpg.publicKey, isSigner: false, isWritable: true },
       { pubkey: user, isSigner: true, isWritable: false },
-      { pubkey: userTrg.publicKey, isSigner: false, isWritable: true },
-      { pubkey: counterpartyTrg.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgTaker.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgMaker.publicKey, isSigner: false, isWritable: true },
       { pubkey: trgOperator.publicKey, isSigner: false, isWritable: true },
       { pubkey: printTrade, isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
@@ -421,8 +421,8 @@ export class HxroPrintTradeProvider {
       { pubkey: HxroPrintTradeProvider.getConfigAddress(), isSigner: false, isWritable: false },
       { pubkey: dexProgram.programId, isSigner: false, isWritable: false },
       { pubkey: mpg.publicKey, isSigner: false, isWritable: true },
-      { pubkey: creatorTrg.publicKey, isSigner: false, isWritable: true },
-      { pubkey: counterpartyTrg.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgTaker.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgMaker.publicKey, isSigner: false, isWritable: true },
       { pubkey: trgOperator.publicKey, isSigner: false, isWritable: true },
       { pubkey: printTrade, isSigner: false, isWritable: true },
       { pubkey: executionOutput, isSigner: false, isWritable: true },
@@ -446,7 +446,30 @@ export class HxroPrintTradeProvider {
   }
 
   getCleanUpPrintTradeSettlementAccounts(rfq: Rfq, response: Response) {
-    return [{ pubkey: this.getProgramId(), isSigner: false, isWritable: false }];
+    const { mpg, trgTaker, trgMaker, trgOperator, dexProgram } = this.hxroContext;
+
+    const [creator, creatorTrg, counterpartyTrg] = response.firstToPrepare?.equals(this.context.taker.publicKey)
+      ? [this.context.taker, trgTaker, trgMaker]
+      : [this.context.maker, trgMaker, trgTaker];
+    let printTrade = this.hxroContext.getPrintTradeAddress(
+      response.account,
+      creatorTrg.publicKey,
+      counterpartyTrg.publicKey
+    );
+
+    return [
+      { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
+      { pubkey: HxroPrintTradeProvider.getOperatorAddress(), isSigner: false, isWritable: true },
+      { pubkey: HxroPrintTradeProvider.getConfigAddress(), isSigner: false, isWritable: false },
+      { pubkey: dexProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: mpg.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgTaker.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgMaker.publicKey, isSigner: false, isWritable: true },
+      { pubkey: trgOperator.publicKey, isSigner: false, isWritable: true },
+      { pubkey: printTrade, isSigner: false, isWritable: true },
+      { pubkey: creator.publicKey, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ];
   }
 }
 

@@ -172,6 +172,12 @@ pub mod dex {
     ) -> Result<()> {
         Ok(())
     }
+
+    pub fn close_print_trade<'info>(
+        _ctx: Context<'_, '_, '_, 'info, ClosePrintTrade<'info>>,
+    ) -> Result<()> {
+        Ok(())
+    }
 }
 
 fn log_errors(e: DomainOrProgramError) -> ProgramError {
@@ -820,4 +826,20 @@ pub struct ExecutePrintTrade<'info> {
     pub seed: AccountInfo<'info>,
     #[account(mut)]
     pub execution_output: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct ClosePrintTrade<'info> {
+    #[account(mut)]
+    pub op: Signer<'info>,
+    pub creator: AccountLoader<'info, TraderRiskGroup>, // user owns creator trg
+    pub counterparty: AccountLoader<'info, TraderRiskGroup>,
+    pub operator: AccountLoader<'info, TraderRiskGroup>,
+    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
+    #[account(mut)]
+    pub print_trade: AccountLoader<'info, PrintTrade>,
+    pub system_program: Program<'info, System>,
+    pub seed: AccountInfo<'info>,
+    #[account(mut)]
+    pub creator_wallet: AccountInfo<'info>,
 }

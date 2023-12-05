@@ -2,17 +2,17 @@ use anchor_lang::prelude::*;
 use constants::{CONFIG_SEED, OPERATOR_SEED};
 use dex::state::market_product_group::MarketProductGroup;
 use dex::state::print_trade::{PrintTrade, PrintTradeExecutionOutput};
-use dex::{program::Dex, state::trader_risk_group::TraderRiskGroup, ID as DexID};
+use dex::{program::Dex, state::trader_risk_group::TraderRiskGroup};
 use rfq::interfaces::print_trade_provider::SettlementResult;
-use rfq::state::{AuthoritySide, ProtocolState, Response, Rfq};
+use rfq::state::{ProtocolState, Response, Rfq};
 use state::Config;
 
 // use dex_cpi::instruction::*;
 
 use errors::HxroPrintTradeProviderError;
 use helpers::{
-    common::{parse_maker_trg, parse_taker_trg},
-    execute_print_trade, initialize_print_trade, initialize_trader_risk_group,
+    close_print_trade, execute_print_trade, initialize_print_trade, initialize_trader_risk_group,
+    validate_print_trade_accounts, ValidationInput,
 };
 use state::AuthoritySideDuplicate;
 
@@ -101,8 +101,8 @@ pub mod hxro_print_trade_provider {
             rfq,
             response,
             user,
-            user_trg,
-            counterparty_trg,
+            taker_trg,
+            maker_trg,
             operator,
             operator_trg,
             market_product_group,
@@ -115,51 +115,19 @@ pub mod hxro_print_trade_provider {
             HxroPrintTradeProviderError::InvalidUserAccount
         );
 
-        let (taker_trg, maker_trg) = if authority_side == AuthoritySideDuplicate::Taker {
-            (user_trg, counterparty_trg)
-        } else {
-            (counterparty_trg, user_trg)
-        };
-        require_keys_eq!(
-            taker_trg.key(),
-            parse_taker_trg(&rfq)?,
-            HxroPrintTradeProviderError::UnexpectedTRG
-        );
-        require_keys_eq!(
-            maker_trg.key(),
-            parse_maker_trg(&response)?,
-            HxroPrintTradeProviderError::UnexpectedTRG
-        );
-
-        let operator_trg_owner = operator_trg.load()?.owner;
-        require_keys_eq!(
-            operator.key(),
-            operator_trg_owner,
-            HxroPrintTradeProviderError::InvalidOperatorTRG
-        );
-
         let first_to_prepare = response
             .print_trade_initialized_by
             .unwrap_or(authority_side.into());
-        let (creator, counterparty) = if first_to_prepare == AuthoritySide::Taker {
-            (taker_trg, maker_trg)
-        } else {
-            (maker_trg, taker_trg)
-        };
-        let (expected_print_trade_address, _) = Pubkey::find_program_address(
-            &[
-                b"print_trade",
-                creator.key().as_ref(),
-                counterparty.key().as_ref(),
-                response.key().as_ref(),
-            ],
-            &DexID,
-        );
-        require_keys_eq!(
-            print_trade.key(),
-            expected_print_trade_address,
-            HxroPrintTradeProviderError::InvalidPrintTradeAddress
-        );
+        validate_print_trade_accounts(ValidationInput {
+            first_to_prepare,
+            rfq,
+            response,
+            operator,
+            taker_trg,
+            maker_trg,
+            operator_trg,
+            print_trade_key: print_trade.key(),
+        })?;
 
         if response.print_trade_initialized_by.is_some() {
             let print_trade = AccountLoader::<PrintTrade>::try_from(print_trade)?;
@@ -193,52 +161,24 @@ pub mod hxro_print_trade_provider {
         let SettlePrintTradeAccounts {
             rfq,
             response,
-            creator_trg,
-            counterparty_trg,
+            taker_trg,
+            maker_trg,
             operator,
             operator_trg,
             print_trade,
             ..
         } = &ctx.accounts;
 
-        let (taker_trg, maker_trg) = match response.print_trade_initialized_by {
-            Some(AuthoritySide::Taker) => (creator_trg, counterparty_trg),
-            Some(AuthoritySide::Maker) => (counterparty_trg, creator_trg),
-            _ => unreachable!("Print trade should always store who prepared first here"),
-        };
-
-        require_keys_eq!(
-            taker_trg.key(),
-            parse_taker_trg(&rfq)?,
-            HxroPrintTradeProviderError::UnexpectedTRG
-        );
-        require_keys_eq!(
-            maker_trg.key(),
-            parse_maker_trg(&response)?,
-            HxroPrintTradeProviderError::UnexpectedTRG
-        );
-
-        let operator_trg_owner = operator_trg.load()?.owner;
-        require_keys_eq!(
-            operator.key(),
-            operator_trg_owner,
-            HxroPrintTradeProviderError::InvalidOperatorTRG
-        );
-
-        let (expected_print_trade_address, _) = Pubkey::find_program_address(
-            &[
-                b"print_trade",
-                creator_trg.key().as_ref(),
-                counterparty_trg.key().as_ref(),
-                response.key().as_ref(),
-            ],
-            &DexID,
-        );
-        require_keys_eq!(
-            print_trade.key(),
-            expected_print_trade_address,
-            HxroPrintTradeProviderError::InvalidPrintTradeAddress
-        );
+        validate_print_trade_accounts(ValidationInput {
+            first_to_prepare: response.print_trade_initialized_by.unwrap(),
+            rfq,
+            response,
+            operator,
+            taker_trg,
+            maker_trg,
+            operator_trg,
+            print_trade_key: print_trade.key(),
+        })?;
 
         execute_print_trade(&ctx)
     }
@@ -250,8 +190,32 @@ pub mod hxro_print_trade_provider {
         Ok(())
     }
 
-    pub fn clean_up_print_trade(_ctx: Context<CleanUpPrintTradeAccounts>) -> Result<()> {
-        Ok(())
+    pub fn clean_up_print_trade<'info>(
+        ctx: Context<'_, '_, '_, 'info, CleanUpPrintTradeAccounts<'info>>,
+    ) -> Result<()> {
+        let CleanUpPrintTradeAccounts {
+            rfq,
+            response,
+            taker_trg,
+            maker_trg,
+            operator,
+            operator_trg,
+            print_trade,
+            ..
+        } = &ctx.accounts;
+
+        validate_print_trade_accounts(ValidationInput {
+            first_to_prepare: response.print_trade_initialized_by.unwrap(),
+            rfq,
+            response,
+            operator,
+            taker_trg,
+            maker_trg,
+            operator_trg,
+            print_trade_key: print_trade.key(),
+        })?;
+
+        close_print_trade(&ctx)
     }
 }
 
@@ -354,8 +318,8 @@ pub struct PreparePrintTradeAccounts<'info> {
     #[account(constraint = config.valid_mpg == market_product_group.key() @ HxroPrintTradeProviderError::NotAValidatedMpg)]
     pub market_product_group: AccountLoader<'info, MarketProductGroup>,
     pub user: Signer<'info>,
-    pub user_trg: AccountLoader<'info, TraderRiskGroup>,
-    pub counterparty_trg: AccountLoader<'info, TraderRiskGroup>,
+    pub taker_trg: AccountLoader<'info, TraderRiskGroup>,
+    pub maker_trg: AccountLoader<'info, TraderRiskGroup>,
     pub operator_trg: AccountLoader<'info, TraderRiskGroup>,
     /// CHECK done inside method or hxro CPI
     pub print_trade: UncheckedAccount<'info>,
@@ -377,8 +341,8 @@ pub struct SettlePrintTradeAccounts<'info> {
     pub dex: Program<'info, Dex>,
     #[account(constraint = config.valid_mpg == market_product_group.key() @ HxroPrintTradeProviderError::NotAValidatedMpg)]
     pub market_product_group: AccountLoader<'info, MarketProductGroup>,
-    pub creator_trg: AccountLoader<'info, TraderRiskGroup>,
-    pub counterparty_trg: AccountLoader<'info, TraderRiskGroup>,
+    pub taker_trg: AccountLoader<'info, TraderRiskGroup>,
+    pub maker_trg: AccountLoader<'info, TraderRiskGroup>,
     pub operator_trg: AccountLoader<'info, TraderRiskGroup>,
     pub print_trade: AccountLoader<'info, PrintTrade>,
     pub execution_output: AccountLoader<'info, PrintTradeExecutionOutput>,
@@ -423,4 +387,20 @@ pub struct CleanUpPrintTradeAccounts<'info> {
     pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Box<Account<'info, Response>>,
+
+    /// CHECK PDA account
+    #[account(seeds = [OPERATOR_SEED.as_bytes()], bump)]
+    pub operator: UncheckedAccount<'info>,
+    pub config: Account<'info, Config>,
+    pub dex: Program<'info, Dex>,
+    #[account(constraint = config.valid_mpg == market_product_group.key() @ HxroPrintTradeProviderError::NotAValidatedMpg)]
+    pub market_product_group: AccountLoader<'info, MarketProductGroup>,
+    pub taker_trg: AccountLoader<'info, TraderRiskGroup>,
+    pub maker_trg: AccountLoader<'info, TraderRiskGroup>,
+    pub operator_trg: AccountLoader<'info, TraderRiskGroup>,
+    pub print_trade: AccountLoader<'info, PrintTrade>,
+    /// CHECK on hxro side
+    pub creator_wallet: UncheckedAccount<'info>,
+
+    pub system_program: Program<'info, System>,
 }

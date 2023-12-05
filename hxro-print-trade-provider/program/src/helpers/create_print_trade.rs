@@ -25,8 +25,8 @@ pub fn initialize_print_trade<'info>(
         dex,
         market_product_group,
         user,
-        user_trg,
-        counterparty_trg,
+        taker_trg,
+        maker_trg,
         operator,
         operator_trg,
         print_trade,
@@ -59,9 +59,15 @@ pub fn initialize_print_trade<'info>(
         operator_counterparty_fee_proportion: OPERATOR_COUNTERPARTY_FEE_PROPORTION,
     };
 
+    let (creator_trg, counterparty_trg) = if authority_side == AuthoritySide::Taker {
+        (taker_trg, maker_trg)
+    } else {
+        (maker_trg, taker_trg)
+    };
+
     let accounts = InitializePrintTrade {
         user: user.to_account_info(),
-        creator: user_trg.to_account_info(),
+        creator: creator_trg.to_account_info(),
         counterparty: counterparty_trg.to_account_info(),
         operator: operator_trg.to_account_info(),
         market_product_group: market_product_group.to_account_info(),
