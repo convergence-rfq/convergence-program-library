@@ -1329,9 +1329,13 @@ export class Response {
       .rpc();
   }
 
-  async revertPrintTradeSettlementPreparation(side: { taker: {} } | { maker: {} }) {
+  async revertPrintTradeSettlementPreparation(side: { taker: {} } | { maker: {} }, { skipPreStep = false } = {}) {
     if (this.rfq.content.type != "printTradeProvider") {
       throw Error("Not settled by print trade!");
+    }
+
+    if (!skipPreStep) {
+      await this.rfq.content.provider.executePreRevertPrintTradeSettlementPreparation(side, this.rfq, this);
     }
 
     const remainingAccounts = this.rfq.content.provider.getRevertPrintTradeSettlementPreparationAccounts(

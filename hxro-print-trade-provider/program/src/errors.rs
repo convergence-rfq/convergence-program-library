@@ -56,4 +56,6 @@ pub enum HxroPrintTradeProviderError {
     InvalidPrintTradeAddress,
     #[msg("Invalid print trade parameters")]
     InvalidPrintTradeParams,
+    #[msg("Only a lock record creator can remove it")]
+    NotALockCreator,
 }

@@ -2,6 +2,7 @@ use dex::utils::numeric::Fractional;
 
 pub const CONFIG_SEED: &str = "config";
 pub const OPERATOR_SEED: &str = "operator";
+pub const LOCKED_COLLATERAL_RECORD_SEED: &str = "locked_collateral_record";
 
 pub const MAX_PRODUCTS_PER_TRADE: usize = 6;
 pub const EXPECTED_DECIMALS: u8 = 9;

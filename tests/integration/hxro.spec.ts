@@ -217,8 +217,8 @@ describe("RFQ HXRO instrument integration tests", () => {
     expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Taker);
 
     await response.settleOnePartyDefault();
-    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
-    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker, { skipPreStep: true });
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker, { skipPreStep: true });
     await response.cleanUp();
   });
 
@@ -246,8 +246,8 @@ describe("RFQ HXRO instrument integration tests", () => {
     expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Maker);
 
     await response.settleOnePartyDefault();
-    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
-    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker, { skipPreStep: true });
+    await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker, { skipPreStep: true });
     await response.cleanUp();
   });
 

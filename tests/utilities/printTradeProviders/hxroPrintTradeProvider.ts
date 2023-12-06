@@ -18,13 +18,14 @@ export const DEFAULT_SETTLEMENT_OUTCOME = { price: "100", legs: ["-10"] };
 
 const configSeed = "config";
 const operatorSeed = "operator";
+const lockedCollateralRecordSeed = "locked_collateral_record";
 
 const trgSize = 64336;
 
 export const toHxroAmount = (value: number) => value * 10 ** hxroDecimals;
 
 let hxroPrintTradeProviderProgram: Program<HxroPrintTradeProviderIdl> | null = null;
-export function getHxroInstrumentProgram(): Program<HxroPrintTradeProviderIdl> {
+export function getHxroProviderProgram(): Program<HxroPrintTradeProviderIdl> {
   if (hxroPrintTradeProviderProgram === null) {
     hxroPrintTradeProviderProgram = workspace.HxroPrintTradeProvider as Program<HxroPrintTradeProviderIdl>;
   }
@@ -52,11 +53,11 @@ export class HxroPrintTradeProvider {
   ) {}
 
   static async addPrintTradeProvider(context: Context) {
-    await context.addPrintTradeProvider(getHxroInstrumentProgram().programId, 2, true);
+    await context.addPrintTradeProvider(getHxroProviderProgram().programId, 2, true);
   }
 
   static async initializeConfig(context: Context, validMpg: PublicKey) {
-    await getHxroInstrumentProgram()
+    await getHxroProviderProgram()
       .methods.initializeConfig(validMpg)
       .accounts({
         authority: context.dao.publicKey,
@@ -100,7 +101,7 @@ export class HxroPrintTradeProvider {
       lamports: 1 * 10 ** 9, // 1 sol
     });
 
-    await getHxroInstrumentProgram()
+    await getHxroProviderProgram()
       .methods.initializeOperatorTraderRiskGroup()
       .accounts({
         authority: context.dao.publicKey,
@@ -124,19 +125,28 @@ export class HxroPrintTradeProvider {
   }
 
   static getConfigAddress() {
-    const program = getHxroInstrumentProgram();
+    const program = getHxroProviderProgram();
     const [address] = PublicKey.findProgramAddressSync([Buffer.from(configSeed)], program.programId);
     return address;
   }
 
   static getOperatorAddress() {
-    const program = getHxroInstrumentProgram();
+    const program = getHxroProviderProgram();
     const [address] = PublicKey.findProgramAddressSync([Buffer.from(operatorSeed)], program.programId);
     return address;
   }
 
+  static getLockedCollateralRecordAddress(user: PublicKey, response: PublicKey) {
+    const program = getHxroProviderProgram();
+    const [address] = PublicKey.findProgramAddressSync(
+      [Buffer.from(lockedCollateralRecordSeed), user.toBuffer(), response.toBuffer()],
+      program.programId
+    );
+    return address;
+  }
+
   getProgramId(): PublicKey {
-    return getHxroInstrumentProgram().programId;
+    return getHxroProviderProgram().programId;
   }
 
   getLegData(): LegData[] {
@@ -220,16 +230,40 @@ export class HxroPrintTradeProvider {
     }
   }
 
-  async manageCollateral(action: "lock" | "unlock", side: AuthoritySide, expectedSettlement: SettlementOutcome) {
+  async executePreRevertPrintTradeSettlementPreparation(side: AuthoritySide, rfq: Rfq, response: Response) {
     const { taker, maker } = this.context;
-    const { mpg, trgTaker, trgMaker, latestDexProgram, riskAndFeeSigner } = this.hxroContext;
-    const [user, userTrg] = side == AuthoritySide.Taker ? [taker, trgTaker] : [maker, trgMaker];
+    const user = side == AuthoritySide.Taker ? taker : maker;
+    const lockRecord = HxroPrintTradeProvider.getLockedCollateralRecordAddress(user.publicKey, response.account);
+    const lockRecordData = await getHxroProviderProgram().account.lockedCollateralRecord.fetch(lockRecord);
 
+    const locksByLegs = lockRecordData.locks.map((x) => x.size);
+
+    await this.manageCollateralByLocks("unlock", side, locksByLegs);
+
+    await getHxroProviderProgram()
+      .methods.removeLockedCollateralRecord()
+      .accountsStrict({
+        user: user.publicKey,
+        lockedCollateralRecord: lockRecord,
+      })
+      .signers([user])
+      .rpc();
+  }
+
+  async manageCollateral(action: "lock" | "unlock", side: AuthoritySide, expectedSettlement: SettlementOutcome) {
     if (side === AuthoritySide.Maker) {
       expectedSettlement = inverseExpectedSettlement(expectedSettlement);
     }
 
     const fractionalSettlement = convertExpectedSettlementToFractional(expectedSettlement);
+
+    await this.manageCollateralByLocks(action, side, fractionalSettlement.legs);
+  }
+
+  async manageCollateralByLocks(action: "lock" | "unlock", side: AuthoritySide, locksByLegs: { m: BN; exp: BN }[]) {
+    const { taker, maker } = this.context;
+    const { mpg, trgTaker, trgMaker, latestDexProgram, riskAndFeeSigner } = this.hxroContext;
+    const [user, userTrg] = side == AuthoritySide.Taker ? [taker, trgTaker] : [maker, trgMaker];
 
     const products = [];
     for (let i = 0; i < 6; i++) {
@@ -237,7 +271,7 @@ export class HxroPrintTradeProvider {
         const leg = this.legs[i];
         products.push({
           productIndex: new BN(leg.productIndex),
-          size: fractionalSettlement.legs[i],
+          size: locksByLegs[i],
         });
       } else {
         products.push({ productIndex: new BN(0), size: { m: new BN(0), exp: new BN(0) } });
@@ -390,6 +424,11 @@ export class HxroPrintTradeProvider {
 
     return [
       { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
+      {
+        pubkey: HxroPrintTradeProvider.getLockedCollateralRecordAddress(user, response.account),
+        isSigner: false,
+        isWritable: true,
+      },
       { pubkey: HxroPrintTradeProvider.getOperatorAddress(), isSigner: false, isWritable: false },
       { pubkey: HxroPrintTradeProvider.getConfigAddress(), isSigner: false, isWritable: false },
       { pubkey: dexProgram.programId, isSigner: false, isWritable: false },

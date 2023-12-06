@@ -1,18 +1,18 @@
 use anchor_lang::prelude::*;
-use constants::{CONFIG_SEED, OPERATOR_SEED};
+use constants::{CONFIG_SEED, LOCKED_COLLATERAL_RECORD_SEED, OPERATOR_SEED};
 use dex::state::market_product_group::MarketProductGroup;
 use dex::state::print_trade::{PrintTrade, PrintTradeExecutionOutput};
 use dex::{program::Dex, state::trader_risk_group::TraderRiskGroup};
 use rfq::interfaces::print_trade_provider::SettlementResult;
 use rfq::state::{ProtocolState, Response, Rfq};
-use state::Config;
+use state::{Config, LockedCollateralRecord, ProductInfo};
 
 // use dex_cpi::instruction::*;
 
 use errors::HxroPrintTradeProviderError;
 use helpers::{
     close_print_trade, execute_print_trade, initialize_print_trade, initialize_trader_risk_group,
-    validate_print_trade_accounts, ValidationInput,
+    to_hxro_product, validate_print_trade_accounts, ValidationInput,
 };
 use state::AuthoritySideDuplicate;
 
@@ -31,6 +31,8 @@ declare_id!("GyRW7qvzx6UTVW9DkQGMy5f1rp9XK2x53FvWSjUUF7BJ");
 
 #[program]
 pub mod hxro_print_trade_provider {
+    use crate::state::FractionalCopy;
+
     use super::*;
 
     pub fn initialize_config(
@@ -50,6 +52,12 @@ pub mod hxro_print_trade_provider {
         ctx: Context<'_, '_, '_, 'info, InitializeOperatorTraderRiskGroupAccounts<'info>>,
     ) -> Result<()> {
         initialize_trader_risk_group(ctx)
+    }
+
+    pub fn remove_locked_collateral_record(
+        _ctx: Context<RemoveLockedCollateralRecord>,
+    ) -> Result<()> {
+        Ok(())
     }
 
     pub fn validate_print_trade(ctx: Context<ValidatePrintTradeAccounts>) -> Result<()> {
@@ -152,6 +160,22 @@ pub mod hxro_print_trade_provider {
         } else {
             initialize_print_trade(&ctx, authority_side.into())?;
         }
+
+        let mut locks = [ProductInfo {
+            product_index: 0,
+            size: FractionalCopy { m: 0, exp: 0 },
+        }; 6];
+        for i in 0..rfq.legs.len() {
+            locks[i] = to_hxro_product(authority_side.into(), rfq, response, i as u8)?;
+        }
+        ctx.accounts
+            .locked_collateral_record
+            .set_inner(LockedCollateralRecord {
+                user: user.key(),
+                response: response.key(),
+                locks,
+            });
+
         Ok(())
     }
 
@@ -246,6 +270,15 @@ pub struct ModifyConfigAccounts<'info> {
 }
 
 #[derive(Accounts)]
+pub struct RemoveLockedCollateralRecord<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+
+    #[account(mut, close=user, constraint = locked_collateral_record.user == user.key() @ HxroPrintTradeProviderError::NotALockCreator)]
+    pub locked_collateral_record: Account<'info, LockedCollateralRecord>,
+}
+
+#[derive(Accounts)]
 pub struct InitializeOperatorTraderRiskGroupAccounts<'info> {
     #[account(mut, constraint = protocol.authority == authority.key() @ HxroPrintTradeProviderError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
@@ -310,6 +343,14 @@ pub struct PreparePrintTradeAccounts<'info> {
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Box<Account<'info, Response>>,
 
+    #[account(
+        init,
+        payer = user,
+        seeds = [LOCKED_COLLATERAL_RECORD_SEED.as_bytes(), user.key().as_ref(), response.key().as_ref()],
+        space = 8 + LockedCollateralRecord::INIT_SPACE,
+        bump
+    )]
+    pub locked_collateral_record: Account<'info, LockedCollateralRecord>,
     /// CHECK PDA account
     #[account(seeds = [OPERATOR_SEED.as_bytes()], bump)]
     pub operator: UncheckedAccount<'info>,
@@ -317,6 +358,7 @@ pub struct PreparePrintTradeAccounts<'info> {
     pub dex: Program<'info, Dex>,
     #[account(constraint = config.valid_mpg == market_product_group.key() @ HxroPrintTradeProviderError::NotAValidatedMpg)]
     pub market_product_group: AccountLoader<'info, MarketProductGroup>,
+    #[account(mut)]
     pub user: Signer<'info>,
     pub taker_trg: AccountLoader<'info, TraderRiskGroup>,
     pub maker_trg: AccountLoader<'info, TraderRiskGroup>,

@@ -6,14 +6,15 @@ use dex::{cpi::accounts::InitializePrintTrade, state::print_trade::PrintTradePro
 use rfq::state::AuthoritySide;
 
 use crate::constants::OPERATOR_SEED;
+use crate::state::ProductInfo;
 use crate::{
     constants::{OPERATOR_COUNTERPARTY_FEE_PROPORTION, OPERATOR_CREATOR_FEE_PROPORTION},
     PreparePrintTradeAccounts,
 };
 
+use super::conversions::to_hxro_price;
 use super::conversions::to_hxro_product;
 use super::conversions::to_hxro_side;
-use super::conversions::{to_hxro_price, ProductInfo};
 
 pub fn initialize_print_trade<'info>(
     ctx: &Context<'_, '_, '_, 'info, PreparePrintTradeAccounts<'info>>,
@@ -43,10 +44,10 @@ pub fn initialize_print_trade<'info>(
         let ProductInfo {
             product_index,
             size,
-        } = to_hxro_product(rfq, response, i as u8)?;
+        } = to_hxro_product(AuthoritySide::Taker, rfq, response, i as u8)?;
         products[i] = PrintTradeProductIndex {
             product_index: product_index as usize,
-            size,
+            size: size.into(),
         };
     }
     let params = InitializePrintTradeParams {
