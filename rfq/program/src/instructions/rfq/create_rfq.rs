@@ -5,7 +5,7 @@ use crate::{
     errors::ProtocolError,
     interfaces::instrument::validate_quote_instrument_data,
     seeds::{PROTOCOL_SEED, RFQ_SEED},
-    state::{rfq::QuoteAsset, FixedSize, Leg, OrderType, ProtocolState, Rfq, StoredRfqState},
+    state::{rfq::QuoteAsset, ApiLeg, FixedSize, OrderType, ProtocolState, Rfq, StoredRfqState},
 };
 use anchor_lang::prelude::*;
 use solana_program::hash::hash;
@@ -16,7 +16,7 @@ const RECENT_TIMESTAMP_VALIDITY: u64 = 120; // slightly higher then the recent b
 #[instruction(
     expected_legs_size: u16,
     expected_legs_hash: [u8; 32],
-    _legs: Vec<Leg>,
+    _legs: Vec<ApiLeg>,
     print_trade_provider: Option<Pubkey>,
     order_type: OrderType,
     quote_asset: QuoteAsset,
@@ -30,7 +30,7 @@ pub struct CreateRfqAccounts<'info> {
     pub taker: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(init, payer = taker, space = 8 + mem::size_of::<Rfq>() + expected_legs_size as usize, seeds = [
         RFQ_SEED.as_bytes(),
         taker.key().as_ref(),
@@ -81,7 +81,7 @@ fn validate_legs<'a, 'info: 'a>(
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
     expected_leg_size: u16,
-    legs: &[Leg],
+    legs: &[ApiLeg],
     is_settled_as_print_trade: bool,
 ) -> Result<()> {
     require!(
@@ -120,7 +120,7 @@ pub fn create_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
     expected_legs_size: u16,
     expected_legs_hash: [u8; 32],
-    legs: Vec<Leg>,
+    legs: Vec<ApiLeg>,
     print_trade_provider: Option<Pubkey>,
     order_type: OrderType,
     quote_asset: QuoteAsset,
@@ -165,7 +165,8 @@ pub fn create_rfq_instruction<'info>(
         cleared_responses: 0,
         confirmed_responses: 0,
         print_trade_provider,
-        legs,
+        reserved: [0; 256],
+        legs: legs.into_iter().map(Into::into).collect(),
     });
 
     Ok(())

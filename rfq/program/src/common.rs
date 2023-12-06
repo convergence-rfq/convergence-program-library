@@ -8,7 +8,7 @@ use crate::{
     interfaces::instrument::validate_leg_instrument_data,
     seeds::COLLATERAL_SEED,
     state::{
-        AuthoritySide, BaseAssetInfo, CollateralInfo, Leg, ProtocolState, Response, Rfq,
+        ApiLeg, AuthoritySide, BaseAssetInfo, CollateralInfo, ProtocolState, Response, Rfq,
         SettlementTypeMetadata, StoredResponseState,
     },
 };
@@ -88,7 +88,7 @@ pub fn update_state_after_escrow_preparation(
 }
 
 pub fn validate_legs<'a, 'info: 'a>(
-    legs: &[Leg],
+    legs: &[ApiLeg],
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
     is_settled_as_print_trade: bool,
@@ -104,7 +104,7 @@ pub fn validate_legs<'a, 'info: 'a>(
 }
 
 fn validate_legs_base_asset<'a, 'info: 'a>(
-    legs: &[Leg],
+    legs: &[ApiLeg],
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     for leg in legs.iter() {
@@ -122,7 +122,7 @@ fn validate_legs_base_asset<'a, 'info: 'a>(
     Ok(())
 }
 
-fn validate_legs_settlement_type(legs: &[Leg], is_settled_as_print_trade: bool) -> Result<()> {
+fn validate_legs_settlement_type(legs: &[ApiLeg], is_settled_as_print_trade: bool) -> Result<()> {
     for leg in legs.iter() {
         validate_settlement_type_metadata(
             &leg.settlement_type_metadata,
@@ -161,7 +161,7 @@ pub fn validate_settlement_type_metadata(
 }
 
 fn validate_instrument_legs<'a, 'info: 'a>(
-    legs: &[Leg],
+    legs: &[ApiLeg],
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {

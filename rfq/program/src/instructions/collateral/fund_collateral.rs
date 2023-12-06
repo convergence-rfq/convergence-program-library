@@ -14,7 +14,7 @@ pub struct FundCollateralAccounts<'info> {
     pub user_tokens: Account<'info, TokenAccount>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(seeds = [COLLATERAL_SEED.as_bytes(), user.key().as_ref()], bump = collateral_info.bump)]
     pub collateral_info: Account<'info, CollateralInfo>,
     #[account(mut, seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), user.key().as_ref()],

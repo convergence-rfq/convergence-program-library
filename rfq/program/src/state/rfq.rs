@@ -28,6 +28,7 @@ pub struct Rfq {
     pub confirmed_responses: u32,
 
     pub print_trade_provider: Option<Pubkey>, // move higher after replacing with nullable wrapper
+    pub reserved: [u8; 256],
 
     pub legs: Vec<Leg>, // TODO add limit for this size
 }
@@ -114,6 +115,41 @@ pub struct Leg {
     pub amount: u64,
     pub amount_decimals: u8,
     pub side: LegSide,
+
+    pub reserved: [u8; 64],
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct ApiLeg {
+    pub settlement_type_metadata: SettlementTypeMetadata,
+    pub base_asset_index: BaseAssetIndex,
+    pub data: Vec<u8>,
+    pub amount: u64,
+    pub amount_decimals: u8,
+    pub side: LegSide,
+}
+
+impl From<ApiLeg> for Leg {
+    fn from(value: ApiLeg) -> Self {
+        let ApiLeg {
+            settlement_type_metadata,
+            base_asset_index,
+            data,
+            amount,
+            amount_decimals,
+            side,
+        } = value;
+
+        Self {
+            settlement_type_metadata,
+            base_asset_index,
+            data,
+            amount,
+            amount_decimals,
+            side,
+            reserved: [0; 64],
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

@@ -16,11 +16,11 @@ pub struct ConfirmResponseAccounts<'info> {
     pub taker: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     #[account(mut, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
-    pub response: Account<'info, Response>,
+    pub response: Box<Account<'info, Response>>,
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), taker.key().as_ref()],
                 bump = collateral_info.bump)]
     pub collateral_info: Account<'info, CollateralInfo>,

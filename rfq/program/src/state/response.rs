@@ -27,6 +27,8 @@ pub struct Response {
 
     pub settled_escrow_legs: u8,
 
+    pub reserved: [u8; 256],
+
     pub confirmed: Option<Confirmation>,
     pub defaulting_party: Option<DefaultingParty>,
     pub print_trade_initialized_by: Option<AuthoritySide>,

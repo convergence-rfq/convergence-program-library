@@ -16,6 +16,7 @@ pub struct Config {
     pub overall_safety_factor: f64,
     pub accepted_oracle_staleness: u64,
     pub accepted_oracle_confidence_interval_portion: f64,
+    pub reserved: [u8; 256],
     pub risk_categories_info: [RiskCategoryInfo; 8], // 8 - mem::variant_count::<RiskCategory>
     pub instrument_types: [StoredInstrumentType; 50], // Embed ProtocolState::MAX_INSTRUMENTS to work around anchor idl generation issue
     pub padding: [u8; 6],

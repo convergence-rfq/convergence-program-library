@@ -5,8 +5,8 @@ use crate::{
     errors::ProtocolError,
     seeds::PROTOCOL_SEED,
     state::{
-        AssetIdentifier, AuthoritySide, BaseAssetIndex, Leg, ProtocolState, QuoteAsset, Response,
-        Rfq,
+        ApiLeg, AssetIdentifier, AuthoritySide, BaseAssetIndex, ProtocolState, QuoteAsset,
+        Response, Rfq,
     },
     utils::ToAccountMeta,
 };
@@ -18,7 +18,7 @@ const REVERT_PREPARATION_SELECTOR: [u8; 8] = [32, 185, 171, 189, 112, 246, 209, 
 const CLEAN_UP_SELECTOR: [u8; 8] = [8, 182, 195, 138, 85, 137, 221, 250];
 
 pub fn validate_leg_instrument_data<'a, 'info: 'a>(
-    leg: &Leg,
+    leg: &ApiLeg,
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {

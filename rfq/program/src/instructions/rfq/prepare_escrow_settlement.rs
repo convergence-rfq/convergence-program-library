@@ -13,7 +13,7 @@ pub struct PrepareEscrowSettlementAccounts<'info> {
     pub caller: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
     #[account(mut, constraint = response.rfq == rfq.key() @ ProtocolError::ResponseForAnotherRfq)]
     pub response: Account<'info, Response>,

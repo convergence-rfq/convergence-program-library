@@ -10,7 +10,7 @@ pub struct ChangeProtocolFeesAccounts<'info> {
     #[account(constraint = protocol.authority == authority.key() @ ProtocolError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
     #[account(mut, seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
 }
 
 fn validate(settle_fees: Option<FeeParameters>, default_fees: Option<FeeParameters>) -> Result<()> {

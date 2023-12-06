@@ -4,7 +4,7 @@ pub mod response;
 pub mod rfq;
 
 pub use self::rfq::{
-    AssetIdentifier, FixedSize, Leg, LegSide, OrderType, QuoteAsset, Rfq, RfqState,
+    ApiLeg, AssetIdentifier, FixedSize, Leg, LegSide, OrderType, QuoteAsset, Rfq, RfqState,
     SettlementTypeMetadata, StoredRfqState,
 };
 pub use collateral::CollateralInfo;

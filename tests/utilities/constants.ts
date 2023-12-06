@@ -11,6 +11,8 @@ export const QUOTE_ESCROW_SEED = "quote_escrow";
 export const BASE_ASSET_INFO_SEED = "base_asset";
 export const MINT_INFO_SEED = "mint_info";
 
+export const EMPTY_LEG_SIZE = 32 + 2 + 4 + 8 + 1 + 1 + 64;
+
 export const LEG_MULTIPLIER_DECIMALS = 9;
 export const ABSOLUTE_PRICE_DECIMALS = 9;
 export const FEE_BPS_DECIMALS = 9;

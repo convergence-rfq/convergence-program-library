@@ -22,7 +22,7 @@ pub struct RespondToRfqAccounts<'info> {
     pub maker: Signer<'info>,
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     // rfq legs additional storage for first_to_prepare_legs field
@@ -162,6 +162,7 @@ pub fn respond_to_rfq_instruction<'info>(
         taker_prepared_counter: 0,
         maker_prepared_counter: 0,
         settled_escrow_legs: 0,
+        reserved: [0; 256],
         confirmed: None,
         defaulting_party: None,
         print_trade_initialized_by: None,

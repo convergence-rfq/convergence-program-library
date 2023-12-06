@@ -13,7 +13,7 @@ pub struct RegisterMintAccounts<'info> {
     #[account(mut, constraint = protocol.authority == authority.key() @ ProtocolError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(init, payer = authority, space = 8 + mem::size_of::<MintInfo>(),
                 seeds = [MINT_INFO_SEED.as_bytes(), mint.key().as_ref()], bump)]
     pub mint_info: Account<'info, MintInfo>,

@@ -27,7 +27,7 @@ describe("Create RFQ", () => {
 
   it("Cannot Approve Response after Response is expired", async () => {
     const rfq = await context.createEscrowRfq({
-      activeWindow: 3,
+      activeWindow: 5,
     });
     const response = await rfq.respond({
       expirationTimestamp: Date.now() / 1000 + 1,
