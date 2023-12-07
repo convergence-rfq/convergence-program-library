@@ -34,7 +34,7 @@ pub struct RespondToRfqAccounts<'info> {
         &ask.try_to_vec().unwrap(),
         &pda_distinguisher.to_le_bytes(),
     ], bump)]
-    pub response: Account<'info, Response>,
+    pub response: Box<Account<'info, Response>>,
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
                 bump = collateral_info.bump)]
     pub collateral_info: Account<'info, CollateralInfo>,

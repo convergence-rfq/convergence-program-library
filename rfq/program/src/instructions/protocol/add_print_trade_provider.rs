@@ -10,7 +10,7 @@ pub struct AddPrintTradeProviderAccounts<'info> {
     #[account(constraint = protocol.authority == authority.key() @ ProtocolError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
     #[account(mut, seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     /// CHECK: is a valid instrument program id
     #[account(executable)]
     pub print_trade_provider_program: UncheckedAccount<'info>,

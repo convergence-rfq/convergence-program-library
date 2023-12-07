@@ -247,7 +247,7 @@ pub mod hxro_print_trade_provider {
 pub struct InitializeConfigAccounts<'info> {
     #[account(mut, constraint = protocol.authority == authority.key() @ HxroPrintTradeProviderError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(
         init,
         payer = authority,
@@ -264,7 +264,7 @@ pub struct InitializeConfigAccounts<'info> {
 pub struct ModifyConfigAccounts<'info> {
     #[account(constraint = protocol.authority == authority.key() @ HxroPrintTradeProviderError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut)]
     pub config: Account<'info, Config>,
 }
@@ -282,7 +282,7 @@ pub struct RemoveLockedCollateralRecord<'info> {
 pub struct InitializeOperatorTraderRiskGroupAccounts<'info> {
     #[account(mut, constraint = protocol.authority == authority.key() @ HxroPrintTradeProviderError::NotAProtocolAuthority)]
     pub authority: Signer<'info>,
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut)]
     pub config: Account<'info, Config>,
     #[account(constraint = config.valid_mpg == market_product_group.key() @ HxroPrintTradeProviderError::NotAValidatedMpg)]
@@ -316,7 +316,7 @@ pub struct InitializeOperatorTraderRiskGroupAccounts<'info> {
 #[derive(Accounts)]
 pub struct ValidatePrintTradeAccounts<'info> {
     #[account(signer)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Account<'info, Rfq>,
 
     pub config: Account<'info, Config>,
@@ -328,7 +328,7 @@ pub struct ValidatePrintTradeAccounts<'info> {
 #[derive(Accounts)]
 pub struct ValidateResponseAccounts<'info> {
     #[account(signer)]
-    pub protocol: Account<'info, ProtocolState>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Account<'info, Rfq>,
     pub response: Account<'info, Response>,
 
