@@ -230,7 +230,7 @@ export class HxroPrintTradeProvider {
     }
   }
 
-  async executePreRevertPrintTradeSettlementPreparation(side: AuthoritySide, rfq: Rfq, response: Response) {
+  async unlockCollateralAndRemoveRecord(side: AuthoritySide, rfq: Rfq, response: Response) {
     const { taker, maker } = this.context;
     const user = side == AuthoritySide.Taker ? taker : maker;
     const lockRecord = HxroPrintTradeProvider.getLockedCollateralRecordAddress(user.publicKey, response.account);
@@ -443,6 +443,10 @@ export class HxroPrintTradeProvider {
   }
 
   getExecutePrintTradeSettlementAccounts(rfq: Rfq, response: Response) {
+    const {
+      taker: { publicKey: taker },
+      maker: { publicKey: maker },
+    } = this.context;
     const { mpg, trgTaker, trgMaker, trgOperator, dexProgram, executionOutput, riskAndFeeSigner } = this.hxroContext;
 
     const [creatorTrg, counterpartyTrg] = response.firstToPrepare?.equals(this.context.taker.publicKey)
@@ -456,6 +460,18 @@ export class HxroPrintTradeProvider {
 
     return [
       { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
+      { pubkey: taker, isSigner: false, isWritable: true },
+      { pubkey: maker, isSigner: false, isWritable: true },
+      {
+        pubkey: HxroPrintTradeProvider.getLockedCollateralRecordAddress(taker, response.account),
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: HxroPrintTradeProvider.getLockedCollateralRecordAddress(maker, response.account),
+        isSigner: false,
+        isWritable: true,
+      },
       { pubkey: HxroPrintTradeProvider.getOperatorAddress(), isSigner: false, isWritable: true },
       { pubkey: HxroPrintTradeProvider.getConfigAddress(), isSigner: false, isWritable: false },
       { pubkey: dexProgram.programId, isSigner: false, isWritable: false },
@@ -480,8 +496,16 @@ export class HxroPrintTradeProvider {
     ];
   }
 
-  getRevertPrintTradeSettlementPreparationAccounts(rfq: Rfq, response: Response) {
-    return [{ pubkey: this.getProgramId(), isSigner: false, isWritable: false }];
+  getRevertPrintTradeSettlementPreparationAccounts(rfq: Rfq, response: Response, side: AuthoritySide) {
+    const lockRecordOwner = side === AuthoritySide.Taker ? this.context.taker.publicKey : this.context.maker.publicKey;
+    return [
+      { pubkey: this.getProgramId(), isSigner: false, isWritable: false },
+      {
+        pubkey: HxroPrintTradeProvider.getLockedCollateralRecordAddress(lockRecordOwner, response.account),
+        isSigner: false,
+        isWritable: true,
+      },
+    ];
   }
 
   getCleanUpPrintTradeSettlementAccounts(rfq: Rfq, response: Response) {

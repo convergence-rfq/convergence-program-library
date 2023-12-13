@@ -13,7 +13,9 @@ pub struct Config {
 pub struct LockedCollateralRecord {
     pub user: Pubkey,
     pub response: Pubkey,
+    pub is_in_use: bool,
     pub locks: [ProductInfo; 6],
+    pub reserved: [u8; 64],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq, Default, InitSpace)]

@@ -58,4 +58,12 @@ pub enum HxroPrintTradeProviderError {
     InvalidPrintTradeParams,
     #[msg("Only a lock record creator can remove it")]
     NotALockCreator,
+    #[msg("Not a valid taker account")]
+    NotATaker,
+    #[msg("Not a valid maker account")]
+    NotAMaker,
+    #[msg("Can't remove a collateral lock record for a live settlement")]
+    RecordIsInUse,
+    #[msg("Invalid collateral lock record address")]
+    InvalidLockAddress,
 }

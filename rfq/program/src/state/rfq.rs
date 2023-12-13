@@ -27,10 +27,10 @@ pub struct Rfq {
     pub cleared_responses: u32,
     pub confirmed_responses: u32,
 
-    pub print_trade_provider: Option<Pubkey>, // move higher after replacing with nullable wrapper
     pub reserved: [u8; 256],
 
-    pub legs: Vec<Leg>, // TODO add limit for this size
+    pub print_trade_provider: Option<Pubkey>, // move higher after replacing with nullable wrapper
+    pub legs: Vec<Leg>,                       // TODO add limit for this size
 }
 
 impl Rfq {

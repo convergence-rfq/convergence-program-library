@@ -18,7 +18,7 @@ const SETTLE_PRINT_TRADE_SELECTOR: [u8; 8] = [188, 110, 242, 145, 117, 203, 30, 
 const REVERT_PRINT_TRADE_PREPARATION_SELECTOR: [u8; 8] = [242, 33, 96, 69, 184, 244, 78, 6];
 const CLEAN_UP_PRINT_TRADE_SELECTOR: [u8; 8] = [246, 29, 115, 215, 20, 227, 25, 57];
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub enum SettlementResult {
     Success,
     TakerDefaults,

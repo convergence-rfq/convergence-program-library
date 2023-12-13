@@ -47,8 +47,7 @@ fn validate(ctx: &Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
         ProtocolError::LegsSizeDoesNotMatchExpectedSize
     );
 
-    let legs_serialized = rfq.legs.try_to_vec().unwrap();
-    let legs_hash = solana_program::hash::hash(&legs_serialized);
+    let legs_hash = solana_program::hash::hash(&serialized_legs);
     require!(
         legs_hash.to_bytes() == rfq.expected_legs_hash,
         ProtocolError::LegsHashDoesNotMatchExpectedHash

@@ -23,12 +23,6 @@ mod state;
 
 declare_id!("GyRW7qvzx6UTVW9DkQGMy5f1rp9XK2x53FvWSjUUF7BJ");
 
-// Hxro global TODOS
-// 2 points in the pinned message
-// 2 bugs from the chat
-// print trade address conflict
-// trgs checking
-
 #[program]
 pub mod hxro_print_trade_provider {
     use crate::state::FractionalCopy;
@@ -55,8 +49,13 @@ pub mod hxro_print_trade_provider {
     }
 
     pub fn remove_locked_collateral_record(
-        _ctx: Context<RemoveLockedCollateralRecord>,
+        ctx: Context<RemoveLockedCollateralRecord>,
     ) -> Result<()> {
+        require!(
+            !ctx.accounts.locked_collateral_record.is_in_use,
+            HxroPrintTradeProviderError::RecordIsInUse
+        );
+
         Ok(())
     }
 
@@ -173,7 +172,9 @@ pub mod hxro_print_trade_provider {
             .set_inner(LockedCollateralRecord {
                 user: user.key(),
                 response: response.key(),
+                is_in_use: true,
                 locks,
+                reserved: [0; 64],
             });
 
         Ok(())
@@ -185,6 +186,10 @@ pub mod hxro_print_trade_provider {
         let SettlePrintTradeAccounts {
             rfq,
             response,
+            taker,
+            maker,
+            taker_locked_collateral_record,
+            maker_locked_collateral_record,
             taker_trg,
             maker_trg,
             operator,
@@ -204,13 +209,47 @@ pub mod hxro_print_trade_provider {
             print_trade_key: print_trade.key(),
         })?;
 
-        execute_print_trade(&ctx)
+        let settlement_result = execute_print_trade(&ctx)?;
+
+        if settlement_result == SettlementResult::Success {
+            taker_locked_collateral_record.close(taker.to_account_info())?;
+            maker_locked_collateral_record.close(maker.to_account_info())?;
+        }
+
+        Ok(settlement_result)
     }
 
     pub fn revert_print_trade_preparation<'info>(
-        _ctx: Context<'_, '_, '_, 'info, RevertPrintTradePreparationAccounts<'info>>,
-        _authority_side: AuthoritySideDuplicate,
+        ctx: Context<'_, '_, '_, 'info, RevertPrintTradePreparationAccounts<'info>>,
+        authority_side: AuthoritySideDuplicate,
     ) -> Result<()> {
+        let RevertPrintTradePreparationAccounts {
+            rfq,
+            response,
+            locked_collateral_record,
+            ..
+        } = ctx.accounts;
+
+        let lock_owner = match authority_side {
+            AuthoritySideDuplicate::Taker => rfq.taker,
+            AuthoritySideDuplicate::Maker => response.maker,
+        };
+        let (expected_lock_address, _) = Pubkey::find_program_address(
+            &[
+                LOCKED_COLLATERAL_RECORD_SEED.as_bytes(),
+                lock_owner.as_ref(),
+                response.key().as_ref(),
+            ],
+            &ID,
+        );
+        require_keys_eq!(
+            locked_collateral_record.key(),
+            expected_lock_address,
+            HxroPrintTradeProviderError::InvalidLockAddress
+        );
+
+        locked_collateral_record.is_in_use = false;
+
         Ok(())
     }
 
@@ -376,6 +415,24 @@ pub struct SettlePrintTradeAccounts<'info> {
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Box<Account<'info, Response>>,
 
+    /// CHECK: is a taker account
+    #[account(mut, constraint = rfq.taker == taker.key() @ HxroPrintTradeProviderError::NotATaker)]
+    pub taker: UncheckedAccount<'info>,
+    /// CHECK: is a maker account
+    #[account(mut, constraint = response.maker == maker.key() @ HxroPrintTradeProviderError::NotAMaker)]
+    pub maker: UncheckedAccount<'info>,
+    #[account(
+        mut,
+        seeds = [LOCKED_COLLATERAL_RECORD_SEED.as_bytes(), rfq.taker.as_ref(), response.key().as_ref()],
+        bump
+    )]
+    pub taker_locked_collateral_record: Box<Account<'info, LockedCollateralRecord>>,
+    #[account(
+        mut,
+        seeds = [LOCKED_COLLATERAL_RECORD_SEED.as_bytes(), response.maker.as_ref(), response.key().as_ref()],
+        bump
+    )]
+    pub maker_locked_collateral_record: Box<Account<'info, LockedCollateralRecord>>,
     /// CHECK PDA account
     #[account(seeds = [OPERATOR_SEED.as_bytes()], bump)]
     pub operator: UncheckedAccount<'info>,
@@ -421,6 +478,9 @@ pub struct RevertPrintTradePreparationAccounts<'info> {
     pub protocol: Box<Account<'info, ProtocolState>>,
     pub rfq: Box<Account<'info, Rfq>>,
     pub response: Box<Account<'info, Response>>,
+
+    #[account(mut)]
+    pub locked_collateral_record: Account<'info, LockedCollateralRecord>,
 }
 
 #[derive(Accounts)]
