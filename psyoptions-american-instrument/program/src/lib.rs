@@ -14,7 +14,7 @@ mod errors;
 mod instructions;
 mod state;
 
-declare_id!("8MvpZsBa4fRjRLR717CDQHzGEkvXr3anpQLpm9zDHY1G");
+declare_id!("HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok");
 
 const ESCROW_SEED: &str = "escrow";
 #[program]

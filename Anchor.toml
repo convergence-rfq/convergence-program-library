@@ -1,20 +1,20 @@
 anchor_version = "0.28.0"
 
 [programs.localnet]
-rfq = "CdvjLpJGpYTdpdanPpfUe1zPERYvpvP4VALUz62eRrGP"
-risk_engine = "GL6ezn1mYExqgbFQs85NjfBUi1k4uYkdjGf2pvSKktz8"
-spot_instrument = "2LmfeVxwy5CqF5ufqfa6PVGRGjxJizEawQF1SngACufT"
-psyoptions_european_instrument = "3cPrWr9jp8bHcVhH1dy6AKTyPS1yo6jQRoNmgPCcP2MM"
-psyoptions_american_instrument = "8MvpZsBa4fRjRLR717CDQHzGEkvXr3anpQLpm9zDHY1G"
-hxro_print_trade_provider = "GyRW7qvzx6UTVW9DkQGMy5f1rp9XK2x53FvWSjUUF7BJ"
+rfq = "EMFRxsc7FSavsUVKuwNiywXixYthe2Mo5GUNaUvnvBva"
+risk_engine = "F3o2hWqv61TavHuZYuStvW2Zd3M1JnoqBmmgGU77LRTr"
+spot_instrument = "4A9M7iojGDPc4n4YDGnTmsYsNKUohG1zM1nrAqVMMmrm"
+psyoptions_european_instrument = "6B7TdBNAF7tWWz5sZbbBZj8jH1ix7QWAchtkvMHveEuW"
+psyoptions_american_instrument = "HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok"
+hxro_print_trade_provider = "4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95"
 
 [programs.devnet]
-rfq = "CdvjLpJGpYTdpdanPpfUe1zPERYvpvP4VALUz62eRrGP"
-risk_engine = "GL6ezn1mYExqgbFQs85NjfBUi1k4uYkdjGf2pvSKktz8"
-spot_instrument = "2LmfeVxwy5CqF5ufqfa6PVGRGjxJizEawQF1SngACufT"
-psyoptions_european_instrument = "3cPrWr9jp8bHcVhH1dy6AKTyPS1yo6jQRoNmgPCcP2MM"
-psyoptions_american_instrument = "8MvpZsBa4fRjRLR717CDQHzGEkvXr3anpQLpm9zDHY1G"
-hxro_print_trade_provider = "GyRW7qvzx6UTVW9DkQGMy5f1rp9XK2x53FvWSjUUF7BJ"
+rfq = "EMFRxsc7FSavsUVKuwNiywXixYthe2Mo5GUNaUvnvBva"
+risk_engine = "F3o2hWqv61TavHuZYuStvW2Zd3M1JnoqBmmgGU77LRTr"
+spot_instrument = "4A9M7iojGDPc4n4YDGnTmsYsNKUohG1zM1nrAqVMMmrm"
+psyoptions_european_instrument = "6B7TdBNAF7tWWz5sZbbBZj8jH1ix7QWAchtkvMHveEuW"
+psyoptions_american_instrument = "HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok"
+hxro_print_trade_provider = "4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95"
 
 [programs.mainnet]
 rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
@@ -22,7 +22,7 @@ risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
 spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
 psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
 psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
-hxro_print_trade_provider = "GyRW7qvzx6UTVW9DkQGMy5f1rp9XK2x53FvWSjUUF7BJ"
+hxro_print_trade_provider = "4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95"
 
 [registry]
 url = "https://anchor.projectserum.com"

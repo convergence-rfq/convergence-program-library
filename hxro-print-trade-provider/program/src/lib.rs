@@ -21,7 +21,7 @@ mod errors;
 mod helpers;
 mod state;
 
-declare_id!("GyRW7qvzx6UTVW9DkQGMy5f1rp9XK2x53FvWSjUUF7BJ");
+declare_id!("4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95");
 
 #[program]
 pub mod hxro_print_trade_provider {
