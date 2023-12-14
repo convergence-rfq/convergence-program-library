@@ -5,7 +5,7 @@ PROJDIR=$PWD
 build_solita () {
     yarn 
     yarn solita
-    yarn prepublish
+    yarn build
     npm publish
 }
 
