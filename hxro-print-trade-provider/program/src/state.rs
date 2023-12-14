@@ -13,6 +13,7 @@ pub struct Config {
 pub struct LockedCollateralRecord {
     pub user: Pubkey,
     pub response: Pubkey,
+    pub trg: Pubkey,
     pub is_in_use: bool,
     pub locks: [ProductInfo; 6],
     pub reserved: [u8; 64],

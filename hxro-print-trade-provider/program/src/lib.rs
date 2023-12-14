@@ -5,7 +5,7 @@ use dex::state::print_trade::{PrintTrade, PrintTradeExecutionOutput};
 use dex::{program::Dex, state::trader_risk_group::TraderRiskGroup};
 use rfq::interfaces::print_trade_provider::SettlementResult;
 use rfq::state::{ProtocolState, Response, Rfq};
-use state::{Config, LockedCollateralRecord, ProductInfo};
+use state::{Config, FractionalCopy, LockedCollateralRecord, ProductInfo};
 
 // use dex_cpi::instruction::*;
 
@@ -25,8 +25,6 @@ declare_id!("4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95");
 
 #[program]
 pub mod hxro_print_trade_provider {
-    use crate::state::FractionalCopy;
-
     use super::*;
 
     pub fn initialize_config(
@@ -167,11 +165,17 @@ pub mod hxro_print_trade_provider {
         for i in 0..rfq.legs.len() {
             locks[i] = to_hxro_product(authority_side.into(), rfq, response, i as u8)?;
         }
+        let user_trg_key = if authority_side == AuthoritySideDuplicate::Taker {
+            taker_trg.key()
+        } else {
+            maker_trg.key()
+        };
         ctx.accounts
             .locked_collateral_record
             .set_inner(LockedCollateralRecord {
                 user: user.key(),
                 response: response.key(),
+                trg: user_trg_key,
                 is_in_use: true,
                 locks,
                 reserved: [0; 64],
