@@ -182,7 +182,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await response.cleanUp();
   });
 
-  it("Create two-way RFQ with one Psyoptions American option leg, respond but maker defaults on settleEscrowment", async () => {
+  it("Create two-way RFQ with one Psyoptions American option leg, respond but maker defaults on settlement", async () => {
     // Create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL);
@@ -224,7 +224,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await rfq.cleanUp();
   });
 
-  it("Create two-way RFQ with one Psyoptions American option leg, respond but taker defaults on settleEscrowment", async () => {
+  it("Create two-way RFQ with one Psyoptions American option leg, respond but taker defaults on settlement", async () => {
     // create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL);
@@ -268,7 +268,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await rfq.cleanUp();
   });
 
-  it("With fractional leg multiplier, rounds option amount to a bigger amount for a maker at settleEscrowment", async () => {
+  it("With fractional leg multiplier, rounds option amount to a bigger amount for a maker at settlement", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOptions(context.taker, new anchor.BN(1), OptionType.CALL);
 
@@ -311,7 +311,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await response.cleanUp();
   });
 
-  it("With fractional leg multiplier, rounds option amount to a lower amount for a taker at settleEscrowment", async () => {
+  it("With fractional leg multiplier, rounds option amount to a lower amount for a taker at settlement", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.maker);
     await options.mintPsyOptions(context.maker, new anchor.BN(2), OptionType.CALL);
 

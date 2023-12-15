@@ -23,8 +23,8 @@ describe("Expire settlement", () => {
 
   it("Can't expire unrelated response", async () => {
     const [rfq1, rfq2] = await executeInParallel(
-      () => context.createEscrowRfq({ orderType: OrderType.TwoWay }),
-      () => context.createEscrowRfq({ orderType: OrderType.Sell })
+      () => context.createEscrowRfq({ orderType: OrderType.Sell }),
+      () => context.createEscrowRfq({ orderType: OrderType.Buy })
     );
 
     const response = await rfq1.respond();
@@ -33,7 +33,7 @@ describe("Expire settlement", () => {
   });
 
   it("Can't expire escrow rfq", async () => {
-    const rfq = await context.createEscrowRfq();
+    const rfq = await context.createEscrowRfq({ orderType: OrderType.TwoWay });
     const response = await rfq.respond();
 
     await expectError(response.expireSettlement(), "InvalidSettlingFlow");
