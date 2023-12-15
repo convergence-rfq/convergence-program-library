@@ -40,12 +40,12 @@ pub fn initialize_print_trade<'info>(
         product_index: 0,
         size: ZERO_FRAC,
     }; 6];
-    for i in 0..rfq.legs.len() {
+    for (i, product) in products.iter_mut().enumerate().take(rfq.legs.len()) {
         let ProductInfo {
             product_index,
             size,
         } = to_hxro_product(AuthoritySide::Taker, rfq, response, i as u8)?;
-        products[i] = PrintTradeProductIndex {
+        *product = PrintTradeProductIndex {
             product_index: product_index as usize,
             size: size.into(),
         };

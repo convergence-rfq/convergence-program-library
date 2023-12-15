@@ -1,9 +1,6 @@
 use bytemuck::{Pod, Zeroable};
 
-use crate::{
-    error::{DexError, DomainOrProgramResult},
-    UtilError,
-};
+use crate::error::{DexError, DomainOrProgramResult, UtilError};
 use anchor_lang::{AnchorDeserialize, AnchorSerialize};
 use serde::{Deserialize, Serialize};
 

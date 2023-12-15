@@ -1,4 +1,15 @@
 #![allow(unused_imports)]
+#![allow(clippy::result_large_err)]
+#![allow(clippy::needless_lifetimes)]
+#![allow(clippy::derivable_impls)]
+#![allow(clippy::match_like_matches_macro)]
+#![allow(clippy::large_enum_variant)]
+#![allow(clippy::should_implement_trait)]
+#![allow(clippy::comparison_chain)]
+#![allow(clippy::redundant_pattern_matching)]
+#![allow(clippy::single_char_pattern)]
+#![allow(clippy::cast_abs_to_unsigned)]
+#![allow(clippy::neg_multiply)]
 
 use agnostic_orderbook::state::{SelfTradeBehavior, Side};
 use anchor_lang::{
@@ -19,7 +30,6 @@ use state::{
 };
 
 use crate::{
-    error::{DomainOrProgramError, UtilError},
     state::{
         constants::NAME_LEN,
         enums::OrderType,
@@ -29,12 +39,9 @@ use crate::{
         trader_risk_group::TraderRiskGroup,
     },
     utils::numeric::Fractional,
-    UtilError::SerializeError,
 };
 
 pub mod error;
-/// Handlers for each instruction
-pub mod processor;
 /// Describes the data structures the program uses to encode state
 pub mod state;
 /// Helper functions
@@ -47,103 +54,106 @@ pub mod dex {
     use super::*;
 
     pub fn initialize_market_product_group(
-        ctx: Context<InitializeMarketProductGroup>,
-        params: InitializeMarketProductGroupParams,
+        _ctx: Context<InitializeMarketProductGroup>,
+        _params: InitializeMarketProductGroupParams,
     ) -> ProgramResult {
-        processor::initialize_market_product_group::process(ctx, params).map_err(log_errors)
+        Ok(())
     }
 
     pub fn initialize_market_product(
-        ctx: Context<InitializeMarketProduct>,
-        params: InitializeMarketProductParams,
+        _ctx: Context<InitializeMarketProduct>,
+        _params: InitializeMarketProductParams,
     ) -> ProgramResult {
-        processor::initialize_market_product::process(ctx, params).map_err(log_errors)
+        Ok(())
     }
 
-    pub fn remove_market_product(ctx: Context<RemoveMarketProduct>) -> ProgramResult {
-        processor::remove_market_product::process(ctx).map_err(log_errors)
+    pub fn remove_market_product(_ctx: Context<RemoveMarketProduct>) -> ProgramResult {
+        Ok(())
     }
 
     pub fn initialize_trader_risk_group<'a, 'b, 'c, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, InitializeTraderRiskGroup<'info>>,
+        _ctx: Context<'a, 'b, 'c, 'info, InitializeTraderRiskGroup<'info>>,
     ) -> ProgramResult {
-        processor::initialize_trader_risk_group::process(ctx).map_err(log_errors)
+        Ok(())
     }
 
     pub fn new_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, NewOrder<'info>>,
-        params: NewOrderParams,
+        _ctx: Context<'_, '_, '_, 'info, NewOrder<'info>>,
+        _params: NewOrderParams,
     ) -> ProgramResult {
-        processor::new_order::process(ctx, params).map_err(log_errors)
+        Ok(())
     }
 
     pub fn consume_orderbook_events<'a, 'b, 'c, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, ConsumeOrderbookEvents<'info>>,
-        params: ConsumeOrderbookEventsParams,
+        _ctx: Context<'a, 'b, 'c, 'info, ConsumeOrderbookEvents<'info>>,
+        _params: ConsumeOrderbookEventsParams,
     ) -> ProgramResult {
-        processor::consume_orderbook_events::process(ctx, params).map_err(log_errors)
+        Ok(())
     }
 
     pub fn cancel_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, CancelOrder<'info>>,
-        params: CancelOrderParams,
+        _ctx: Context<'_, '_, '_, 'info, CancelOrder<'info>>,
+        _params: CancelOrderParams,
     ) -> ProgramResult {
-        processor::cancel_order::process(ctx, params).map_err(log_errors)
+        Ok(())
     }
 
-    pub fn deposit_funds(ctx: Context<DepositFunds>, params: DepositFundsParams) -> ProgramResult {
-        processor::deposit_funds::process(ctx, params).map_err(log_errors)
+    pub fn deposit_funds(
+        _ctx: Context<DepositFunds>,
+        _params: DepositFundsParams,
+    ) -> ProgramResult {
+        Ok(())
     }
 
     pub fn withdraw_funds<'info>(
-        ctx: Context<'_, '_, '_, 'info, WithdrawFunds<'info>>,
-        params: WithdrawFundsParams,
+        _ctx: Context<'_, '_, '_, 'info, WithdrawFunds<'info>>,
+        _params: WithdrawFundsParams,
     ) -> ProgramResult {
-        processor::withdraw_funds::process(ctx, params).map_err(log_errors)
+        Ok(())
     }
 
     pub fn update_product_funding(
-        ctx: Context<UpdateProductFunding>,
-        params: UpdateProductFundingParams,
+        _ctx: Context<UpdateProductFunding>,
+        _params: UpdateProductFundingParams,
     ) -> ProgramResult {
-        processor::update_product_funding::process(ctx, params).map_err(log_errors)
+        Ok(())
     }
 
     pub fn transfer_full_position<'info>(
-        ctx: Context<'_, '_, '_, 'info, TransferFullPosition<'info>>,
+        _ctx: Context<'_, '_, '_, 'info, TransferFullPosition<'info>>,
     ) -> ProgramResult {
         // msg!("Dex Instr: Transfer full position");
-        processor::transfer_full_position::process(ctx).map_err(log_errors)
+        Ok(())
     }
 
     pub fn initialize_combo(
-        ctx: Context<InitializeCombo>,
-        params: InitializeComboParams,
+        _ctx: Context<InitializeCombo>,
+        _params: InitializeComboParams,
     ) -> ProgramResult {
-        processor::initialize_combo::process(ctx, params).map_err(log_errors)
+        Ok(())
     }
 
-    pub fn update_trader_funding(ctx: Context<UpdateTraderFunding>) -> ProgramResult {
-        processor::update_trader_funding::process(ctx).map_err(log_errors)
+    pub fn update_trader_funding(_ctx: Context<UpdateTraderFunding>) -> ProgramResult {
+        Ok(())
     }
 
     pub fn clear_expired_orderbook(
-        ctx: Context<ClearExpiredOrderbook>,
-        params: ClearExpiredOrderbookParams,
+        _ctx: Context<ClearExpiredOrderbook>,
+        _params: ClearExpiredOrderbookParams,
     ) -> ProgramResult {
-        processor::clear_expired_orderbook::process(ctx, params).map_err(log_errors)
+        Ok(())
     }
 
-    pub fn sweep_fees(ctx: Context<SweepFees>) -> ProgramResult {
-        processor::sweep_fees::process(ctx).map_err(log_errors)
+    pub fn sweep_fees(_ctx: Context<SweepFees>) -> ProgramResult {
+        Ok(())
     }
 
-    pub fn choose_successor(ctx: Context<ChooseSuccessor>) -> ProgramResult {
-        processor::change_authority::choose_successor(ctx).map_err(log_errors)
+    pub fn choose_successor(_ctx: Context<ChooseSuccessor>) -> ProgramResult {
+        Ok(())
     }
 
-    pub fn claim_authority(ctx: Context<ClaimAuthority>) -> ProgramResult {
-        processor::change_authority::claim_authority(ctx).map_err(log_errors)
+    pub fn claim_authority(_ctx: Context<ClaimAuthority>) -> ProgramResult {
+        Ok(())
     }
 
     pub fn lock_collateral<'info>(
@@ -178,11 +188,6 @@ pub mod dex {
     ) -> Result<()> {
         Ok(())
     }
-}
-
-fn log_errors(e: DomainOrProgramError) -> ProgramError {
-    msg!("Error: {}", e);
-    e.into()
 }
 
 #[repr(C)]
@@ -578,96 +583,6 @@ pub struct UpdateHealthState<'info> {
     risk_output_register: AccountInfo<'info>,
     #[account(mut)]
     trader_risk_state_acct: AccountInfo<'info>,
-}
-
-pub fn validate_account_health_ix(
-    program_id: Pubkey,
-    market_product_group: Pubkey,
-    trader_risk_group: Pubkey,
-    out_register_risk: Pubkey,
-    trader_risk_state_acct: Pubkey,
-    risk_model_configuration: Pubkey,
-    risk_signer: Pubkey,
-    risk_engine_accounts: Vec<Pubkey>,
-    mut discriminant: Vec<u8>,
-    order_info: &OrderInfo,
-) -> std::result::Result<Instruction, DomainOrProgramError> {
-    let mut accounts = vec![
-        AccountMeta::new_readonly(market_product_group, false),
-        AccountMeta::new_readonly(trader_risk_group, false),
-        AccountMeta::new(out_register_risk, false),
-        AccountMeta::new(trader_risk_state_acct, false),
-        AccountMeta::new_readonly(risk_model_configuration, false),
-        AccountMeta::new_readonly(risk_signer, true),
-    ];
-    for key in risk_engine_accounts.into_iter() {
-        accounts.push(AccountMeta::new(key, false));
-    }
-    BorshSerialize::serialize(order_info, &mut discriminant)
-        .map_err(|_| UtilError::SerializeError)?;
-    Ok(Instruction {
-        program_id,
-        accounts,
-        data: discriminant,
-    })
-}
-
-pub fn find_fees_ix(
-    program_id: Pubkey,
-    market_product_group: Pubkey,
-    trader_risk_group: Pubkey,
-    trader_fee_state_acct: Pubkey,
-    fee_model_configuration: Pubkey,
-    fee_output_register: Pubkey,
-    fee_signer: Pubkey,
-    fee_params: &TraderFeeParams,
-    mut discriminant: Vec<u8>,
-) -> std::result::Result<Instruction, DomainOrProgramError> {
-    let accounts = vec![
-        AccountMeta::new_readonly(market_product_group, false),
-        AccountMeta::new_readonly(trader_risk_group, false),
-        AccountMeta::new(trader_fee_state_acct, false),
-        AccountMeta::new_readonly(fee_model_configuration, false),
-        AccountMeta::new(fee_output_register, false),
-        AccountMeta::new_readonly(fee_signer, true),
-    ];
-    BorshSerialize::serialize(fee_params, &mut discriminant)
-        .map_err(|_| UtilError::SerializeError)?;
-    Ok(Instruction {
-        program_id,
-        accounts,
-        data: discriminant,
-    })
-}
-
-pub fn create_trader_risk_state_acct_ix(
-    program_id: Pubkey,
-    authority: Pubkey,
-    risk_signer: Pubkey,
-    trader_risk_state_acct: &AccountInfo,
-    market_product_group: Pubkey,
-    system_program: Pubkey,
-    risk_engine_accounts: Vec<Pubkey>,
-    discriminant: Vec<u8>,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(authority, true),
-        AccountMeta::new_readonly(risk_signer, true),
-        AccountMeta::new(
-            trader_risk_state_acct.key(),
-            trader_risk_state_acct.is_signer,
-        ),
-        AccountMeta::new_readonly(market_product_group, false),
-        AccountMeta::new_readonly(system_program, false),
-    ];
-    for key in risk_engine_accounts.into_iter() {
-        accounts.push(AccountMeta::new(key, false));
-    }
-    Instruction {
-        program_id,
-        accounts,
-        data: discriminant,
-    }
 }
 
 #[repr(C)]

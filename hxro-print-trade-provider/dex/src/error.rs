@@ -1,7 +1,6 @@
 use num_derive::FromPrimitive;
 use std::{error::Error, fmt::Formatter};
 
-use crate::DomainOrProgramError::ProgramErr;
 use anchor_lang::solana_program::{
     decode_error::DecodeError, program_error::ProgramError, pubkey::PubkeyError,
 };

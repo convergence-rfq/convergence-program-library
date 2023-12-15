@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 use anchor_lang::prelude::*;
 use constants::{CONFIG_SEED, LOCKED_COLLATERAL_RECORD_SEED, OPERATOR_SEED};
 use dex::state::market_product_group::MarketProductGroup;
@@ -95,7 +97,7 @@ pub mod hxro_print_trade_provider {
             ..
         } = &ctx.accounts;
 
-        helpers::validate_maker_trg(&response, config.valid_mpg, trader_risk_group)
+        helpers::validate_maker_trg(response, config.valid_mpg, trader_risk_group)
     }
 
     pub fn prepare_print_trade<'info>(
@@ -139,7 +141,7 @@ pub mod hxro_print_trade_provider {
             let print_trade_data = print_trade.load()?;
 
             require_keys_eq!(
-                Pubkey::from(print_trade_data.operator),
+                print_trade_data.operator,
                 operator_trg.key(),
                 HxroPrintTradeProviderError::InvalidPrintTradeParams
             );
@@ -162,8 +164,8 @@ pub mod hxro_print_trade_provider {
             product_index: 0,
             size: FractionalCopy { m: 0, exp: 0 },
         }; 6];
-        for i in 0..rfq.legs.len() {
-            locks[i] = to_hxro_product(authority_side.into(), rfq, response, i as u8)?;
+        for (i, lock) in locks.iter_mut().enumerate().take(rfq.legs.len()) {
+            *lock = to_hxro_product(authority_side.into(), rfq, response, i as u8)?;
         }
         let user_trg_key = if authority_side == AuthoritySideDuplicate::Taker {
             taker_trg.key()

@@ -2,8 +2,6 @@ use anchor_lang::prelude::*;
 use bytemuck::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
 
-use crate::utils::loadable::Loadable;
-
 #[derive(
     Copy, AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Deserialize, Serialize,
 )]

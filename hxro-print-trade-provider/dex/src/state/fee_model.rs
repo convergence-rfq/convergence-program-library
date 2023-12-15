@@ -1,7 +1,4 @@
-use crate::{
-    utils::{loadable::Loadable, numeric::bps},
-    Fractional, MarketProductGroup,
-};
+use crate::{utils::numeric::bps, Fractional, MarketProductGroup};
 use agnostic_orderbook::state::Side;
 use anchor_lang::{prelude::*, solana_program::clock::UnixTimestamp};
 use bytemuck::{Pod, Zeroable};

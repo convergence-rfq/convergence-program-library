@@ -14,17 +14,13 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_big_array::BigArray;
 
 use crate::{
-    error::{DexError, DomainOrProgramError, DomainOrProgramResult, UtilError},
     state::{
         constants::*,
         enums::*,
         products::{Combo, Outright, Product, ProductMetadata},
     },
     utils::{
-        bitset::Bitset,
-        loadable::Loadable,
         numeric::{Fractional, ZERO_FRAC},
-        validation::assert,
         TwoIterators,
     },
 };

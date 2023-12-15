@@ -13,7 +13,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_big_array::BigArray;
 
 use crate::{
-    error::{DexError, DomainOrProgramError, DomainOrProgramResult, UtilError},
     state::{
         constants::*,
         enums::*,
@@ -21,9 +20,7 @@ use crate::{
     },
     utils::{
         bitset::Bitset,
-        loadable::Loadable,
         numeric::{Fractional, ZERO_FRAC},
-        validation::assert,
         TwoIterators,
     },
 };
@@ -83,99 +80,6 @@ impl IsInitialized for MarketProductGroup {
             AccountTag::MarketProductGroup | AccountTag::MarketProductGroupWithCombos => true,
             _ => false,
         }
-    }
-}
-
-impl MarketProductGroup {
-    pub fn is_expired(&self, product: &Product) -> bool {
-        match product {
-            Product::Outright { outright: o } => o.is_expired(),
-            Product::Combo { combo: c } => c.legs().iter().any(|_l| {
-                // self.market_products[l.product_index]
-                //     .try_to_outright()
-                //     .unwrap()
-                //     .is_expired()
-                true
-            }),
-        }
-    }
-
-    // Finds index corresponding to product key
-    pub fn find_product_index(
-        &self,
-        product_key: &Pubkey,
-    ) -> DomainOrProgramResult<(usize, &Product)> {
-        self.active_products()
-            .find(|(_, prod)| &prod.product_key == product_key)
-            .ok_or(DexError::MissingMarketProduct.into())
-    }
-
-    pub fn find_outright(&self, product_key: &Pubkey) -> DomainOrProgramResult<(usize, &Outright)> {
-        let (idx, p) = self.find_product_index(product_key)?;
-        Ok((idx, p.try_to_outright()?))
-    }
-
-    pub fn find_combo(&self, product_key: &Pubkey) -> DomainOrProgramResult<(usize, &Combo)> {
-        let (idx, p) = self.find_product_index(product_key)?;
-        Ok((idx, p.try_to_combo()?))
-    }
-
-    pub fn active_products(&self) -> impl Iterator<Item = (usize, &Product)> {
-        // self.market_products
-        //     .iter()
-        //     .enumerate()
-        //     .filter(|(idx, _)| self.active_flags_products.contains(*idx))
-        vec![].into_iter()
-    }
-
-    pub fn active_outrights(&self) -> impl Iterator<Item = (usize, &Outright)> {
-        self.active_products()
-            .filter_map(|(idx, prod)| Some((idx, prod.try_to_outright().ok()?)))
-    }
-
-    pub fn active_combos(&self) -> impl Iterator<Item = (usize, &Combo)> {
-        self.active_products()
-            .filter_map(|(idx, prod)| Some((idx, prod.try_to_combo().ok()?)))
-    }
-
-    pub fn deactivate_product(&mut self, key: Pubkey) -> DomainOrProgramResult {
-        // todo: handle if Outright has Combos that reference it
-        let (_index, _) = self.find_product_index(&key)?;
-        // self.active_flags_products.remove(index)?;
-        // self.market_products[index] = Default::default();
-        Ok(())
-    }
-
-    pub fn add_product(&mut self, product: Product) -> DomainOrProgramResult {
-        assert(
-            self.active_products().all(|(_, p)| p.name != product.name),
-            DexError::DuplicateProductNameError,
-        )?;
-        // let idx = self
-        //     .active_flags_products
-        //     .find_idx_and_insert()
-        //     .map_err(|_| DexError::FullMarketProductGroup)?;
-        // self.market_products[idx] = product;
-        Ok(())
-    }
-
-    // pub fn get_prices(&mut self, product_idx: usize) -> &mut PriceEwma {
-    //     // &mut self.market_products[product_idx].prices
-    // }
-
-    pub fn get_find_fees_discriminant(&self) -> Vec<u8> {
-        self.find_fees_discriminant[..self.find_fees_discriminant_len as usize].to_vec()
-    }
-
-    pub fn get_validate_account_health_discriminant(&self) -> Vec<u8> {
-        self.validate_account_health_discriminant[..self.validate_account_discriminant_len as usize]
-            .to_vec()
-    }
-
-    pub fn get_validate_account_liquidation_discriminant(&self) -> Vec<u8> {
-        self.validate_account_liquidation_discriminant
-            [..self.validate_account_discriminant_len as usize]
-            .to_vec()
     }
 }
 

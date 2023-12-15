@@ -238,7 +238,7 @@ impl AssetIdentifier {
 
 impl AnchorSerialize for AssetIdentifier {
     fn serialize<W: std::io::prelude::Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        writer.write(&self.to_bytes())?;
+        writer.write_all(&self.to_bytes())?;
 
         Ok(())
     }

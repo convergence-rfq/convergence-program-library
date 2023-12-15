@@ -45,8 +45,6 @@ primitive. In general, the event processing logic should be handled by a dedicat
 
 #[doc(hidden)]
 pub mod entrypoint;
-/// Program instructions and their CPI-compatible bindings
-pub mod instruction;
 /// Describes the different data structres that the program uses to encode state
 pub mod state;
 
@@ -55,12 +53,12 @@ pub mod critbit;
 #[doc(hidden)]
 pub mod error;
 
-pub use processor::msrm_token;
+// pub use processor::msrm_token;
 use solana_program::declare_id;
 
 pub(crate) mod orderbook;
 #[doc(hidden)]
-pub(crate) mod processor;
+// pub(crate) mod processor;
 /// Utility functions
 pub mod utils;
 

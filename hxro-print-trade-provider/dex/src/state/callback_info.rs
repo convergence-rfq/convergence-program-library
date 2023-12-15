@@ -1,8 +1,6 @@
 use anchor_lang::{prelude::*, solana_program::pubkey::Pubkey};
 use bytemuck::{Pod, Zeroable};
 
-use crate::utils::loadable::Loadable;
-
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Zeroable, Pod, AnchorSerialize, AnchorDeserialize)]
 /// Buffer attached to aaob events to tie owner to events

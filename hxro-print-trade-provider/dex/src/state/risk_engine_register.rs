@@ -1,16 +1,10 @@
 use bytemuck::{Pod, Zeroable};
 
-use crate::utils::{
-    loadable::Loadable,
-    numeric::{Fractional, ZERO_FRAC},
-};
+use crate::utils::numeric::{Fractional, ZERO_FRAC};
 
 use agnostic_orderbook::state::Side;
 
-use crate::{
-    error::{DomainOrProgramError, DomainOrProgramResult},
-    state::constants::{HEALTH_BUFFER_LEN, MAX_OUTRIGHTS, MAX_TRADER_POSITIONS},
-};
+use crate::state::constants::{HEALTH_BUFFER_LEN, MAX_OUTRIGHTS, MAX_TRADER_POSITIONS};
 
 use anchor_lang::prelude::*;
 

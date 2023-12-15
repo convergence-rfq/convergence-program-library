@@ -275,8 +275,8 @@ fn validate_underlying_amount_per_contract(risk_engine_data: &ParsedRiskEngineDa
 pub struct ValidationInput<'a, 'info: 'a> {
     pub first_to_prepare: AuthoritySide,
 
-    pub rfq: &'a Box<Account<'info, Rfq>>,
-    pub response: &'a Box<Account<'info, Response>>,
+    pub rfq: &'a Account<'info, Rfq>,
+    pub response: &'a Account<'info, Response>,
 
     pub operator: &'a UncheckedAccount<'info>,
     pub taker_trg: &'a AccountLoader<'info, TraderRiskGroup>,
@@ -299,12 +299,12 @@ pub fn validate_print_trade_accounts(input: ValidationInput) -> Result<()> {
 
     require_keys_eq!(
         taker_trg.key(),
-        parse_taker_trg(&rfq)?,
+        parse_taker_trg(rfq)?,
         HxroPrintTradeProviderError::UnexpectedTRG
     );
     require_keys_eq!(
         maker_trg.key(),
-        parse_maker_trg(&response)?,
+        parse_maker_trg(response)?,
         HxroPrintTradeProviderError::UnexpectedTRG
     );
 

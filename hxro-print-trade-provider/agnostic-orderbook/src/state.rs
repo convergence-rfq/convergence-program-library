@@ -3,9 +3,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use bytemuck::{try_from_bytes_mut, Pod, Zeroable};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
-};
+use solana_program::{account_info::AccountInfo, program_error::ProgramError};
 use std::{
     cell::{RefCell, RefMut},
     convert::TryInto,
@@ -17,8 +15,6 @@ extern crate base64;
 use crate::critbit::IoError;
 
 pub use crate::orderbook::{OrderSummary, ORDER_SUMMARY_SIZE};
-#[cfg(feature = "no-entrypoint")]
-pub use crate::utils::get_spread;
 
 #[derive(BorshDeserialize, BorshSerialize, Copy, Clone, Debug, PartialEq)]
 #[allow(missing_docs)]
@@ -252,239 +248,18 @@ pub const EVENT_QUEUE_HEADER_LEN: usize = 33;
 #[allow(missing_docs)]
 pub const REGISTER_SIZE: usize = ORDER_SUMMARY_SIZE as usize + 1; // Option<OrderSummary>
 
-impl EventQueueHeader {
-    pub(crate) fn initialize(callback_info_len: usize) -> Self {
-        Self {
-            tag: AccountTag::EventQueue,
-            head: 0,
-            count: 0,
-            event_size: Event::compute_slot_size(callback_info_len) as u64,
-            seq_num: 0,
-        }
-    }
-
-    pub(crate) fn check(self) -> Result<Self, ProgramError> {
-        if self.tag != AccountTag::EventQueue {
-            return Err(ProgramError::InvalidAccountData);
-        };
-        Ok(self)
-    }
-}
-
 /// The event queue account contains a serialized header, a register
 /// and a circular buffer of serialized events.
 ///
 /// This struct is used at runtime but doesn't represent a serialized event queue
 pub struct EventQueue<'a> {
-    pub(crate) header: EventQueueHeader,
-    pub(crate) buffer: Rc<RefCell<&'a mut [u8]>>, //The whole account data
-    callback_info_len: usize,
+    pub(crate) _header: EventQueueHeader,
+    pub(crate) _buffer: Rc<RefCell<&'a mut [u8]>>, //The whole account data
+    _callback_info_len: usize,
 }
 
 /// The event queue register can hold arbitrary data returned by the AAOB. Currently only used to return [`OrderSummary`] objects.
 pub type Register<T> = Option<T>;
-
-impl<'a> EventQueue<'a> {
-    pub(crate) fn new_safe(
-        header: EventQueueHeader,
-        account: &AccountInfo<'a>,
-        callback_info_len: usize,
-    ) -> Result<Self, ProgramError> {
-        let q = Self {
-            header: header.check()?,
-            buffer: Rc::clone(&account.data),
-            callback_info_len,
-        };
-        q.clear_register();
-        Ok(q)
-    }
-
-    /// Initialize a new EventQueue object.
-    ///
-    /// Within a CPI context, the account parameter can be supplied through
-    /// ```rust,ignore
-    /// use std::rc::Rc;
-    /// let a: AccountInfo;
-    ///
-    /// let event_queue_header = EventQueueHeader::deserialize(&mut &a.data.borrow()[..EVENT_QUEUE_HEADER_LEN]).unwrap();
-    /// let event_queue = EventQueue::new(event_queue_header, Rc::clone(&a.data), callback_info_len);
-    ///
-    /// ```
-    pub fn new(
-        header: EventQueueHeader,
-        account: Rc<RefCell<&'a mut [u8]>>,
-        callback_info_len: usize,
-    ) -> Self {
-        Self {
-            header,
-            buffer: account,
-            callback_info_len,
-        }
-    }
-}
-
-impl<'a> EventQueue<'a> {
-    pub(crate) fn check_buffer_size(
-        account: &AccountInfo,
-        callback_info_len: u64,
-    ) -> ProgramResult {
-        let event_size = Event::compute_slot_size(callback_info_len as usize);
-        if (account.data_len() - EVENT_QUEUE_HEADER_LEN - REGISTER_SIZE) % event_size != 0 {
-            msg!("Event queue buffer size must be a multiple of the event size");
-            return Err(ProgramError::InvalidAccountData);
-        }
-        Ok(())
-    }
-
-    pub(crate) fn gen_order_id(&mut self, limit_price: u64, side: Side) -> u128 {
-        let seq_num = self.gen_seq_num();
-        let upper = (limit_price as u128) << 64;
-        let lower = match side {
-            Side::Bid => !seq_num,
-            Side::Ask => seq_num,
-        };
-        upper | (lower as u128)
-    }
-
-    fn gen_seq_num(&mut self) -> u64 {
-        let seq_num = self.header.seq_num;
-        self.header.seq_num += 1;
-        seq_num
-    }
-
-    pub(crate) fn get_buf_len(&self) -> usize {
-        self.buffer.borrow().len() - EVENT_QUEUE_HEADER_LEN - REGISTER_SIZE
-    }
-
-    pub(crate) fn full(&self) -> bool {
-        self.header.count as usize == (self.get_buf_len() / (self.header.event_size as usize))
-    }
-
-    pub(crate) fn push_back(&mut self, event: Event) -> Result<(), Event> {
-        if self.full() {
-            return Err(event);
-        }
-        let offset = EVENT_QUEUE_HEADER_LEN
-            + (REGISTER_SIZE)
-            + (((self.header.head + self.header.count * self.header.event_size) as usize)
-                % self.get_buf_len());
-        let mut queue_event_data =
-            &mut self.buffer.borrow_mut()[offset..offset + (self.header.event_size as usize)];
-        event.serialize(&mut queue_event_data).unwrap();
-
-        match event {
-            Event::Fill {
-                taker_side,
-                maker_order_id,
-                quote_size,
-                base_size,
-                maker_callback_info,
-                taker_callback_info,
-            } => {
-                let maker_callback_info_b64 = base64::encode(&maker_callback_info);
-                let taker_callback_info_b64 = base64::encode(&taker_callback_info);
-                msg!(
-                    "Wrote Fill Event [taker_side: {} maker_order_id: {} quote_size: {} \
-                        base_size: {} maker_callback_info: {} taker_callback_info: {}]",
-                    if taker_side == Side::Bid { "bid" } else { "ask" },
-                    maker_order_id,
-                    quote_size,
-                    base_size,
-                    maker_callback_info_b64,
-                    taker_callback_info_b64,
-                );
-            }
-            Event::Out {
-                side,
-                order_id,
-                base_size,
-                callback_info,
-                delete,
-            } => {
-                let callback_info_b64 = base64::encode(&callback_info);
-                msg!(
-                    "Wrote Out Event [side: {} order_id: {} base_size: {} delete: {} callback_info: {}]",
-                    if side == Side::Bid { "bid" } else { "ask" },
-                    order_id,
-                    base_size,
-                    delete,
-                    callback_info_b64,
-                );
-            }
-        }
-
-        self.header.count += 1;
-        self.header.seq_num += 1;
-
-        Ok(())
-    }
-
-    /// Retrieves the event at position index in the queue.
-    pub fn peek_at(&self, index: u64) -> Option<Event> {
-        if self.header.count <= index {
-            return None;
-        }
-
-        let header_offset = EVENT_QUEUE_HEADER_LEN + REGISTER_SIZE;
-        let offset = ((self
-            .header
-            .head
-            .checked_add(index.checked_mul(self.header.event_size).unwrap())
-            .unwrap()) as usize
-            % self.get_buf_len())
-            + header_offset;
-        let mut event_data =
-            &self.buffer.borrow()[offset..offset + (self.header.event_size as usize)];
-        Some(Event::deserialize(&mut event_data, self.callback_info_len))
-    }
-
-    /// Pop n entries from the event queue
-    pub(crate) fn pop_n(&mut self, number_of_entries_to_pop: u64) {
-        let capped_number_of_entries_to_pop =
-            std::cmp::min(self.header.count, number_of_entries_to_pop);
-        self.header.count -= capped_number_of_entries_to_pop;
-        self.header.head = (self.header.head
-            + capped_number_of_entries_to_pop * self.header.event_size)
-            % self.get_buf_len() as u64;
-    }
-
-    pub(crate) fn write_to_register<T: BorshSerialize + BorshDeserialize>(&self, object: T) {
-        let mut register = &mut self.buffer.borrow_mut()
-            [EVENT_QUEUE_HEADER_LEN..EVENT_QUEUE_HEADER_LEN + (REGISTER_SIZE)];
-        Register::Some(object).serialize(&mut register).unwrap();
-    }
-
-    pub(crate) fn clear_register(&self) {
-        let mut register = &mut self.buffer.borrow_mut()
-            [EVENT_QUEUE_HEADER_LEN..EVENT_QUEUE_HEADER_LEN + (REGISTER_SIZE)];
-        Register::<u8>::None.serialize(&mut register).unwrap();
-    }
-
-    /// This method is used to deserialize the event queue's register
-    ///
-    /// The nature of the serialized object should be deductible from caller context
-    pub fn read_register<T: BorshSerialize + BorshDeserialize>(
-        &self,
-    ) -> Result<Register<T>, IoError> {
-        let mut register =
-            &self.buffer.borrow()[EVENT_QUEUE_HEADER_LEN..EVENT_QUEUE_HEADER_LEN + (REGISTER_SIZE)];
-        Register::deserialize(&mut register)
-    }
-
-    /// Returns an iterator over all the queue's events
-    #[cfg(feature = "no-entrypoint")]
-    pub fn iter<'b>(&'b self) -> QueueIterator<'a, 'b> {
-        QueueIterator {
-            queue_header: &self.header,
-            buffer: Rc::clone(&self.buffer),
-            current_index: self.header.head as usize,
-            callback_info_len: self.callback_info_len,
-            buffer_length: self.get_buf_len(),
-            header_offset: EVENT_QUEUE_HEADER_LEN + REGISTER_SIZE,
-            remaining: self.header.count,
-        }
-    }
-}
 
 /// This method is used to deserialize the event queue's register
 /// without constructing an EventQueue instance
@@ -498,16 +273,6 @@ pub fn read_register<T: BorshSerialize + BorshDeserialize>(
     Register::deserialize(&mut register)
 }
 
-#[cfg(feature = "no-entrypoint")]
-impl<'a, 'b> IntoIterator for &'b EventQueue<'a> {
-    type Item = Event;
-
-    type IntoIter = QueueIterator<'a, 'b>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
 #[cfg(feature = "no-entrypoint")]
 /// Utility struct for iterating over a queue
 pub struct QueueIterator<'a, 'b> {

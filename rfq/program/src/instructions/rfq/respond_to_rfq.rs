@@ -123,7 +123,7 @@ fn validate(
 
     if !rfq.is_settled_as_print_trade() {
         require!(
-            additional_data.len() == 0,
+            additional_data.is_empty(),
             ProtocolError::AdditionalDataIsNotSupported
         );
     }

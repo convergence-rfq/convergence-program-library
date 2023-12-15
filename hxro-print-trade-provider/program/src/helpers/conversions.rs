@@ -25,7 +25,7 @@ pub fn to_hxro_product(
     let instrument_type = get_leg_instrument_type(leg)?;
     let (_, ParsedLegData { product_index }) = parse_leg_data(leg, instrument_type)?;
 
-    let mut amount = response.get_leg_amount_to_transfer(&rfq, leg_index) as i64;
+    let mut amount = response.get_leg_amount_to_transfer(rfq, leg_index) as i64;
     if response.get_leg_assets_receiver(rfq, leg_index) == perspective.inverse() {
         amount = -amount;
     }

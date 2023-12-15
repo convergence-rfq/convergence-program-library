@@ -1,6 +1,5 @@
-pub mod error;
-pub mod oracle;
-pub mod processor;
+#![allow(clippy::derivable_impls)]
+
 pub mod state;
 
 use crate::state::{
@@ -24,18 +23,18 @@ declare_id!("8981bZYszfz1FrFVx7gcUm61RfawMoAHnURuERRJKdkq");
 pub mod instruments {
     use super::*;
     pub fn initialize_derivative(
-        ctx: Context<InitializeDerivative>,
-        params: InitializeDerivativeParams,
+        _ctx: Context<InitializeDerivative>,
+        _params: InitializeDerivativeParams,
     ) -> ProgramResult {
-        processor::initialize_derivative::process(ctx, params)
+        Ok(())
     }
 
-    pub fn settle_derivative(ctx: Context<SettleDerivative>) -> ProgramResult {
-        processor::settle_derivative::process(ctx)
+    pub fn settle_derivative(_ctx: Context<SettleDerivative>) -> ProgramResult {
+        Ok(())
     }
 
-    pub fn close_derivative_account(ctx: Context<CloseDerivativeAccount>) -> ProgramResult {
-        processor::close_derivative_account::process(ctx)
+    pub fn close_derivative_account(_ctx: Context<CloseDerivativeAccount>) -> ProgramResult {
+        Ok(())
     }
 }
 

@@ -59,7 +59,8 @@ pub fn clean_up_response_instruction<'info>(
 
     let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-    if !rfq.is_settled_as_print_trade() && response.escrow_leg_preparations_initialized_by.len() > 0
+    if !rfq.is_settled_as_print_trade()
+        && !response.escrow_leg_preparations_initialized_by.is_empty()
     {
         let legs_to_revert = response.escrow_leg_preparations_initialized_by.len() as u8;
         for leg_index in 0..legs_to_revert {
@@ -82,7 +83,7 @@ pub fn clean_up_response_instruction<'info>(
     }
 
     if rfq.is_settled_as_print_trade() && response.print_trade_initialized_by.is_some() {
-        clean_up_print_trade(&protocol, rfq, response, &mut remaining_accounts)?;
+        clean_up_print_trade(protocol, rfq, response, &mut remaining_accounts)?;
     }
 
     rfq.cleared_responses += 1;

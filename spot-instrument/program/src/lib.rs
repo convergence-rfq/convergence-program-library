@@ -79,7 +79,6 @@ pub mod spot_instrument {
             SpotError::PassedMintDoesNotMatch
         );
 
-        let side = AuthoritySide::from(side);
         let asset_receiver = response.get_assets_receiver(rfq, asset_identifier);
         let asset_sender = asset_receiver.inverse();
         if side == asset_sender {

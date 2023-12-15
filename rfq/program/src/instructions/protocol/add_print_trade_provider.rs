@@ -24,11 +24,10 @@ fn validate(ctx: &Context<AddPrintTradeProviderAccounts>) -> Result<()> {
     } = &ctx.accounts;
 
     require!(
-        protocol
+        !protocol
             .print_trade_providers
             .iter()
-            .find(|x| x.program_key == print_trade_provider_program.key())
-            .is_none(),
+            .any(|x| x.program_key == print_trade_provider_program.key()),
         ProtocolError::AlreadyAdded
     );
 

@@ -8,10 +8,9 @@ use bytemuck::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::{DexError, DomainOrProgramResult},
     state::{constants::MAX_LEGS, enums::ProductStatus, market_product_group::PriceEwma},
     utils::{numeric::ZERO_FRAC, TwoIterators},
-    DomainOrProgramError, Fractional, NAME_LEN,
+    Fractional, NAME_LEN,
 };
 
 #[derive(Eq, Debug, PartialEq, Clone, Copy, AnchorDeserialize, Deserialize, Serialize)]
@@ -23,84 +22,6 @@ pub enum Product {
 }
 
 unsafe impl Pod for Product {}
-
-impl Product {
-    pub fn get_best_bid(&self) -> Fractional {
-        self.prices.bid
-    }
-
-    pub fn get_best_ask(&self) -> Fractional {
-        self.prices.ask
-    }
-
-    pub fn get_prev_best_bid(&self, slot: u64) -> Fractional {
-        if slot > self.prices.slot {
-            self.prices.bid
-        } else {
-            self.prices.prev_bid
-        }
-    }
-
-    pub fn get_prev_best_ask(&self, slot: u64) -> Fractional {
-        if slot > self.prices.slot {
-            self.prices.ask
-        } else {
-            self.prices.prev_ask
-        }
-    }
-
-    pub fn try_to_combo(&self) -> DomainOrProgramResult<&Combo> {
-        match self {
-            Product::Outright { outright: _ } => Err(DexError::ProductNotCombo.into()),
-            Product::Combo { combo: c } => Ok(c),
-        }
-    }
-
-    pub fn try_to_outright(&self) -> DomainOrProgramResult<&Outright> {
-        match self {
-            Product::Outright { outright: o } => Ok(o),
-            Product::Combo { combo: _ } => Err(DexError::ProductNotOutright.into()),
-        }
-    }
-
-    pub fn try_to_combo_mut(&mut self) -> DomainOrProgramResult<&mut Combo> {
-        match self {
-            Product::Outright { outright: _ } => Err(DexError::ProductNotCombo.into()),
-            Product::Combo { combo: c } => Ok(c),
-        }
-    }
-
-    pub fn try_to_outright_mut(&mut self) -> DomainOrProgramResult<&mut Outright> {
-        match self {
-            Product::Outright { outright: o } => Ok(o),
-            Product::Combo { combo: _ } => Err(DexError::ProductNotOutright.into()),
-        }
-    }
-
-    pub fn get_ratios_and_product_indices(
-        &self,
-        product_idx: usize,
-    ) -> impl Iterator<Item = (i64, usize)> + '_ {
-        match self {
-            Product::Outright { outright: _ } => TwoIterators::A(([(1, product_idx)]).into_iter()),
-            Product::Combo { combo: _c } => TwoIterators::B(
-                // c.legs
-                //     .iter()
-                //     .take(c.num_legs)
-                //     .map(|leg| (leg.ratio, leg.product_index)),
-                vec![].into_iter(),
-            ),
-        }
-    }
-
-    #[inline]
-    pub fn is_combo(&self) -> bool {
-        match self {
-            Product::Outright { outright: _ } => false,
-            Product::Combo { combo: _ } => true,
-        }
-    }
-}
 
 #[zero_copy]
 #[derive(Debug, Eq, PartialEq, AnchorDeserialize, Deserialize, Serialize)] // serde
@@ -115,82 +36,6 @@ pub struct Outright {
     pub open_long_interest: Fractional,
     pub open_short_interest: Fractional,
     pub padding: [u64; 14],
-}
-
-impl Outright {
-    pub fn apply_new_funding(
-        &mut self,
-        amount_per_share: Fractional,
-        cash_decimals: u64,
-    ) -> std::result::Result<(), DomainOrProgramError> {
-        self.cum_funding_per_share += amount_per_share;
-        let target_decimals = (self.base_decimals as i64) - (cash_decimals as i64);
-        if self.cum_funding_per_share.has_precision(target_decimals) {
-            Ok(())
-        } else {
-            Err(DexError::FundingPrecisionError.into())
-        }
-    }
-
-    pub fn apply_social_loss(
-        &mut self,
-        loss: Fractional,
-        cash_decimals: u64,
-    ) -> std::result::Result<(), DomainOrProgramError> {
-        self.dust = (self.dust + loss).round_unchecked(cash_decimals as u32)?;
-        let open_interest = (self.open_long_interest + self.open_short_interest)
-            .round_unchecked(self.base_decimals as u32)?;
-        if open_interest != ZERO_FRAC {
-            let multiplier = self.dust.m / open_interest.m;
-            self.dust.m %= open_interest.m;
-            self.cum_social_loss_per_share += Fractional {
-                m: multiplier * 10_i64.pow(self.base_decimals as u32),
-                exp: cash_decimals,
-            };
-        }
-        Ok(())
-    }
-
-    pub fn is_removable(&self) -> bool {
-        self.open_long_interest == ZERO_FRAC && self.open_short_interest == ZERO_FRAC
-    }
-
-    pub fn is_expired(&self) -> bool {
-        self.product_status == ProductStatus::Expired
-    }
-
-    pub fn update_open_interest_change(
-        &mut self,
-        trade_size: Fractional,
-        buyer_short_position: Fractional,
-        seller_long_position: Fractional,
-    ) -> DomainOrProgramResult {
-        match (
-            buyer_short_position < trade_size,
-            seller_long_position < trade_size,
-        ) {
-            (true, true) => {
-                self.open_long_interest = self
-                    .open_long_interest
-                    .checked_add(trade_size)?
-                    .checked_sub(buyer_short_position)?
-                    .checked_sub(seller_long_position)?;
-            }
-            (true, false) => {
-                self.open_long_interest =
-                    self.open_long_interest.checked_sub(buyer_short_position)?;
-            }
-            (false, true) => {
-                self.open_long_interest =
-                    self.open_long_interest.checked_sub(seller_long_position)?;
-            }
-            (false, false) => {
-                self.open_long_interest = self.open_long_interest.checked_sub(trade_size)?;
-            }
-        };
-        self.open_short_interest = self.open_long_interest;
-        Ok(())
-    }
 }
 
 #[zero_copy]

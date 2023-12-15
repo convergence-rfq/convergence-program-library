@@ -1,5 +1,4 @@
 use crate::error::AoError;
-use crate::processor::Processor;
 use num_traits::FromPrimitive;
 use solana_program::{
     account_info::AccountInfo, decode_error::DecodeError, entrypoint::ProgramResult, msg,
@@ -13,16 +12,11 @@ entrypoint!(process_instruction);
 
 /// The entrypoint to the AAOB program
 pub fn process_instruction(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    instruction_data: &[u8],
+    _program_id: &Pubkey,
+    _accounts: &[AccountInfo],
+    _instruction_data: &[u8],
 ) -> ProgramResult {
     msg!("Entrypoint");
-    if let Err(error) = Processor::process_instruction(program_id, accounts, instruction_data) {
-        // catch the error so we can print it
-        error.print::<AoError>();
-        return Err(error);
-    }
     Ok(())
 }
 

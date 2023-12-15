@@ -1,4 +1,4 @@
-use crate::{error::DomainOrProgramError, utils::loadable::Loadable};
+use crate::utils::loadable::Loadable;
 use anchor_lang::solana_program::{account_info::AccountInfo, pubkey::Pubkey};
 use bytemuck::{Pod, Zeroable};
 use std::{
