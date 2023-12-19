@@ -5,7 +5,6 @@ import {
   attachImprovedLogDisplay,
   calculateLegsHash,
   calculateLegsSize,
-  calculateWhitelistSize,
   expectError,
   runInParallelWithWait,
   toAbsolutePrice,
@@ -16,7 +15,6 @@ import {
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, QuoteSide, LegSide } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
-import { expect } from "chai";
 
 describe("RFQ Spot instrument integration tests", () => {
   let context: Context;
