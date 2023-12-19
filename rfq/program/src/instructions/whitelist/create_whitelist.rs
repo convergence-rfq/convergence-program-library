@@ -15,7 +15,7 @@ pub struct CreateWhitelistAccounts<'info>{
     pub system_program: Program<'info, System>,
 }
 
-pub fn create_whitelist_instruction<>(ctx:Context<CreateWhitelistAccounts>,expected_whitelist_size: u16, whitelist_to_add:Vec<Pubkey>) -> Result<()>{
+pub fn create_whitelist_instruction(ctx:Context<CreateWhitelistAccounts>,expected_whitelist_size: u16, whitelist_to_add:Vec<Pubkey>) -> Result<()>{
     let expected_whitelist_capacity = calculate_expected_capacity(expected_whitelist_size);
     validate_whitelist_inputs(expected_whitelist_capacity, &whitelist_to_add)?;
     let CreateWhitelistAccounts{

@@ -4,8 +4,8 @@ use crate::{
     common::validate_legs as common_validate_legs,
     errors::ProtocolError,
     interfaces::instrument::validate_quote_instrument_data,
-    seeds::{PROTOCOL_SEED, RFQ_SEED},
-    state::{rfq::QuoteAsset, ApiLeg, FixedSize, OrderType, ProtocolState, Rfq, StoredRfqState},
+    seeds::{ PROTOCOL_SEED, RFQ_SEED },
+    state::{ rfq::QuoteAsset, ApiLeg, FixedSize, OrderType, ProtocolState, Rfq, StoredRfqState },
 };
 use anchor_lang::prelude::*;
 use solana_program::hash::hash;
@@ -30,17 +30,23 @@ pub struct CreateRfqAccounts<'info> {
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Box<Account<'info, ProtocolState>>,
-    #[account(init, payer = taker, space = 8 + mem::size_of::<Rfq>() + expected_legs_size as usize, seeds = [
-        RFQ_SEED.as_bytes(),
-        taker.key().as_ref(),
-        &expected_legs_hash,
-        &[order_type as u8],
-        &hash(&quote_asset.try_to_vec().unwrap()).to_bytes(),
-        &fixed_size.try_to_vec().unwrap(),
-        &active_window.to_le_bytes(),
-        &settling_window.to_le_bytes(),
-        &recent_timestamp.to_le_bytes(),
-    ], bump)]
+    #[account(
+        init,
+        payer = taker,
+        space = 8 + mem::size_of::<Rfq>() + (expected_legs_size as usize),
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            taker.key().as_ref(),
+            &expected_legs_hash,
+            &[order_type as u8],
+            &hash(&quote_asset.try_to_vec().unwrap()).to_bytes(),
+            &fixed_size.try_to_vec().unwrap(),
+            &active_window.to_le_bytes(),
+            &settling_window.to_le_bytes(),
+            &recent_timestamp.to_le_bytes(),
+        ],
+        bump
+    )]
     pub rfq: Box<Account<'info, Rfq>>,
 
     pub system_program: Program<'info, System>,
@@ -49,15 +55,11 @@ pub struct CreateRfqAccounts<'info> {
 fn validate_quote<'a, 'info: 'a>(
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
-    quote_asset: &QuoteAsset,
+    quote_asset: &QuoteAsset
 ) -> Result<()> {
-    let instrument_parameters =
-        protocol.get_instrument_parameters(quote_asset.instrument_program)?;
+    let instrument_parameters = protocol.get_instrument_parameters(quote_asset.instrument_program)?;
 
-    require!(
-        instrument_parameters.can_be_used_as_quote,
-        ProtocolError::InvalidQuoteInstrument
-    );
+    require!(instrument_parameters.can_be_used_as_quote, ProtocolError::InvalidQuoteInstrument);
 
     validate_quote_instrument_data(quote_asset, protocol, remaining_accounts)?;
 
@@ -68,16 +70,10 @@ fn validate_legs<'a, 'info: 'a>(
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
     expected_leg_size: u16,
-    legs: &[ApiLeg],
+    legs: &[ApiLeg]
 ) -> Result<()> {
-    require!(
-        legs.len() <= Rfq::MAX_LEGS_AMOUNT as usize,
-        ProtocolError::TooManyLegs
-    );
-    require!(
-        expected_leg_size <= Rfq::MAX_LEGS_SIZE,
-        ProtocolError::LegsDataTooBig
-    );
+    require!(legs.len() <= (Rfq::MAX_LEGS_AMOUNT as usize), ProtocolError::TooManyLegs);
+    require!(expected_leg_size <= Rfq::MAX_LEGS_SIZE, ProtocolError::LegsDataTooBig);
 
     common_validate_legs(legs, protocol, remaining_accounts)?;
 
@@ -88,10 +84,7 @@ fn validate_recent_timestamp(recent_timestamp: u64) -> Result<()> {
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
     let time_offset = recent_timestamp.abs_diff(current_timestamp);
 
-    require!(
-        time_offset < RECENT_TIMESTAMP_VALIDITY,
-        ProtocolError::InvalidRecentTimestamp
-    );
+    require!(time_offset < RECENT_TIMESTAMP_VALIDITY, ProtocolError::InvalidRecentTimestamp);
 
     Ok(())
 }
@@ -108,7 +101,7 @@ pub fn create_rfq_instruction<'info>(
     active_window: u32,
     settling_window: u32,
     recent_timestamp: u64,
-    whitelist: Option<Pubkey>,
+    whitelist: Option<Pubkey>
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
@@ -117,6 +110,15 @@ pub fn create_rfq_instruction<'info>(
     validate_recent_timestamp(recent_timestamp)?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
+    let whitelist_to_pass: Pubkey;
+    match whitelist {
+        Some(whitelist) => {
+            whitelist_to_pass = whitelist;
+        }
+        None => {
+            whitelist_to_pass = Pubkey::default();
+        }
+    }
 
     rfq.set_inner(Rfq {
         taker: taker.key(),
@@ -134,8 +136,8 @@ pub fn create_rfq_instruction<'info>(
         total_responses: 0,
         cleared_responses: 0,
         confirmed_responses: 0,
-        reserved: [0; 256],
-        whitelist,
+        whitelist: whitelist_to_pass,
+        reserved: [0; 224],
         legs: legs.into_iter().map(Into::into).collect(),
     });
 
