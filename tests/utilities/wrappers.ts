@@ -70,6 +70,7 @@ import { InstrumentController } from "./instrument";
 import {
   calculateLegsHash,
   calculateLegsSize,
+  calculateWhitelistSize,
   executeInParallel,
   expandComputeUnits,
   serializeOptionQuote,
@@ -391,6 +392,33 @@ export class Context {
       .rpc();
   }
 
+  async createWhitelist(
+    whitelistAccount: Keypair,
+    creator: PublicKey,
+    whitelist: PublicKey[],
+    expectedWhitelistCapacity: number
+  ) {
+    const whitelistObject = new Whitelist(
+      this,
+      whitelistAccount.publicKey,
+      creator,
+      whitelist,
+      expectedWhitelistCapacity
+    );
+    const expectedWhitelistSize = calculateWhitelistSize(expectedWhitelistCapacity);
+    await this.program.methods
+      .createWhitelist(expectedWhitelistSize, whitelist)
+      .accounts({
+        creator,
+        systemProgram: SystemProgram.programId,
+        whitelistAccount: whitelistAccount.publicKey,
+      })
+      .signers([whitelistAccount, this.taker])
+      .rpc();
+
+    return whitelistObject;
+  }
+
   async createRfq({
     legs = [SpotInstrument.createForLeg(this)],
     quote = SpotInstrument.createForQuote(this, this.quoteToken),
@@ -401,6 +429,7 @@ export class Context {
     legsSize = calculateLegsSize(legs),
     legsHash = calculateLegsHash(legs, this.program),
     finalize = true,
+    whitelistAddress = null,
   }: {
     legs?: InstrumentController[];
     quote?: InstrumentController;
@@ -411,6 +440,7 @@ export class Context {
     legsSize?: number;
     legsHash?: Uint8Array;
     finalize?: boolean;
+    whitelistAddress?: PublicKey | null;
   } = {}) {
     const legData = legs.map((x) => x.toLegData());
     const quoteAccounts = await quote.getValidationAccounts();
@@ -440,7 +470,8 @@ export class Context {
         fixedSize as any,
         activeWindow,
         settlingWindow,
-        new BN(currentTimestamp)
+        new BN(currentTimestamp),
+        whitelistAddress
       )
       .accounts({
         taker: this.taker.publicKey,
@@ -657,6 +688,56 @@ export class RiskEngine {
   }
 }
 
+export class Whitelist {
+  public constructor(
+    public context: Context,
+    public account: PublicKey,
+    public creator: PublicKey,
+    public whitelist: PublicKey[],
+    public expectedWhitelistCapacity: number
+  ) {}
+
+  async addAddressToWhitelist(address: PublicKey) {
+    await this.context.program.methods
+      .addAddressToWhitelist(address)
+      .accounts({
+        creator: this.creator,
+        whitelistAccount: this.account,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
+  async removeAddressFromWhitelist(address: PublicKey) {
+    await this.context.program.methods
+      .removeAddressFromWhitelist(address)
+      .accounts({
+        creator: this.creator,
+        whitelistAccount: this.account,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
+  async cleanUp() {
+    await this.context.program.methods
+      .cleanUpWhitelist()
+      .accounts({
+        creator: this.creator,
+        whitelistAccount: this.account,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
+  async getData() {
+    return await this.context.program.account.whitelist.fetch(this.account);
+  }
+}
+
 export class Mint {
   public publicKey: PublicKey;
   public decimals: number;
@@ -829,6 +910,7 @@ export class Rfq {
       serializeOptionQuote(ask, this.context.program),
       0
     );
+    const rfqData = await this.getData();
 
     await this.context.program.methods
       .respondToRfq(bid as any, ask as any, 0, new BN(expirationTimestamp))
@@ -837,6 +919,7 @@ export class Rfq {
         protocol: this.context.protocolPda,
         rfq: this.account,
         response,
+        whitelist: rfqData.whitelist,
         collateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
         collateralToken: await getCollateralTokenPda(this.context.maker.publicKey, this.context.program.programId),
         riskEngine: this.context.riskEngine.programId,

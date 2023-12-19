@@ -108,6 +108,7 @@ pub fn create_rfq_instruction<'info>(
     active_window: u32,
     settling_window: u32,
     recent_timestamp: u64,
+    whitelist: Option<Pubkey>,
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
@@ -134,6 +135,7 @@ pub fn create_rfq_instruction<'info>(
         cleared_responses: 0,
         confirmed_responses: 0,
         reserved: [0; 256],
+        whitelist,
         legs: legs.into_iter().map(Into::into).collect(),
     });
 

@@ -24,6 +24,7 @@ pub struct Rfq {
     pub total_responses: u32,
     pub cleared_responses: u32,
     pub confirmed_responses: u32,
+    pub whitelist: Option<Pubkey>,
 
     pub reserved: [u8; 256],
 

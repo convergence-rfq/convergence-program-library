@@ -6,7 +6,7 @@ use crate::{
     seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED, RESPONSE_SEED},
     state::{
         CollateralInfo, FixedSize, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
-        StoredResponseState,
+        StoredResponseState, whitelist::Whitelist,
     },
 };
 use anchor_lang::prelude::*;
@@ -43,8 +43,10 @@ pub struct RespondToRfqAccounts<'info> {
     #[account(constraint = risk_engine.key() == protocol.risk_engine
         @ ProtocolError::NotARiskEngine)]
     pub risk_engine: UncheckedAccount<'info>,
+    pub whitelist: Option<Box<Account<'info, Whitelist>>>,
 
     pub system_program: Program<'info, System>,
+   
 }
 
 fn validate(
@@ -53,10 +55,12 @@ fn validate(
     ask: Option<Quote>,
     expiration_timestamp: i64,
 ) -> Result<()> {
-    let RespondToRfqAccounts { maker, rfq, .. } = &ctx.accounts;
+    let RespondToRfqAccounts { maker, rfq,whitelist,..} = &ctx.accounts;
     //checks for expiration timestamp
     let current_timestamp = Clock::get()?.unix_timestamp;
     let rfq_expiration_timestamp = rfq.creation_timestamp + rfq.active_window as i64;
+
+
     require!(
         expiration_timestamp > current_timestamp,
         ProtocolError::InvalidExpirationTimestamp
@@ -66,7 +70,15 @@ fn validate(
         expiration_timestamp <= rfq_expiration_timestamp,
         ProtocolError::InvalidExpirationTimestamp
     );
-
+    
+    // checks for whitelist : if whitelist is provided, check that maker is whitelisted
+    if let Some(whitelist) = whitelist {
+        require!(
+            whitelist.is_whitelisted(maker.key),
+            ProtocolError::MakerAddressNotWhitelisted
+        );
+    }
+    
     require!(maker.key() != rfq.taker, ProtocolError::TakerCanNotRespond);
 
     rfq.get_state()?.assert_state_in([RfqState::Active])?;

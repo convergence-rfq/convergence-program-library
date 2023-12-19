@@ -1,10 +1,12 @@
 import { BN } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Keypair } from "@solana/web3.js";
 import { BITCOIN_BASE_ASSET_INDEX } from "../utilities/constants";
 import {
   attachImprovedLogDisplay,
   calculateLegsHash,
   calculateLegsSize,
+  calculateWhitelistSize,
+  expectError,
   runInParallelWithWait,
   toAbsolutePrice,
   TokenChangeMeasurer,
@@ -14,6 +16,7 @@ import {
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, QuoteSide, LegSide } from "../utilities/types";
 import { Context, getContext, Mint } from "../utilities/wrappers";
+import { expect } from "chai";
 
 describe("RFQ Spot instrument integration tests", () => {
   let context: Context;
@@ -454,5 +457,60 @@ describe("RFQ Spot instrument integration tests", () => {
     await response.settleOnePartyDefault();
     await response.cleanUpLegs(legAmount / 2);
     await response.cleanUp(legAmount / 2);
+  });
+
+  it("Create two-way RFQ with one spot leg add a whitelist of 3 addresses , respond  ", async () => {
+    const whitelistKeypair = Keypair.generate();
+    let whitelist = await context.createWhitelist(
+      whitelistKeypair,
+      context.taker.publicKey,
+      [context.maker.publicKey, context.dao.publicKey],
+      10
+    );
+
+    // create a two way RFQ specifying 1 bitcoin as a leg
+    const rfq = await context.createRfq({
+      legs: [
+        SpotInstrument.createForLeg(context, {
+          amount: withTokenDecimals(1),
+          side: LegSide.Long,
+        }),
+      ],
+      whitelistAddress: whitelist.account,
+    });
+    await rfq.respond({
+      bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
+      ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
+    });
+  });
+
+  it("Create two-way RFQ with one spot leg add a whitelist of 3 addresses , respond but maker not in list ", async () => {
+    const whitelistKeypair = Keypair.generate();
+    const newPubkey = new PublicKey("2Jpwh3rvtHe2X67TxpAGEB4x751FNMwWzDyQHhBjqfKg");
+    let whitelist = await context.createWhitelist(
+      whitelistKeypair,
+      context.taker.publicKey,
+      [newPubkey, context.dao.publicKey],
+      10
+    );
+
+    // create a two way RFQ specifying 1 bitcoin as a leg
+    const rfq = await context.createRfq({
+      legs: [
+        SpotInstrument.createForLeg(context, {
+          amount: withTokenDecimals(1),
+          side: LegSide.Long,
+        }),
+      ],
+      whitelistAddress: whitelist.account,
+    });
+
+    await expectError(
+      rfq.respond({
+        bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(21_900)), toLegMultiplier(5)),
+        ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(2)),
+      }),
+      "MakerAddressNotWhitelisted"
+    );
   });
 });

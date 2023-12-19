@@ -45,6 +45,10 @@ use instructions::rfq::settle_one_party_default::*;
 use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
 use instructions::rfq::unlock_rfq_collateral::*;
+use instructions::whitelist::create_whitelist::*;
+use instructions::whitelist::cleanup_whitelist::*;
+use instructions::whitelist::add_address_to_whitelist::*;
+use instructions::whitelist::remove_address_from_whitelist::*;
 use state::*;
 
 security_txt! {
@@ -62,6 +66,8 @@ declare_id!("J7WkE9mTzwTo3pjxENdrH7sekZPrN2VYNpk1pgfZxVr9");
 /// Request for quote (RFQ) protocol module.
 #[program]
 pub mod rfq {
+    use crate::instructions::whitelist::cleanup_whitelist::CleanUpWhitelistAccounts;
+
     use super::*;
 
     pub fn initialize_protocol(
@@ -182,6 +188,7 @@ pub mod rfq {
         active_window: u32,
         settling_window: u32,
         recent_timestamp: u64, // used to allow the same rfq creation using different recent timestamps
+        whitelist: Option<Pubkey>,
     ) -> Result<()> {
         create_rfq_instruction(
             ctx,
@@ -194,6 +201,7 @@ pub mod rfq {
             active_window,
             settling_window,
             recent_timestamp,
+            whitelist,
         )
     }
 
@@ -317,5 +325,31 @@ pub mod rfq {
 
     pub fn close_protocol_state(ctx: Context<CloseProtocolStateAccounts>) -> Result<()> {
         close_protocol_state_instruction(ctx)
+    }
+
+    pub fn create_whitelist<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateWhitelistAccounts<'info>>,
+        expected_whitelist_size: u16,
+        whitelist: Vec<Pubkey>,
+    ) -> Result<()> {
+        create_whitelist_instruction(ctx, expected_whitelist_size ,whitelist)
+    }
+
+    pub fn clean_up_whitelist(ctx: Context<CleanUpWhitelistAccounts>) -> Result<()> {
+        clean_up_whitelist_instruction(ctx)
+    }
+
+    pub fn add_address_to_whitelist(
+        ctx: Context<AddAddressToWhitelistAccounts>,
+        address: Pubkey,
+    ) -> Result<()> {
+        add_address_to_whitelist_instruction(ctx, address)
+    }
+
+    pub fn remove_address_from_whitelist(
+        ctx: Context<RemoveAddressToWhitelistAccounts>,
+        address: Pubkey,
+    ) -> Result<()> {
+        remove_address_from_whitelist_instruction(ctx, address)
     }
 }
