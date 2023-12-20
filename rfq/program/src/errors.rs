@@ -130,8 +130,18 @@ pub enum ProtocolError {
     DefaultValueIsNotPermitted,
     #[msg("Specified oracle source is missing")]
     OracleSourceIsMissing,
-    #[msg("Additional data is not supported for escrow rfqs")]
-    AdditionalDataIsNotSupported,
-    #[msg("Invalid return data emitter")]
-    InvalidReturnDataEmitter,
+    #[msg("Address Already Exists on Whitelist")]
+    AddressAlreadyExistsOnWhitelist,
+    #[msg("Whitelist Maximum Capacity Reached")]
+    WhitelistMaximumCapacityReached,
+    #[msg("Cannot Respond as Maker Address not Whitelisted")]
+    MakerAddressNotWhitelisted,
+    #[msg("Whitelist Creator Mismatch")]
+    WhitelistCreatorMismatch,
+    #[msg("Whitelist Empty")]
+    WhitelistEmpty,
+    #[msg("Address Does not Exist on Whitelist")]
+    AddressDoesNotExistOnWhitelist,
+    #[msg("Whitelist Not Provided")]
+    WhitelistNotProvided,
 }

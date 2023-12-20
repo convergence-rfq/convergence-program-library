@@ -60,6 +60,7 @@ import {
 import { SpotInstrument } from "./instruments/spotInstrument";
 import { InstrumentController } from "./instrument";
 import {
+  calculateWhitelistSize,
   executeInParallel,
   expandComputeUnits,
   inversePubkeyToName,
@@ -383,7 +384,34 @@ export class Context {
       .rpc();
   }
 
-  async createEscrowRfq({
+  async createWhitelist(
+    whitelistAccount: Keypair,
+    creator: PublicKey,
+    whitelist: PublicKey[],
+    expectedWhitelistCapacity: number
+  ) {
+    const whitelistObject = new Whitelist(
+      this,
+      whitelistAccount.publicKey,
+      creator,
+      whitelist,
+      expectedWhitelistCapacity
+    );
+    const expectedWhitelistSize = calculateWhitelistSize(expectedWhitelistCapacity);
+    await this.program.methods
+      .createWhitelist(expectedWhitelistSize, whitelist)
+      .accounts({
+        creator,
+        systemProgram: SystemProgram.programId,
+        whitelistAccount: whitelistAccount.publicKey,
+      })
+      .signers([whitelistAccount, this.taker])
+      .rpc();
+
+    return whitelistObject;
+  }
+
+  async createRfq({
     legs = [SpotInstrument.createForLeg(this)],
     quote = SpotInstrument.createForQuote(this, this.quoteToken),
     orderType = DEFAULT_ORDER_TYPE,
@@ -392,6 +420,7 @@ export class Context {
     settlingWindow = DEFAULT_SETTLING_WINDOW,
     allLegs = legs,
     finalize = true,
+    whitelistAddress = null,
   }: {
     legs?: InstrumentController[];
     quote?: InstrumentController;
@@ -401,6 +430,7 @@ export class Context {
     settlingWindow?: number;
     allLegs?: InstrumentController[];
     finalize?: boolean;
+    whitelistAddress?: PublicKey | null;
   } = {}) {
     const quoteAccounts = await quote.getValidationAccounts();
     const baseAssetIndexes = await legs.map((leg) => leg.getBaseAssetIndex());
@@ -504,7 +534,8 @@ export class Context {
         fixedSize as any,
         activeWindow,
         settlingWindow,
-        new BN(currentTimestamp)
+        new BN(currentTimestamp),
+        whitelistAddress
       )
       .accounts({
         taker: this.taker.publicKey,
@@ -728,6 +759,56 @@ export class RiskEngine {
   }
 }
 
+export class Whitelist {
+  public constructor(
+    public context: Context,
+    public account: PublicKey,
+    public creator: PublicKey,
+    public whitelist: PublicKey[],
+    public expectedWhitelistCapacity: number
+  ) {}
+
+  async addAddressToWhitelist(address: PublicKey) {
+    await this.context.program.methods
+      .addAddressToWhitelist(address)
+      .accounts({
+        creator: this.creator,
+        whitelistAccount: this.account,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
+  async removeAddressFromWhitelist(address: PublicKey) {
+    await this.context.program.methods
+      .removeAddressFromWhitelist(address)
+      .accounts({
+        creator: this.creator,
+        whitelistAccount: this.account,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
+  async cleanUp() {
+    await this.context.program.methods
+      .cleanUpWhitelist()
+      .accounts({
+        creator: this.creator,
+        whitelistAccount: this.account,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
+  async getData() {
+    return await this.context.program.account.whitelist.fetch(this.account);
+  }
+}
+
 export class Mint {
   public publicKey: PublicKey;
   public decimals: number;
@@ -916,7 +997,9 @@ export class Rfq {
     const responseValidateAccounts =
       this.content.type === "instrument" ? [] : this.content.provider.getValidateResponseAccounts();
     const riskEngineAccounts = await this.getRiskEngineAccounts();
-
+    const rfqData = await this.getData();
+    const defaultPubkey = PublicKey.default;
+    let whitelistToPass = rfqData.whitelist.toBase58() !== defaultPubkey.toBase58() ? rfqData.whitelist : null;
     await this.context.program.methods
       .respondToRfq(bid as any, ask as any, 0, new BN(expirationTimestamp), additionalData)
       .accounts({
@@ -924,6 +1007,7 @@ export class Rfq {
         protocol: this.context.protocolPda,
         rfq: this.account,
         response,
+        whitelist: whitelistToPass,
         collateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
         collateralToken: await getCollateralTokenPda(this.context.maker.publicKey, this.context.program.programId),
         riskEngine: this.context.riskEngine.programId,

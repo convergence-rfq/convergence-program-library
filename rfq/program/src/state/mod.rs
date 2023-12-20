@@ -2,6 +2,7 @@ pub mod collateral;
 pub mod protocol;
 pub mod response;
 pub mod rfq;
+pub mod whitelist;
 
 pub use self::rfq::{
     ApiLeg, AssetIdentifier, FixedSize, Leg, LegSide, OrderType, QuoteAsset, Rfq, RfqState,

@@ -272,3 +272,7 @@ export function inversePubkeyToName(value: { [pubkey: string]: string }): { [nam
 
   return result;
 }
+
+export function calculateWhitelistSize(expectedWhitelistCapacity: number) {
+  return 32 * expectedWhitelistCapacity;
+}
