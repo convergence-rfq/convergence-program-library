@@ -123,15 +123,10 @@ pub fn create_rfq_instruction<'info>(
     validate_recent_timestamp(recent_timestamp)?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
-    let whitelist_to_pass: Pubkey;
-    match whitelist {
-        Some(whitelist) => {
-            whitelist_to_pass = whitelist;
-        }
-        None => {
-            whitelist_to_pass = Pubkey::default();
-        }
-    }
+    let whitelist_to_pass = match whitelist {
+        Some(whitelist) => whitelist,
+        None => Pubkey::default(),
+    };
 
     rfq.set_inner(Rfq {
         taker: taker.key(),

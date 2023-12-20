@@ -7,7 +7,11 @@ use std::mem;
     expected_whitelist_size: u16
 )]
 pub struct CreateWhitelistAccounts<'info> {
-    #[account(init_if_needed, payer = creator, space = 8 + mem::size_of::<Whitelist>() + expected_whitelist_size as usize)]
+    #[account(
+        init_if_needed,
+        payer = creator,
+        space = 8 + mem::size_of::<Whitelist>() + (expected_whitelist_size as usize)
+    )]
     pub whitelist_account: Box<Account<'info, Whitelist>>,
     #[account(mut)]
     pub creator: Signer<'info>,
@@ -41,7 +45,7 @@ fn validate_whitelist_inputs(
     whitelist_to_add: &Vec<Pubkey>,
 ) -> Result<()> {
     require!(
-        whitelist_to_add.len() <= expected_whitelist_capacity as usize,
+        whitelist_to_add.len() <= (expected_whitelist_capacity as usize),
         ProtocolError::WhitelistMaximumCapacityReached
     );
 
@@ -51,5 +55,5 @@ fn validate_whitelist_inputs(
 fn calculate_expected_capacity(expected_whitelist_size: u16) -> u8 {
     let pubkey_size = 32;
     let capacity = (expected_whitelist_size / pubkey_size) as u8;
-    return capacity;
+    capacity
 }

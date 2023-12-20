@@ -23,20 +23,28 @@ pub struct RespondToRfqAccounts<'info> {
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     // rfq legs additional storage for first_to_prepare_legs field
-    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>() + rfq.legs.len(), seeds = [
-        RESPONSE_SEED.as_bytes(),
-        rfq.key().as_ref(),
-        maker.key().as_ref(),
-        &bid.try_to_vec().unwrap(),
-        &ask.try_to_vec().unwrap(),
-        &pda_distinguisher.to_le_bytes(),
-    ], bump)]
+    #[account(
+        init,
+        payer = maker,
+        space = 8 + mem::size_of::<Response>() + rfq.legs.len(),
+        seeds = [
+            RESPONSE_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            maker.key().as_ref(),
+            &bid.try_to_vec().unwrap(),
+            &ask.try_to_vec().unwrap(),
+            &pda_distinguisher.to_le_bytes(),
+        ],
+        bump
+    )]
     pub response: Account<'info, Response>,
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
                 bump = collateral_info.bump)]
     pub collateral_info: Account<'info, CollateralInfo>,
-    #[account(seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), maker.key().as_ref()],
-                bump = collateral_info.token_account_bump)]
+    #[account(
+        seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), maker.key().as_ref()],
+        bump = collateral_info.token_account_bump
+    )]
     pub collateral_token: Account<'info, TokenAccount>,
 
     /// CHECK: is a valid risk engine program id
@@ -62,7 +70,7 @@ fn validate(
     } = &ctx.accounts;
     //checks for expiration timestamp
     let current_timestamp = Clock::get()?.unix_timestamp;
-    let rfq_expiration_timestamp = rfq.creation_timestamp + rfq.active_window as i64;
+    let rfq_expiration_timestamp = rfq.creation_timestamp + (rfq.active_window as i64);
 
     require!(
         expiration_timestamp > current_timestamp,
@@ -99,7 +107,7 @@ fn validate(
             bid.is_some() || ask.is_some(),
             ProtocolError::ResponseDoesNotMatchOrderType
         ),
-    };
+    }
 
     if let Some(quote) = bid {
         let is_quote_fixed_size = matches!(quote, Quote::FixedSize { price_quote: _ });

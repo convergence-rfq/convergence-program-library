@@ -16,7 +16,7 @@ pub fn remove_address_from_whitelist_instruction(
     let RemoveAddressToWhitelistAccounts {
         whitelist_account, ..
     } = ctx.accounts;
-    validate_remove_address_inputs(&whitelist_account, &address)?;
+    validate_remove_address_inputs(whitelist_account, &address)?;
 
     let index = whitelist_account
         .whitelist
@@ -33,7 +33,10 @@ fn validate_remove_address_inputs(whitelist: &Whitelist, address: &Pubkey) -> Re
         whitelist.is_whitelisted(address),
         ProtocolError::AddressDoesNotExistOnWhitelist
     );
-    require!(whitelist.whitelist.len() > 0, ProtocolError::WhitelistEmpty);
+    require!(
+        !whitelist.whitelist.is_empty(),
+        ProtocolError::WhitelistEmpty
+    );
 
     Ok(())
 }
