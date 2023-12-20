@@ -30,17 +30,23 @@ pub struct CreateRfqAccounts<'info> {
 
     #[account(seeds = [PROTOCOL_SEED.as_bytes()], bump = protocol.bump)]
     pub protocol: Box<Account<'info, ProtocolState>>,
-    #[account(init, payer = taker, space = 8 + mem::size_of::<Rfq>() + expected_legs_size as usize, seeds = [
-        RFQ_SEED.as_bytes(),
-        taker.key().as_ref(),
-        &expected_legs_hash,
-        &[order_type as u8],
-        &hash(&quote_asset.try_to_vec().unwrap()).to_bytes(),
-        &fixed_size.try_to_vec().unwrap(),
-        &active_window.to_le_bytes(),
-        &settling_window.to_le_bytes(),
-        &recent_timestamp.to_le_bytes(),
-    ], bump)]
+    #[account(
+        init,
+        payer = taker,
+        space = 8 + mem::size_of::<Rfq>() + (expected_legs_size as usize),
+        seeds = [
+            RFQ_SEED.as_bytes(),
+            taker.key().as_ref(),
+            &expected_legs_hash,
+            &[order_type as u8],
+            &hash(&quote_asset.try_to_vec().unwrap()).to_bytes(),
+            &fixed_size.try_to_vec().unwrap(),
+            &active_window.to_le_bytes(),
+            &settling_window.to_le_bytes(),
+            &recent_timestamp.to_le_bytes(),
+        ],
+        bump
+    )]
     pub rfq: Box<Account<'info, Rfq>>,
 
     pub system_program: Program<'info, System>,
@@ -71,7 +77,7 @@ fn validate_legs<'a, 'info: 'a>(
     legs: &[ApiLeg],
 ) -> Result<()> {
     require!(
-        legs.len() <= Rfq::MAX_LEGS_AMOUNT as usize,
+        legs.len() <= (Rfq::MAX_LEGS_AMOUNT as usize),
         ProtocolError::TooManyLegs
     );
     require!(
@@ -108,6 +114,7 @@ pub fn create_rfq_instruction<'info>(
     active_window: u32,
     settling_window: u32,
     recent_timestamp: u64,
+    whitelist: Option<Pubkey>,
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
@@ -116,6 +123,10 @@ pub fn create_rfq_instruction<'info>(
     validate_recent_timestamp(recent_timestamp)?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
+    let whitelist_to_pass = match whitelist {
+        Some(whitelist) => whitelist,
+        None => Pubkey::default(),
+    };
 
     rfq.set_inner(Rfq {
         taker: taker.key(),
@@ -133,7 +144,8 @@ pub fn create_rfq_instruction<'info>(
         total_responses: 0,
         cleared_responses: 0,
         confirmed_responses: 0,
-        reserved: [0; 256],
+        whitelist: whitelist_to_pass,
+        reserved: [0; 224],
         legs: legs.into_iter().map(Into::into).collect(),
     });
 
