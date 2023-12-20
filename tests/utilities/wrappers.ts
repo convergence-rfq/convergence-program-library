@@ -384,34 +384,7 @@ export class Context {
       .rpc();
   }
 
-  async createWhitelist(
-    whitelistAccount: Keypair,
-    creator: PublicKey,
-    whitelist: PublicKey[],
-    expectedWhitelistCapacity: number
-  ) {
-    const whitelistObject = new Whitelist(
-      this,
-      whitelistAccount.publicKey,
-      creator,
-      whitelist,
-      expectedWhitelistCapacity
-    );
-    const expectedWhitelistSize = calculateWhitelistSize(expectedWhitelistCapacity);
-    await this.program.methods
-      .createWhitelist(expectedWhitelistSize, whitelist)
-      .accounts({
-        creator,
-        systemProgram: SystemProgram.programId,
-        whitelistAccount: whitelistAccount.publicKey,
-      })
-      .signers([whitelistAccount, this.taker])
-      .rpc();
-
-    return whitelistObject;
-  }
-
-  async createRfq({
+  async createEscrowRfq({
     legs = [SpotInstrument.createForLeg(this)],
     quote = SpotInstrument.createForQuote(this, this.quoteToken),
     orderType = DEFAULT_ORDER_TYPE,
@@ -454,8 +427,36 @@ export class Context {
       activeWindow,
       settlingWindow,
       true,
-      finalize
+      finalize,
+      whitelistAddress
     );
+  }
+
+  async createWhitelist(
+    whitelistAccount: Keypair,
+    creator: PublicKey,
+    whitelist: PublicKey[],
+    expectedWhitelistCapacity: number
+  ) {
+    const whitelistObject = new Whitelist(
+      this,
+      whitelistAccount.publicKey,
+      creator,
+      whitelist,
+      expectedWhitelistCapacity
+    );
+    const expectedWhitelistSize = calculateWhitelistSize(expectedWhitelistCapacity);
+    await this.program.methods
+      .createWhitelist(expectedWhitelistSize, whitelist)
+      .accounts({
+        creator,
+        systemProgram: SystemProgram.programId,
+        whitelistAccount: whitelistAccount.publicKey,
+      })
+      .signers([whitelistAccount, this.taker])
+      .rpc();
+
+    return whitelistObject;
   }
 
   async createPrintTradeRfq({
@@ -504,7 +505,8 @@ export class Context {
     activeWindow: number,
     settlingWindow: number,
     verify: boolean,
-    finalize: boolean
+    finalize: boolean,
+    whitelistAddress: PublicKey | null = null
   ) {
     const serializedLegData = serializeLegData(allLegData, this.program);
 
@@ -759,56 +761,6 @@ export class RiskEngine {
   }
 }
 
-export class Whitelist {
-  public constructor(
-    public context: Context,
-    public account: PublicKey,
-    public creator: PublicKey,
-    public whitelist: PublicKey[],
-    public expectedWhitelistCapacity: number
-  ) {}
-
-  async addAddressToWhitelist(address: PublicKey) {
-    await this.context.program.methods
-      .addAddressToWhitelist(address)
-      .accounts({
-        creator: this.creator,
-        whitelistAccount: this.account,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.context.taker])
-      .rpc();
-  }
-
-  async removeAddressFromWhitelist(address: PublicKey) {
-    await this.context.program.methods
-      .removeAddressFromWhitelist(address)
-      .accounts({
-        creator: this.creator,
-        whitelistAccount: this.account,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.context.taker])
-      .rpc();
-  }
-
-  async cleanUp() {
-    await this.context.program.methods
-      .cleanUpWhitelist()
-      .accounts({
-        creator: this.creator,
-        whitelistAccount: this.account,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.context.taker])
-      .rpc();
-  }
-
-  async getData() {
-    return await this.context.program.account.whitelist.fetch(this.account);
-  }
-}
-
 export class Mint {
   public publicKey: PublicKey;
   public decimals: number;
@@ -1008,8 +960,8 @@ export class Rfq {
         rfq: this.account,
         response,
         whitelist: whitelistToPass,
-        collateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
-        collateralToken: await getCollateralTokenPda(this.context.maker.publicKey, this.context.program.programId),
+        collateralInfo: getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
+        collateralToken: getCollateralTokenPda(this.context.maker.publicKey, this.context.program.programId),
         riskEngine: this.context.riskEngine.programId,
         systemProgram: SystemProgram.programId,
       })
@@ -1156,6 +1108,56 @@ export class Rfq {
       });
 
     return [config, ...baseAssets, ...oracles];
+  }
+}
+
+export class Whitelist {
+  public constructor(
+    public context: Context,
+    public account: PublicKey,
+    public creator: PublicKey,
+    public whitelist: PublicKey[],
+    public expectedWhitelistCapacity: number
+  ) {}
+
+  async addAddressToWhitelist(address: PublicKey) {
+    await this.context.program.methods
+      .addAddressToWhitelist(address)
+      .accounts({
+        creator: this.creator,
+        whitelistAccount: this.account,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
+  async removeAddressFromWhitelist(address: PublicKey) {
+    await this.context.program.methods
+      .removeAddressFromWhitelist(address)
+      .accounts({
+        creator: this.creator,
+        whitelistAccount: this.account,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
+  async cleanUp() {
+    await this.context.program.methods
+      .cleanUpWhitelist()
+      .accounts({
+        creator: this.creator,
+        whitelistAccount: this.account,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.context.taker])
+      .rpc();
+  }
+
+  async getData() {
+    return await this.context.program.account.whitelist.fetch(this.account);
   }
 }
 
