@@ -1,4 +1,4 @@
-use crate::{errors::ProtocolError, state::whitelist::Whitelist};
+use crate::{ errors::ProtocolError, state::whitelist::Whitelist };
 use anchor_lang::prelude::*;
 use std::mem;
 
@@ -21,15 +21,11 @@ pub struct CreateWhitelistAccounts<'info> {
 pub fn create_whitelist_instruction(
     ctx: Context<CreateWhitelistAccounts>,
     expected_whitelist_size: u16,
-    whitelist_to_add: Vec<Pubkey>,
+    whitelist_to_add: Vec<Pubkey>
 ) -> Result<()> {
     let expected_whitelist_capacity = calculate_expected_capacity(expected_whitelist_size);
     validate_whitelist_inputs(expected_whitelist_capacity, &whitelist_to_add)?;
-    let CreateWhitelistAccounts {
-        creator,
-        whitelist_account,
-        ..
-    } = ctx.accounts;
+    let CreateWhitelistAccounts { creator, whitelist_account, .. } = ctx.accounts;
 
     whitelist_account.set_inner(Whitelist {
         creator: creator.key(),
@@ -40,10 +36,7 @@ pub fn create_whitelist_instruction(
     Ok(())
 }
 
-fn validate_whitelist_inputs(
-    expected_whitelist_capacity: u8,
-    whitelist_to_add: &Vec<Pubkey>,
-) -> Result<()> {
+fn validate_whitelist_inputs(expected_whitelist_capacity: u8, whitelist_to_add: &Vec<Pubkey>) -> Result<()> {
     require!(
         whitelist_to_add.len() <= (expected_whitelist_capacity as usize),
         ProtocolError::WhitelistMaximumCapacityReached
@@ -54,6 +47,5 @@ fn validate_whitelist_inputs(
 
 fn calculate_expected_capacity(expected_whitelist_size: u16) -> u8 {
     let pubkey_size = 32;
-    let capacity = (expected_whitelist_size / pubkey_size) as u8;
-    capacity
+    (expected_whitelist_size / pubkey_size) as u8
 }
