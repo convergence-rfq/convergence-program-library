@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::{state::whitelist::Whitelist, errors::ProtocolError};
+use crate::{errors::ProtocolError, state::whitelist::Whitelist};
 
 #[derive(Accounts)]
-pub struct CleanUpWhitelistAccounts<'info>{
+pub struct CleanUpWhitelistAccounts<'info> {
     #[account(mut, constraint = whitelist_account.creator == creator.key() @ProtocolError::WhitelistCreatorMismatch ,close = creator)]
     pub whitelist_account: Box<Account<'info, Whitelist>>,
     #[account(mut)]
@@ -11,6 +11,6 @@ pub struct CleanUpWhitelistAccounts<'info>{
     pub system_program: Program<'info, System>,
 }
 
-pub fn clean_up_whitelist_instruction(_ctx:Context<CleanUpWhitelistAccounts>) -> Result<()>{
+pub fn clean_up_whitelist_instruction(_ctx: Context<CleanUpWhitelistAccounts>) -> Result<()> {
     Ok(())
 }

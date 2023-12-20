@@ -45,9 +45,9 @@ use instructions::rfq::settle_one_party_default::*;
 use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
 use instructions::rfq::unlock_rfq_collateral::*;
-use instructions::whitelist::create_whitelist::*;
-use instructions::whitelist::cleanup_whitelist::*;
 use instructions::whitelist::add_address_to_whitelist::*;
+use instructions::whitelist::cleanup_whitelist::*;
+use instructions::whitelist::create_whitelist::*;
 use instructions::whitelist::remove_address_from_whitelist::*;
 use state::*;
 
@@ -332,7 +332,7 @@ pub mod rfq {
         expected_whitelist_size: u16,
         whitelist: Vec<Pubkey>,
     ) -> Result<()> {
-        create_whitelist_instruction(ctx, expected_whitelist_size ,whitelist)
+        create_whitelist_instruction(ctx, expected_whitelist_size, whitelist)
     }
 
     pub fn clean_up_whitelist(ctx: Context<CleanUpWhitelistAccounts>) -> Result<()> {
