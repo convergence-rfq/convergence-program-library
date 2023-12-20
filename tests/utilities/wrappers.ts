@@ -911,7 +911,8 @@ export class Rfq {
       0
     );
     const rfqData = await this.getData();
-
+    const defaultPubkey = PublicKey.default;
+    let whitelistToPass = rfqData.whitelist.toBase58() !== defaultPubkey.toBase58() ? rfqData.whitelist : null;
     await this.context.program.methods
       .respondToRfq(bid as any, ask as any, 0, new BN(expirationTimestamp))
       .accounts({
@@ -919,7 +920,7 @@ export class Rfq {
         protocol: this.context.protocolPda,
         rfq: this.account,
         response,
-        whitelist: rfqData.whitelist,
+        whitelist: whitelistToPass,
         collateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
         collateralToken: await getCollateralTokenPda(this.context.maker.publicKey, this.context.program.programId),
         riskEngine: this.context.riskEngine.programId,
