@@ -50,11 +50,12 @@ use instructions::rfq::settle_print_trade::*;
 use instructions::rfq::settle_two_party_default::*;
 use instructions::rfq::unlock_response_collateral::*;
 use instructions::rfq::unlock_rfq_collateral::*;
+use instructions::rfq::validate_rfq_by_print_trade_provider::*;
 use instructions::whitelist::add_address_to_whitelist::*;
 use instructions::whitelist::cleanup_whitelist::*;
 use instructions::whitelist::create_whitelist::*;
 use instructions::whitelist::remove_address_from_whitelist::*;
-use instructions::rfq::validate_rfq_by_print_trade_provider::*;
+
 use state::*;
 
 security_txt! {
