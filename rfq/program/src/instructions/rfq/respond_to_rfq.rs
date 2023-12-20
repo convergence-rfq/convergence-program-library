@@ -5,8 +5,8 @@ use crate::{
     interfaces::risk_engine::calculate_required_collateral_for_response,
     seeds::{COLLATERAL_SEED, COLLATERAL_TOKEN_SEED, PROTOCOL_SEED, RESPONSE_SEED},
     state::{
-        CollateralInfo, FixedSize, OrderType, ProtocolState, Quote, Response, Rfq, RfqState,
-        StoredResponseState,
+        whitelist::Whitelist, CollateralInfo, FixedSize, OrderType, ProtocolState, Quote, Response,
+        Rfq, RfqState, StoredResponseState,
     },
 };
 use anchor_lang::prelude::*;
@@ -23,26 +23,35 @@ pub struct RespondToRfqAccounts<'info> {
     #[account(mut)]
     pub rfq: Box<Account<'info, Rfq>>,
     // rfq legs additional storage for first_to_prepare_legs field
-    #[account(init, payer = maker, space = 8 + mem::size_of::<Response>() + rfq.legs.len(), seeds = [
-        RESPONSE_SEED.as_bytes(),
-        rfq.key().as_ref(),
-        maker.key().as_ref(),
-        &bid.try_to_vec().unwrap(),
-        &ask.try_to_vec().unwrap(),
-        &pda_distinguisher.to_le_bytes(),
-    ], bump)]
+    #[account(
+        init,
+        payer = maker,
+        space = 8 + mem::size_of::<Response>() + rfq.legs.len(),
+        seeds = [
+            RESPONSE_SEED.as_bytes(),
+            rfq.key().as_ref(),
+            maker.key().as_ref(),
+            &bid.try_to_vec().unwrap(),
+            &ask.try_to_vec().unwrap(),
+            &pda_distinguisher.to_le_bytes(),
+        ],
+        bump
+    )]
     pub response: Account<'info, Response>,
     #[account(mut, seeds = [COLLATERAL_SEED.as_bytes(), maker.key().as_ref()],
                 bump = collateral_info.bump)]
     pub collateral_info: Account<'info, CollateralInfo>,
-    #[account(seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), maker.key().as_ref()],
-                bump = collateral_info.token_account_bump)]
+    #[account(
+        seeds = [COLLATERAL_TOKEN_SEED.as_bytes(), maker.key().as_ref()],
+        bump = collateral_info.token_account_bump
+    )]
     pub collateral_token: Account<'info, TokenAccount>,
 
     /// CHECK: is a valid risk engine program id
     #[account(constraint = risk_engine.key() == protocol.risk_engine
         @ ProtocolError::NotARiskEngine)]
     pub risk_engine: UncheckedAccount<'info>,
+    pub whitelist: Option<Box<Account<'info, Whitelist>>>,
 
     pub system_program: Program<'info, System>,
 }
@@ -53,10 +62,16 @@ fn validate(
     ask: Option<Quote>,
     expiration_timestamp: i64,
 ) -> Result<()> {
-    let RespondToRfqAccounts { maker, rfq, .. } = &ctx.accounts;
+    let RespondToRfqAccounts {
+        maker,
+        rfq,
+        whitelist,
+        ..
+    } = &ctx.accounts;
     //checks for expiration timestamp
     let current_timestamp = Clock::get()?.unix_timestamp;
-    let rfq_expiration_timestamp = rfq.creation_timestamp + rfq.active_window as i64;
+    let rfq_expiration_timestamp = rfq.creation_timestamp + (rfq.active_window as i64);
+
     require!(
         expiration_timestamp > current_timestamp,
         ProtocolError::InvalidExpirationTimestamp
@@ -66,6 +81,18 @@ fn validate(
         expiration_timestamp <= rfq_expiration_timestamp,
         ProtocolError::InvalidExpirationTimestamp
     );
+
+    // checks for whitelist : if whitelist is not default, check that it is provided
+    if !rfq.whitelist.eq(&Pubkey::default()) {
+        require!(whitelist.is_some(), ProtocolError::WhitelistNotProvided);
+    }
+    // checks for whitelist : if whitelist is provided, check that maker is whitelisted
+    if let Some(whitelist) = whitelist {
+        require!(
+            whitelist.is_whitelisted(maker.key),
+            ProtocolError::MakerAddressNotWhitelisted
+        );
+    }
 
     require!(maker.key() != rfq.taker, ProtocolError::TakerCanNotRespond);
 
@@ -84,7 +111,7 @@ fn validate(
             bid.is_some() || ask.is_some(),
             ProtocolError::ResponseDoesNotMatchOrderType
         ),
-    };
+    }
 
     if let Some(quote) = bid {
         let is_quote_fixed_size = matches!(quote, Quote::FixedSize { price_quote: _ });

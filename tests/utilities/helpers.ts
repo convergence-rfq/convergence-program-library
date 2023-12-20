@@ -256,3 +256,7 @@ export function addPubkeyExplanations(context: Context, input: string) {
 
   return result;
 }
+
+export function calculateWhitelistSize(expectedWhitelistCapacity: number) {
+  return 32 * expectedWhitelistCapacity;
+}

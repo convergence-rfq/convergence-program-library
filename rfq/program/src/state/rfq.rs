@@ -24,8 +24,9 @@ pub struct Rfq {
     pub total_responses: u32,
     pub cleared_responses: u32,
     pub confirmed_responses: u32,
+    pub whitelist: Pubkey,
 
-    pub reserved: [u8; 256],
+    pub reserved: [u8; 224],
 
     pub legs: Vec<Leg>, // TODO add limit for this size
 }
