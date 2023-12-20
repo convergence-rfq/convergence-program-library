@@ -72,6 +72,8 @@ fn validate(
     let current_timestamp = Clock::get()?.unix_timestamp;
     let rfq_expiration_timestamp = rfq.creation_timestamp + (rfq.active_window as i64);
 
+    
+
     require!(
         expiration_timestamp > current_timestamp,
         ProtocolError::InvalidExpirationTimestamp
@@ -82,6 +84,13 @@ fn validate(
         ProtocolError::InvalidExpirationTimestamp
     );
 
+    // checks for whitelist : if whitelist is not default, check that it is provided
+    if !rfq.whitelist.eq(&Pubkey::default()) {
+        require!(
+            whitelist.is_some(),
+            ProtocolError::WhitelistNotProvided
+        );
+    }
     // checks for whitelist : if whitelist is provided, check that maker is whitelisted
     if let Some(whitelist) = whitelist {
         require!(
