@@ -128,4 +128,6 @@ pub enum ProtocolError {
     AddressDoesNotExistOnWhitelist,
     #[msg("Whitelist Not Provided")]
     WhitelistNotProvided,
+    #[msg("Whitelist Address Mismatch")]
+    WhitelistAddressMismatch,
 }
