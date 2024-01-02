@@ -85,7 +85,11 @@ fn validate(
     match whitelist {
         // checks for whitelist : if whitelist is provided, check rfq whitelist address match and maker is whitelisted
         Some(whitelist) => {
-            require_keys_eq!(rfq.whitelist,whitelist.key(), ProtocolError::WhitelistAddressMismatch);
+            require_keys_eq!(
+                rfq.whitelist,
+                whitelist.key(),
+                ProtocolError::WhitelistAddressMismatch
+            );
             require!(
                 whitelist.is_whitelisted(maker.key),
                 ProtocolError::MakerAddressNotWhitelisted
@@ -94,7 +98,8 @@ fn validate(
         // checks for whitelist : if whitelist is not provided, check that rfq whitelist is default
         None => {
             require_keys_eq!(
-                rfq.whitelist,Pubkey::default(),
+                rfq.whitelist,
+                Pubkey::default(),
                 ProtocolError::WhitelistNotProvided
             );
         }
