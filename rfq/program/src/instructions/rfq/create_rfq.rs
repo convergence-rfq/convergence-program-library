@@ -115,6 +115,17 @@ fn validate_recent_timestamp(recent_timestamp: u64) -> Result<()> {
     Ok(())
 }
 
+fn validate_print_trade_provider(
+    protocol: &Account<ProtocolState>,
+    print_trade_provider: Option<Pubkey>,
+) -> Result<()> {
+    if let Some(address) = print_trade_provider {
+        protocol.get_print_trade_provider_parameters(address)?;
+    }
+
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn create_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
@@ -145,6 +156,7 @@ pub fn create_rfq_instruction<'info>(
         print_trade_provider.is_some(),
     )?;
     validate_recent_timestamp(recent_timestamp)?;
+    validate_print_trade_provider(protocol, print_trade_provider)?;
 
     let CreateRfqAccounts { taker, rfq, .. } = ctx.accounts;
 
