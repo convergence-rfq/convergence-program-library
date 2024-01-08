@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/risk-engine",
-  "version": "3.3.2-dev",
+  "version": "3.4.0-dev",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
