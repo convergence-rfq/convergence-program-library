@@ -1,16 +1,17 @@
-use crate::{errors::ProtocolError, state::whitelist::Whitelist};
+
+use crate::{errors::ProtocolError, state::whitelist::Whitelist,constants::MAX_WHITELIST_SIZE};
 use anchor_lang::prelude::*;
 use std::mem;
 
 #[derive(Accounts)]
 #[instruction(
-    expected_whitelist_size: u16
+    length: u8
 )]
 pub struct CreateWhitelistAccounts<'info> {
     #[account(
         init_if_needed,
         payer = creator,
-        space = 8 + mem::size_of::<Whitelist>() + (expected_whitelist_size as usize)
+        space = get_whitelist_size_from_length(length),
     )]
     pub whitelist_account: Box<Account<'info, Whitelist>>,
     #[account(mut)]
@@ -20,11 +21,10 @@ pub struct CreateWhitelistAccounts<'info> {
 
 pub fn create_whitelist_instruction(
     ctx: Context<CreateWhitelistAccounts>,
-    expected_whitelist_size: u16,
+    length:u8,
     whitelist_to_add: Vec<Pubkey>,
 ) -> Result<()> {
-    let expected_whitelist_capacity = calculate_expected_capacity(expected_whitelist_size);
-    validate_whitelist_inputs(expected_whitelist_capacity, &whitelist_to_add)?;
+    validate_whitelist_inputs(length)?;
     let CreateWhitelistAccounts {
         creator,
         whitelist_account,
@@ -34,25 +34,23 @@ pub fn create_whitelist_instruction(
     whitelist_account.set_inner(Whitelist {
         creator: creator.key(),
         whitelist: whitelist_to_add,
-        capacity: expected_whitelist_capacity,
     });
 
     Ok(())
 }
 
 fn validate_whitelist_inputs(
-    expected_whitelist_capacity: u8,
-    whitelist_to_add: &Vec<Pubkey>,
+    length:u8,
 ) -> Result<()> {
     require!(
-        whitelist_to_add.len() <= (expected_whitelist_capacity as usize),
+        length <= MAX_WHITELIST_SIZE ,
         ProtocolError::WhitelistMaximumCapacityReached
     );
 
     Ok(())
 }
 
-fn calculate_expected_capacity(expected_whitelist_size: u16) -> u8 {
-    let pubkey_size = 32;
-    (expected_whitelist_size / pubkey_size) as u8
+
+fn get_whitelist_size_from_length(length:u8) -> usize {
+    8 + mem::size_of::<Whitelist>() + (length as u64 * 32 as u64) as usize
 }

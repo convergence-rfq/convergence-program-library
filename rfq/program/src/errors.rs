@@ -114,8 +114,6 @@ pub enum ProtocolError {
     DefaultValueIsNotPermitted,
     #[msg("Specified oracle source is missing")]
     OracleSourceIsMissing,
-    #[msg("Address Already Exists on Whitelist")]
-    AddressAlreadyExistsOnWhitelist,
     #[msg("Whitelist Maximum Capacity Reached")]
     WhitelistMaximumCapacityReached,
     #[msg("Cannot Respond as Maker Address not Whitelisted")]

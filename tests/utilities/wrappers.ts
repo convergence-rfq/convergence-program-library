@@ -70,7 +70,6 @@ import { InstrumentController } from "./instrument";
 import {
   calculateLegsHash,
   calculateLegsSize,
-  calculateWhitelistSize,
   executeInParallel,
   expandComputeUnits,
   serializeOptionQuote,
@@ -392,29 +391,19 @@ export class Context {
       .rpc();
   }
 
-  async createWhitelist(
-    whitelistAccount: Keypair,
-    creator: PublicKey,
-    whitelist: PublicKey[],
-    expectedWhitelistCapacity: number
-  ) {
-    const whitelistObject = new Whitelist(
-      this,
-      whitelistAccount.publicKey,
-      creator,
-      whitelist,
-      expectedWhitelistCapacity
-    );
-    const expectedWhitelistSize = calculateWhitelistSize(expectedWhitelistCapacity);
+  async createWhitelist(whitelistAccount: Keypair, creator: PublicKey, whitelist: PublicKey[]) {
+    const whitelistObject = new Whitelist(this, whitelistAccount.publicKey, creator, whitelist);
     await this.program.methods
-      .createWhitelist(expectedWhitelistSize, whitelist)
+      .createWhitelist(whitelist.length, whitelist)
       .accounts({
         creator,
         systemProgram: SystemProgram.programId,
         whitelistAccount: whitelistAccount.publicKey,
       })
       .signers([whitelistAccount, this.taker])
-      .rpc();
+      .rpc({
+        skipPreflight: true,
+      });
 
     return whitelistObject;
   }
@@ -693,33 +682,8 @@ export class Whitelist {
     public context: Context,
     public account: PublicKey,
     public creator: PublicKey,
-    public whitelist: PublicKey[],
-    public expectedWhitelistCapacity: number
+    public whitelist: PublicKey[]
   ) {}
-
-  async addAddressToWhitelist(address: PublicKey) {
-    await this.context.program.methods
-      .addAddressToWhitelist(address)
-      .accounts({
-        creator: this.creator,
-        whitelistAccount: this.account,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.context.taker])
-      .rpc();
-  }
-
-  async removeAddressFromWhitelist(address: PublicKey) {
-    await this.context.program.methods
-      .removeAddressFromWhitelist(address)
-      .accounts({
-        creator: this.creator,
-        whitelistAccount: this.account,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.context.taker])
-      .rpc();
-  }
 
   async cleanUp() {
     await this.context.program.methods

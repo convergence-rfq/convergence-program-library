@@ -459,12 +459,10 @@ describe("RFQ Spot instrument integration tests", () => {
 
   it("Create two-way RFQ with one spot leg add a whitelist of 3 addresses , respond  ", async () => {
     const whitelistKeypair = Keypair.generate();
-    let whitelist = await context.createWhitelist(
-      whitelistKeypair,
-      context.taker.publicKey,
-      [context.maker.publicKey, context.dao.publicKey],
-      10
-    );
+    let whitelist = await context.createWhitelist(whitelistKeypair, context.taker.publicKey, [
+      context.maker.publicKey,
+      context.dao.publicKey,
+    ]);
 
     // create a two way RFQ specifying 1 bitcoin as a leg
     const rfq = await context.createRfq({
@@ -485,12 +483,10 @@ describe("RFQ Spot instrument integration tests", () => {
   it("Create two-way RFQ with one spot leg add a whitelist of 3 addresses , respond but maker not in list ", async () => {
     const whitelistKeypair = Keypair.generate();
     const newPubkey = new PublicKey("2Jpwh3rvtHe2X67TxpAGEB4x751FNMwWzDyQHhBjqfKg");
-    let whitelist = await context.createWhitelist(
-      whitelistKeypair,
-      context.taker.publicKey,
-      [newPubkey, context.dao.publicKey],
-      10
-    );
+    let whitelist = await context.createWhitelist(whitelistKeypair, context.taker.publicKey, [
+      newPubkey,
+      context.dao.publicKey,
+    ]);
 
     // create a two way RFQ specifying 1 bitcoin as a leg
     const rfq = await context.createRfq({
