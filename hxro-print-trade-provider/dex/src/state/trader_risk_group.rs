@@ -24,8 +24,7 @@ use crate::{
     utils::numeric::{Fractional, ZERO_FRAC},
 };
 
-#[account(zero_copy)]
-/// State account corresponding to a trader on a given market product group
+#[account(zero_copy(unsafe))]
 pub struct TraderRiskGroup {
     pub tag: AccountTag,
     pub market_product_group: Pubkey,
@@ -46,15 +45,21 @@ pub struct TraderRiskGroup {
     pub trader_positions: [TraderPosition; MAX_TRADER_POSITIONS],
     pub risk_state_account: Pubkey,
     pub fee_state_account: Pubkey,
-    // Densely packed linked list of open orders
-    pub client_order_id: u128,
-    pub open_orders: OpenOrders,
     pub locked_collateral: [LockedCollateral; MAX_TRADER_POSITIONS], // in one-to-one mapping with trader_positions
+    pub notional_maker_volume: Fractional,
+    pub notional_taker_volume: Fractional,
+    pub referred_takers_notional_volume: Fractional,
+    /// referral_fees is not necessarily REFERRER_FEES_PROPORTION * referred_takers_notional_volume,
+    /// because combo volume has only collects 1/8th the fees as outright volume
+    pub referral_fees: Fractional,
+    // unused
+    pub allocated_for_future_use: [u8; 256],
+    pub open_orders: OpenOrders,
 }
 
 impl IsInitialized for TraderRiskGroup {
     fn is_initialized(&self) -> bool {
-        self.tag == AccountTag::TraderRiskGroup
+        unimplemented!()
     }
 }
 

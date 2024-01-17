@@ -21,7 +21,7 @@ pub const MAX_TRADER_POSITIONS: usize = 16;
 pub const MAX_OPEN_ORDERS_PER_POSITION: u64 = 256;
 
 #[constant]
-pub const MAX_OPEN_ORDERS: usize = 1024;
+pub const MAX_OPEN_ORDERS: usize = 100;
 
 #[constant]
 pub const ANCHOR_DISCRIMINANT_LEN: usize = 8;
