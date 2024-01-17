@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/psyoptions-european-instrument",
-  "version": "3.4.0-dev",
+  "version": "3.5.0-dev",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
