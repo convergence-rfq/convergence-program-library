@@ -82,27 +82,16 @@ fn validate(
         ProtocolError::InvalidExpirationTimestamp
     );
 
+    Whitelist::validate(whitelist, rfq)?;
+
     match whitelist {
-        // checks for whitelist : if whitelist is provided, check rfq whitelist address match and maker is whitelisted
         Some(whitelist) => {
-            require_keys_eq!(
-                rfq.whitelist,
-                whitelist.key(),
-                ProtocolError::WhitelistAddressMismatch
-            );
             require!(
                 whitelist.is_whitelisted(maker.key),
                 ProtocolError::MakerAddressNotWhitelisted
             );
         }
-        // checks for whitelist : if whitelist is not provided, check that rfq whitelist is default
-        None => {
-            require_keys_eq!(
-                rfq.whitelist,
-                Pubkey::default(),
-                ProtocolError::WhitelistNotProvided
-            );
-        }
+        None => {}
     }
 
     require!(maker.key() != rfq.taker, ProtocolError::TakerCanNotRespond);
