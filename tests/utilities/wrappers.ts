@@ -70,7 +70,6 @@ import { InstrumentController } from "./instrument";
 import {
   calculateLegsHash,
   calculateLegsSize,
-  calculateWhitelistSize,
   executeInParallel,
   expandComputeUnits,
   serializeOptionQuote,
@@ -392,22 +391,10 @@ export class Context {
       .rpc();
   }
 
-  async createWhitelist(
-    whitelistAccount: Keypair,
-    creator: PublicKey,
-    whitelist: PublicKey[],
-    expectedWhitelistCapacity: number
-  ) {
-    const whitelistObject = new Whitelist(
-      this,
-      whitelistAccount.publicKey,
-      creator,
-      whitelist,
-      expectedWhitelistCapacity
-    );
-    const expectedWhitelistSize = calculateWhitelistSize(expectedWhitelistCapacity);
+  async createWhitelist(whitelistAccount: Keypair, creator: PublicKey, whitelist: PublicKey[]) {
+    const whitelistObject = new Whitelist(this, whitelistAccount.publicKey, creator, whitelist);
     await this.program.methods
-      .createWhitelist(expectedWhitelistSize, whitelist)
+      .createWhitelist(whitelist)
       .accounts({
         creator,
         systemProgram: SystemProgram.programId,
@@ -429,7 +416,8 @@ export class Context {
     legsSize = calculateLegsSize(legs),
     legsHash = calculateLegsHash(legs, this.program),
     finalize = true,
-    whitelistAddress = null,
+    whitelistKeypair = null,
+    whitelistPubkeyList = [],
   }: {
     legs?: InstrumentController[];
     quote?: InstrumentController;
@@ -440,7 +428,8 @@ export class Context {
     legsSize?: number;
     legsHash?: Uint8Array;
     finalize?: boolean;
-    whitelistAddress?: PublicKey | null;
+    whitelistKeypair?: Keypair | null;
+    whitelistPubkeyList?: PublicKey[];
   } = {}) {
     const legData = legs.map((x) => x.toLegData());
     const quoteAccounts = await quote.getValidationAccounts();
@@ -458,8 +447,21 @@ export class Context {
       currentTimestamp,
       this.program
     );
-    const rfqObject = new Rfq(this, rfq, quote, legs);
 
+    let whitelistAccount = null;
+    if (whitelistKeypair !== null) {
+      whitelistAccount = whitelistKeypair.publicKey;
+      await this.program.methods
+        .createWhitelist(whitelistPubkeyList)
+        .accounts({
+          whitelistAccount: whitelistKeypair.publicKey,
+          creator: this.taker.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([whitelistKeypair, this.taker])
+        .rpc();
+    }
+    const rfqObject = new Rfq(this, rfq, quote, legs, whitelistAccount);
     let txConstructor = await this.program.methods
       .createRfq(
         legsSize,
@@ -470,13 +472,13 @@ export class Context {
         fixedSize as any,
         activeWindow,
         settlingWindow,
-        new BN(currentTimestamp),
-        whitelistAddress
+        new BN(currentTimestamp)
       )
       .accounts({
         taker: this.taker.publicKey,
         protocol: this.protocolPda,
         rfq,
+        whitelist: whitelistAccount,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts([...quoteAccounts, ...baseAssetAccounts, ...legAccounts])
@@ -693,33 +695,8 @@ export class Whitelist {
     public context: Context,
     public account: PublicKey,
     public creator: PublicKey,
-    public whitelist: PublicKey[],
-    public expectedWhitelistCapacity: number
+    public whitelist: PublicKey[]
   ) {}
-
-  async addAddressToWhitelist(address: PublicKey) {
-    await this.context.program.methods
-      .addAddressToWhitelist(address)
-      .accounts({
-        creator: this.creator,
-        whitelistAccount: this.account,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.context.taker])
-      .rpc();
-  }
-
-  async removeAddressFromWhitelist(address: PublicKey) {
-    await this.context.program.methods
-      .removeAddressFromWhitelist(address)
-      .accounts({
-        creator: this.creator,
-        whitelistAccount: this.account,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.context.taker])
-      .rpc();
-  }
 
   async cleanUp() {
     await this.context.program.methods
@@ -883,7 +860,8 @@ export class Rfq {
     public context: Context,
     public account: PublicKey,
     public quote: InstrumentController,
-    public legs: InstrumentController[]
+    public legs: InstrumentController[],
+    public whitelist: PublicKey | null
   ) {}
 
   async respond({
@@ -946,12 +924,18 @@ export class Rfq {
   }
 
   async cleanUp() {
+    const whitelist = this?.whitelist
+      ? this.whitelist.toBase58() !== PublicKey.default.toBase58()
+        ? this.whitelist
+        : null
+      : null;
     await this.context.program.methods
       .cleanUpRfq()
       .accounts({
         taker: this.context.taker.publicKey,
         protocol: this.context.protocolPda,
         rfq: this.account,
+        whitelist,
       })
       .rpc();
   }

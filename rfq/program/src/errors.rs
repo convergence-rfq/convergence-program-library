@@ -114,20 +114,24 @@ pub enum ProtocolError {
     DefaultValueIsNotPermitted,
     #[msg("Specified oracle source is missing")]
     OracleSourceIsMissing,
-    #[msg("Address Already Exists on Whitelist")]
-    AddressAlreadyExistsOnWhitelist,
-    #[msg("Whitelist Maximum Capacity Reached")]
+    #[msg("Whitelist maximum capacity reached")]
     WhitelistMaximumCapacityReached,
-    #[msg("Cannot Respond as Maker Address not Whitelisted")]
+    #[msg("Cannot respond as maker address is not whitelisted")]
     MakerAddressNotWhitelisted,
-    #[msg("Whitelist Creator Mismatch")]
+    #[msg("Whitelist creator mismatch")]
     WhitelistCreatorMismatch,
-    #[msg("Whitelist Empty")]
+    #[msg("Whitelist empty")]
     WhitelistEmpty,
-    #[msg("Address Does not Exist on Whitelist")]
+    #[msg("Address does not exist on whitelist")]
     AddressDoesNotExistOnWhitelist,
-    #[msg("Whitelist Not Provided")]
+    #[msg("Whitelist not provided")]
     WhitelistNotProvided,
-    #[msg("Whitelist Address Mismatch")]
+    #[msg("Whitelist address mismatch")]
     WhitelistAddressMismatch,
+    #[msg("Whitelist already associated with an RFQ")]
+    WhitelistAlreadyAssociated,
+    #[msg("Whitelist has an associated RFQ")]
+    WhitelistHasAssociatedRfq,
+    #[msg("Whitelist RFQ association  mismatch")]
+    WhitelistAssocaitionRFQMismatch,
 }

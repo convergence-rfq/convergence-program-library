@@ -11,49 +11,31 @@ describe("Create Whitelist", () => {
   it("Create a whitelist", async () => {
     const whitelistKeypair = Keypair.generate();
 
-    await context.createWhitelist(
-      whitelistKeypair,
-      context.taker.publicKey,
-      [context.maker.publicKey, context.dao.publicKey],
-      10
-    );
+    await context.createWhitelist(whitelistKeypair, context.taker.publicKey, [
+      context.maker.publicKey,
+      context.dao.publicKey,
+    ]);
   });
 
-  it("Add an address to whitelist", async () => {
-    const whitelistKeypair = Keypair.generate();
-    const newPublickey = new PublicKey("Eyv3PBdmp5PUVzrT3orDVad8roBMK8au9nKBazZXkKtA");
+  it("Create a whitelist with MAX_WHITELIST_SIZE", async () => {
+    const pubkeys: PublicKey[] = [];
 
-    const whitelist = await context.createWhitelist(
-      whitelistKeypair,
-      context.taker.publicKey,
-      [context.dao.publicKey, newPublickey],
-      50
-    );
-
-    await whitelist.addAddressToWhitelist(context.maker.publicKey);
-  });
-
-  it("remove an address from whitelist", async () => {
+    for (let i = 0; i < 20; i++) {
+      const keypair = Keypair.generate();
+      pubkeys.push(keypair.publicKey);
+    }
     const whitelistKeypair = Keypair.generate();
 
-    const whitelist = await context.createWhitelist(
-      whitelistKeypair,
-      context.taker.publicKey,
-      [context.maker.publicKey, context.dao.publicKey],
-      10
-    );
-    await whitelist.removeAddressFromWhitelist(context.maker.publicKey);
+    await context.createWhitelist(whitelistKeypair, context.taker.publicKey, [...pubkeys]);
   });
 
   it("clean up", async () => {
     const whitelistKeypair = Keypair.generate();
 
-    const whitelist = await context.createWhitelist(
-      whitelistKeypair,
-      context.taker.publicKey,
-      [context.maker.publicKey, context.dao.publicKey],
-      10
-    );
+    const whitelist = await context.createWhitelist(whitelistKeypair, context.taker.publicKey, [
+      context.maker.publicKey,
+      context.dao.publicKey,
+    ]);
 
     await whitelist.cleanUp();
   });

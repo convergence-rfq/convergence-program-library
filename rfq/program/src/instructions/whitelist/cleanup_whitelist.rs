@@ -12,5 +12,12 @@ pub struct CleanUpWhitelistAccounts<'info> {
 }
 
 pub fn clean_up_whitelist_instruction(_ctx: Context<CleanUpWhitelistAccounts>) -> Result<()> {
+    let CleanUpWhitelistAccounts {
+        whitelist_account, ..
+    } = _ctx.accounts;
+    require!(
+        whitelist_account.associated_rfq == Pubkey::default(),
+        ProtocolError::WhitelistHasAssociatedRfq
+    );
     Ok(())
 }
