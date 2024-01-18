@@ -57,27 +57,12 @@ fn validate_whitelist_and_cleanup(ctx: &Context<CleanUpRfqAccounts>) -> Result<(
         ..
     } = &ctx.accounts;
 
+    Whitelist::validate(whitelist, rfq)?;
     match whitelist {
         Some(whitelist) => {
-            require_keys_eq!(
-                rfq.whitelist,
-                whitelist.key(),
-                ProtocolError::WhitelistAddressMismatch
-            );
-            require_keys_eq!(
-                whitelist.associated_rfq,
-                rfq.key(),
-                ProtocolError::WhitelistAssocaitionRFQMismatch
-            );
             return whitelist.close(taker.to_account_info());
         }
-        None => {
-            require_keys_eq!(
-                rfq.whitelist,
-                Pubkey::default(),
-                ProtocolError::WhitelistNotProvided
-            );
-        }
+        None => {}
     }
 
     Ok(())
