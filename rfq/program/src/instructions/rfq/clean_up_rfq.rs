@@ -49,9 +49,13 @@ pub fn clean_up_rfq_instruction(ctx: Context<CleanUpRfqAccounts>) -> Result<()> 
     Ok(())
 }
 
-
 fn validate_whitelist_and_cleanup(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
-    let CleanUpRfqAccounts { rfq,whitelist, taker,.. } = &ctx.accounts;
+    let CleanUpRfqAccounts {
+        rfq,
+        whitelist,
+        taker,
+        ..
+    } = &ctx.accounts;
 
     match whitelist {
         Some(whitelist) => {
@@ -77,5 +81,4 @@ fn validate_whitelist_and_cleanup(ctx: &Context<CleanUpRfqAccounts>) -> Result<(
     }
 
     Ok(())
-
 }
