@@ -401,9 +401,7 @@ export class Context {
         whitelistAccount: whitelistAccount.publicKey,
       })
       .signers([whitelistAccount, this.taker])
-      .rpc({
-        skipPreflight: true,
-      });
+      .rpc();
 
     return whitelistObject;
   }
@@ -449,7 +447,7 @@ export class Context {
       currentTimestamp,
       this.program
     );
-    const rfqObject = new Rfq(this, rfq, quote, legs);
+
     let whitelistAccount = null;
     if (whitelistKeypair !== null) {
       whitelistAccount = whitelistKeypair.publicKey;
@@ -463,7 +461,7 @@ export class Context {
         .signers([whitelistKeypair, this.taker])
         .rpc();
     }
-
+    const rfqObject = new Rfq(this, rfq, quote, legs, whitelistAccount);
     let txConstructor = await this.program.methods
       .createRfq(
         legsSize,
@@ -862,7 +860,8 @@ export class Rfq {
     public context: Context,
     public account: PublicKey,
     public quote: InstrumentController,
-    public legs: InstrumentController[]
+    public legs: InstrumentController[],
+    public whitelist: PublicKey | null
   ) {}
 
   async respond({
@@ -925,8 +924,11 @@ export class Rfq {
   }
 
   async cleanUp() {
-    const rfq = await this.getData();
-    const whitelist = rfq.whitelist.toBase58() !== PublicKey.default.toBase58() ? rfq.whitelist : null;
+    const whitelist = this?.whitelist
+      ? this.whitelist.toBase58() !== PublicKey.default.toBase58()
+        ? this.whitelist
+        : null
+      : null;
     await this.context.program.methods
       .cleanUpRfq()
       .accounts({

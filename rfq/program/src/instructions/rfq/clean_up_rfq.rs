@@ -20,7 +20,7 @@ pub struct CleanUpRfqAccounts<'info> {
     pub whitelist: Option<Box<Account<'info, Whitelist>>>,
 }
 
-fn validate(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
+fn validate_rfq(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
     let CleanUpRfqAccounts { rfq, .. } = &ctx.accounts;
 
     rfq.get_state()?.assert_state_in([
@@ -44,24 +44,38 @@ fn validate(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
 }
 
 pub fn clean_up_rfq_instruction(ctx: Context<CleanUpRfqAccounts>) -> Result<()> {
-    validate(&ctx)?;
-    let CleanUpRfqAccounts {
-        whitelist,
-        rfq,
-        taker,
-        ..
-    } = &ctx.accounts;
+    validate_rfq(&ctx)?;
+    validate_whitelist_and_cleanup(&ctx)?;
+    Ok(())
+}
+
+
+fn validate_whitelist_and_cleanup(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
+    let CleanUpRfqAccounts { rfq,whitelist, taker,.. } = &ctx.accounts;
+
     match whitelist {
         Some(whitelist) => {
+            require_keys_eq!(
+                rfq.whitelist,
+                whitelist.key(),
+                ProtocolError::WhitelistAddressMismatch
+            );
             require_keys_eq!(
                 whitelist.associated_rfq,
                 rfq.key(),
                 ProtocolError::WhitelistAssocaitionRFQMismatch
             );
-            whitelist.close(taker.to_account_info())
+            return whitelist.close(taker.to_account_info());
         }
         None => {
-            return Ok(());
+            require_keys_eq!(
+                rfq.whitelist,
+                Pubkey::default(),
+                ProtocolError::WhitelistNotProvided
+            );
         }
     }
+
+    Ok(())
+
 }
