@@ -394,7 +394,7 @@ export class Context {
   async createWhitelist(whitelistAccount: Keypair, creator: PublicKey, whitelist: PublicKey[]) {
     const whitelistObject = new Whitelist(this, whitelistAccount.publicKey, creator, whitelist);
     await this.program.methods
-      .createWhitelist(whitelist.length, whitelist)
+      .createWhitelist(whitelist)
       .accounts({
         creator,
         systemProgram: SystemProgram.programId,
@@ -418,7 +418,8 @@ export class Context {
     legsSize = calculateLegsSize(legs),
     legsHash = calculateLegsHash(legs, this.program),
     finalize = true,
-    whitelistAddress = null,
+    whitelistKeypair = null,
+    whitelistPubkeyList = [],
   }: {
     legs?: InstrumentController[];
     quote?: InstrumentController;
@@ -429,7 +430,8 @@ export class Context {
     legsSize?: number;
     legsHash?: Uint8Array;
     finalize?: boolean;
-    whitelistAddress?: PublicKey | null;
+    whitelistKeypair?: Keypair | null;
+    whitelistPubkeyList?: PublicKey[];
   } = {}) {
     const legData = legs.map((x) => x.toLegData());
     const quoteAccounts = await quote.getValidationAccounts();
@@ -448,6 +450,19 @@ export class Context {
       this.program
     );
     const rfqObject = new Rfq(this, rfq, quote, legs);
+    let whitelistAccount = null;
+    if (whitelistKeypair !== null) {
+      whitelistAccount = whitelistKeypair.publicKey;
+      await this.program.methods
+        .createWhitelist(whitelistPubkeyList)
+        .accounts({
+          whitelistAccount: whitelistKeypair.publicKey,
+          creator: this.taker.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([whitelistKeypair, this.taker])
+        .rpc();
+    }
 
     let txConstructor = await this.program.methods
       .createRfq(
@@ -459,13 +474,13 @@ export class Context {
         fixedSize as any,
         activeWindow,
         settlingWindow,
-        new BN(currentTimestamp),
-        whitelistAddress
+        new BN(currentTimestamp)
       )
       .accounts({
         taker: this.taker.publicKey,
         protocol: this.protocolPda,
         rfq,
+        whitelist: whitelistAccount,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts([...quoteAccounts, ...baseAssetAccounts, ...legAccounts])
@@ -910,12 +925,15 @@ export class Rfq {
   }
 
   async cleanUp() {
+    const rfq = await this.getData();
+    const whitelist = rfq.whitelist.toBase58() !== PublicKey.default.toBase58() ? rfq.whitelist : null;
     await this.context.program.methods
       .cleanUpRfq()
       .accounts({
         taker: this.context.taker.publicKey,
         protocol: this.context.protocolPda,
         rfq: this.account,
+        whitelist,
       })
       .rpc();
   }

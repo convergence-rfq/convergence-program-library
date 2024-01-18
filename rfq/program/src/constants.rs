@@ -1,1 +1,0 @@
-pub const MAX_WHITELIST_SIZE: u8 = 20;

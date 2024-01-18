@@ -1,5 +1,4 @@
-
-use crate::{errors::ProtocolError, state::whitelist::Whitelist,constants::MAX_WHITELIST_SIZE};
+use crate::{errors::ProtocolError, state::whitelist::Whitelist};
 use anchor_lang::prelude::*;
 use std::mem;
 
@@ -21,10 +20,9 @@ pub struct CreateWhitelistAccounts<'info> {
 
 pub fn create_whitelist_instruction(
     ctx: Context<CreateWhitelistAccounts>,
-    length:u8,
     whitelist_to_add: Vec<Pubkey>,
 ) -> Result<()> {
-    validate_whitelist_inputs(length)?;
+    validate_whitelist_inputs(whitelist_to_add.len())?;
     let CreateWhitelistAccounts {
         creator,
         whitelist_account,
@@ -33,24 +31,21 @@ pub fn create_whitelist_instruction(
 
     whitelist_account.set_inner(Whitelist {
         creator: creator.key(),
+        associated_rfq: Pubkey::default(),
         whitelist: whitelist_to_add,
     });
 
     Ok(())
 }
 
-fn validate_whitelist_inputs(
-    length:u8,
-) -> Result<()> {
+fn validate_whitelist_inputs(length: usize) -> Result<()> {
     require!(
-        length <= MAX_WHITELIST_SIZE ,
+        length <= Whitelist::MAX_WHITELIST_SIZE as usize,
         ProtocolError::WhitelistMaximumCapacityReached
     );
-
     Ok(())
 }
 
-
-fn get_whitelist_size_from_length(length:u8) -> usize {
-    8 + mem::size_of::<Whitelist>() + (length as u64 * 32 as u64) as usize
+fn get_whitelist_size_from_length(length: u8) -> usize {
+    8 + mem::size_of::<Whitelist>() + length as usize * 32
 }

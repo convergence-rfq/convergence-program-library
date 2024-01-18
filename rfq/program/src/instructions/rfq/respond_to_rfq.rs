@@ -90,6 +90,11 @@ fn validate(
                 whitelist.key(),
                 ProtocolError::WhitelistAddressMismatch
             );
+            require_keys_eq!(
+                whitelist.associated_rfq,
+                rfq.key(),
+                ProtocolError::WhitelistAssocaitionRFQMismatch
+            );
             require!(
                 whitelist.is_whitelisted(maker.key),
                 ProtocolError::MakerAddressNotWhitelisted

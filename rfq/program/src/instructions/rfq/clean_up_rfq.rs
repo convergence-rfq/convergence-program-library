@@ -2,6 +2,7 @@ use crate::{
     errors::ProtocolError,
     seeds::PROTOCOL_SEED,
     state::{ProtocolState, Rfq, RfqState},
+    whitelist::Whitelist,
 };
 use anchor_lang::prelude::*;
 
@@ -15,6 +16,8 @@ pub struct CleanUpRfqAccounts<'info> {
     pub protocol: Box<Account<'info, ProtocolState>>,
     #[account(mut, close = taker)]
     pub rfq: Box<Account<'info, Rfq>>,
+    #[account(mut)]
+    pub whitelist: Option<Box<Account<'info, Whitelist>>>,
 }
 
 fn validate(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
@@ -42,6 +45,23 @@ fn validate(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
 
 pub fn clean_up_rfq_instruction(ctx: Context<CleanUpRfqAccounts>) -> Result<()> {
     validate(&ctx)?;
-
-    Ok(())
+    let CleanUpRfqAccounts {
+        whitelist,
+        rfq,
+        taker,
+        ..
+    } = &ctx.accounts;
+    match whitelist {
+        Some(whitelist) => {
+            require_keys_eq!(
+                whitelist.associated_rfq,
+                rfq.key(),
+                ProtocolError::WhitelistAssocaitionRFQMismatch
+            );
+            whitelist.close(taker.to_account_info())
+        }
+        None => {
+            return Ok(());
+        }
+    }
 }

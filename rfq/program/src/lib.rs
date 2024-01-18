@@ -13,7 +13,6 @@ pub mod interfaces;
 pub mod seeds;
 pub mod state;
 pub mod utils;
-pub mod constants;
 
 use instructions::collateral::fund_collateral::*;
 use instructions::collateral::initialize_collateral::*;
@@ -187,7 +186,6 @@ pub mod rfq {
         active_window: u32,
         settling_window: u32,
         recent_timestamp: u64, // used to allow the same rfq creation using different recent timestamps
-        whitelist: Option<Pubkey>,
     ) -> Result<()> {
         create_rfq_instruction(
             ctx,
@@ -200,7 +198,6 @@ pub mod rfq {
             active_window,
             settling_window,
             recent_timestamp,
-            whitelist,
         )
     }
 
@@ -328,14 +325,12 @@ pub mod rfq {
 
     pub fn create_whitelist<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateWhitelistAccounts<'info>>,
-        length:u8,
         whitelist: Vec<Pubkey>,
     ) -> Result<()> {
-        create_whitelist_instruction(ctx,length,whitelist)
+        create_whitelist_instruction(ctx, whitelist)
     }
 
     pub fn clean_up_whitelist(ctx: Context<CleanUpWhitelistAccounts>) -> Result<()> {
         clean_up_whitelist_instruction(ctx)
     }
-
 }
