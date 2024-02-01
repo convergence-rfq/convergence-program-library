@@ -2,7 +2,7 @@ import { Program, BN, workspace, Wallet } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer, Keypair } from "@solana/web3.js";
 import { instructions, createProgram, getOptionByKey, OptionMarketWithKey } from "@mithraic-labs/psy-american";
-import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
+import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
 import { AuthoritySide, AssetIdentifier, InstrumentType, LegSide } from "../types";
@@ -28,6 +28,8 @@ export function getAmericanOptionsInstrumentProgram() {
 }
 
 export class PsyoptionsAmericanInstrumentClass implements Instrument {
+  static instrumentIndex = 2;
+
   constructor(private context: Context, private OptionMarket: AmericanPsyoptions, private OptionType: OptionType) {}
 
   static create(
@@ -35,8 +37,8 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     optionMarket: AmericanPsyoptions,
     optionType: OptionType,
     {
-      amount = DEFAULT_INSTRUMENT_AMOUNT,
-      side = DEFAULT_INSTRUMENT_SIDE,
+      amount = DEFAULT_LEG_AMOUNT,
+      side = DEFAULT_LEG_SIDE,
     }: {
       amount?: BN;
       side?: LegSide;
@@ -64,12 +66,16 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     );
   }
 
+  getInstrumentIndex(): number {
+    return PsyoptionsAmericanInstrumentClass.instrumentIndex;
+  }
+
   static async addInstrument(context: Context) {
     await context.addInstrument(getAmericanOptionsInstrumentProgram().programId, false, 3, 7, 3, 3, 4);
   }
 
   static async setRiskEngineInstrumentType(context: Context) {
-    await context.riskEngine.setInstrumentType(getAmericanOptionsInstrumentProgram().programId, InstrumentType.Option);
+    await context.riskEngine.setInstrumentType(this.instrumentIndex, InstrumentType.Option);
   }
 
   serializeInstrumentData(): Buffer {
@@ -95,6 +101,11 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
       ])
     );
   }
+
+  serializeInstrumentDataForQuote(): Buffer {
+    throw Error("Does not support being in quote!");
+  }
+
   getProgramId(): PublicKey {
     return getAmericanOptionsInstrumentProgram().programId;
   }
@@ -194,7 +205,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
   async getCleanUpAccounts(assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
-        pubkey: response.firstToPrepare,
+        pubkey: response.firstToPrepare!,
         isSigner: false,
         isWritable: true,
       },

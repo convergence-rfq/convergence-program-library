@@ -20,17 +20,24 @@ pub struct Response {
     pub maker_collateral_locked: u64,
     pub taker_collateral_locked: u64,
     pub state: StoredResponseState,
-    pub taker_prepared_legs: u8,
-    pub maker_prepared_legs: u8,
-    pub settled_legs: u8,
+
+    // counter is an amount of prepared legs for escrow settlement and 1 if prepared for print trade settlement
+    pub taker_prepared_counter: u8,
+    pub maker_prepared_counter: u8,
+
+    pub settled_escrow_legs: u8,
 
     pub reserved: [u8; 256],
 
     pub confirmed: Option<Confirmation>,
     pub defaulting_party: Option<DefaultingParty>,
-    pub leg_preparations_initialized_by: Vec<AuthoritySide>,
+    pub print_trade_initialized_by: Option<AuthoritySide>,
+    pub escrow_leg_preparations_initialized_by: Vec<AuthoritySide>,
     pub bid: Option<Quote>,
     pub ask: Option<Quote>,
+
+    // currently only used for print trades
+    pub additional_data: Vec<u8>,
 }
 
 impl Response {
@@ -79,6 +86,7 @@ impl Response {
             }
             StoredResponseState::ReadyForSettling => ResponseState::ReadyForSettling,
             StoredResponseState::Settled => ResponseState::Settled,
+            StoredResponseState::SettlementExpired => ResponseState::SettlementExpired,
             StoredResponseState::Defaulted => ResponseState::Defaulted,
         };
         Ok(state)
@@ -103,7 +111,7 @@ impl Response {
         let leg = &rfq.legs[leg_index as usize];
         let leg_multiplier_bps = self.calculate_confirmed_legs_multiplier_bps(rfq);
 
-        let result_with_more_decimals = leg.instrument_amount as u128 * leg_multiplier_bps as u128;
+        let result_with_more_decimals = leg.amount as u128 * leg_multiplier_bps as u128;
 
         let decimals_factor = Quote::LEG_MULTIPLIER_FACTOR;
         let mut result = result_with_more_decimals / decimals_factor;
@@ -296,20 +304,24 @@ impl Response {
     }
 
     pub fn is_prepared(&self, side: AuthoritySide, rfq: &Rfq) -> bool {
-        self.get_prepared_legs(side) as usize == rfq.legs.len()
-    }
-
-    pub fn get_prepared_legs(&self, side: AuthoritySide) -> u8 {
-        match side {
-            AuthoritySide::Taker => self.taker_prepared_legs,
-            AuthoritySide::Maker => self.maker_prepared_legs,
+        if rfq.is_settled_as_print_trade() {
+            self.get_prepared_counter(side) as usize == 1
+        } else {
+            self.get_prepared_counter(side) as usize == rfq.legs.len()
         }
     }
 
-    pub fn get_prepared_legs_mut(&mut self, side: AuthoritySide) -> &mut u8 {
+    pub fn get_prepared_counter(&self, side: AuthoritySide) -> u8 {
         match side {
-            AuthoritySide::Taker => &mut self.taker_prepared_legs,
-            AuthoritySide::Maker => &mut self.maker_prepared_legs,
+            AuthoritySide::Taker => self.taker_prepared_counter,
+            AuthoritySide::Maker => self.maker_prepared_counter,
+        }
+    }
+
+    pub fn get_prepared_counter_mut(&mut self, side: AuthoritySide) -> &mut u8 {
+        match side {
+            AuthoritySide::Taker => &mut self.taker_prepared_counter,
+            AuthoritySide::Maker => &mut self.maker_prepared_counter,
         }
     }
 
@@ -323,10 +335,10 @@ impl Response {
     ) -> Option<AuthoritySide> {
         match asset_identifier {
             AssetIdentifier::Leg { leg_index } => self
-                .leg_preparations_initialized_by
+                .escrow_leg_preparations_initialized_by
                 .get(leg_index as usize)
                 .cloned(),
-            AssetIdentifier::Quote => self.leg_preparations_initialized_by.get(0).cloned(),
+            AssetIdentifier::Quote => self.escrow_leg_preparations_initialized_by.get(0).cloned(),
         }
     }
 }
@@ -345,6 +357,7 @@ pub enum StoredResponseState {
     SettlingPreparations,
     ReadyForSettling,
     Settled,
+    SettlementExpired,
     Defaulted,
 }
 
@@ -358,6 +371,7 @@ pub enum ResponseState {
     OnlyTakerPrepared,
     ReadyForSettling,
     Settled,
+    SettlementExpired,
     Defaulted,
     Expired,
 }
@@ -456,7 +470,7 @@ pub enum PriceQuote {
 }
 
 impl PriceQuote {
-    const ABSOLUTE_PRICE_DECIMALS: u32 = 9;
+    pub const ABSOLUTE_PRICE_DECIMALS: u32 = 9;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

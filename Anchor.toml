@@ -1,25 +1,28 @@
-anchor_version = "0.25.0"
+anchor_version = "0.28.0"
 
 [programs.localnet]
-rfq = "J7WkE9mTzwTo3pjxENdrH7sekZPrN2VYNpk1pgfZxVr9"
-risk_engine = "6rosVyXKwj9tiHubXUBTguaCELsci4pBEuiRy36Lbz1p"
-spot_instrument = "CjQCEjXtG3QNBuT5Z1sctaAYCo5Mt6edftqHQetEPo9w"
-psyoptions_european_instrument = "A86fhhdNVDdXV8pB48WXtPeM3EBkcBeJEdrx9xrUo9nF"
-psyoptions_american_instrument = "6JG1tWK4w6LmjeXbmDZJsmUsPSjgnp74j2XPsTvjjTX8"
+rfq = "EMFRxsc7FSavsUVKuwNiywXixYthe2Mo5GUNaUvnvBva"
+risk_engine = "F3o2hWqv61TavHuZYuStvW2Zd3M1JnoqBmmgGU77LRTr"
+spot_instrument = "4A9M7iojGDPc4n4YDGnTmsYsNKUohG1zM1nrAqVMMmrm"
+psyoptions_european_instrument = "6B7TdBNAF7tWWz5sZbbBZj8jH1ix7QWAchtkvMHveEuW"
+psyoptions_american_instrument = "HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok"
+hxro_print_trade_provider = "4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95"
 
 [programs.devnet]
-rfq = "J7WkE9mTzwTo3pjxENdrH7sekZPrN2VYNpk1pgfZxVr9"
-risk_engine = "6rosVyXKwj9tiHubXUBTguaCELsci4pBEuiRy36Lbz1p"
-spot_instrument = "CjQCEjXtG3QNBuT5Z1sctaAYCo5Mt6edftqHQetEPo9w"
-psyoptions_european_instrument = "A86fhhdNVDdXV8pB48WXtPeM3EBkcBeJEdrx9xrUo9nF"
-psyoptions_american_instrument = "6JG1tWK4w6LmjeXbmDZJsmUsPSjgnp74j2XPsTvjjTX8"
+rfq = "EMFRxsc7FSavsUVKuwNiywXixYthe2Mo5GUNaUvnvBva"
+risk_engine = "F3o2hWqv61TavHuZYuStvW2Zd3M1JnoqBmmgGU77LRTr"
+spot_instrument = "4A9M7iojGDPc4n4YDGnTmsYsNKUohG1zM1nrAqVMMmrm"
+psyoptions_european_instrument = "6B7TdBNAF7tWWz5sZbbBZj8jH1ix7QWAchtkvMHveEuW"
+psyoptions_american_instrument = "HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok"
+hxro_print_trade_provider = "4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95"
 
 [programs.mainnet]
-rfq = "J7WkE9mTzwTo3pjxENdrH7sekZPrN2VYNpk1pgfZxVr9"
-risk_engine = "6rosVyXKwj9tiHubXUBTguaCELsci4pBEuiRy36Lbz1p"
-spot_instrument = "CjQCEjXtG3QNBuT5Z1sctaAYCo5Mt6edftqHQetEPo9w"
-psyoptions_european_instrument = "A86fhhdNVDdXV8pB48WXtPeM3EBkcBeJEdrx9xrUo9nF"
-psyoptions_american_instrument = "6JG1tWK4w6LmjeXbmDZJsmUsPSjgnp74j2XPsTvjjTX8"
+rfq = "CeYwCe6YwBvRE9CpRU2Zgc5oQP7r2ThNqicyKN37Unn4"
+risk_engine = "7WBoFuPnWttNyxzL9tPtQJrNaAZTG6VquYy4dZZkj84F"
+spot_instrument = "HxWk421wJzJPzzRrAa4tPatRtMqY1hqPKV7XenBxsBpH"
+psyoptions_european_instrument = "4cEEKadSe3p73rCQmbLaAgzBtdnzWaBJtjr2RBaQ5DgB"
+psyoptions_american_instrument = "8jc8D8H1jkzJZvHmR6xXvxKwCCo4L2fg6gxoBYam1em9"
+hxro_print_trade_provider = "4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -34,6 +37,7 @@ members = [
     "risk-engine/program",
     "spot-instrument/program",
     "psyoptions-european-instrument/program",
+    "hxro-print-trade-provider/program",
     "psyoptions-american-instrument/program",
 ]
 

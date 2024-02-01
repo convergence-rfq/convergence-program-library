@@ -7,7 +7,7 @@ import * as toml from "toml";
 import { rimraf } from "rimraf";
 import { PublicKey, Keypair, Connection, Version } from "@solana/web3.js";
 import { Wallet } from "@coral-xyz/anchor";
-import { executeInParallel, sleep } from "../utilities/helpers";
+import { executeInParallel, inversePubkeyToName, sleep } from "../utilities/helpers";
 import { CollateralMint, Context, Mint } from "../utilities/wrappers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { PsyoptionsAmericanInstrumentClass } from "../utilities/instruments/psyoptionsAmericanInstrument";
@@ -23,7 +23,14 @@ import {
   SWITCHBOARD_BTC_ORACLE,
 } from "../utilities/constants";
 import { OracleSource, RiskCategory } from "../utilities/types";
-import { fixtureAccountsPath, getKeypairPath, pubkeyNamingFilePath, readKeypair } from "../utilities/fixtures";
+import {
+  fixtureAccountsPath,
+  getKeypairPath,
+  loadHxroPubkeyNaming,
+  pubkeyNamingFilePath,
+  readKeypair,
+} from "../utilities/fixtures";
+import { HxroPrintTradeProvider } from "../utilities/printTradeProviders/hxroPrintTradeProvider";
 
 const ledgerPath = path.join(".anchor", "test-ledger");
 const buildDirectoryPath = path.join("target", "deploy");
@@ -93,22 +100,26 @@ async function main() {
   );
 
   await context.initializeProtocol();
+  // static instrument index values are taken from position in this sequence
+  await SpotInstrument.addInstrument(context);
+  await PsyoptionsEuropeanInstrument.addInstrument(context);
+  await PsyoptionsAmericanInstrumentClass.addInstrument(context);
 
   await executeInParallel(
     async () => {
       await context.riskEngine.initializeDefaultConfig();
     },
-    // add instruments
     async () => {
-      await SpotInstrument.addInstrument(context);
+      await HxroPrintTradeProvider.addPrintTradeProvider(context);
+
+      const hxroAddresses = inversePubkeyToName(await loadHxroPubkeyNaming());
+      const mpgAddress = hxroAddresses["mpg"];
+      await HxroPrintTradeProvider.initializeConfig(context, mpgAddress);
+
+      const configAddress = HxroPrintTradeProvider.getConfigAddress();
+      await saveAccountAsFixture(context, configAddress, "hxro-print-trade-provider-config");
     },
-    async () => {
-      await PsyoptionsEuropeanInstrument.addInstrument(context);
-    },
-    async () => {
-      await PsyoptionsAmericanInstrumentClass.addInstrument(context);
-    },
-    // initialize and fund collateral accounts
+    // initialize and fund collateral accounts`
     async () => {
       await context.initializeCollateral(context.taker);
       await context.fundCollateral(context.taker, DEFAULT_COLLATERAL_FUNDED);

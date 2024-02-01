@@ -1,4 +1,3 @@
-import { DEFAULT_ACTIVE_WINDOW } from "../utilities/constants";
 import { attachImprovedLogDisplay, expectError, sleep } from "../utilities/helpers";
 
 import { Context, getContext } from "../utilities/wrappers";
@@ -16,7 +15,7 @@ describe("Create RFQ", () => {
   });
 
   it("Confirmed responses counter gets incremented", async () => {
-    const rfq = await context.createRfq();
+    const rfq = await context.createEscrowRfq();
     const rfqDataBefore = await rfq.getData();
     expect(rfqDataBefore.confirmedResponses).to.be.equal(0);
 
@@ -27,7 +26,7 @@ describe("Create RFQ", () => {
   });
 
   it("Cannot Approve Response after Response is expired", async () => {
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       activeWindow: 5,
     });
     const response = await rfq.respond({

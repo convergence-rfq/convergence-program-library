@@ -281,7 +281,7 @@ fn calculate_asset_unit_value(
         InstrumentType::Spot => Ok(price),
         InstrumentType::Option => {
             let option_data: OptionCommonData = AnchorDeserialize::try_from_slice(
-                &leg_with_meta.leg.instrument_data[..OptionCommonData::SERIALIZED_SIZE],
+                &leg_with_meta.leg.data[..OptionCommonData::SERIALIZED_SIZE],
             )?;
 
             let seconds_till_expiration =
@@ -299,7 +299,7 @@ fn calculate_asset_unit_value(
         }
         InstrumentType::TermFuture | InstrumentType::PerpFuture => {
             let future_data: FutureCommonData = AnchorDeserialize::try_from_slice(
-                &leg_with_meta.leg.instrument_data[..FutureCommonData::SERIALIZED_SIZE],
+                &leg_with_meta.leg.data[..FutureCommonData::SERIALIZED_SIZE],
             )?;
 
             Ok(price * future_data.get_underlying_amount_per_contract())
@@ -310,7 +310,7 @@ fn calculate_asset_unit_value(
 #[cfg(test)]
 mod tests {
     use float_cmp::assert_approx_eq;
-    use rfq::state::{Leg, LegSide, OracleSource, ProtocolState};
+    use rfq::state::{Leg, LegSide, OracleSource, ProtocolState, SettlementTypeMetadata};
 
     use crate::state::{OptionType, RiskCategoryInfo};
     use crate::utils::{convert_fixed_point_to_f64, get_leg_amount_f64};
@@ -336,6 +336,7 @@ mod tests {
                 scenario_per_settlement_period: Default::default(),
             }; 8],
             instrument_types: [Default::default(); ProtocolState::MAX_INSTRUMENTS],
+            padding: [0; 6],
         }
     }
 
@@ -354,12 +355,14 @@ mod tests {
         let config = get_config();
 
         let leg = Leg {
-            instrument_amount: 2 * 10_u64.pow(6),
-            instrument_decimals: 6,
+            amount: 2 * 10_u64.pow(6),
+            amount_decimals: 6,
             side: LegSide::Long,
             base_asset_index: BTC_INDEX,
-            instrument_program: Default::default(),
-            instrument_data: Default::default(),
+            data: Default::default(),
+            settlement_type_metadata: SettlementTypeMetadata::Instrument {
+                instrument_index: Default::default(),
+            },
             reserved: [0; 64],
         };
         let legs_with_meta = vec![LegWithMetadata {
@@ -407,21 +410,25 @@ mod tests {
 
         let legs = vec![
             Leg {
-                instrument_amount: 2 * 10_u64.pow(6),
-                instrument_decimals: 6,
+                amount: 2 * 10_u64.pow(6),
+                amount_decimals: 6,
                 side: LegSide::Long,
                 base_asset_index: BTC_INDEX,
-                instrument_program: Default::default(),
-                instrument_data: Default::default(),
+                data: Default::default(),
+                settlement_type_metadata: SettlementTypeMetadata::Instrument {
+                    instrument_index: Default::default(),
+                },
                 reserved: [0; 64],
             },
             Leg {
-                instrument_amount: 2 * 10_u64.pow(6),
-                instrument_decimals: 6,
+                amount: 2 * 10_u64.pow(6),
+                amount_decimals: 6,
                 side: LegSide::Short,
                 base_asset_index: BTC_INDEX,
-                instrument_program: Default::default(),
-                instrument_data: Default::default(),
+                data: Default::default(),
+                settlement_type_metadata: SettlementTypeMetadata::Instrument {
+                    instrument_index: Default::default(),
+                },
                 reserved: [0; 64],
             },
         ];
@@ -477,21 +484,25 @@ mod tests {
 
         let legs = vec![
             Leg {
-                instrument_amount: 1 * 10_u64.pow(6),
-                instrument_decimals: 6,
+                amount: 1 * 10_u64.pow(6),
+                amount_decimals: 6,
                 side: LegSide::Long,
                 base_asset_index: BTC_INDEX,
-                instrument_program: Default::default(),
-                instrument_data: Default::default(),
+                data: Default::default(),
+                settlement_type_metadata: SettlementTypeMetadata::Instrument {
+                    instrument_index: Default::default(),
+                },
                 reserved: [0; 64],
             },
             Leg {
-                instrument_amount: 100 * 10_u64.pow(9),
-                instrument_decimals: 9,
+                amount: 100 * 10_u64.pow(9),
+                amount_decimals: 9,
                 side: LegSide::Short,
                 base_asset_index: SOL_INDEX,
-                instrument_program: Default::default(),
-                instrument_data: Default::default(),
+                data: Default::default(),
+                settlement_type_metadata: SettlementTypeMetadata::Instrument {
+                    instrument_index: Default::default(),
+                },
                 reserved: [0; 64],
             },
         ];
@@ -555,19 +566,21 @@ mod tests {
         let option_data = OptionCommonData {
             option_type: OptionType::Call,
             underlying_amount_per_contract: 1 * 10_u64.pow(8),
-            underlying_amound_per_contract_decimals: 9,
+            underlying_amount_per_contract_decimals: 9,
             strike_price: 22000 * 10_u64.pow(9),
             strike_price_decimals: 9,
             expiration_timestamp: 90 * 24 * 60 * 60,
         };
 
         let leg = Leg {
-            instrument_amount: 1 * 10_u64.pow(6),
-            instrument_decimals: 6,
+            amount: 1 * 10_u64.pow(6),
+            amount_decimals: 6,
             side: LegSide::Long,
             base_asset_index: BTC_INDEX,
-            instrument_program: Default::default(),
-            instrument_data: option_data.try_to_vec().unwrap(),
+            data: option_data.try_to_vec().unwrap(),
+            settlement_type_metadata: SettlementTypeMetadata::Instrument {
+                instrument_index: Default::default(),
+            },
             reserved: [0; 64],
         };
         let legs_with_meta = vec![LegWithMetadata {

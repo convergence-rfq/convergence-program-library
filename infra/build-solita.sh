@@ -2,10 +2,10 @@
 
 PROJDIR=$PWD
 
-function build_solita {
+build_solita () {
     yarn 
     yarn solita
-    yarn prepublish
+    yarn build
     npm publish
 }
 
@@ -22,4 +22,7 @@ cd $PROJDIR/psyoptions-european-instrument/js
 build_solita
 
 cd $PROJDIR/psyoptions-american-instrument/js
+build_solita
+
+cd $PROJDIR/hxro-print-trade-provider/js
 build_solita

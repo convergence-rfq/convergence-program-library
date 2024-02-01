@@ -1,0 +1,21 @@
+[package]
+name = "hxro-print-trade-provider"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "hxro_print_trade_provider"
+
+[dependencies]
+anchor-lang = { version = "0.28.0", features = ["init-if-needed"] }
+dex = { path = "../dex", features = ["cpi"] }
+agnostic-orderbook = { version = "0.1.0", path = "../agnostic-orderbook", features = [
+  "no-entrypoint",
+] }
+instruments = { path = "../instruments", features = ["cpi"] }
+rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
+risk-engine = { path = "../../risk-engine/program", features = [
+  "no-entrypoint",
+] }

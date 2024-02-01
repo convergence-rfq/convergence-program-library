@@ -66,7 +66,7 @@ fn validate(
 
     // make sure new leg multiplier is not bigger than provided
     if let Some(override_leg_multiplier_bps) = override_leg_multiplier_bps {
-        let quote: Quote = match side {
+        let quote = match side {
             QuoteSide::Bid => response.bid.unwrap(),
             QuoteSide::Ask => response.ask.unwrap(),
         };
