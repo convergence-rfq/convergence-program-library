@@ -8,7 +8,7 @@ const binaryInstallDir = path.join(__dirname, ".crates");
 module.exports = {
   idlGenerator: "anchor",
   programName: "psyoptions_american_instrument",
-  programId: "HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok",
+  programId: "6JG1tWK4w6LmjeXbmDZJsmUsPSjgnp74j2XPsTvjjTX8",
   idlDir,
   sdkDir,
   binaryInstallDir,
