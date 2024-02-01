@@ -5,7 +5,6 @@ import {
   attachImprovedLogDisplay,
   expectError,
   runInParallelWithWait,
-  sleep,
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
