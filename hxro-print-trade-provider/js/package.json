@@ -1,6 +1,6 @@
 {
   "name": "@convergence-rfq/hxro-print-trade-provider",
-  "version": "3.5.0-dev",
+  "version": "2.3.4",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
