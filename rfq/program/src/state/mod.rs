@@ -6,12 +6,12 @@ pub mod whitelist;
 
 pub use self::rfq::{
     ApiLeg, AssetIdentifier, FixedSize, Leg, LegSide, OrderType, QuoteAsset, Rfq, RfqState,
-    StoredRfqState,
+    SettlementTypeMetadata, StoredRfqState,
 };
 pub use collateral::CollateralInfo;
 pub use protocol::{
     BaseAssetIndex, BaseAssetInfo, FeeParameters, Instrument, MintInfo, MintType, OracleSource,
-    ProtocolState, RiskCategory,
+    PrintTradeProvider, ProtocolState, RiskCategory,
 };
 pub use response::{
     AuthoritySide, Confirmation, DefaultingParty, Quote, QuoteSide, Response, ResponseState,

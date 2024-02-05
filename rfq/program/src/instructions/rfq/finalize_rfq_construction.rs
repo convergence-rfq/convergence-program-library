@@ -32,7 +32,12 @@ pub struct FinalizeRfqConstructionAccounts<'info> {
 fn validate(ctx: &Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
     let FinalizeRfqConstructionAccounts { rfq, .. } = &ctx.accounts;
 
-    rfq.get_state()?.assert_state_in([RfqState::Constructed])?;
+    let expected_state = if rfq.is_settled_as_print_trade() {
+        RfqState::ValidatedByPrintTradeProvider
+    } else {
+        RfqState::Constructed
+    };
+    rfq.get_state()?.assert_state_in([expected_state])?;
 
     require!(!rfq.legs.is_empty(), ProtocolError::EmptyLegsNotSupported);
 
@@ -42,8 +47,7 @@ fn validate(ctx: &Context<FinalizeRfqConstructionAccounts>) -> Result<()> {
         ProtocolError::LegsSizeDoesNotMatchExpectedSize
     );
 
-    let legs_serialized = rfq.legs.try_to_vec().unwrap();
-    let legs_hash = solana_program::hash::hash(&legs_serialized);
+    let legs_hash = solana_program::hash::hash(&serialized_legs);
     require!(
         legs_hash.to_bytes() == rfq.expected_legs_hash,
         ProtocolError::LegsHashDoesNotMatchExpectedHash
@@ -65,10 +69,11 @@ pub fn finalize_rfq_construction_instruction<'info>(
         ..
     } = ctx.accounts;
 
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
     let required_collateral = calculate_required_collateral_for_rfq(
         rfq.to_account_info(),
         risk_engine,
-        ctx.remaining_accounts,
+        &mut remaining_accounts,
     )?;
 
     collateral_info.lock_collateral(collateral_token, required_collateral)?;

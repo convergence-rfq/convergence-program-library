@@ -19,13 +19,13 @@ describe("Cancel RFQ", () => {
   });
 
   it("Can cancel Rfq after response settlement", async () => {
-    let rfq = await context.createRfq();
+    let rfq = await context.createEscrowRfq();
 
     let response = await rfq.respond();
     await response.confirm();
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
-    await response.settle(taker, [maker]);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
+    await response.settleEscrow(taker, [maker]);
     await response.unlockResponseCollateral();
     await response.cleanUp();
 

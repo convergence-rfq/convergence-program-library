@@ -1,7 +1,7 @@
-import { Program, web3, BN, workspace, AnchorProvider } from "@coral-xyz/anchor";
+import { Program, web3, BN, workspace } from "@coral-xyz/anchor";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/web3.js";
-import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
+import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
 import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
@@ -29,6 +29,8 @@ export function getEuroOptionsInstrumentProgram(): Program<PsyoptionsEuropeanIns
 }
 
 export class PsyoptionsEuropeanInstrument implements Instrument {
+  static instrumentIndex = 1;
+
   constructor(private context: Context, private optionFacade: EuroOptionsFacade, private optionType: OptionType) {}
 
   static create(
@@ -36,8 +38,8 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     optionFacade: EuroOptionsFacade,
     optionType: OptionType,
     {
-      amount = DEFAULT_INSTRUMENT_AMOUNT,
-      side = DEFAULT_INSTRUMENT_SIDE,
+      amount = DEFAULT_LEG_AMOUNT,
+      side = DEFAULT_LEG_SIDE,
     }: {
       amount?: BN;
       side?: LegSide;
@@ -52,12 +54,16 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
     );
   }
 
+  getInstrumentIndex(): number {
+    return PsyoptionsEuropeanInstrument.instrumentIndex;
+  }
+
   static async addInstrument(context: Context) {
     await context.addInstrument(getEuroOptionsInstrumentProgram().programId, false, 2, 7, 3, 3, 4);
   }
 
   static async setRiskEngineInstrumentType(context: Context) {
-    await context.riskEngine.setInstrumentType(getEuroOptionsInstrumentProgram().programId, InstrumentType.Option);
+    await context.riskEngine.setInstrumentType(this.instrumentIndex, InstrumentType.Option);
   }
 
   serializeInstrumentData(): Buffer {
@@ -81,6 +87,10 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
         ...meta,
       ])
     );
+  }
+
+  serializeInstrumentDataForQuote(): Buffer {
+    throw Error("Does not support being in quote!");
   }
 
   getProgramId(): PublicKey {
@@ -164,7 +174,7 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
   async getCleanUpAccounts(assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
-        pubkey: response.firstToPrepare,
+        pubkey: response.firstToPrepare!,
         isSigner: false,
         isWritable: true,
       },
@@ -328,6 +338,6 @@ export class EuroOptionsFacade {
   };
 
   private static getEuroOptionsProgram(context: Context) {
-    return createProgramFromProvider(context.provider as AnchorProvider, new PublicKey(euroOptionsProgramId));
+    return createProgramFromProvider(context.provider, new PublicKey(euroOptionsProgramId));
   }
 }

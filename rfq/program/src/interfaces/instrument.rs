@@ -23,17 +23,17 @@ pub fn validate_leg_instrument_data<'a, 'info: 'a>(
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = VALIDATE_DATA_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&leg.instrument_data, &mut data)?;
+    AnchorSerialize::serialize(&leg.data, &mut data)?;
     AnchorSerialize::serialize(&Some(leg.base_asset_index), &mut data)?;
-    AnchorSerialize::serialize(&leg.instrument_decimals, &mut data)?;
+    AnchorSerialize::serialize(&leg.amount_decimals, &mut data)?;
 
-    let instrument_key = leg.instrument_program;
-    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+    let instrument_index = leg.settlement_type_metadata.get_instrument_index().unwrap();
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_index)?;
 
     call_instrument(
         data,
         protocol,
-        &instrument_key,
+        &instrument_parameters.program_key,
         instrument_parameters.validate_data_account_amount as usize,
         None,
         None,
@@ -47,17 +47,20 @@ pub fn validate_quote_instrument_data<'a, 'info: 'a>(
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     let mut data = VALIDATE_DATA_SELECTOR.to_vec();
-    AnchorSerialize::serialize(&quote.instrument_data, &mut data)?;
+    AnchorSerialize::serialize(&quote.data, &mut data)?;
     AnchorSerialize::serialize(&Option::<BaseAssetIndex>::None, &mut data)?;
-    AnchorSerialize::serialize(&quote.instrument_decimals, &mut data)?;
+    AnchorSerialize::serialize(&quote.decimals, &mut data)?;
 
-    let instrument_key = quote.instrument_program;
-    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+    let instrument_index = quote
+        .settlement_type_metadata
+        .get_instrument_index()
+        .unwrap();
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_index)?;
 
     call_instrument(
         data,
         protocol,
-        &instrument_key,
+        &instrument_parameters.program_key,
         instrument_parameters.validate_data_account_amount as usize,
         None,
         None,
@@ -77,13 +80,13 @@ pub fn prepare_to_settle<'a, 'info: 'a>(
     AnchorSerialize::serialize(&asset_identifier, &mut data)?;
     AnchorSerialize::serialize(&side, &mut data)?;
 
-    let instrument_key = rfq.get_asset_instrument_program(asset_identifier);
-    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+    let instrument_index = rfq.get_asset_instrument_index(asset_identifier).unwrap();
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_index)?;
 
     call_instrument(
         data,
         protocol,
-        &instrument_key,
+        &instrument_parameters.program_key,
         instrument_parameters.prepare_to_settle_account_amount as usize,
         Some(rfq),
         Some(response),
@@ -101,13 +104,13 @@ pub fn settle<'a, 'info: 'a>(
     let mut data = SETTLE_SELECTOR.to_vec();
     AnchorSerialize::serialize(&asset_identifier, &mut data)?;
 
-    let instrument_key = rfq.get_asset_instrument_program(asset_identifier);
-    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+    let instrument_index = rfq.get_asset_instrument_index(asset_identifier).unwrap();
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_index)?;
 
     call_instrument(
         data,
         protocol,
-        &instrument_key,
+        &instrument_parameters.program_key,
         instrument_parameters.settle_account_amount as usize,
         Some(rfq),
         Some(response),
@@ -127,13 +130,13 @@ pub fn revert_preparation<'a, 'info: 'a>(
     AnchorSerialize::serialize(&asset_identifier, &mut data)?;
     AnchorSerialize::serialize(&side, &mut data)?;
 
-    let instrument_key = rfq.get_asset_instrument_program(asset_identifier);
-    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+    let instrument_index = rfq.get_asset_instrument_index(asset_identifier).unwrap();
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_index)?;
 
     call_instrument(
         data,
         protocol,
-        &instrument_key,
+        &instrument_parameters.program_key,
         instrument_parameters.revert_preparation_account_amount as usize,
         Some(rfq),
         Some(response),
@@ -151,13 +154,13 @@ pub fn clean_up<'a, 'info: 'a>(
     let mut data = CLEAN_UP_SELECTOR.to_vec();
     AnchorSerialize::serialize(&asset_identifier, &mut data)?;
 
-    let instrument_key = rfq.get_asset_instrument_program(asset_identifier);
-    let instrument_parameters = protocol.get_instrument_parameters(instrument_key)?;
+    let instrument_index = rfq.get_asset_instrument_index(asset_identifier).unwrap();
+    let instrument_parameters = protocol.get_instrument_parameters(instrument_index)?;
 
     call_instrument(
         data,
         protocol,
-        &instrument_key,
+        &instrument_parameters.program_key,
         instrument_parameters.clean_up_account_amount as usize,
         Some(rfq),
         Some(response),

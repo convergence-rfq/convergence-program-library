@@ -1,0 +1,37 @@
+[package]
+edition = "2021"
+name = "dex"
+version = "0.1.0"
+resolver = "2"
+
+[features]
+no-entrypoint = []
+cpi = ["no-entrypoint"]
+test-bpf = []
+
+[dependencies]
+agnostic-orderbook = { version = "0.1.0", path = "../agnostic-orderbook", features = [
+  "no-entrypoint",
+] }
+anchor-lang = "0.28.0"
+anchor-spl = "0.28.0"
+arrayref = "0.3.6"
+base64 = "0.13.0"
+bonfida-utils = "0.2"
+borsh = "0.9"
+bytemuck = { version = "1.4.0", features = ["derive", "min_const_generics"] }
+pyth-client = { version = "0.3.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "1.0.3", features = [
+  "no-entrypoint",
+] }
+spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+thiserror = "1.0"
+num-traits = "0.2.14"
+num-derive = "0.3"
+num = "0.4"
+itertools = "0.10.3"
+serde = "1.0.136"
+serde-big-array = { version = "0.3.2", features = ["const-generics"] }
+
+[lib]
+crate-type = ["cdylib", "lib"]

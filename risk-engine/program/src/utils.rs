@@ -1,7 +1,7 @@
 use rfq::state::{Leg, LegSide};
 
 pub fn get_leg_amount_f64(leg: &Leg) -> f64 {
-    let mut result = convert_fixed_point_to_f64(leg.instrument_amount, leg.instrument_decimals);
+    let mut result = convert_fixed_point_to_f64(leg.amount, leg.amount_decimals);
     // TODO: investigate why we invert long side instead of a short
     if let LegSide::Long = leg.side {
         result = -result;

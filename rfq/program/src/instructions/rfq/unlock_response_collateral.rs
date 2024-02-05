@@ -41,6 +41,7 @@ fn validate(ctx: &Context<UnlockResponseCollateralAccounts>) -> Result<()> {
         ResponseState::Canceled,
         ResponseState::Expired,
         ResponseState::Settled,
+        ResponseState::SettlementExpired,
     ])?;
 
     require!(

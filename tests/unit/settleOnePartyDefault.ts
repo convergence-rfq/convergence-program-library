@@ -33,13 +33,8 @@ describe("Settle one party default", () => {
 
   it("Taker defaulting transfers the correct amount of fees", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
-    const rfq = await context.createRfq({
-      legs: [
-        SpotInstrument.createForLeg(context, {
-          amount: withTokenDecimals(1),
-          side: LegSide.Long,
-        }),
-      ],
+    const rfq = await context.createEscrowRfq({
+      legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(1), side: LegSide.Long })],
       activeWindow: 2,
       settlingWindow: 1,
     });
@@ -50,11 +45,8 @@ describe("Settle one party default", () => {
         expirationTimestamp: Date.now() / 1000 + 1,
       });
 
-      await response.confirm({
-        side: QuoteSide.Bid,
-        legMultiplierBps: toLegMultiplier(1),
-      });
-      await response.prepareSettlement(AuthoritySide.Maker);
+      await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(1) });
+      await response.prepareEscrowSettlement(AuthoritySide.Maker);
       const responseState = await response.getData();
 
       return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];
@@ -82,7 +74,7 @@ describe("Settle one party default", () => {
 
   it("Maker defaulting transfers the correct amount of fees", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         SpotInstrument.createForLeg(context, {
           mint: context.solToken,
@@ -100,11 +92,8 @@ describe("Settle one party default", () => {
         expirationTimestamp: Date.now() / 1000 + 1,
       });
 
-      await response.confirm({
-        side: QuoteSide.Ask,
-        legMultiplierBps: toLegMultiplier(500),
-      });
-      await response.prepareSettlement(AuthoritySide.Taker);
+      await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(500) });
+      await response.prepareEscrowSettlement(AuthoritySide.Taker);
       const responseState = await response.getData();
 
       return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];

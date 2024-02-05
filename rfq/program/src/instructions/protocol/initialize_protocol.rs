@@ -52,6 +52,7 @@ pub fn initialize_protocol_instruction(
         default_fees,
         risk_engine: risk_engine.key(),
         collateral_mint: collateral_mint.key(),
+        print_trade_providers: Default::default(),
         instruments: Default::default(),
         reserved: [0; 1024],
     });

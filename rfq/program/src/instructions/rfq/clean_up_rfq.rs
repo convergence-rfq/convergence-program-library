@@ -28,6 +28,8 @@ fn validate_rfq(ctx: &Context<CleanUpRfqAccounts>) -> Result<()> {
         RfqState::Expired,
         RfqState::Settling,
         RfqState::SettlingEnded,
+        RfqState::Constructed,
+        RfqState::ValidatedByPrintTradeProvider,
     ])?;
 
     require!(

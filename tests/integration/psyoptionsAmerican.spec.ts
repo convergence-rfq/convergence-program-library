@@ -42,7 +42,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       [context.taker.publicKey, context.maker.publicKey]
     );
 
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
@@ -58,15 +58,12 @@ describe("Psyoptions American instrument integration tests", async () => {
     });
 
     // Taker confirms to buy 1 option
-    await response.confirm({
-      side: QuoteSide.Ask,
-      legMultiplierBps: toLegMultiplier(1),
-    });
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1) });
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
 
     // taker should receive 1 option, maker should receive 50$ and lose 1 bitcoin as option collateral
-    await response.settle(maker, [taker]);
+    await response.settleEscrow(maker, [taker]);
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-50) },
@@ -91,7 +88,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       [context.taker.publicKey, context.maker.publicKey]
     );
 
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.PUT, {
           amount: new BN(1),
@@ -111,11 +108,11 @@ describe("Psyoptions American instrument integration tests", async () => {
       side: QuoteSide.Ask,
       legMultiplierBps: toLegMultiplier(1),
     });
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
 
     // taker should receive 1 option, maker should receive 50$ and lose 1 bitcoin as option collateral
-    await response.settle(maker, [taker]);
+    await response.settleEscrow(maker, [taker]);
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-50) },
@@ -138,7 +135,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     );
 
     // Create a two way RFQ specifying 1 option call as a leg
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
@@ -159,19 +156,19 @@ describe("Psyoptions American instrument integration tests", async () => {
     // taker confirms to sell 2 options
 
     try {
-      await response.prepareSettlement(AuthoritySide.Taker);
+      await response.prepareEscrowSettlement(AuthoritySide.Taker);
     } catch (e) {
       console.error(e);
     }
 
     try {
-      await response.prepareSettlement(AuthoritySide.Maker);
+      await response.prepareEscrowSettlement(AuthoritySide.Maker);
     } catch (e) {
       console.error(e);
     }
 
     // taker should redceive 90$, maker should receive 2 options
-    await response.settle(taker, [maker]);
+    await response.settleEscrow(taker, [maker]);
 
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(-2) },
@@ -190,7 +187,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL);
 
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
@@ -210,17 +207,14 @@ describe("Psyoptions American instrument integration tests", async () => {
       });
 
       // taker confirms to sell 2 options
-      await response.confirm({
-        side: QuoteSide.Bid,
-        legMultiplierBps: toLegMultiplier(2),
-      });
+      await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(2) });
       const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.optionMint], [taker]);
-      await response.prepareSettlement(AuthoritySide.Taker);
+      await response.prepareEscrowSettlement(AuthoritySide.Taker);
 
       return [response, tokenMeasurer];
     }, 3.5);
 
-    await response.revertSettlementPreparation(AuthoritySide.Taker);
+    await response.revertEscrowSettlementPreparation(AuthoritySide.Taker);
 
     // taker have returned his assets
     await tokenMeasurer.expectChange([{ token: options.optionMint, user: taker, delta: new BN(0) }]);
@@ -234,7 +228,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     // create a two way RFQ specifying 1 option put as a leg
     const options = await AmericanPsyoptions.initalizeNewPsyoptionsAmerican(context, context.taker);
     await options.mintPsyOptions(context.taker, new anchor.BN(2), OptionType.CALL);
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
@@ -259,13 +253,13 @@ describe("Psyoptions American instrument integration tests", async () => {
         legMultiplierBps: toLegMultiplier(2),
       });
       const tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["quote"], [maker]);
-      await response.prepareSettlement(AuthoritySide.Maker);
+      await response.prepareEscrowSettlement(AuthoritySide.Maker);
       await tokenMeasurer.expectChange([{ token: "quote", user: maker, delta: withTokenDecimals(new BN(-90)) }]);
 
       return [response, tokenMeasurer];
     }, 3.5);
 
-    await response.revertSettlementPreparation(AuthoritySide.Maker);
+    await response.revertEscrowSettlementPreparation(AuthoritySide.Maker);
 
     // taker have returned his assets
     await response.settleOnePartyDefault();
@@ -284,7 +278,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       [taker, maker]
     );
 
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
@@ -300,15 +294,12 @@ describe("Psyoptions American instrument integration tests", async () => {
     });
 
     // Taker confirms to sell 0.4 option
-    await response.confirm({
-      side: QuoteSide.Bid,
-      legMultiplierBps: toLegMultiplier(0.4),
-    });
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(0.4) });
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
 
     // maker should receive 1 option(0.4 rounded up), taker should receive 40 * 0.4 = 16$
-    await response.settle(taker, [maker]);
+    await response.settleEscrow(taker, [maker]);
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(-1) },
       { token: options.optionMint, user: maker, delta: new BN(1) },
@@ -330,7 +321,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       [taker, maker]
     );
 
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsAmericanInstrumentClass.create(context, options, OptionType.CALL, {
           amount: new BN(1),
@@ -346,15 +337,12 @@ describe("Psyoptions American instrument integration tests", async () => {
     });
 
     // Taker confirms to buy 1.4 option
-    await response.confirm({
-      side: QuoteSide.Ask,
-      legMultiplierBps: toLegMultiplier(1.4),
-    });
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.confirm({ side: QuoteSide.Ask, legMultiplierBps: toLegMultiplier(1.4) });
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
 
     // taker should receive 1 option(1.4 rounded down), maker should receive 50 * 1.4 = 70$
-    await response.settle(maker, [taker]);
+    await response.settleEscrow(maker, [taker]);
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(1) },
       { token: options.optionMint, user: maker, delta: new BN(-1) },

@@ -32,7 +32,7 @@ describe("Unlock response collateral", () => {
 
   it("Correct amount of fees is taken as result as settled response", async () => {
     let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker, dao]);
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [SpotInstrument.createForLeg(context, { amount: withTokenDecimals(22), side: LegSide.Long })],
     });
 
@@ -41,9 +41,9 @@ describe("Unlock response collateral", () => {
     });
 
     await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(1) });
-    await response.prepareSettlement(AuthoritySide.Taker);
-    await response.prepareSettlement(AuthoritySide.Maker);
-    await response.settle(taker, [maker]);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
+    await response.settleEscrow(taker, [maker]);
     const { takerCollateralLocked, makerCollateralLocked } = await response.getData();
     await response.unlockResponseCollateral();
 

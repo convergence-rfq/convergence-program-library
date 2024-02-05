@@ -1,6 +1,6 @@
 use crate::{
     errors::ProtocolError,
-    interfaces::instrument::clean_up,
+    interfaces::{instrument::clean_up, print_trade_provider::clean_up_print_trade},
     seeds::PROTOCOL_SEED,
     state::{AssetIdentifier, ProtocolState, Response, ResponseState, Rfq},
 };
@@ -32,7 +32,7 @@ fn validate(ctx: &Context<CleanUpResponseAccounts>) -> Result<()> {
     ])?;
     if let ResponseState::Defaulted = response_state {
         require!(
-            response.taker_prepared_legs == 0 && response.maker_prepared_legs == 0,
+            response.taker_prepared_counter == 0 && response.maker_prepared_counter == 0,
             ProtocolError::PendingPreparations
         );
     }
@@ -57,10 +57,12 @@ pub fn clean_up_response_instruction<'info>(
         ..
     } = ctx.accounts;
 
-    if !response.leg_preparations_initialized_by.is_empty() {
-        let mut remaining_accounts = ctx.remaining_accounts.iter();
+    let mut remaining_accounts = ctx.remaining_accounts.iter();
 
-        let legs_to_revert = response.leg_preparations_initialized_by.len() as u8;
+    if !rfq.is_settled_as_print_trade()
+        && !response.escrow_leg_preparations_initialized_by.is_empty()
+    {
+        let legs_to_revert = response.escrow_leg_preparations_initialized_by.len() as u8;
         for leg_index in 0..legs_to_revert {
             clean_up(
                 AssetIdentifier::Leg { leg_index },
@@ -78,6 +80,10 @@ pub fn clean_up_response_instruction<'info>(
             response,
             &mut remaining_accounts,
         )?;
+    }
+
+    if rfq.is_settled_as_print_trade() && response.print_trade_initialized_by.is_some() {
+        clean_up_print_trade(protocol, rfq, response, &mut remaining_accounts)?;
     }
 
     rfq.cleared_responses += 1;

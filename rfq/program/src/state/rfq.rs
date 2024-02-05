@@ -1,3 +1,5 @@
+use std::io;
+
 use anchor_lang::prelude::*;
 
 use crate::errors::ProtocolError;
@@ -28,16 +30,24 @@ pub struct Rfq {
 
     pub reserved: [u8; 224],
 
-    pub legs: Vec<Leg>, // TODO add limit for this size
+    pub print_trade_provider: Option<Pubkey>, // move higher after replacing with nullable wrapper
+    pub legs: Vec<Leg>,                       // TODO add limit for this size
 }
 
 impl Rfq {
     pub const MAX_LEGS_AMOUNT: u8 = 25;
     pub const MAX_LEGS_SIZE: u16 = 4096;
 
+    pub fn is_settled_as_print_trade(&self) -> bool {
+        self.print_trade_provider.is_some()
+    }
+
     pub fn get_state(&self) -> Result<RfqState> {
         let state = match self.state {
             StoredRfqState::Constructed => RfqState::Constructed,
+            StoredRfqState::ValidatedByPrintTradeProvider => {
+                RfqState::ValidatedByPrintTradeProvider
+            }
             StoredRfqState::Active => {
                 let current_time = Clock::get()?.unix_timestamp;
                 if !self.active_window_ended(current_time) {
@@ -60,8 +70,11 @@ impl Rfq {
     }
 
     pub fn settle_window_ended(&self, current_time: i64) -> bool {
-        current_time
-            >= self.creation_timestamp + self.active_window as i64 + self.settling_window as i64
+        current_time >= self.get_settle_window_end()
+    }
+
+    pub fn get_settle_window_end(&self) -> i64 {
+        self.creation_timestamp + self.active_window as i64 + self.settling_window as i64
     }
 
     pub fn is_fixed_size(&self) -> bool {
@@ -70,33 +83,38 @@ impl Rfq {
 
     pub fn get_asset_instrument_data(&self, asset_identifier: AssetIdentifier) -> &Vec<u8> {
         match asset_identifier {
-            AssetIdentifier::Leg { leg_index } => &self.legs[leg_index as usize].instrument_data,
-            AssetIdentifier::Quote => &self.quote_asset.instrument_data,
+            AssetIdentifier::Leg { leg_index } => &self.legs[leg_index as usize].data,
+            AssetIdentifier::Quote => &self.quote_asset.data,
         }
     }
 
-    pub fn get_asset_instrument_program(&self, asset_identifier: AssetIdentifier) -> Pubkey {
+    pub fn get_asset_instrument_index(&self, asset_identifier: AssetIdentifier) -> Option<u8> {
         match asset_identifier {
-            AssetIdentifier::Leg { leg_index } => self.legs[leg_index as usize].instrument_program,
-            AssetIdentifier::Quote => self.quote_asset.instrument_program,
+            AssetIdentifier::Leg { leg_index } => self.legs[leg_index as usize]
+                .settlement_type_metadata
+                .get_instrument_index(),
+            AssetIdentifier::Quote => self
+                .quote_asset
+                .settlement_type_metadata
+                .get_instrument_index(),
         }
     }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct QuoteAsset {
-    pub instrument_program: Pubkey,
-    pub instrument_data: Vec<u8>,
-    pub instrument_decimals: u8,
+    pub settlement_type_metadata: SettlementTypeMetadata,
+    pub data: Vec<u8>,
+    pub decimals: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct Leg {
-    pub instrument_program: Pubkey,
+    pub settlement_type_metadata: SettlementTypeMetadata,
     pub base_asset_index: BaseAssetIndex,
-    pub instrument_data: Vec<u8>,
-    pub instrument_amount: u64,
-    pub instrument_decimals: u8,
+    pub data: Vec<u8>,
+    pub amount: u64,
+    pub amount_decimals: u8,
     pub side: LegSide,
 
     pub reserved: [u8; 64],
@@ -104,33 +122,48 @@ pub struct Leg {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct ApiLeg {
-    pub instrument_program: Pubkey,
+    pub settlement_type_metadata: SettlementTypeMetadata,
     pub base_asset_index: BaseAssetIndex,
-    pub instrument_data: Vec<u8>,
-    pub instrument_amount: u64,
-    pub instrument_decimals: u8,
+    pub data: Vec<u8>,
+    pub amount: u64,
+    pub amount_decimals: u8,
     pub side: LegSide,
 }
 
 impl From<ApiLeg> for Leg {
     fn from(value: ApiLeg) -> Self {
         let ApiLeg {
-            instrument_program,
+            settlement_type_metadata,
             base_asset_index,
-            instrument_data,
-            instrument_amount,
-            instrument_decimals,
+            data,
+            amount,
+            amount_decimals,
             side,
         } = value;
 
         Self {
-            instrument_program,
+            settlement_type_metadata,
             base_asset_index,
-            instrument_data,
-            instrument_amount,
-            instrument_decimals,
+            data,
+            amount,
+            amount_decimals,
             side,
             reserved: [0; 64],
+        }
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub enum SettlementTypeMetadata {
+    Instrument { instrument_index: u8 },
+    PrintTrade { instrument_type: u8 }, // keeping it opaque, as it's related to the risk engine logic
+}
+
+impl SettlementTypeMetadata {
+    pub fn get_instrument_index(&self) -> Option<u8> {
+        match self {
+            SettlementTypeMetadata::Instrument { instrument_index } => Some(*instrument_index),
+            SettlementTypeMetadata::PrintTrade { instrument_type: _ } => None,
         }
     }
 }
@@ -152,6 +185,7 @@ pub enum OrderType {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub enum StoredRfqState {
     Constructed,
+    ValidatedByPrintTradeProvider,
     Active,
     Canceled,
 }
@@ -159,6 +193,7 @@ pub enum StoredRfqState {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RfqState {
     Constructed,
+    ValidatedByPrintTradeProvider,
     Active,
     Canceled,
     Expired,
@@ -187,17 +222,41 @@ pub enum LegSide {
     Short,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub enum AssetIdentifier {
     Leg { leg_index: u8 },
     Quote,
 }
 
 impl AssetIdentifier {
-    pub fn to_seed_bytes(self) -> [u8; 2] {
+    pub fn to_bytes(self) -> [u8; 2] {
         match self {
             AssetIdentifier::Leg { leg_index } => [0, leg_index],
             AssetIdentifier::Quote => [1, 0],
         }
+    }
+}
+
+impl AnchorSerialize for AssetIdentifier {
+    fn serialize<W: std::io::prelude::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        writer.write_all(&self.to_bytes())?;
+
+        Ok(())
+    }
+}
+
+impl AnchorDeserialize for AssetIdentifier {
+    fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
+        let bytes: (u8, u8) = AnchorDeserialize::deserialize(buf)?;
+        let value = match bytes {
+            (0, leg_index) => AssetIdentifier::Leg { leg_index },
+            (1, 0) => AssetIdentifier::Quote,
+            _ => {
+                let msg = format!("Unexpected bytes: {:?}", bytes);
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+            }
+        };
+
+        Ok(value)
     }
 }
