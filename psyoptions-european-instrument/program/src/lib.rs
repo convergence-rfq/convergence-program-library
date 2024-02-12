@@ -15,7 +15,7 @@ mod errors;
 mod euro_options;
 mod state;
 
-declare_id!("A86fhhdNVDdXV8pB48WXtPeM3EBkcBeJEdrx9xrUo9nF");
+declare_id!("6B7TdBNAF7tWWz5sZbbBZj8jH1ix7QWAchtkvMHveEuW");
 
 const ESCROW_SEED: &str = "escrow";
 
