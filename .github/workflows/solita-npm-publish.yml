@@ -17,6 +17,7 @@ jobs:
           - "spot-instrument"
           - "psyoptions-american-instrument"
           - "psyoptions-european-instrument"
+          - "hxro-print-trade-provider"
     defaults:
       run:
         working-directory: ./${{ matrix.package }}/js

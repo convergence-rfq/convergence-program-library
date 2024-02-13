@@ -4,11 +4,11 @@ import { BigNumber } from "bignumber.js";
 import { PublicKey, ComputeBudgetProgram, SendTransactionError } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
-import { ABSOLUTE_PRICE_DECIMALS, EMPTY_LEG_SIZE, FEE_BPS_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
+import { ABSOLUTE_PRICE_DECIMALS, FEE_BPS_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
 import { Context, Mint } from "./wrappers";
-import { InstrumentController } from "./instrument";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
-import { FeeParams } from "./types";
+import { FeeParams, LegData } from "./types";
+import { getBaseAssetPda } from "./pdas";
 
 chai.use(chaiBn(BN));
 
@@ -42,8 +42,9 @@ export function withTokenDecimals(value: number) {
   return new BN(bignumber.toString());
 }
 
-export function executeInParallel(...fns: (() => Promise<any>)[]) {
-  return Promise.all(fns.map((x) => x()));
+type InferredOutputs<T> = Promise<{ [K in keyof T]: T[K] extends () => Promise<infer R> ? R : never }>;
+export async function executeInParallel<T extends Array<() => Promise<any>>>(...fns: T): Promise<InferredOutputs<T>> {
+  return Promise.all(fns.map((x) => x())) as unknown as InferredOutputs<T>;
 }
 
 /**
@@ -61,16 +62,12 @@ export async function runInParallelWithWait<T>(promiseGetter: () => Promise<T>, 
   return result;
 }
 
-export function calculateLegsSize(legs: InstrumentController[]) {
-  return legs.map((leg) => EMPTY_LEG_SIZE + leg.getInstrumendDataSize()).reduce((x, y) => x + y, 4);
-}
-
-export function calculateLegsHash(legs: InstrumentController[], program: Program<RfqIdl>) {
-  const serializedLegsData = legs.map((leg) => program.coder.types.encode("Leg", leg.toLegData()));
+export function serializeLegData(legs: LegData[], program: Program<RfqIdl>) {
+  const serializedLegsData = legs.map((leg) => program.coder.types.encode("Leg", leg));
   const lengthBuffer = Buffer.alloc(4);
   lengthBuffer.writeInt32LE(legs.length);
   const fullLegDataBuffer = Buffer.concat([lengthBuffer, ...serializedLegsData]);
-  return sha256(fullLegDataBuffer);
+  return { data: fullLegDataBuffer, hash: sha256(fullLegDataBuffer) };
 }
 
 type MeasuredToken =
@@ -252,6 +249,25 @@ export function addPubkeyExplanations(context: Context, input: string) {
   let result = input;
   for (const [pubkeyString, name] of Object.entries(context.pubkeyToName)) {
     result = result.replace(new RegExp(pubkeyString, "g"), `${pubkeyString}(${name})`);
+  }
+
+  return result;
+}
+
+export function toBaseAssetAccount(index: number, program: Program<RfqIdl>) {
+  return {
+    pubkey: getBaseAssetPda(index, program.programId),
+    isSigner: false,
+    isWritable: false,
+  };
+}
+
+export function inversePubkeyToName(value: { [pubkey: string]: string }): { [name: string]: PublicKey } {
+  const result: { [name: string]: PublicKey } = {};
+
+  for (const key in value) {
+    const name = value[key];
+    result[name] = new PublicKey(key);
   }
 
   return result;

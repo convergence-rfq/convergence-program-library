@@ -2,8 +2,6 @@ import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
   attachImprovedLogDisplay,
-  calculateLegsHash,
-  calculateLegsSize,
   runInParallelWithWait,
   toAbsolutePrice,
   TokenChangeMeasurer,
@@ -46,7 +44,7 @@ describe("Psyoptions European instrument integration tests", () => {
     );
 
     // create a two way RFQ specifying 1 option call as a leg
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [
         PsyoptionsEuropeanInstrument.create(context, options, OptionType.CALL, {
           amount: new BN(1).mul(CONTRACT_DECIMALS_BN),
@@ -65,13 +63,13 @@ describe("Psyoptions European instrument integration tests", () => {
       legMultiplierBps: toLegMultiplier(1),
     });
 
-    await response.prepareSettlement(AuthoritySide.Taker);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker);
 
     await options.mintOptions(context.maker, new BN(1), OptionType.CALL);
-    await response.prepareSettlement(AuthoritySide.Maker);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
 
     // taker should receive 1 option, maker should receive 500$ and lose 1 bitcoin as option collateral
-    await response.settle(maker, [taker]);
+    await response.settleEscrow(maker, [taker]);
     await tokenMeasurer.expectChange([
       {
         token: options.callMint,
@@ -90,7 +88,7 @@ describe("Psyoptions European instrument integration tests", () => {
 
   it("Create two-way RFQ with one euro option leg, respond but maker defaults on settlement", async () => {
     // create a two way RFQ specifying 1 option put as a leg
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       activeWindow: 2,
       settlingWindow: 1,
       legs: [
@@ -116,12 +114,12 @@ describe("Psyoptions European instrument integration tests", () => {
       await options.mintOptions(context.taker, new BN(2), OptionType.PUT);
 
       let tokenMeasurer = await TokenChangeMeasurer.takeSnapshot(context, [options.putMint], [taker]);
-      await response.prepareSettlement(AuthoritySide.Taker);
+      await response.prepareEscrowSettlement(AuthoritySide.Taker);
 
       return [response, tokenMeasurer];
     }, 3.5);
 
-    await response.revertSettlementPreparation(AuthoritySide.Taker);
+    await response.revertEscrowSettlementPreparation(AuthoritySide.Taker);
 
     // taker have returned his assets
     await tokenMeasurer.expectChange([{ token: options.putMint, user: taker, delta: new BN(0) }]);
@@ -166,10 +164,9 @@ describe("Psyoptions European instrument integration tests", () => {
         side: LegSide.Long,
       })
     );
-    const rfq = await context.createRfq({
+    const rfq = await context.createEscrowRfq({
       legs: [legs[0]],
-      legsSize: calculateLegsSize(legs),
-      legsHash: calculateLegsHash(legs, context.program),
+      allLegs: legs,
       finalize: false,
     });
     await rfq.addLegs([...legs.slice(1, 3)], false);
@@ -188,12 +185,12 @@ describe("Psyoptions European instrument integration tests", () => {
     // mint options
     await Promise.all(options.map(async (option) => option.mintOptions(context.maker, new BN(2), OptionType.CALL)));
 
-    await response.prepareSettlement(AuthoritySide.Taker, legAmount / 2);
-    await response.prepareMoreLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
-    await response.prepareSettlement(AuthoritySide.Maker, legAmount / 2);
-    await response.prepareMoreLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
+    await response.prepareEscrowSettlement(AuthoritySide.Taker, legAmount / 2);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Taker, legAmount / 2, legAmount / 2);
+    await response.prepareEscrowSettlement(AuthoritySide.Maker, legAmount / 2);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, legAmount / 2, legAmount / 2);
 
-    await response.settle(
+    await response.settleEscrow(
       maker,
       [...Array(legAmount)].map(() => taker)
     );

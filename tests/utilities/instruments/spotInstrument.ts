@@ -1,7 +1,7 @@
 import { BN, Program, workspace } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
-import { DEFAULT_INSTRUMENT_AMOUNT, DEFAULT_INSTRUMENT_SIDE } from "../constants";
+import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
 import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
@@ -18,14 +18,16 @@ export function getSpotInstrumentProgram(): Program<SpotInstrumentIdl> {
 }
 
 export class SpotInstrument implements Instrument {
+  static instrumentIndex = 0;
+
   constructor(private context: Context, private mint: Mint) {}
 
   static createForLeg(
     context: Context,
     {
       mint = context.btcToken,
-      amount = DEFAULT_INSTRUMENT_AMOUNT,
-      side = DEFAULT_INSTRUMENT_SIDE,
+      amount = DEFAULT_LEG_AMOUNT,
+      side = DEFAULT_LEG_SIDE,
     }: {
       mint?: Mint;
       amount?: BN;
@@ -52,10 +54,18 @@ export class SpotInstrument implements Instrument {
   }
 
   static async setRiskEngineInstrumentType(context: Context) {
-    await context.riskEngine.setInstrumentType(getSpotInstrumentProgram().programId, InstrumentType.Spot);
+    await context.riskEngine.setInstrumentType(this.instrumentIndex, InstrumentType.Spot);
+  }
+
+  getInstrumentIndex(): number {
+    return SpotInstrument.instrumentIndex;
   }
 
   serializeInstrumentData(): Buffer {
+    return Buffer.from(this.mint.publicKey.toBytes());
+  }
+
+  serializeInstrumentDataForQuote(): Buffer {
     return Buffer.from(this.mint.publicKey.toBytes());
   }
 
@@ -137,7 +147,7 @@ export class SpotInstrument implements Instrument {
   async getCleanUpAccounts(assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
-        pubkey: response.firstToPrepare,
+        pubkey: response.firstToPrepare!,
         isSigner: false,
         isWritable: true,
       },

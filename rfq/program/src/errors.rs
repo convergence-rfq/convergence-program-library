@@ -6,8 +6,10 @@ use anchor_lang::prelude::*;
 pub enum ProtocolError {
     #[msg("Require protocol authority")]
     NotAProtocolAuthority,
-    #[msg("Instrument already added")]
-    InstrumentAlreadyAdded,
+    #[msg("Program is already added")]
+    AlreadyAdded,
+    #[msg("Can't add because the max limit is reached")]
+    CannotAddBecauseOfMaxAmountLimit,
     #[msg("Fee can't be higher than 100%")]
     InvalidValueForAFee,
     #[msg("Invalid risk engine register")]
@@ -34,10 +36,14 @@ pub enum ProtocolError {
     NotEnoughCollateral,
     #[msg("Not a whitelisted instrument")]
     NotAWhitelistedInstrument,
+    #[msg("Not a whitelisted print trade provider")]
+    NotAWhitelistedPrintTradeProvider,
     #[msg("Not enough accounts")]
     NotEnoughAccounts,
     #[msg("Passed program id differs from an instrument")]
     PassedProgramIdDiffersFromAnInstrument,
+    #[msg("Passed program id differs from a print trade provider")]
+    PassedProgramIdDiffersFromAPrintTradeProvider,
     #[msg("Rfq is not in required state")]
     RfqIsNotInRequiredState,
     #[msg("Response does not match order type")]
@@ -98,22 +104,36 @@ pub enum ProtocolError {
     MaxInstruments,
     #[msg("Current instrument cannot be used as a quote asset")]
     InvalidQuoteInstrument,
+    #[msg("Print trade provider program ID wasn't provided")]
+    NoPrintTradeProvider,
+    #[msg("This instruction is used for settling flow of another type of rfq")]
+    InvalidSettlingFlow,
+    #[msg("No print trade to clean up")]
+    NoPrintTradeToCleanUp,
     #[msg("Amount of asset to transfer overflows")]
     AssetAmountOverflow,
     #[msg("Price should be positive for fixed quote asset amount RFQ")]
     PriceShouldBePositive,
-    #[msg("Price cannot be negative for fixed quote asset amount RFQ")]
-    PriceCannotBeNegative,
     #[msg("Already has a status to set")]
     AlreadyHasAStatusToSet,
     #[msg("Can't create an rfq using a disabled instrument")]
     InstrumentIsDisabled,
     #[msg("Can't create an rfq using a disabled base asset")]
     BaseAssetIsDisabled,
+    #[msg("Settlement type info does not match rfq type")]
+    SettlementInfoDoesNotMatchRfqType,
+    #[msg("Settlement expiration is disabled for this print trade provider")]
+    SettlementExpirationIsDisabled,
+    #[msg("Too early for the settlement expiration")]
+    TooEarlyForExpiration,
     #[msg("Can't accept default value in non-default field")]
     DefaultValueIsNotPermitted,
     #[msg("Specified oracle source is missing")]
     OracleSourceIsMissing,
+    #[msg("Additional data is not supported for escrow rfqs")]
+    AdditionalDataIsNotSupported,
+    #[msg("Invalid return data emitter")]
+    InvalidReturnDataEmitter,
     #[msg("Whitelist maximum capacity reached")]
     WhitelistMaximumCapacityReached,
     #[msg("Cannot respond as maker address is not whitelisted")]

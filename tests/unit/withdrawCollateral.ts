@@ -28,7 +28,7 @@ describe("Withdraw collateral instruction", () => {
     let fullCollateral = await context.collateralToken.getTotalCollateral(taker);
 
     // lock some collateral
-    await context.createRfq();
+    await context.createEscrowRfq();
 
     await expectError(context.withdrawCollateral(context.taker, fullCollateral), "NotEnoughCollateral");
   });

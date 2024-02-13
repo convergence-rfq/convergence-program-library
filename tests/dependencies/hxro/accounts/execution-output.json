@@ -1,0 +1,13 @@
+{
+  "pubkey": "6Prp1p7vjS6LCb8xR1oQqsbUPX9AWaHz9PBVbdzAFHT4",
+  "account": {
+    "lamports": 953520,
+    "data": [
+      "UXUBZI2/164A",
+      "base64"
+    ],
+    "owner": "FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL",
+    "executable": false,
+    "rentEpoch": 0
+  }
+}

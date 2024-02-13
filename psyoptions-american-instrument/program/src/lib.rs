@@ -7,15 +7,14 @@ use instructions::*;
 use rfq::state::MintType;
 use rfq::state::{AssetIdentifier, AuthoritySide};
 use risk_engine::state::OptionType;
-use state::{AssetIdentifierDuplicate, ParsedLegData};
-use state::{AuthoritySideDuplicate, TOKEN_DECIMALS};
+use state::{ParsedLegData, TOKEN_DECIMALS};
 
 mod american_options;
 mod errors;
 mod instructions;
 mod state;
 
-declare_id!("6JG1tWK4w6LmjeXbmDZJsmUsPSjgnp74j2XPsTvjjTX8");
+declare_id!("HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok");
 
 const ESCROW_SEED: &str = "escrow";
 #[program]
@@ -103,7 +102,7 @@ pub mod psyoptions_american_instrument {
             PsyoptionsAmericanError::PassedStrikePriceDecimalsDoesNotMatch
         );
         require_eq!(
-            option_common_data.underlying_amound_per_contract_decimals,
+            option_common_data.underlying_amount_per_contract_decimals,
             underlying_asset_mint.decimals,
             PsyoptionsAmericanError::PassedUnderlyingAmountPerContractDecimalsDoesNotMatch
         );
@@ -132,11 +131,7 @@ pub mod psyoptions_american_instrument {
         Ok(())
     }
 
-    pub fn prepare_to_settle(
-        ctx: Context<PrepareToSettle>,
-        asset_identifier: AssetIdentifierDuplicate,
-        side: AuthoritySideDuplicate,
-    ) -> Result<()> {
+    pub fn prepare_to_settle(ctx: Context<PrepareToSettle>, input: [u8; 3]) -> Result<()> {
         let PrepareToSettle {
             caller,
             caller_token_account,
@@ -148,7 +143,10 @@ pub mod psyoptions_american_instrument {
             ..
         } = &ctx.accounts;
 
-        let asset_data = rfq.get_asset_instrument_data(asset_identifier.into());
+        let (asset_identifier, side): (AssetIdentifier, AuthoritySide) =
+            AnchorDeserialize::try_from_slice(&input)?;
+
+        let asset_data = rfq.get_asset_instrument_data(asset_identifier);
 
         let ParsedLegData { mint_address, .. } = AnchorDeserialize::try_from_slice(asset_data)?;
 
@@ -162,11 +160,10 @@ pub mod psyoptions_american_instrument {
             PsyoptionsAmericanError::PassedMintDoesNotMatch
         );
 
-        let side = AuthoritySide::from(side);
-        let asset_receiver = response.get_assets_receiver(rfq, asset_identifier.into());
+        let asset_receiver = response.get_assets_receiver(rfq, asset_identifier);
         let asset_sender = asset_receiver.inverse();
         if side == asset_sender {
-            let token_amount = response.get_asset_amount_to_transfer(rfq, asset_identifier.into());
+            let token_amount = response.get_asset_amount_to_transfer(rfq, asset_identifier);
             let transfer_accounts = Transfer {
                 from: caller_token_account.to_account_info(),
                 to: escrow.to_account_info(),
@@ -179,7 +176,7 @@ pub mod psyoptions_american_instrument {
         Ok(())
     }
 
-    pub fn settle(ctx: Context<Settle>, asset_identifier: AssetIdentifierDuplicate) -> Result<()> {
+    pub fn settle(ctx: Context<Settle>, input: [u8; 2]) -> Result<()> {
         let Settle {
             rfq,
             response,
@@ -189,8 +186,10 @@ pub mod psyoptions_american_instrument {
             ..
         } = &ctx.accounts;
 
+        let asset_identifier = AnchorDeserialize::try_from_slice(&input)?;
+
         response
-            .get_assets_receiver(rfq, asset_identifier.into())
+            .get_assets_receiver(rfq, asset_identifier)
             .validate_is_associated_token_account(
                 rfq,
                 response,
@@ -202,7 +201,7 @@ pub mod psyoptions_american_instrument {
             escrow,
             receiver_token_account,
             response.key(),
-            asset_identifier.into(),
+            asset_identifier,
             *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
@@ -210,11 +209,7 @@ pub mod psyoptions_american_instrument {
         Ok(())
     }
 
-    pub fn revert_preparation(
-        ctx: Context<RevertPreparation>,
-        asset_identifier: AssetIdentifierDuplicate,
-        side: AuthoritySideDuplicate,
-    ) -> Result<()> {
+    pub fn revert_preparation(ctx: Context<RevertPreparation>, input: [u8; 3]) -> Result<()> {
         let RevertPreparation {
             rfq,
             response,
@@ -224,19 +219,21 @@ pub mod psyoptions_american_instrument {
             ..
         } = &ctx.accounts;
 
-        let side: AuthoritySide = side.into();
+        let (asset_identifier, side): (AssetIdentifier, AuthoritySide) =
+            AnchorDeserialize::try_from_slice(&input)?;
+
         side.validate_is_associated_token_account(rfq, response, escrow.mint, tokens.key())?;
 
         if side
             == response
-                .get_assets_receiver(rfq, asset_identifier.into())
+                .get_assets_receiver(rfq, asset_identifier)
                 .inverse()
         {
             transfer_from_an_escrow(
                 escrow,
                 tokens,
                 response.key(),
-                asset_identifier.into(),
+                asset_identifier,
                 *ctx.bumps.get("escrow").unwrap(),
                 token_program,
             )?;
@@ -245,10 +242,7 @@ pub mod psyoptions_american_instrument {
         Ok(())
     }
 
-    pub fn clean_up(
-        ctx: Context<CleanUp>,
-        asset_identifier: AssetIdentifierDuplicate,
-    ) -> Result<()> {
+    pub fn clean_up(ctx: Context<CleanUp>, input: [u8; 2]) -> Result<()> {
         let CleanUp {
             rfq,
             response,
@@ -259,8 +253,10 @@ pub mod psyoptions_american_instrument {
             ..
         } = &ctx.accounts;
 
+        let asset_identifier = AnchorDeserialize::try_from_slice(&input)?;
+
         let expected_first_to_prepare = response
-            .get_preparation_initialized_by(asset_identifier.into())
+            .get_preparation_initialized_by(asset_identifier)
             .unwrap()
             .to_public_key(rfq, response);
         require!(
@@ -275,7 +271,7 @@ pub mod psyoptions_american_instrument {
                 escrow,
                 &backup_receiver,
                 response.key(),
-                asset_identifier.into(),
+                asset_identifier,
                 *ctx.bumps.get("escrow").unwrap(),
                 token_program,
             )?;
@@ -285,7 +281,7 @@ pub mod psyoptions_american_instrument {
             escrow,
             first_to_prepare,
             response.key(),
-            asset_identifier.into(),
+            asset_identifier,
             *ctx.bumps.get("escrow").unwrap(),
             token_program,
         )?;
@@ -309,7 +305,7 @@ fn transfer_from_an_escrow<'info>(
         authority: escrow_token_account.to_account_info(),
     };
     let response_key = response.key();
-    let leg_index_seed = asset_identifier.to_seed_bytes();
+    let leg_index_seed = asset_identifier.to_bytes();
     let bump_seed = [bump];
     let escrow_seed = &[&[
         ESCROW_SEED.as_bytes(),
@@ -342,7 +338,7 @@ fn close_escrow_account<'info>(
     };
 
     let response_key = response.key();
-    let leg_index_seed = asset_identifier.to_seed_bytes();
+    let leg_index_seed = asset_identifier.to_bytes();
     let bump_seed = [bump];
     let escrow_seed = &[&[
         ESCROW_SEED.as_bytes(),

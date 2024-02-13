@@ -1,0 +1,34 @@
+{
+  "name": "@convergence-rfq/hxro-print-trade-provider",
+  "version": "3.7.0",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": "https://github.com/convergence-rfq/convergence-program-library.git",
+  "author": "Convergence RFQ Maintainers <contact@tradersguild.so>",
+  "main": "./generated/index.js",
+  "types": "./generated/index.d.ts",
+  "files": [
+    "/generated",
+    "/idl"
+  ],
+  "scripts": {
+    "build": "rimraf dist && yarn solita && tsc -p tsconfig.json --declaration"
+  },
+  "dependencies": {
+    "@convergence-rfq/beet": "^0.7.10",
+    "@convergence-rfq/beet-solana": "^0.4.11",
+    "@solana/spl-token": "^0.3.5",
+    "@solana/web3.js": "^1.56.2",
+    "bn.js": "^5.2.0"
+  },
+  "devDependencies": {
+    "@convergence-rfq/solita": "^0.16.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.0.0",
+    "typescript": "^4.8.4",
+    "rimraf": "^4.1.2"
+  }
+}

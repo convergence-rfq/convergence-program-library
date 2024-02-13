@@ -9,7 +9,7 @@ use crate::{
     seeds::COLLATERAL_SEED,
     state::{
         ApiLeg, AuthoritySide, BaseAssetInfo, CollateralInfo, ProtocolState, Response, Rfq,
-        StoredResponseState,
+        SettlementTypeMetadata, StoredResponseState,
     },
 };
 
@@ -61,21 +61,23 @@ pub fn transfer_collateral_token<'info>(
     Ok(())
 }
 
-pub fn update_state_after_preparation(
+pub fn update_state_after_escrow_preparation(
     side: AuthoritySide,
     legs_prepared: u8,
     rfq: &mut Rfq,
     response: &mut Response,
 ) {
-    let state_legs_prepared = response.get_prepared_legs_mut(side);
+    let state_legs_prepared = response.get_prepared_counter_mut(side);
     *state_legs_prepared += legs_prepared;
 
-    let state_legs_prepared = response.get_prepared_legs(side);
-    if state_legs_prepared > response.leg_preparations_initialized_by.len() as u8 {
+    let state_legs_prepared = response.get_prepared_counter(side);
+    if state_legs_prepared > response.escrow_leg_preparations_initialized_by.len() as u8 {
         let additional_entries =
-            state_legs_prepared - response.leg_preparations_initialized_by.len() as u8;
+            state_legs_prepared - response.escrow_leg_preparations_initialized_by.len() as u8;
         let items = iter::repeat(side).take(additional_entries as usize);
-        response.leg_preparations_initialized_by.extend(items);
+        response
+            .escrow_leg_preparations_initialized_by
+            .extend(items);
     }
 
     if response.is_prepared(AuthoritySide::Taker, rfq)
@@ -89,16 +91,84 @@ pub fn validate_legs<'a, 'info: 'a>(
     legs: &[ApiLeg],
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+    is_settled_as_print_trade: bool,
+) -> Result<()> {
+    validate_legs_base_asset(legs, remaining_accounts)?;
+    validate_legs_settlement_type(legs, is_settled_as_print_trade)?;
+
+    if !is_settled_as_print_trade {
+        validate_instrument_legs(legs, protocol, remaining_accounts)?;
+    }
+
+    Ok(())
+}
+
+fn validate_legs_base_asset<'a, 'info: 'a>(
+    legs: &[ApiLeg],
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
 ) -> Result<()> {
     for leg in legs.iter() {
-        let instrument = protocol.get_instrument_parameters(leg.instrument_program)?;
-        require!(instrument.enabled, ProtocolError::InstrumentIsDisabled);
-
         let base_asset_account = remaining_accounts
             .next()
             .ok_or_else(|| error!(ProtocolError::NotEnoughAccounts))?;
         let base_asset = Account::<BaseAssetInfo>::try_from(base_asset_account)?;
+        require!(
+            leg.base_asset_index == base_asset.index,
+            ProtocolError::BaseAssetIsDisabled
+        );
         require!(base_asset.enabled, ProtocolError::BaseAssetIsDisabled);
+    }
+
+    Ok(())
+}
+
+fn validate_legs_settlement_type(legs: &[ApiLeg], is_settled_as_print_trade: bool) -> Result<()> {
+    for leg in legs.iter() {
+        validate_settlement_type_metadata(
+            &leg.settlement_type_metadata,
+            is_settled_as_print_trade,
+        )?;
+    }
+
+    Ok(())
+}
+
+pub fn validate_settlement_type_metadata(
+    value: &SettlementTypeMetadata,
+    is_settled_as_print_trade: bool,
+) -> Result<()> {
+    if is_settled_as_print_trade {
+        require!(
+            matches!(
+                value,
+                SettlementTypeMetadata::PrintTrade { instrument_type: _ }
+            ),
+            ProtocolError::SettlementInfoDoesNotMatchRfqType
+        );
+    } else {
+        require!(
+            matches!(
+                value,
+                SettlementTypeMetadata::Instrument {
+                    instrument_index: _
+                }
+            ),
+            ProtocolError::SettlementInfoDoesNotMatchRfqType
+        );
+    };
+
+    Ok(())
+}
+
+fn validate_instrument_legs<'a, 'info: 'a>(
+    legs: &[ApiLeg],
+    protocol: &Account<'info, ProtocolState>,
+    remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
+) -> Result<()> {
+    for leg in legs.iter() {
+        let instrument_index = leg.settlement_type_metadata.get_instrument_index().unwrap();
+        let instrument = protocol.get_instrument_parameters(instrument_index)?;
+        require!(instrument.enabled, ProtocolError::InstrumentIsDisabled);
     }
 
     for leg in legs.iter() {

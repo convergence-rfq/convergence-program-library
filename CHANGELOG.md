@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Note:** Version 0 of Semantic Versioning is handled differently from version 1 and above.
 The minor version will be incremented upon a breaking change and the patch version will be incremented for features.
 
+## [3.0.1-dev] - 2023-09-05
+
+### Fixes
+
+- all: Added HXRO print trade provider and instrument for futures. See PR ([#163](https://github.com/convergence-rfq/convergence-program-library/pull/163)) for full details.
+
 ## [2.2.14] - 2023-10-31
 
 ### Features

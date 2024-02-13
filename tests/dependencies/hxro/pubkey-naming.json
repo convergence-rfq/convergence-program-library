@@ -1,0 +1,22 @@
+{
+  "12fr3WXr7Mh1wGMPQe1qe5VUeexz1BRzJ6SfAhHPgC1b": "taker-fee-state",
+  "3fw72yL2pG7cKmPs4TYJa6C9496NyypFpj5UQVLe515j": "product-0",
+  "3q4UnqSY7ARzcbX8B647soB5Xji4Qr23idLQGpZGLzJa": "product-1-orderbook",
+  "4Lrt2YtUyEB8SrtTR3Tsb1DBGU9hRU6xNuDZd9zJrKG9": "maker-trg",
+  "4Ucpj5hWiz8msBQVgFSUnqxQCkJWEPn5YbpwFbbhxoa6": "fee-output",
+  "5T9ApZtB3yTKRv6ssmHdr15hB3d9XnA3WwrYAZTScetY": "risk-config",
+  "5T9gt3frWPAvu1hxEULbsKrP2WF4ggqSxCMqpJvtWXHV": "fees-program",
+  "6Prp1p7vjS6LCb8xR1oQqsbUPX9AWaHz9PBVbdzAFHT4": "execution-output",
+  "78haJHMHdjdp6phofBzQwbHdNobFyYDrGRdgfAWQfwxL": "taker-risk-state",
+  "8qBD1ZewtfoxNAy3E45f5fRtwQUhLku55cVVxT5cMPef": "product-1",
+  "A3tmPza8B4rvHFiUkPHLsL7Nnv4ERK8utFfwPa1yAn18": "taker-trg",
+  "BVDTB61eHY7UnCb4ueatdaV4rctTzqfLAL6sQDeMNSHA": "risk-program",
+  "CTc7swEKXFCD1gsnvVcQyozXK2zJ3roQr3fuU7G6uerC": "product-0-orderbook",
+  "EDHbf67fJZBZoKFJGPEC7b9qimnave5DiYBctVWEysYb": "maker-risk-state",
+  "FEaUEZkFnyTfkWm8GgYR7sbyMkoW5nYSyqECDmKfQQoo": "risk-output",
+  "FU68EKUppMq89TSVBELYpbsdw2FpzKwx79mPvCARmM9t": "maker-fee-state",
+  "FUfpR31LmcP1VSbz5zDaM7nxnH55iBHkpwusgrnhaFjL": "dex-program",
+  "G6b2JSF5M7SySosNC4GkHHmqXczSCGUycppRiYvTQ7aK": "vault",
+  "GBhshm4LFyYTv9iPocz7kmLpRhvvPNoxH9wgB57uNamm": "fee-config",
+  "GCXr6LDZurWK8Hkm18gZzJ7jUgvrYEVFFeWUR346fd42": "mpg"
+}

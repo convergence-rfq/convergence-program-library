@@ -23,24 +23,27 @@ pub struct ProtocolState {
 
     pub risk_engine: Pubkey,
     pub collateral_mint: Pubkey,
+    pub print_trade_providers: Vec<PrintTradeProvider>,
     pub instruments: Vec<Instrument>,
 
     pub reserved: [u8; 1024],
 }
 
 impl ProtocolState {
+    pub const MAX_PRINT_TRADE_PROVIDERS: usize = 5;
     pub const MAX_INSTRUMENTS: usize = 50;
 
     pub fn get_allocated_size() -> usize {
         // mem::size_of can include unwanted additional overhead padding
         // TODO: rework from pre-allocating to reallocating on new elements addition
-        8 + mem::size_of::<Self>() + Self::MAX_INSTRUMENTS * mem::size_of::<Instrument>()
+        8 + mem::size_of::<Self>()
+            + Self::MAX_INSTRUMENTS * mem::size_of::<Instrument>()
+            + Self::MAX_PRINT_TRADE_PROVIDERS * mem::size_of::<PrintTradeProvider>()
     }
 
-    pub fn get_instrument_parameters(&self, instrument_key: Pubkey) -> Result<&Instrument> {
+    pub fn get_instrument_parameters(&self, instrument_index: u8) -> Result<&Instrument> {
         self.instruments
-            .iter()
-            .find(|x| x.program_key == instrument_key)
+            .get(instrument_index as usize)
             .ok_or_else(|| error!(ProtocolError::NotAWhitelistedInstrument))
     }
 
@@ -53,6 +56,23 @@ impl ProtocolState {
             .find(|x| x.program_key == instrument_key)
             .ok_or_else(|| error!(ProtocolError::NotAWhitelistedInstrument))
     }
+
+    pub fn get_print_trade_provider_parameters(
+        &self,
+        print_trade_provider_key: Pubkey,
+    ) -> Result<&PrintTradeProvider> {
+        self.print_trade_providers
+            .iter()
+            .find(|x| x.program_key == print_trade_provider_key)
+            .ok_or_else(|| error!(ProtocolError::NotAWhitelistedPrintTradeProvider))
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
+pub struct PrintTradeProvider {
+    pub program_key: Pubkey,
+    pub validate_response_account_amount: u8,
+    pub settlement_can_expire: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]

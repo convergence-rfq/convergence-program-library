@@ -24,10 +24,8 @@ pub enum Error {
     NotAProtocolAuthority,
     #[msg("Instrument is not added to the risk engine")]
     MissingInstrument,
-    #[msg("Can't remove instrument")]
-    CannotRemoveInstrument,
-    #[msg("Can't change instrument")]
-    CannotChangeInstrument,
-    #[msg("Can't add instrument")]
-    CannotAddInstrument,
+    #[msg("Missing instrument index")]
+    MissingInstrumentIndex,
+    #[msg("Failed to extract instrument type")]
+    FailedToExtractInstrumentType,
 }

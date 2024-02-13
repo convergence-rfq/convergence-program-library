@@ -1,7 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
 import { AccountMeta, PublicKey } from "@solana/web3.js";
-import { getBaseAssetPda } from "./pdas";
-import { AssetIdentifier, LegSide } from "./types";
+import { AssetIdentifier, LegData, LegSide, QuoteData } from "./types";
 import { Response, Rfq } from "./wrappers";
 
 export interface InstrumentData {
@@ -13,7 +12,9 @@ export interface InstrumentData {
 
 export interface Instrument {
   serializeInstrumentData(): Buffer;
+  serializeInstrumentDataForQuote(): Buffer;
   getProgramId(): PublicKey;
+  getInstrumentIndex(): number;
   getValidationAccounts(): Promise<AccountMeta[]>;
   getPrepareSettlementAccounts(
     side: { taker: {} } | { maker: {} },
@@ -51,44 +52,35 @@ export class InstrumentController {
     return this.legInfo.baseAssetIndex;
   }
 
-  toLegData() {
+  toLegData(): LegData {
     if (this.legInfo === null) {
       throw Error("Instrument is used for quote!");
     }
 
     return {
-      instrumentProgram: this.instrument.getProgramId(),
+      settlementTypeMetadata: { instrument: { instrumentIndex: this.instrument.getInstrumentIndex() } },
       baseAssetIndex: { value: this.legInfo.baseAssetIndex },
-      instrumentData: this.instrument.serializeInstrumentData(),
-      instrumentAmount: new BN(this.legInfo.amount),
-      instrumentDecimals: this.decimals,
+      data: this.instrument.serializeInstrumentData(),
+      amount: new BN(this.legInfo.amount),
+      amountDecimals: this.decimals,
       side: this.legInfo.side,
     };
   }
 
-  toQuoteData() {
+  toQuoteData(): QuoteData {
     if (this.legInfo !== null) {
       throw Error("Instrument is used for leg!");
     }
 
     return {
-      instrumentProgram: this.instrument.getProgramId(),
-      instrumentData: this.instrument.serializeInstrumentData(),
-      instrumentDecimals: this.decimals,
+      settlementTypeMetadata: { instrument: { instrumentIndex: this.instrument.getInstrumentIndex() } },
+      data: this.instrument.serializeInstrumentDataForQuote(),
+      decimals: this.decimals,
     };
-  }
-
-  getInstrumendDataSize() {
-    return this.instrument.serializeInstrumentData().length;
   }
 
   private getProgramAccount() {
     return { pubkey: this.instrument.getProgramId(), isSigner: false, isWritable: false };
-  }
-
-  async getBaseAssetAccount(rfqProgramAddress: PublicKey) {
-    const baseAssetAddress = await getBaseAssetPda(this.getBaseAssetIndex(), rfqProgramAddress);
-    return { pubkey: baseAssetAddress, isSigner: false, isWritable: false };
   }
 
   async getValidationAccounts() {

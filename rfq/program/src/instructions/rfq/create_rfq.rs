@@ -1,7 +1,7 @@
 use std::mem;
 
 use crate::{
-    common::validate_legs as common_validate_legs,
+    common::{validate_legs as common_validate_legs, validate_settlement_type_metadata},
     errors::ProtocolError,
     interfaces::instrument::validate_quote_instrument_data,
     seeds::{PROTOCOL_SEED, RFQ_SEED},
@@ -18,6 +18,7 @@ const RECENT_TIMESTAMP_VALIDITY: u64 = 120; // slightly higher then the recent b
     expected_legs_size: u16,
     expected_legs_hash: [u8; 32],
     _legs: Vec<ApiLeg>,
+    print_trade_provider: Option<Pubkey>,
     order_type: OrderType,
     quote_asset: QuoteAsset,
     fixed_size: FixedSize,
@@ -39,6 +40,7 @@ pub struct CreateRfqAccounts<'info> {
             RFQ_SEED.as_bytes(),
             taker.key().as_ref(),
             &expected_legs_hash,
+            print_trade_provider.unwrap_or_default().as_ref(),
             &[order_type as u8],
             &hash(&quote_asset.try_to_vec().unwrap()).to_bytes(),
             &fixed_size.try_to_vec().unwrap(),
@@ -59,16 +61,27 @@ fn validate_quote<'a, 'info: 'a>(
     protocol: &Account<'info, ProtocolState>,
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
     quote_asset: &QuoteAsset,
+    is_settled_as_print_trade: bool,
 ) -> Result<()> {
-    let instrument_parameters =
-        protocol.get_instrument_parameters(quote_asset.instrument_program)?;
+    validate_settlement_type_metadata(
+        &quote_asset.settlement_type_metadata,
+        is_settled_as_print_trade,
+    )?;
 
-    require!(
-        instrument_parameters.can_be_used_as_quote,
-        ProtocolError::InvalidQuoteInstrument
-    );
+    if !is_settled_as_print_trade {
+        let instrument_index = quote_asset
+            .settlement_type_metadata
+            .get_instrument_index()
+            .unwrap();
+        let instrument_parameters = protocol.get_instrument_parameters(instrument_index)?;
 
-    validate_quote_instrument_data(quote_asset, protocol, remaining_accounts)?;
+        require!(
+            instrument_parameters.can_be_used_as_quote,
+            ProtocolError::InvalidQuoteInstrument
+        );
+
+        validate_quote_instrument_data(quote_asset, protocol, remaining_accounts)?;
+    }
 
     Ok(())
 }
@@ -78,6 +91,7 @@ fn validate_legs<'a, 'info: 'a>(
     remaining_accounts: &mut impl Iterator<Item = &'a AccountInfo<'info>>,
     expected_leg_size: u16,
     legs: &[ApiLeg],
+    is_settled_as_print_trade: bool,
 ) -> Result<()> {
     require!(
         legs.len() <= (Rfq::MAX_LEGS_AMOUNT as usize),
@@ -88,7 +102,12 @@ fn validate_legs<'a, 'info: 'a>(
         ProtocolError::LegsDataTooBig
     );
 
-    common_validate_legs(legs, protocol, remaining_accounts)?;
+    common_validate_legs(
+        legs,
+        protocol,
+        remaining_accounts,
+        is_settled_as_print_trade,
+    )?;
 
     Ok(())
 }
@@ -119,12 +138,24 @@ fn validate_whitelist(whitelist: &Whitelist, creator: Pubkey) -> Result<()> {
     Ok(())
 }
 
+fn validate_print_trade_provider(
+    protocol: &Account<ProtocolState>,
+    print_trade_provider: Option<Pubkey>,
+) -> Result<()> {
+    if let Some(address) = print_trade_provider {
+        protocol.get_print_trade_provider_parameters(address)?;
+    }
+
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn create_rfq_instruction<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateRfqAccounts<'info>>,
     expected_legs_size: u16,
     expected_legs_hash: [u8; 32],
     legs: Vec<ApiLeg>,
+    print_trade_provider: Option<Pubkey>,
     order_type: OrderType,
     quote_asset: QuoteAsset,
     fixed_size: FixedSize,
@@ -134,9 +165,21 @@ pub fn create_rfq_instruction<'info>(
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
-    validate_quote(protocol, &mut remaining_accounts, &quote_asset)?;
-    validate_legs(protocol, &mut remaining_accounts, expected_legs_size, &legs)?;
+    validate_quote(
+        protocol,
+        &mut remaining_accounts,
+        &quote_asset,
+        print_trade_provider.is_some(),
+    )?;
+    validate_legs(
+        protocol,
+        &mut remaining_accounts,
+        expected_legs_size,
+        &legs,
+        print_trade_provider.is_some(),
+    )?;
     validate_recent_timestamp(recent_timestamp)?;
+    validate_print_trade_provider(protocol, print_trade_provider)?;
     let CreateRfqAccounts {
         taker,
         rfq,
@@ -170,6 +213,7 @@ pub fn create_rfq_instruction<'info>(
         cleared_responses: 0,
         confirmed_responses: 0,
         whitelist: whitelist_to_pass,
+        print_trade_provider,
         reserved: [0; 224],
         legs: legs.into_iter().map(Into::into).collect(),
     });
