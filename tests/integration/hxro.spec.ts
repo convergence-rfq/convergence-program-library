@@ -52,7 +52,6 @@ describe("RFQ HXRO instrument integration tests", () => {
       printTradeProvider: new HxroPrintTradeProvider(context, hxroContext),
     });
     await rfq.cancel();
-    await rfq.unlockCollateral();
     await rfq.cleanUp();
   });
 
@@ -62,7 +61,6 @@ describe("RFQ HXRO instrument integration tests", () => {
       activeWindow: 1,
     });
     await sleep(1.5);
-    await rfq.unlockCollateral();
     await rfq.cleanUp();
   });
 
@@ -73,9 +71,7 @@ describe("RFQ HXRO instrument integration tests", () => {
     });
     const response = await runInParallelWithWait(() => rfq.respond(), 2.5);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
-    await rfq.unlockCollateral();
     await rfq.cleanUp();
   });
 
@@ -101,7 +97,6 @@ describe("RFQ HXRO instrument integration tests", () => {
     await response.preparePrintTradeSettlement(AuthoritySide.Taker, DEFAULT_SETTLEMENT_OUTCOME);
     await response.preparePrintTradeSettlement(AuthoritySide.Maker, DEFAULT_SETTLEMENT_OUTCOME);
     await response.settlePrintTrade();
-    await response.unlockResponseCollateral();
     await response.cleanUp();
     await rfq.cancel();
     await rfq.cleanUp();
@@ -123,7 +118,6 @@ describe("RFQ HXRO instrument integration tests", () => {
     }, 4.5);
 
     await response.settlePrintTrade();
-    await response.unlockResponseCollateral();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -146,7 +140,6 @@ describe("RFQ HXRO instrument integration tests", () => {
 
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
 
-    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -169,7 +162,6 @@ describe("RFQ HXRO instrument integration tests", () => {
 
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
 
-    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -188,7 +180,6 @@ describe("RFQ HXRO instrument integration tests", () => {
       return response;
     }, 3.5);
 
-    await response.settleTwoPartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -216,7 +207,6 @@ describe("RFQ HXRO instrument integration tests", () => {
     const responseData = await response.getData();
     expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Taker);
 
-    await response.settleOnePartyDefault();
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
     await response.cleanUp();
@@ -245,7 +235,6 @@ describe("RFQ HXRO instrument integration tests", () => {
     const responseData = await response.getData();
     expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Maker);
 
-    await response.settleOnePartyDefault();
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
     await response.cleanUp();
@@ -272,7 +261,6 @@ describe("RFQ HXRO instrument integration tests", () => {
     const responseData = await response.getData();
     expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Taker);
 
-    await response.settleOnePartyDefault();
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
     await response.cleanUp();
@@ -299,7 +287,6 @@ describe("RFQ HXRO instrument integration tests", () => {
     const responseData = await response.getData();
     expect(responseData.defaultingParty).to.be.deep.equal(AuthoritySide.Maker);
 
-    await response.settleOnePartyDefault();
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
     await response.cleanUp();

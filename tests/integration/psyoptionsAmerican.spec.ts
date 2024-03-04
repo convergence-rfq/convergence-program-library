@@ -72,7 +72,6 @@ describe("Psyoptions American instrument integration tests", async () => {
       { token: options.optionMint, user: maker, delta: new BN(-1) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -121,7 +120,6 @@ describe("Psyoptions American instrument integration tests", async () => {
       { token: options.optionMint, user: maker, delta: new BN(-1) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -178,7 +176,6 @@ describe("Psyoptions American instrument integration tests", async () => {
       { token: options.optionMint, user: maker, delta: new BN(2) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -219,7 +216,6 @@ describe("Psyoptions American instrument integration tests", async () => {
     // taker have returned his assets
     await tokenMeasurer.expectChange([{ token: options.optionMint, user: taker, delta: new BN(0) }]);
 
-    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -262,7 +258,6 @@ describe("Psyoptions American instrument integration tests", async () => {
     await response.revertEscrowSettlementPreparation(AuthoritySide.Maker);
 
     // taker have returned his assets
-    await response.settleOnePartyDefault();
     await tokenMeasurer.expectChange([{ token: "quote", user: maker, delta: new BN(0) }]);
     await response.cleanUp();
     await rfq.cleanUp();
@@ -307,7 +302,6 @@ describe("Psyoptions American instrument integration tests", async () => {
       { token: "quote", user: maker, delta: withTokenDecimals(-16) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -350,7 +344,6 @@ describe("Psyoptions American instrument integration tests", async () => {
       { token: "quote", user: maker, delta: withTokenDecimals(70) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 });

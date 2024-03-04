@@ -82,7 +82,6 @@ describe("Psyoptions European instrument integration tests", () => {
       { token: options.callMint, user: maker, delta: new BN(0) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -124,7 +123,6 @@ describe("Psyoptions European instrument integration tests", () => {
     // taker have returned his assets
     await tokenMeasurer.expectChange([{ token: options.putMint, user: taker, delta: new BN(0) }]);
 
-    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -194,7 +192,6 @@ describe("Psyoptions European instrument integration tests", () => {
       maker,
       [...Array(legAmount)].map(() => taker)
     );
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 });
