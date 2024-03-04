@@ -10,6 +10,7 @@ import {
   toLegMultiplier,
   withTokenDecimals,
   sleep,
+  withoutSpotQuoteFees,
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, QuoteSide, LegSide } from "../utilities/types";
@@ -84,7 +85,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "asset", user: taker, delta: withTokenDecimals(1) },
       { token: "asset", user: maker, delta: withTokenDecimals(-1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-22_000) },
-      { token: "quote", user: maker, delta: withTokenDecimals(22_000) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(22_000)) },
     ]);
 
     await response.cleanUp();
@@ -111,7 +112,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await tokenMeasurer.expectChange([
       { token: "asset", user: taker, delta: withTokenDecimals(-1.5) },
       { token: "asset", user: maker, delta: withTokenDecimals(1.5) },
-      { token: "quote", user: taker, delta: withTokenDecimals(30_000) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(30_000)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-30_000) },
     ]);
 
@@ -162,7 +163,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "asset", user: maker, delta: withTokenDecimals(1.25) },
       { token: "additionalAsset", user: taker, delta: withTokenDecimals(250) },
       { token: "additionalAsset", user: maker, delta: withTokenDecimals(-250) },
-      { token: "quote", user: taker, delta: withTokenDecimals(17_500) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(17_500)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-17_500) },
     ]);
     await response.cleanUp();
@@ -187,7 +188,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
         user: maker,
         delta: withTokenDecimals(-2000),
       },
-      { token: "quote", user: taker, delta: withTokenDecimals(142_000) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(142_000)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-142_000) },
     ]);
     await secondResponse.cleanUp();
@@ -215,7 +216,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "asset", user: taker, delta: withTokenDecimals(15) },
       { token: "asset", user: maker, delta: withTokenDecimals(-15) },
       { token: "quote", user: taker, delta: withTokenDecimals(-309_999) },
-      { token: "quote", user: maker, delta: withTokenDecimals(309_999) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(309_999)) },
     ]);
     await response.cleanUp();
   });
@@ -241,7 +242,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await tokenMeasurer.expectChange([
       { token: "asset", user: taker, delta: withTokenDecimals(-1.75) },
       { token: "asset", user: maker, delta: withTokenDecimals(1.75) },
-      { token: "quote", user: taker, delta: withTokenDecimals(38_500) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(38_500)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-38_500) },
     ]);
     await response.cleanUp();

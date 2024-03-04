@@ -42,6 +42,8 @@ export const SWITCHBOARD_BTC_ORACLE = new PublicKey("8SXvChNYFhRq4EZuZvnhjrB3jJR
 export const PYTH_SOL_ORACLE = new PublicKey("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG");
 export const ETH_IN_PLACE_PRICE = 2_000;
 
+export const SPOT_QUOTE_FEE_BPS = new BN(1).mul(new BN(10).pow(new BN(FEE_BPS_DECIMALS - 2))); // 1%
+
 export const RISK_ENGINE_CONFIG_SEED = "config";
 
 export const DEFAULT_MIN_COLLATERAL_REQUIREMENT = new BN(0);

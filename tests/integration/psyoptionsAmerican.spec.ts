@@ -6,6 +6,7 @@ import {
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
+  withoutSpotQuoteFees,
   withTokenDecimals,
 } from "../utilities/helpers";
 import * as anchor from "@coral-xyz/anchor";
@@ -67,7 +68,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-50) },
-      { token: "quote", user: maker, delta: withTokenDecimals(50) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(50)) },
       { token: "asset", user: maker, delta: withTokenDecimals(0) },
       { token: options.optionMint, user: maker, delta: new BN(-1) },
     ]);
@@ -115,7 +116,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-50) },
-      { token: "quote", user: maker, delta: withTokenDecimals(50) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(50)) },
       { token: "asset", user: maker, delta: withTokenDecimals(0) },
       { token: options.optionMint, user: maker, delta: new BN(-1) },
     ]);
@@ -170,7 +171,7 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(-2) },
-      { token: "quote", user: taker, delta: withTokenDecimals(90) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(90)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-90) },
       { token: "asset", user: maker, delta: withTokenDecimals(0) },
       { token: options.optionMint, user: maker, delta: new BN(2) },
@@ -298,7 +299,7 @@ describe("Psyoptions American instrument integration tests", async () => {
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(-1) },
       { token: options.optionMint, user: maker, delta: new BN(1) },
-      { token: "quote", user: taker, delta: withTokenDecimals(16) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(16)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-16) },
     ]);
 
@@ -341,7 +342,7 @@ describe("Psyoptions American instrument integration tests", async () => {
       { token: options.optionMint, user: taker, delta: new BN(1) },
       { token: options.optionMint, user: maker, delta: new BN(-1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-70) },
-      { token: "quote", user: maker, delta: withTokenDecimals(70) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(70)) },
     ]);
 
     await response.cleanUp();

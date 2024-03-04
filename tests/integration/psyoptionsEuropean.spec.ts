@@ -6,6 +6,7 @@ import {
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
+  withoutSpotQuoteFees,
   withTokenDecimals,
 } from "../utilities/helpers";
 import { PsyoptionsEuropeanInstrument, EuroOptionsFacade } from "../utilities/instruments/psyoptionsEuropeanInstrument";
@@ -77,7 +78,7 @@ describe("Psyoptions European instrument integration tests", () => {
         delta: new BN(1).mul(CONTRACT_DECIMALS_BN),
       },
       { token: "quote", user: taker, delta: withTokenDecimals(-500) },
-      { token: "quote", user: maker, delta: withTokenDecimals(500) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(500)) },
       { token: "asset", user: maker, delta: withTokenDecimals(-1) },
       { token: options.callMint, user: maker, delta: new BN(0) },
     ]);
