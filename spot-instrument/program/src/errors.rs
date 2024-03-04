@@ -22,4 +22,6 @@ pub enum SpotError {
     MintTypeDoesNotMatch,
     #[msg("Invalid fee value")]
     InvalidFee,
+    #[msg("Invalid protocol tokens account address")]
+    InvalidProtocolTokensAccount,
 }

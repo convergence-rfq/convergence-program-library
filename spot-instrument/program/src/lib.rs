@@ -2,6 +2,7 @@
 
 use crate::errors::SpotError;
 use anchor_lang::prelude::*;
+use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
@@ -22,23 +23,19 @@ const CONFIG_SEED: &str = "config";
 pub mod spot_instrument {
     use super::*;
 
-    pub fn initialize_config(
-        ctx: Context<InitializeConfigAccounts>,
-        fee_bps: u64,
-    ) -> Result<()> {
-        let config = &mut ctx.accounts.config; 
+    pub fn initialize_config(ctx: Context<InitializeConfigAccounts>, fee_bps: u64) -> Result<()> {
+        let config = &mut ctx.accounts.config;
 
         config.fee_bps = fee_bps;
         config.validate()
     }
 
     pub fn modify_config(ctx: Context<ModifyConfigAccounts>, fee_bps: u64) -> Result<()> {
-        let config = &mut ctx.accounts.config; 
+        let config = &mut ctx.accounts.config;
 
         config.fee_bps = fee_bps;
         config.validate()
     }
-
 
     pub fn validate_data(
         ctx: Context<ValidateData>,
@@ -118,6 +115,7 @@ pub mod spot_instrument {
 
     pub fn settle(mut ctx: Context<Settle>, input: [u8; 2]) -> Result<()> {
         let Settle {
+            protocol,
             rfq,
             response,
             escrow,
@@ -138,6 +136,12 @@ pub mod spot_instrument {
                 escrow.mint,
                 receiver_tokens.key(),
             )?;
+
+        require_keys_eq!(
+            get_associated_token_address(&protocol.authority, &escrow.mint),
+            protocol_tokens.key(),
+            SpotError::InvalidProtocolTokensAccount
+        );
 
         let fee_amount = match asset_identifier {
             AssetIdentifier::Leg { leg_index: _ } => 0,
@@ -398,7 +402,7 @@ pub struct Settle<'info> {
     pub escrow: Box<Account<'info, TokenAccount>>,
     #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
     pub receiver_tokens: Box<Account<'info, TokenAccount>>,
-    #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
+    #[account(mut, constraint = protocol_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
     pub protocol_tokens: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,

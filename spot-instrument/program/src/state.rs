@@ -12,8 +12,8 @@ impl Config {
     pub const BPS_DECIMALS: usize = 9;
 
     pub fn calculate_fees(&self, amount: u64) -> u64 {
-        let result = (amount as u128) * (self.fee_bps as u128)
-            / 10_u128.pow(Self::BPS_DECIMALS as u32);
+        let result =
+            (amount as u128) * (self.fee_bps as u128) / 10_u128.pow(Self::BPS_DECIMALS as u32);
 
         result as u64
     }
