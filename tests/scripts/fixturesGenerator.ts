@@ -20,6 +20,7 @@ import {
   ETH_IN_PLACE_PRICE,
   PYTH_SOL_ORACLE,
   SOLANA_BASE_ASSET_INDEX,
+  SPOT_QUOTE_FEE_BPS,
   SWITCHBOARD_BTC_ORACLE,
 } from "../utilities/constants";
 import { OracleSource, RiskCategory } from "../utilities/types";
@@ -106,6 +107,12 @@ async function main() {
   await PsyoptionsAmericanInstrumentClass.addInstrument(context);
 
   await executeInParallel(
+    async () => {
+      await SpotInstrument.initializeConfig(context, SPOT_QUOTE_FEE_BPS);
+
+      const configAddress = SpotInstrument.getConfigAddress();
+      await saveAccountAsFixture(context, configAddress, "spot-instrument-config");
+    },
     async () => {
       await context.riskEngine.initializeDefaultConfig();
     },

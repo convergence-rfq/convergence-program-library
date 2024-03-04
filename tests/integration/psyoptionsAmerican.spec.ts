@@ -6,6 +6,7 @@ import {
   toAbsolutePrice,
   TokenChangeMeasurer,
   toLegMultiplier,
+  withoutSpotQuoteFees,
   withTokenDecimals,
 } from "../utilities/helpers";
 import * as anchor from "@coral-xyz/anchor";
@@ -67,12 +68,11 @@ describe("Psyoptions American instrument integration tests", async () => {
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-50) },
-      { token: "quote", user: maker, delta: withTokenDecimals(50) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(50)) },
       { token: "asset", user: maker, delta: withTokenDecimals(0) },
       { token: options.optionMint, user: maker, delta: new BN(-1) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -116,12 +116,11 @@ describe("Psyoptions American instrument integration tests", async () => {
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-50) },
-      { token: "quote", user: maker, delta: withTokenDecimals(50) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(50)) },
       { token: "asset", user: maker, delta: withTokenDecimals(0) },
       { token: options.optionMint, user: maker, delta: new BN(-1) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -172,13 +171,12 @@ describe("Psyoptions American instrument integration tests", async () => {
 
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(-2) },
-      { token: "quote", user: taker, delta: withTokenDecimals(90) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(90)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-90) },
       { token: "asset", user: maker, delta: withTokenDecimals(0) },
       { token: options.optionMint, user: maker, delta: new BN(2) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -219,7 +217,6 @@ describe("Psyoptions American instrument integration tests", async () => {
     // taker have returned his assets
     await tokenMeasurer.expectChange([{ token: options.optionMint, user: taker, delta: new BN(0) }]);
 
-    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -262,7 +259,6 @@ describe("Psyoptions American instrument integration tests", async () => {
     await response.revertEscrowSettlementPreparation(AuthoritySide.Maker);
 
     // taker have returned his assets
-    await response.settleOnePartyDefault();
     await tokenMeasurer.expectChange([{ token: "quote", user: maker, delta: new BN(0) }]);
     await response.cleanUp();
     await rfq.cleanUp();
@@ -303,11 +299,10 @@ describe("Psyoptions American instrument integration tests", async () => {
     await tokenMeasurer.expectChange([
       { token: options.optionMint, user: taker, delta: new BN(-1) },
       { token: options.optionMint, user: maker, delta: new BN(1) },
-      { token: "quote", user: taker, delta: withTokenDecimals(16) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(16)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-16) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -347,10 +342,9 @@ describe("Psyoptions American instrument integration tests", async () => {
       { token: options.optionMint, user: taker, delta: new BN(1) },
       { token: options.optionMint, user: maker, delta: new BN(-1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-70) },
-      { token: "quote", user: maker, delta: withTokenDecimals(70) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(70)) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 });

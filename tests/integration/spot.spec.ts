@@ -10,6 +10,7 @@ import {
   toLegMultiplier,
   withTokenDecimals,
   sleep,
+  withoutSpotQuoteFees,
 } from "../utilities/helpers";
 import { SpotInstrument } from "../utilities/instruments/spotInstrument";
 import { AuthoritySide, FixedSize, OrderType, Quote, QuoteSide, LegSide } from "../utilities/types";
@@ -45,14 +46,12 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create an RFQ, cancel it and remove", async () => {
     const rfq = await context.createEscrowRfq();
     await rfq.cancel();
-    await rfq.unlockCollateral();
     await rfq.cleanUp();
   });
 
   it("Create an RFQ, it expires and is removed", async () => {
     const rfq = await context.createEscrowRfq({ activeWindow: 1 });
     await sleep(1.5);
-    await rfq.unlockCollateral();
     await rfq.cleanUp();
   });
 
@@ -60,9 +59,7 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     const rfq = await context.createEscrowRfq({ activeWindow: 2 });
     const response = await runInParallelWithWait(() => rfq.respond(), 2.5);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
-    await rfq.unlockCollateral();
     await rfq.cleanUp();
   });
 
@@ -88,10 +85,9 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "asset", user: taker, delta: withTokenDecimals(1) },
       { token: "asset", user: maker, delta: withTokenDecimals(-1) },
       { token: "quote", user: taker, delta: withTokenDecimals(-22_000) },
-      { token: "quote", user: maker, delta: withTokenDecimals(22_000) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(22_000)) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -116,11 +112,10 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await tokenMeasurer.expectChange([
       { token: "asset", user: taker, delta: withTokenDecimals(-1.5) },
       { token: "asset", user: maker, delta: withTokenDecimals(1.5) },
-      { token: "quote", user: taker, delta: withTokenDecimals(30_000) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(30_000)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-30_000) },
     ]);
 
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -168,10 +163,9 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "asset", user: maker, delta: withTokenDecimals(1.25) },
       { token: "additionalAsset", user: taker, delta: withTokenDecimals(250) },
       { token: "additionalAsset", user: maker, delta: withTokenDecimals(-250) },
-      { token: "quote", user: taker, delta: withTokenDecimals(17_500) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(17_500)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-17_500) },
     ]);
-    await response.unlockResponseCollateral();
     await response.cleanUp();
 
     // taker confirms second response
@@ -194,10 +188,9 @@ describe("RFQ escrow settlement using spot integration tests", () => {
         user: maker,
         delta: withTokenDecimals(-2000),
       },
-      { token: "quote", user: taker, delta: withTokenDecimals(142_000) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(142_000)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-142_000) },
     ]);
-    await secondResponse.unlockResponseCollateral();
     await secondResponse.cleanUp();
   });
 
@@ -223,9 +216,8 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "asset", user: taker, delta: withTokenDecimals(15) },
       { token: "asset", user: maker, delta: withTokenDecimals(-15) },
       { token: "quote", user: taker, delta: withTokenDecimals(-309_999) },
-      { token: "quote", user: maker, delta: withTokenDecimals(309_999) },
+      { token: "quote", user: maker, delta: withoutSpotQuoteFees(withTokenDecimals(309_999)) },
     ]);
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -250,10 +242,9 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await tokenMeasurer.expectChange([
       { token: "asset", user: taker, delta: withTokenDecimals(-1.75) },
       { token: "asset", user: maker, delta: withTokenDecimals(1.75) },
-      { token: "quote", user: taker, delta: withTokenDecimals(38_500) },
+      { token: "quote", user: taker, delta: withoutSpotQuoteFees(withTokenDecimals(38_500)) },
       { token: "quote", user: maker, delta: withTokenDecimals(-38_500) },
     ]);
-    await response.unlockResponseCollateral();
     await response.cleanUp();
   });
 
@@ -269,7 +260,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     }, 3.5);
 
     await response.settleEscrow(taker, [maker]);
-    await response.unlockResponseCollateral();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -297,7 +287,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "quote", user: taker, delta: withTokenDecimals(0) },
       { token: "quote", user: maker, delta: withTokenDecimals(0) },
     ]);
-    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -325,7 +314,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await response.revertEscrowSettlementPreparation(AuthoritySide.Maker, 1);
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker);
 
-    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -353,7 +341,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       { token: "quote", user: taker, delta: withTokenDecimals(0) },
       { token: "quote", user: maker, delta: withTokenDecimals(0) },
     ]);
-    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -381,7 +368,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await response.revertEscrowSettlementPreparation(AuthoritySide.Maker);
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker, 1);
 
-    await response.settleOnePartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
   });
@@ -399,24 +385,23 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       return response;
     }, 3.5);
 
-    await response.settleTwoPartyDefault();
     await response.cleanUp();
     await rfq.cleanUp();
     await tokenMeasurer.expectChange([
       {
         token: "unlockedCollateral",
         user: taker,
-        delta: withTokenDecimals(-660),
+        delta: withTokenDecimals(0),
       },
       {
         token: "unlockedCollateral",
         user: maker,
-        delta: withTokenDecimals(-660),
+        delta: withTokenDecimals(0),
       },
       {
         token: "unlockedCollateral",
         user: dao,
-        delta: withTokenDecimals(1320),
+        delta: withTokenDecimals(0),
       },
     ]);
   });
@@ -439,7 +424,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       return response;
     }, 3.5);
 
-    await response.settleTwoPartyDefault();
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker, 1);
     await response.revertEscrowSettlementPreparation(AuthoritySide.Maker, 1);
     await response.cleanUp(1);
@@ -454,11 +438,8 @@ describe("RFQ escrow settlement using spot integration tests", () => {
         expirationTimestamp: Date.now() / 1000 + 1,
       });
       await response.cancel();
-      await response.unlockResponseCollateral();
       await response.cleanUp();
     }, 2.5);
-
-    await rfq.unlockCollateral();
     await rfq.cleanUp();
     await tokenMeasurer.expectChange([
       { token: "unlockedCollateral", user: taker, delta: new BN(0) },
@@ -469,7 +450,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   it("Create RFQ, cancel it and clean up", async () => {
     const rfq = await context.createEscrowRfq();
     await rfq.cancel();
-    await rfq.unlockCollateral();
     await rfq.cleanUp();
   });
 
@@ -510,7 +490,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       legAmount / 2
     );
 
-    await response.unlockResponseCollateral();
     await response.cleanUpEscrowLegs(legAmount / 2);
     await response.cleanUp(legAmount / 2);
   });
@@ -554,7 +533,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
     await response.revertEscrowSettlementPreparation(AuthoritySide.Taker, legAmount / 2);
     await response.revertEscrowSettlementPreparation(AuthoritySide.Maker, legAmount / 2);
 
-    await response.settleOnePartyDefault();
     await response.cleanUpEscrowLegs(legAmount / 2);
     await response.cleanUp(legAmount / 2);
   });
@@ -580,10 +558,8 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       expirationTimestamp: Date.now() / 1000 + 1,
     });
     await response.cancel();
-    await response.unlockResponseCollateral();
     await response.cleanUp();
     await sleep(2);
-    await rfq.unlockCollateral();
     await rfq.cleanUp();
   });
 

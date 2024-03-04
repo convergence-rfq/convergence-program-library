@@ -45,7 +45,6 @@ describe("Unlock response collateral", () => {
     await response.prepareEscrowSettlement(AuthoritySide.Maker);
     await response.settleEscrow(taker, [maker]);
     const { takerCollateralLocked, makerCollateralLocked } = await response.getData();
-    await response.unlockResponseCollateral();
 
     const takerFees = calculateFeesValue(takerCollateralLocked, DEFAULT_SETTLE_FEES.taker);
     const makerFees = calculateFeesValue(makerCollateralLocked, DEFAULT_SETTLE_FEES.maker);

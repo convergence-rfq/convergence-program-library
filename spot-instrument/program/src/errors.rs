@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 /// Error codes.
 #[error_code]
 pub enum SpotError {
+    #[msg("Require protocol authority")]
+    NotAProtocolAuthority,
     #[msg("Invalid data size")]
     InvalidDataSize,
     #[msg("Passed mint account does not match")]
@@ -18,4 +20,8 @@ pub enum SpotError {
     NotFirstToPrepare,
     #[msg("Mint type does not match. Either stablecoin passed as leg asset or asset with risk passed as quote")]
     MintTypeDoesNotMatch,
+    #[msg("Invalid fee value")]
+    InvalidFee,
+    #[msg("Invalid protocol tokens account address")]
+    InvalidProtocolTokensAccount,
 }

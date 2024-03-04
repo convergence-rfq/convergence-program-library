@@ -76,7 +76,7 @@ describe("Required collateral calculation and lock", () => {
       fixedSize: FixedSize.getBaseAsset(toLegMultiplier(1)),
     });
 
-    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-660) }]);
+    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(0) }]);
   });
 
   it("Correct collateral locked for fix base asset rfq creation with different oracle types", async () => {
@@ -107,7 +107,7 @@ describe("Required collateral calculation and lock", () => {
     });
     await rfq.finalizeRfq();
 
-    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-903.1) }]);
+    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(0) }]);
   });
 
   it("Correct collateral locked for responding to spot rfq", async () => {
@@ -127,7 +127,7 @@ describe("Required collateral calculation and lock", () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [maker]);
     // respond with leg multiplier of 2
     await rfq.respond({ bid: Quote.getStandard(toAbsolutePrice(new BN(20)), toLegMultiplier(2)) });
-    await measurer.expectChange([{ token: "unlockedCollateral", user: maker, delta: withTokenDecimals(-92.4) }]);
+    await measurer.expectChange([{ token: "unlockedCollateral", user: maker, delta: withTokenDecimals(0) }]);
   });
 
   it("Correct additional collateral locked for taker and unlocked for maker on lower confirmation", async () => {
@@ -155,14 +155,13 @@ describe("Required collateral calculation and lock", () => {
     let measurer = await TokenChangeMeasurer.takeSnapshot(context, ["unlockedCollateral"], [taker, maker]);
     // confirm multiplier leg multiplier of 1
     await response.confirm({ side: QuoteSide.Bid, legMultiplierBps: toLegMultiplier(1) });
-    let expectedCollateral = withTokenDecimals(1122);
     await measurer.expectChange([
       {
         token: "unlockedCollateral",
         user: taker,
-        delta: expectedCollateral.neg().add(DEFAULT_MIN_COLLATERAL_REQUIREMENT),
+        delta: withTokenDecimals(0),
       },
-      { token: "unlockedCollateral", user: maker, delta: expectedCollateral },
+      { token: "unlockedCollateral", user: maker, delta: withTokenDecimals(0) },
     ]);
   });
 
@@ -189,8 +188,7 @@ describe("Required collateral calculation and lock", () => {
       {
         token: "unlockedCollateral",
         user: taker,
-        delta: withTokenDecimals(-194),
-        precision: withTokenDecimals(1),
+        delta: withTokenDecimals(0),
       },
     ]);
   });
@@ -247,8 +245,7 @@ describe("Required collateral calculation and lock", () => {
       {
         token: "unlockedCollateral",
         user: taker,
-        delta: withTokenDecimals(-440),
-        precision: withTokenDecimals(1),
+        delta: withTokenDecimals(0),
       },
     ]);
   });
@@ -305,7 +302,7 @@ describe("Required collateral calculation and lock", () => {
       {
         token: "unlockedCollateral",
         user: taker,
-        delta: DEFAULT_MIN_COLLATERAL_REQUIREMENT.neg(),
+        delta: withTokenDecimals(0),
       },
     ]);
   });
@@ -327,6 +324,6 @@ describe("Required collateral calculation and lock", () => {
       settlingWindow: 90 * 24 * 60 * 60, // 90 days
     });
 
-    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(-600.6) }]);
+    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: withTokenDecimals(0) }]);
   });
 });

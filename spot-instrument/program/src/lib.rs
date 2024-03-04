@@ -2,22 +2,40 @@
 
 use crate::errors::SpotError;
 use anchor_lang::prelude::*;
+use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
 };
 use rfq::state::{
     AssetIdentifier, AuthoritySide, MintInfo, MintType, ProtocolState, Response, Rfq,
 };
+use state::Config;
 
 mod errors;
+mod state;
 
 declare_id!("4A9M7iojGDPc4n4YDGnTmsYsNKUohG1zM1nrAqVMMmrm");
 
 const ESCROW_SEED: &str = "escrow";
+const CONFIG_SEED: &str = "config";
 
 #[program]
 pub mod spot_instrument {
     use super::*;
+
+    pub fn initialize_config(ctx: Context<InitializeConfigAccounts>, fee_bps: u64) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+
+        config.fee_bps = fee_bps;
+        config.validate()
+    }
+
+    pub fn modify_config(ctx: Context<ModifyConfigAccounts>, fee_bps: u64) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+
+        config.fee_bps = fee_bps;
+        config.validate()
+    }
 
     pub fn validate_data(
         ctx: Context<ValidateData>,
@@ -95,15 +113,18 @@ pub mod spot_instrument {
         Ok(())
     }
 
-    pub fn settle(ctx: Context<Settle>, input: [u8; 2]) -> Result<()> {
+    pub fn settle(mut ctx: Context<Settle>, input: [u8; 2]) -> Result<()> {
         let Settle {
+            protocol,
             rfq,
             response,
             escrow,
+            config,
             receiver_tokens,
+            protocol_tokens,
             token_program,
             ..
-        } = &ctx.accounts;
+        } = &mut ctx.accounts;
 
         let asset_identifier = AnchorDeserialize::try_from_slice(&input)?;
 
@@ -116,9 +137,35 @@ pub mod spot_instrument {
                 receiver_tokens.key(),
             )?;
 
+        require_keys_eq!(
+            get_associated_token_address(&protocol.authority, &escrow.mint),
+            protocol_tokens.key(),
+            SpotError::InvalidProtocolTokensAccount
+        );
+
+        let fee_amount = match asset_identifier {
+            AssetIdentifier::Leg { leg_index: _ } => 0,
+            AssetIdentifier::Quote => config.calculate_fees(escrow.amount),
+        };
+
+        if fee_amount > 0 {
+            transfer_from_an_escrow(
+                escrow,
+                protocol_tokens,
+                Some(fee_amount),
+                response.key(),
+                asset_identifier,
+                *ctx.bumps.get("escrow").unwrap(),
+                token_program,
+            )?;
+
+            escrow.reload()?;
+        }
+
         transfer_from_an_escrow(
             escrow,
             receiver_tokens,
+            None,
             response.key(),
             asset_identifier,
             *ctx.bumps.get("escrow").unwrap(),
@@ -151,6 +198,7 @@ pub mod spot_instrument {
             transfer_from_an_escrow(
                 escrow,
                 tokens,
+                None,
                 response.key(),
                 asset_identifier,
                 *ctx.bumps.get("escrow").unwrap(),
@@ -189,6 +237,7 @@ pub mod spot_instrument {
             transfer_from_an_escrow(
                 escrow,
                 &backup_receiver,
+                None,
                 response.key(),
                 asset_identifier,
                 *ctx.bumps.get("escrow").unwrap(),
@@ -212,12 +261,13 @@ pub mod spot_instrument {
 fn transfer_from_an_escrow<'info>(
     escrow: &Account<'info, TokenAccount>,
     receiver: &Account<'info, TokenAccount>,
+    amount: Option<u64>,
     response: Pubkey,
     asset_identifier: AssetIdentifier,
     bump: u8,
     token_program: &Program<'info, Token>,
 ) -> Result<()> {
-    let amount = escrow.amount;
+    let amount = amount.unwrap_or(escrow.amount);
     let transfer_accounts = Transfer {
         from: escrow.to_account_info(),
         to: receiver.to_account_info(),
@@ -276,6 +326,32 @@ fn close_escrow_account<'info>(
 }
 
 #[derive(Accounts)]
+pub struct InitializeConfigAccounts<'info> {
+    #[account(mut, constraint = protocol.authority == authority.key() @ SpotError::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
+    #[account(
+        init,
+        payer = authority,
+        seeds = [CONFIG_SEED.as_bytes()],
+        space = 8 + Config::INIT_SPACE,
+        bump
+    )]
+    pub config: Account<'info, Config>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ModifyConfigAccounts<'info> {
+    #[account(constraint = protocol.authority == authority.key() @ SpotError::NotAProtocolAuthority)]
+    pub authority: Signer<'info>,
+    pub protocol: Box<Account<'info, ProtocolState>>,
+    #[account(mut)]
+    pub config: Account<'info, Config>,
+}
+
+#[derive(Accounts)]
 pub struct ValidateData<'info> {
     /// protocol provided
     #[account(signer)]
@@ -321,10 +397,13 @@ pub struct Settle<'info> {
     pub response: Account<'info, Response>,
 
     /// user provided
+    pub config: Account<'info, Config>,
     #[account(mut, seeds = [ESCROW_SEED.as_bytes(), response.key().as_ref(), &asset_identifier.to_bytes()], bump)]
-    pub escrow: Account<'info, TokenAccount>,
+    pub escrow: Box<Account<'info, TokenAccount>>,
     #[account(mut, constraint = receiver_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
-    pub receiver_tokens: Account<'info, TokenAccount>,
+    pub receiver_tokens: Box<Account<'info, TokenAccount>>,
+    #[account(mut, constraint = protocol_tokens.mint == escrow.mint @ SpotError::PassedMintDoesNotMatch)]
+    pub protocol_tokens: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }

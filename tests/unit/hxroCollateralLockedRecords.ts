@@ -80,7 +80,6 @@ describe("RFQ HXRO collateral lock records", () => {
     await printTradeProvider.manageCollateral("unlock", AuthoritySide.Taker, expectedSettlement);
     await response.preparePrintTradeSettlement(AuthoritySide.Maker, expectedSettlement);
     await response.settlePrintTrade();
-    await response.settleOnePartyDefault();
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Taker);
     await response.revertPrintTradeSettlementPreparation(AuthoritySide.Maker);
 

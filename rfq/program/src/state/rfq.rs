@@ -222,7 +222,7 @@ pub enum LegSide {
     Short,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum AssetIdentifier {
     Leg { leg_index: u8 },
     Quote,

@@ -1008,17 +1008,6 @@ export class Rfq {
     return new Response(this.context, this, this.context.maker, response);
   }
 
-  async unlockCollateral() {
-    await this.context.program.methods
-      .unlockRfqCollateral()
-      .accounts({
-        protocol: this.context.protocolPda,
-        rfq: this.account,
-        collateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
-      })
-      .rpc();
-  }
-
   async cleanUp() {
     const whitelist = this?.whitelist
       ? this.whitelist.toBase58() !== PublicKey.default.toBase58()
@@ -1465,83 +1454,6 @@ export class Response {
         response: this.account,
       })
       .remainingAccounts(remainingAccounts)
-      .rpc();
-  }
-
-  async unlockResponseCollateral() {
-    await this.context.program.methods
-      .unlockResponseCollateral()
-      .accounts({
-        protocol: this.context.protocolPda,
-        rfq: this.rfq.account,
-        response: this.account,
-        takerCollateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
-        makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
-        takerCollateralTokens: await getCollateralTokenPda(
-          this.context.taker.publicKey,
-          this.context.program.programId
-        ),
-        makerCollateralTokens: await getCollateralTokenPda(
-          this.context.maker.publicKey,
-          this.context.program.programId
-        ),
-        protocolCollateralTokens: await getCollateralTokenPda(
-          this.context.dao.publicKey,
-          this.context.program.programId
-        ),
-      })
-      .rpc();
-  }
-
-  async settleOnePartyDefault() {
-    await this.context.program.methods
-      .settleOnePartyDefault()
-      .accounts({
-        protocol: this.context.protocolPda,
-        rfq: this.rfq.account,
-        response: this.account,
-        takerCollateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
-        makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
-        takerCollateralTokens: await getCollateralTokenPda(
-          this.context.taker.publicKey,
-          this.context.program.programId
-        ),
-        makerCollateralTokens: await getCollateralTokenPda(
-          this.context.maker.publicKey,
-          this.context.program.programId
-        ),
-        protocolCollateralTokens: await getCollateralTokenPda(
-          this.context.dao.publicKey,
-          this.context.program.programId
-        ),
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .rpc();
-  }
-
-  async settleTwoPartyDefault() {
-    await this.context.program.methods
-      .settleTwoPartyDefault()
-      .accounts({
-        protocol: this.context.protocolPda,
-        rfq: this.rfq.account,
-        response: this.account,
-        takerCollateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
-        makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
-        takerCollateralTokens: await getCollateralTokenPda(
-          this.context.taker.publicKey,
-          this.context.program.programId
-        ),
-        makerCollateralTokens: await getCollateralTokenPda(
-          this.context.maker.publicKey,
-          this.context.program.programId
-        ),
-        protocolCollateralTokens: await getCollateralTokenPda(
-          this.context.dao.publicKey,
-          this.context.program.programId
-        ),
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
       .rpc();
   }
 
