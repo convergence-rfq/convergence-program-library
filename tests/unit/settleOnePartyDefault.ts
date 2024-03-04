@@ -39,7 +39,7 @@ describe("Settle one party default", () => {
       settlingWindow: 1,
     });
 
-    const [response, takerCollateralLocked, makerCollateralLocked] = await runInParallelWithWait(async () => {
+    const [_response, takerCollateralLocked, makerCollateralLocked] = await runInParallelWithWait(async () => {
       const response = await rfq.respond({
         bid: Quote.getStandard(toAbsolutePrice(withTokenDecimals(22_000)), toLegMultiplier(5)),
         expirationTimestamp: Date.now() / 1000 + 1,
@@ -52,7 +52,6 @@ describe("Settle one party default", () => {
       return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];
     }, 3.5);
 
-    await response.settleOnePartyDefault();
     const totalFees = calculateFeesValue(takerCollateralLocked, DEFAULT_DEFAULT_FEES.taker).add(
       calculateFeesValue(makerCollateralLocked, DEFAULT_DEFAULT_FEES.maker)
     );
@@ -86,7 +85,7 @@ describe("Settle one party default", () => {
       settlingWindow: 1,
     });
 
-    const [response, takerCollateralLocked, makerCollateralLocked] = await runInParallelWithWait(async () => {
+    const [_response, takerCollateralLocked, makerCollateralLocked] = await runInParallelWithWait(async () => {
       const response = await rfq.respond({
         ask: Quote.getStandard(toAbsolutePrice(withTokenDecimals(30)), toLegMultiplier(1000)),
         expirationTimestamp: Date.now() / 1000 + 1,
@@ -99,7 +98,6 @@ describe("Settle one party default", () => {
       return [response, responseState.takerCollateralLocked, responseState.makerCollateralLocked];
     }, 3.5);
 
-    await response.settleOnePartyDefault();
     const totalFees = calculateFeesValue(takerCollateralLocked, DEFAULT_DEFAULT_FEES.taker).add(
       calculateFeesValue(makerCollateralLocked, DEFAULT_DEFAULT_FEES.maker)
     );

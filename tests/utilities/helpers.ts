@@ -4,7 +4,7 @@ import { BigNumber } from "bignumber.js";
 import { PublicKey, ComputeBudgetProgram, SendTransactionError } from "@solana/web3.js";
 import chai, { expect } from "chai";
 import chaiBn from "chai-bn";
-import { ABSOLUTE_PRICE_DECIMALS, FEE_BPS_DECIMALS, LEG_MULTIPLIER_DECIMALS } from "./constants";
+import { ABSOLUTE_PRICE_DECIMALS, FEE_BPS_DECIMALS, LEG_MULTIPLIER_DECIMALS, SPOT_QUOTE_FEE_BPS } from "./constants";
 import { Context, Mint } from "./wrappers";
 import { Rfq as RfqIdl } from "../../target/types/rfq";
 import { FeeParams, LegData } from "./types";
@@ -271,4 +271,12 @@ export function inversePubkeyToName(value: { [pubkey: string]: string }): { [nam
   }
 
   return result;
+}
+
+export function calculateSpotQuoteFee(amount: BN): BN {
+  return amount.mul(SPOT_QUOTE_FEE_BPS).div(new BN(10).pow(new BN(FEE_BPS_DECIMALS)));
+}
+
+export function withoutSpotQuoteFees(amount: BN): BN {
+  return amount.sub(calculateSpotQuoteFee(amount));
 }

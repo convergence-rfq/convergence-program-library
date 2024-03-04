@@ -50,11 +50,30 @@ export class SpotInstrument implements Instrument {
   }
 
   static async addInstrument(context: Context) {
-    await context.addInstrument(getSpotInstrumentProgram().programId, true, 1, 7, 3, 3, 4);
+    await context.addInstrument(getSpotInstrumentProgram().programId, true, 1, 7, 5, 3, 4);
+  }
+
+  static async initializeConfig(context: Context, feeBps: BN) {
+    await getSpotInstrumentProgram()
+      .methods.initializeConfig(feeBps)
+      .accounts({
+        authority: context.dao.publicKey,
+        protocol: context.protocolPda,
+        config: this.getConfigAddress(),
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([context.dao])
+      .rpc();
   }
 
   static async setRiskEngineInstrumentType(context: Context) {
     await context.riskEngine.setInstrumentType(this.instrumentIndex, InstrumentType.Spot);
+  }
+
+  static getConfigAddress() {
+    const program = getSpotInstrumentProgram();
+    const [address] = PublicKey.findProgramAddressSync([Buffer.from("config")], program.programId);
+    return address;
   }
 
   getInstrumentIndex(): number {
@@ -108,12 +127,22 @@ export class SpotInstrument implements Instrument {
   async getSettleAccounts(assetReceiver: PublicKey, assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response) {
     return [
       {
+        pubkey: SpotInstrument.getConfigAddress(),
+        isSigner: false,
+        isWritable: false,
+      },
+      {
         pubkey: await getInstrumentEscrowPda(response.account, assetIdentifier, this.getProgramId()),
         isSigner: false,
         isWritable: true,
       },
       {
         pubkey: await this.mint.getAssociatedAddress(assetReceiver),
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: await this.mint.getAssociatedAddress(this.context.dao.publicKey),
         isSigner: false,
         isWritable: true,
       },
