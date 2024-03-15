@@ -110,15 +110,23 @@ impl Response {
     pub fn get_leg_amount_to_transfer(&self, rfq: &Rfq, leg_index: u8) -> u64 {
         let leg = &rfq.legs[leg_index as usize];
         let leg_multiplier_bps = self.calculate_confirmed_legs_multiplier_bps(rfq);
+        let receiver = self.get_leg_assets_receiver(rfq, leg_index);
 
-        let result_with_more_decimals = leg.amount as u128 * leg_multiplier_bps as u128;
+        Self::get_leg_amount_to_transfer_inner(leg.amount, leg_multiplier_bps, receiver)
+    }
+
+    pub fn get_leg_amount_to_transfer_inner(
+        leg_amount: u64,
+        leg_multiplier_bps: u64,
+        receiver: AuthoritySide,
+    ) -> u64 {
+        let result_with_more_decimals = leg_amount as u128 * leg_multiplier_bps as u128;
 
         let decimals_factor = Quote::LEG_MULTIPLIER_FACTOR;
         let mut result = result_with_more_decimals / decimals_factor;
 
         // if a maker receives assets, we round additinal decimals up
         // to prevent taker from leg multiplier manipulation attack by a taker
-        let receiver = self.get_leg_assets_receiver(rfq, leg_index);
         if receiver == AuthoritySide::Maker && result_with_more_decimals % decimals_factor > 0 {
             result += 1;
         }

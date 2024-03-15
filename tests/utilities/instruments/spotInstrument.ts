@@ -20,7 +20,7 @@ export function getSpotInstrumentProgram(): Program<SpotInstrumentIdl> {
 export class SpotInstrument implements Instrument {
   static instrumentIndex = 0;
 
-  constructor(private context: Context, private mint: Mint) {}
+  constructor(private context: Context, public mint: Mint) {}
 
   static createForLeg(
     context: Context,
@@ -33,20 +33,20 @@ export class SpotInstrument implements Instrument {
       amount?: BN;
       side?: LegSide;
     } = {}
-  ): InstrumentController {
+  ): InstrumentController<SpotInstrument> {
     const annotatedMint: Mint = mint;
     annotatedMint.assertRegisteredAsBaseAsset();
     const instrument = new SpotInstrument(context, annotatedMint);
     return new InstrumentController(
-      instrument as Instrument,
+      instrument,
       { amount, side, baseAssetIndex: annotatedMint.baseAssetIndex },
       mint.decimals
     );
   }
 
-  static createForQuote(context: Context, mint: Mint = context.btcToken): InstrumentController {
+  static createForQuote(context: Context, mint: Mint = context.btcToken): InstrumentController<SpotInstrument> {
     const instrument = new SpotInstrument(context, mint);
-    return new InstrumentController(instrument as Instrument, null, mint.decimals);
+    return new InstrumentController(instrument, null, mint.decimals);
   }
 
   static async addInstrument(context: Context) {
@@ -98,17 +98,19 @@ export class SpotInstrument implements Instrument {
   }
 
   async getPrepareSettlementAccounts(
-    side: { taker: {} } | { maker: {} },
+    side: { taker: {} } | { maker: {} } | { operator: PublicKey },
     assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
-    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    const caller =
+      "taker" in side ? this.context.taker.publicKey : "maker" in side ? this.context.maker.publicKey : side.operator;
+    const callerIsSigner = !("operator" in side);
 
     return [
-      { pubkey: caller.publicKey, isSigner: true, isWritable: true },
+      { pubkey: caller, isSigner: callerIsSigner, isWritable: true },
       {
-        pubkey: await getAssociatedTokenAddress(this.mint.publicKey, caller.publicKey),
+        pubkey: await getAssociatedTokenAddress(this.mint.publicKey, caller, true),
         isSigner: false,
         isWritable: true,
       },

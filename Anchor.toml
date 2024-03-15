@@ -8,6 +8,7 @@ spot_instrument = "4A9M7iojGDPc4n4YDGnTmsYsNKUohG1zM1nrAqVMMmrm"
 psyoptions_european_instrument = "6B7TdBNAF7tWWz5sZbbBZj8jH1ix7QWAchtkvMHveEuW"
 psyoptions_american_instrument = "HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok"
 hxro_print_trade_provider = "4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95"
+vault_operator = "5Qnp9VdXtRvmR9wBcAdvqTRsBHzpZ4jU3ZKtn3BaYWUM"
 
 [programs.devnet]
 rfq = "EMFRxsc7FSavsUVKuwNiywXixYthe2Mo5GUNaUvnvBva"
@@ -16,6 +17,7 @@ spot_instrument = "4A9M7iojGDPc4n4YDGnTmsYsNKUohG1zM1nrAqVMMmrm"
 psyoptions_european_instrument = "6B7TdBNAF7tWWz5sZbbBZj8jH1ix7QWAchtkvMHveEuW"
 psyoptions_american_instrument = "HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok"
 hxro_print_trade_provider = "4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95"
+vault_operator = "5Qnp9VdXtRvmR9wBcAdvqTRsBHzpZ4jU3ZKtn3BaYWUM"
 
 [programs.mainnet]
 rfq = "EMFRxsc7FSavsUVKuwNiywXixYthe2Mo5GUNaUvnvBva"
@@ -24,6 +26,7 @@ spot_instrument = "4A9M7iojGDPc4n4YDGnTmsYsNKUohG1zM1nrAqVMMmrm"
 psyoptions_european_instrument = "6B7TdBNAF7tWWz5sZbbBZj8jH1ix7QWAchtkvMHveEuW"
 psyoptions_american_instrument = "HGmSFSRfVAG8RC8Ae4G1JFSHK7Au5GrGskDxncG3JRok"
 hxro_print_trade_provider = "4WbVwc5Edfo3oB1n16bVC9qrghYHSNh1qAECbSCyiT95"
+vault_operator = "5Qnp9VdXtRvmR9wBcAdvqTRsBHzpZ4jU3ZKtn3BaYWUM"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -40,6 +43,7 @@ members = [
     "psyoptions-european-instrument/program",
     "hxro-print-trade-provider/program",
     "psyoptions-american-instrument/program",
+    "vault-operator/program",
 ]
 
 [scripts]

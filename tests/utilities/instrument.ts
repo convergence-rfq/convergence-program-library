@@ -17,7 +17,7 @@ export interface Instrument {
   getInstrumentIndex(): number;
   getValidationAccounts(): Promise<AccountMeta[]>;
   getPrepareSettlementAccounts(
-    side: { taker: {} } | { maker: {} },
+    side: { taker: {} } | { maker: {} } | { operator: PublicKey },
     assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
@@ -37,9 +37,9 @@ export interface Instrument {
   getCleanUpAccounts(assetIdentifier: AssetIdentifier, rfq: Rfq, response: Response): Promise<AccountMeta[]>;
 }
 
-export class InstrumentController {
+export class InstrumentController<T extends Instrument = Instrument> {
   constructor(
-    protected instrument: Instrument,
+    public instrument: T,
     protected legInfo: { amount: BN; side: LegSide; baseAssetIndex: number } | null,
     protected decimals: number
   ) {}
@@ -88,7 +88,7 @@ export class InstrumentController {
   }
 
   async getPrepareSettlementAccounts(
-    side: { taker: {} } | { maker: {} },
+    side: { taker: {} } | { maker: {} } | { operator: PublicKey },
     assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response

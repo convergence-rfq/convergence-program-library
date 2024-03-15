@@ -44,5 +44,6 @@
   "7DTftDbxGPfDi6fA7ooGgEW4ELcmZDfrjXXJHbcKgpbt": "token-account-usd-collateral-taker",
   "7t4TQvMCkpJj23t2XVWhcJZu5kPoyMvvTR4dDVPQ8WsA": "token-account-usd-quote-dao",
   "G47NrfrvTpdiUc3m9jZn6x98qQYkuD6nYy98tmUMMuvn": "token-account-usd-quote-maker",
-  "7Q4CtjBBJJwXbuFstgsjpPKcupaRahgoAVPuDy6MjgQF": "token-account-usd-quote-taker"
+  "7Q4CtjBBJJwXbuFstgsjpPKcupaRahgoAVPuDy6MjgQF": "token-account-usd-quote-taker",
+  "5Qnp9VdXtRvmR9wBcAdvqTRsBHzpZ4jU3ZKtn3BaYWUM": "vault-operator"
 }

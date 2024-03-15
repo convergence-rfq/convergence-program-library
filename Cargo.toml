@@ -6,6 +6,7 @@ members = [
     "psyoptions-american-instrument/program",
     "psyoptions-european-instrument/program",
     "hxro-print-trade-provider/program",
+    "vault-operator/program",
 ]
 
 [profile.release]

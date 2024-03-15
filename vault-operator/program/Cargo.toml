@@ -1,17 +1,20 @@
 [package]
-name = "spot-instrument"
+name = "vault-operator"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "spot_instrument"
+name = "vault_operator"
 
 [features]
 no-entrypoint = []
 
 [dependencies]
+spot-instrument = { path = "../../spot-instrument/program", features = [
+  "no-entrypoint",
+] }
 anchor-lang = { version = "0.28.0", features = ["init-if-needed"] }
 anchor-spl = "0.28.0"
-rfq = { path = "../../rfq/program", features = ["no-entrypoint"] }
+rfq = { path = "../../rfq/program", features = ["no-entrypoint", "cpi"] }
