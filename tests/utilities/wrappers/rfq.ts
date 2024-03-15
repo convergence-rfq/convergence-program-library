@@ -86,7 +86,7 @@ export class Rfq {
     return new Response(this.context, this, this.context.maker, response);
   }
 
-  async cleanUp({ taker = this.context.taker.publicKey }: { taker: PublicKey }) {
+  async cleanUp({ taker = this.context.taker.publicKey }: { taker?: PublicKey } = {}) {
     const whitelist = this?.whitelist
       ? this.whitelist.toBase58() !== PublicKey.default.toBase58()
         ? this.whitelist

@@ -4,6 +4,8 @@ import { Rfq } from "./rfq";
 import { expandComputeUnits } from "../helpers";
 import { getCollateralInfoPda, getCollateralTokenPda, getVaultOperatorPda } from "../pdas";
 import { Response } from "./response";
+import { SpotInstrument } from "../instruments/spotInstrument";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 export class VaultOperator {
   private response?: Response;
@@ -76,6 +78,40 @@ export class VaultOperator {
       })
       .remainingAccounts([...quoteAccounts, ...legAccounts])
       .preInstructions([expandComputeUnits])
+      .rpc();
+  }
+
+  async withdrawTokens({ withdrawTo = this.context.taker.publicKey }: { withdrawTo?: PublicKey } = {}) {
+    if (this.response === undefined) {
+      throw new Error("Not yet confirmed!");
+    }
+
+    if (this.rfq.content.type !== "instrument") {
+      throw new Error("Unexpected RFQ type");
+    }
+
+    const {
+      legs: [leg],
+      quote,
+    } = this.rfq.content;
+    const legMint = (leg.instrument as SpotInstrument).mint;
+    const quoteMint = (quote.instrument as SpotInstrument).mint;
+
+    await this.context.vaultOperatorProgram.methods
+      .withdrawTokens()
+      .accountsStrict({
+        vaultParams: this.account,
+        operator: this.operator,
+        creator: withdrawTo,
+        legVault: legMint.getAssociatedAddress(this.operator),
+        legTokens: legMint.getAssociatedAddress(withdrawTo),
+        legMint: legMint.publicKey,
+        quoteVault: quoteMint.getAssociatedAddress(this.operator),
+        quoteTokens: quoteMint.getAssociatedAddress(withdrawTo),
+        quoteMint: quoteMint.publicKey,
+        response: this.response.account,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
       .rpc();
   }
 }

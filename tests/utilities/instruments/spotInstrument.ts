@@ -4,7 +4,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
+import { AssetIdentifier, InstrumentType, LegSide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { SpotInstrument as SpotInstrumentIdl } from "../../../target/types/spot_instrument";
 
@@ -153,12 +153,13 @@ export class SpotInstrument implements Instrument {
   }
 
   async getRevertSettlementPreparationAccounts(
-    side: { taker: {} } | { maker: {} },
+    side: { taker: {} } | { maker: {} } | { operator: PublicKey },
     assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
-    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    const caller =
+      "taker" in side ? this.context.taker.publicKey : "maker" in side ? this.context.maker.publicKey : side.operator;
 
     return [
       {
@@ -167,7 +168,7 @@ export class SpotInstrument implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
+        pubkey: await this.mint.getAssociatedAddress(caller),
         isSigner: false,
         isWritable: true,
       },

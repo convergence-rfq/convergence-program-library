@@ -29,7 +29,7 @@ export interface Instrument {
     response: Response
   ): Promise<AccountMeta[]>;
   getRevertSettlementPreparationAccounts(
-    side: { taker: {} } | { maker: {} },
+    side: { taker: {} } | { maker: {} } | { operator: PublicKey },
     assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
@@ -105,7 +105,7 @@ export class InstrumentController<T extends Instrument = Instrument> {
   }
 
   async getRevertSettlementPreparationAccounts(
-    side: { taker: {} } | { maker: {} },
+    side: { taker: {} } | { maker: {} } | { operator: PublicKey },
     assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response

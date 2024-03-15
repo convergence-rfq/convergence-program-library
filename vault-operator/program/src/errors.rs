@@ -20,4 +20,8 @@ pub enum VaultError {
     WrongResponse,
     #[msg("Creator address does not match this vault's creator")]
     WrongCreatorAddress,
+    #[msg("Creator token account is not an associated token account")]
+    WrongCreatorTokenAddress,
+    #[msg("Response still exist. Remove it to withdraw tokens")]
+    ResponseStillExist,
 }

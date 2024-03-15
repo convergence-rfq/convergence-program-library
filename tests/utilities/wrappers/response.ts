@@ -229,7 +229,10 @@ export class Response {
       .rpc();
   }
 
-  async revertEscrowSettlementPreparation(side: { taker: {} } | { maker: {} }, preparedLegs?: number) {
+  async revertEscrowSettlementPreparation(
+    side: { taker: {} } | { maker: {} } | { operator: PublicKey },
+    preparedLegs?: number
+  ) {
     if (this.rfq.content.type != "instrument") {
       throw Error("Not settled by instruments!");
     }
@@ -248,9 +251,10 @@ export class Response {
       )
     ).flat();
     const remainingAccounts = [...legAccounts, ...quoteAccounts];
+    const programSide = "operator" in side ? AuthoritySide.Taker : side;
 
     await this.context.program.methods
-      .revertEscrowSettlementPreparation(side)
+      .revertEscrowSettlementPreparation(programSide)
       .accounts({
         protocol: this.context.protocolPda,
         rfq: this.rfq.account,

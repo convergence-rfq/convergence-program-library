@@ -2,7 +2,9 @@
 
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::get_associated_token_address;
-use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{
+    close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
+};
 use errors::VaultError;
 use rfq::cpi::accounts::{
     ConfirmResponseAccounts, CreateRfqAccounts, FinalizeRfqConstructionAccounts,
@@ -34,6 +36,7 @@ pub const CONFIG_SEED: &str = "config";
 pub mod vault_operator {
     use super::*;
 
+    #[allow(clippy::too_many_arguments)]
     pub fn create_rfq<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateVaultAccounts<'info>>,
         acceptable_price_limit: u128,
@@ -90,7 +93,7 @@ pub mod vault_operator {
             .instruments
             .iter()
             .position(|x| x.program_key == SpotID)
-            .ok_or_else(|| VaultError::SpotInstrumentNotFound)? as u8;
+            .ok_or(VaultError::SpotInstrumentNotFound)? as u8;
 
         let order_type = AnchorDeserialize::try_from_slice(&[order_type])?;
         let fixed_size = AnchorDeserialize::try_from_slice(&fixed_size)?;
@@ -209,11 +212,7 @@ pub mod vault_operator {
             to: vault.to_account_info(),
             authority: creator.to_account_info(),
         };
-        let transfer_ctx = CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            transfer_accounts,
-            operator_seeds,
-        );
+        let transfer_ctx = CpiContext::new(token_program.to_account_info(), transfer_accounts);
         transfer(transfer_ctx, vault_amount)?;
 
         Ok(())
@@ -327,16 +326,44 @@ pub mod vault_operator {
         prepare_escrow_settlement(cpi_context, AuthoritySide::Taker, 1)
     }
 
-    pub fn finalize_vault<'info>(
+    pub fn withdraw_tokens<'info>(
         ctx: Context<'_, '_, '_, 'info, WithdrawVaultTokensAccounts<'info>>,
     ) -> Result<()> {
         let WithdrawVaultTokensAccounts {
+            creator,
             vault_params,
             operator,
-            rfq,
             response,
-            ..
+            leg_vault,
+            leg_tokens,
+            leg_mint,
+            quote_vault,
+            quote_tokens,
+            quote_mint,
+            token_program,
         } = ctx.accounts;
+
+        require_keys_eq!(
+            get_associated_token_address(&operator.key(), &leg_mint.key()),
+            leg_vault.key(),
+            VaultError::WrongVaultAddress
+        );
+        require_keys_eq!(
+            get_associated_token_address(&operator.key(), &quote_mint.key()),
+            quote_vault.key(),
+            VaultError::WrongVaultAddress
+        );
+        require_keys_eq!(
+            get_associated_token_address(&creator.key(), &leg_mint.key()),
+            leg_tokens.key(),
+            VaultError::WrongCreatorTokenAddress
+        );
+        require_keys_eq!(
+            get_associated_token_address(&creator.key(), &quote_mint.key()),
+            quote_tokens.key(),
+            VaultError::WrongCreatorTokenAddress
+        );
+        require!(response.data_is_empty(), VaultError::ResponseStillExist);
 
         let vault_params_key = vault_params.key();
         let bump_seed = [*ctx.bumps.get("operator").unwrap()];
@@ -346,18 +373,53 @@ pub mod vault_operator {
             &bump_seed,
         ][..]];
 
-        // let accounts = PrepareEscrowSettlementAccounts {
-        //     caller: operator.to_account_info(),
-        //     protocol: protocol.to_account_info(),
-        //     rfq: rfq.to_account_info(),
-        //     response: response.to_account_info(),
-        // };
+        let transfer_accounts = Transfer {
+            from: leg_vault.to_account_info(),
+            to: leg_tokens.to_account_info(),
+            authority: operator.to_account_info(),
+        };
+        let transfer_ctx = CpiContext::new_with_signer(
+            token_program.to_account_info(),
+            transfer_accounts,
+            operator_seeds,
+        );
+        transfer(transfer_ctx, leg_vault.amount)?;
+        let close_accounts = CloseAccount {
+            account: leg_vault.to_account_info(),
+            destination: creator.to_account_info(),
+            authority: operator.to_account_info(),
+        };
+        let close_ctx = CpiContext::new_with_signer(
+            token_program.to_account_info(),
+            close_accounts,
+            operator_seeds,
+        );
+        close_account(close_ctx)?;
 
-        // let cpi_context =
-        //     CpiContext::new_with_signer(rfq_program.to_account_info(), accounts, operator_seeds)
-        //         .with_remaining_accounts(ctx.remaining_accounts.to_vec());
+        let transfer_accounts = Transfer {
+            from: quote_vault.to_account_info(),
+            to: quote_tokens.to_account_info(),
+            authority: operator.to_account_info(),
+        };
+        let transfer_ctx = CpiContext::new_with_signer(
+            token_program.to_account_info(),
+            transfer_accounts,
+            operator_seeds,
+        );
+        transfer(transfer_ctx, quote_vault.amount)?;
+        let close_accounts = CloseAccount {
+            account: quote_vault.to_account_info(),
+            destination: creator.to_account_info(),
+            authority: operator.to_account_info(),
+        };
+        let close_ctx = CpiContext::new_with_signer(
+            token_program.to_account_info(),
+            close_accounts,
+            operator_seeds,
+        );
+        close_account(close_ctx)?;
 
-        // prepare_escrow_settlement(cpi_context, AuthoritySide::Taker, 1)
+        Ok(())
     }
 }
 
@@ -447,7 +509,7 @@ pub struct PrepareVaultSettlementAccounts<'info> {
 #[derive(Accounts)]
 pub struct WithdrawVaultTokensAccounts<'info> {
     /// CHECK: vault creator
-    #[account(constraint = creator.key() == vault_params.creator @ VaultError::WrongCreatorAddress)]
+    #[account(mut, constraint = creator.key() == vault_params.creator @ VaultError::WrongCreatorAddress)]
     pub creator: UncheckedAccount<'info>,
 
     #[account(mut, close = creator)]
@@ -461,7 +523,6 @@ pub struct WithdrawVaultTokensAccounts<'info> {
     #[account(mut)]
     pub leg_tokens: Box<Account<'info, TokenAccount>>,
     pub leg_mint: Box<Account<'info, Mint>>,
-
     #[account(mut)]
     pub quote_vault: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
@@ -469,9 +530,8 @@ pub struct WithdrawVaultTokensAccounts<'info> {
     pub quote_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: can already be deleted
-    #[account(mut, constraint = rfq.key() == vault_params.rfq @ VaultError::InvalidRfq)]
-    pub rfq: UncheckedAccount<'info>,
-    /// CHECK: can already be deleted
     #[account(mut, constraint = response.key() == vault_params.confirmed_response @ VaultError::WrongResponse)]
     pub response: UncheckedAccount<'info>,
+
+    pub token_program: Program<'info, Token>,
 }
