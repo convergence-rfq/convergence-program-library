@@ -7,6 +7,7 @@ import {
 } from "../utilities/helpers";
 import { Context, getContext } from "../utilities/wrappers";
 import { AuthoritySide, FixedSize, OrderType, Quote } from "../utilities/types";
+import { expect } from "chai";
 
 describe("Vault operator", () => {
   let context: Context;
@@ -97,5 +98,38 @@ describe("Vault operator", () => {
 
     await response.cleanUp();
     await expectError(vault.withdrawTokens({ withdrawTo: context.dao.publicKey }), "WrongCreatorAddress");
+  });
+
+  it("Tokens withdrawn field works as expected", async () => {
+    const vault = await context.createVaultOperatorRfq({
+      orderType: OrderType.Sell,
+      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      acceptableLimitPrice: 48_000,
+    });
+
+    const response = await vault.rfq.respond({ bid: Quote.getFixedSize(toAbsolutePrice(withTokenDecimals(48_000))) });
+    await vault.confirmResponse(response);
+
+    await vault.prepareToSettle();
+    await response.prepareEscrowSettlement(AuthoritySide.Maker);
+    await response.settleEscrow(vault.operator, [context.maker.publicKey]);
+
+    await response.cleanUp();
+
+    const vaultDataBefore = await vault.getData();
+    expect(vaultDataBefore.tokensWithdrawn).to.be.false;
+    await vault.withdrawTokens();
+    const vaultDataAfter = await vault.getData();
+    expect(vaultDataAfter.tokensWithdrawn).to.be.true;
+  });
+
+  it("Can't withdraw tokens without confirmation while rfq is active", async () => {
+    const vault = await context.createVaultOperatorRfq({
+      orderType: OrderType.Sell,
+      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      acceptableLimitPrice: 48_000,
+    });
+
+    await expectError(vault.withdrawTokens(), "ActiveWindowHasNotFinished");
   });
 });

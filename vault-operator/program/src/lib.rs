@@ -81,6 +81,8 @@ pub mod vault_operator {
         vault_params.set_inner(VaultParams {
             creator: creator.key(),
             rfq: rfq.key(),
+            active_window_expiration: Clock::get()?.unix_timestamp + active_window as i64,
+            tokens_withdrawn: false,
             acceptable_price_limit,
             confirmed_response: Pubkey::default(),
         });
@@ -363,7 +365,16 @@ pub mod vault_operator {
             quote_tokens.key(),
             VaultError::WrongCreatorTokenAddress
         );
-        require!(response.data_is_empty(), VaultError::ResponseStillExist);
+        if vault_params.confirmed_response == Pubkey::default() {
+            require!(
+                Clock::get()?.unix_timestamp >= vault_params.active_window_expiration,
+                VaultError::ActiveWindowHasNotFinished
+            );
+        } else {
+            require!(response.data_is_empty(), VaultError::ResponseStillExist);
+        }
+
+        vault_params.tokens_withdrawn = true;
 
         let vault_params_key = vault_params.key();
         let bump_seed = [*ctx.bumps.get("operator").unwrap()];
@@ -512,7 +523,7 @@ pub struct WithdrawVaultTokensAccounts<'info> {
     #[account(mut, constraint = creator.key() == vault_params.creator @ VaultError::WrongCreatorAddress)]
     pub creator: UncheckedAccount<'info>,
 
-    #[account(mut, close = creator)]
+    #[account(mut)]
     pub vault_params: Account<'info, VaultParams>,
     /// CHECK: empty PDA account
     #[account(mut, seeds = [OPERATOR_SEED.as_bytes(), vault_params.key().as_ref()], bump)]
@@ -530,7 +541,7 @@ pub struct WithdrawVaultTokensAccounts<'info> {
     pub quote_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: can already be deleted
-    #[account(mut, constraint = response.key() == vault_params.confirmed_response @ VaultError::WrongResponse)]
+    #[account(constraint = response.key() == vault_params.confirmed_response @ VaultError::WrongResponse)]
     pub response: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
