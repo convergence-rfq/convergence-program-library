@@ -28,7 +28,7 @@ pub mod errors;
 pub mod seeds;
 pub mod state;
 
-declare_id!("5Qnp9VdXtRvmR9wBcAdvqTRsBHzpZ4jU3ZKtn3BaYWUM");
+declare_id!("DftT8Q74YPqwrtJzy6g97XLzouG2YWaWZfRad6yK2GvA");
 
 pub const CONFIG_SEED: &str = "config";
 
