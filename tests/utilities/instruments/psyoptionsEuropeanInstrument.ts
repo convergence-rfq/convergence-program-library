@@ -44,11 +44,11 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
       amount?: BN;
       side?: LegSide;
     } = {}
-  ): InstrumentController {
+  ): InstrumentController<PsyoptionsEuropeanInstrument> {
     const instrument = new PsyoptionsEuropeanInstrument(context, optionFacade, optionType);
     optionFacade.underlyingMint.assertRegisteredAsBaseAsset();
     return new InstrumentController(
-      instrument as Instrument,
+      instrument,
       { amount, side, baseAssetIndex: optionFacade.underlyingMint.baseAssetIndex },
       4
     );

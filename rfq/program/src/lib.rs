@@ -71,8 +71,6 @@ declare_id!("EMFRxsc7FSavsUVKuwNiywXixYthe2Mo5GUNaUvnvBva");
 /// Request for quote (RFQ) protocol module.
 #[program]
 pub mod rfq {
-    use crate::instructions::whitelist::cleanup_whitelist::CleanUpWhitelistAccounts;
-
     use super::*;
 
     pub fn initialize_protocol(

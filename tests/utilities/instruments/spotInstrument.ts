@@ -4,7 +4,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
+import { AssetIdentifier, InstrumentType, LegSide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { SpotInstrument as SpotInstrumentIdl } from "../../../target/types/spot_instrument";
 
@@ -20,7 +20,7 @@ export function getSpotInstrumentProgram(): Program<SpotInstrumentIdl> {
 export class SpotInstrument implements Instrument {
   static instrumentIndex = 0;
 
-  constructor(private context: Context, private mint: Mint) {}
+  constructor(private context: Context, public mint: Mint) {}
 
   static createForLeg(
     context: Context,
@@ -33,20 +33,20 @@ export class SpotInstrument implements Instrument {
       amount?: BN;
       side?: LegSide;
     } = {}
-  ): InstrumentController {
+  ): InstrumentController<SpotInstrument> {
     const annotatedMint: Mint = mint;
     annotatedMint.assertRegisteredAsBaseAsset();
     const instrument = new SpotInstrument(context, annotatedMint);
     return new InstrumentController(
-      instrument as Instrument,
+      instrument,
       { amount, side, baseAssetIndex: annotatedMint.baseAssetIndex },
       mint.decimals
     );
   }
 
-  static createForQuote(context: Context, mint: Mint = context.btcToken): InstrumentController {
+  static createForQuote(context: Context, mint: Mint = context.btcToken): InstrumentController<SpotInstrument> {
     const instrument = new SpotInstrument(context, mint);
-    return new InstrumentController(instrument as Instrument, null, mint.decimals);
+    return new InstrumentController(instrument, null, mint.decimals);
   }
 
   static async addInstrument(context: Context) {
@@ -98,17 +98,19 @@ export class SpotInstrument implements Instrument {
   }
 
   async getPrepareSettlementAccounts(
-    side: { taker: {} } | { maker: {} },
+    side: { taker: {} } | { maker: {} } | { operator: PublicKey },
     assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
-    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    const caller =
+      "taker" in side ? this.context.taker.publicKey : "maker" in side ? this.context.maker.publicKey : side.operator;
+    const callerIsSigner = !("operator" in side);
 
     return [
-      { pubkey: caller.publicKey, isSigner: true, isWritable: true },
+      { pubkey: caller, isSigner: callerIsSigner, isWritable: true },
       {
-        pubkey: await getAssociatedTokenAddress(this.mint.publicKey, caller.publicKey),
+        pubkey: await getAssociatedTokenAddress(this.mint.publicKey, caller, true),
         isSigner: false,
         isWritable: true,
       },
@@ -151,12 +153,13 @@ export class SpotInstrument implements Instrument {
   }
 
   async getRevertSettlementPreparationAccounts(
-    side: { taker: {} } | { maker: {} },
+    side: { taker: {} } | { maker: {} } | { operator: PublicKey },
     assetIdentifier: AssetIdentifier,
     rfq: Rfq,
     response: Response
   ) {
-    const caller = side == AuthoritySide.Taker ? this.context.taker : this.context.maker;
+    const caller =
+      "taker" in side ? this.context.taker.publicKey : "maker" in side ? this.context.maker.publicKey : side.operator;
 
     return [
       {
@@ -165,7 +168,7 @@ export class SpotInstrument implements Instrument {
         isWritable: true,
       },
       {
-        pubkey: await this.mint.getAssociatedAddress(caller.publicKey),
+        pubkey: await this.mint.getAssociatedAddress(caller),
         isSigner: false,
         isWritable: true,
       },

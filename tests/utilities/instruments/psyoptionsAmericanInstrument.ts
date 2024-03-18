@@ -43,7 +43,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
       amount?: BN;
       side?: LegSide;
     } = {}
-  ): InstrumentController {
+  ): InstrumentController<PsyoptionsAmericanInstrumentClass> {
     const optionInfoClone: OptionMarketWithKey = Object.assign({}, optionMarket.OptionInfo);
     if (optionType === OptionType.PUT) {
       optionInfoClone.underlyingAmountPerContract = optionMarket.OptionInfo.quoteAmountPerContract;
@@ -56,7 +56,7 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
     const instrument = new PsyoptionsAmericanInstrumentClass(context, optionMarketClone, optionType);
     optionMarketClone.underlyingMint.assertRegisteredAsBaseAsset();
     return new InstrumentController(
-      instrument as Instrument,
+      instrument,
       {
         amount,
         side: side,
