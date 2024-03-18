@@ -3,6 +3,7 @@ import {
   TokenChangeMeasurer,
   attachImprovedLogDisplay,
   runInParallelWithWait,
+  sleep,
   toAbsolutePrice,
   toLegMultiplier,
   withTokenDecimals,
@@ -24,6 +25,27 @@ describe("Vault operator", () => {
     context = await getContext();
     taker = context.taker.publicKey;
     maker = context.maker.publicKey;
+  });
+
+  it("Create a sell vault operator, active window ends and tokens are withdrawn", async () => {
+    let tokenMeasurer = await TokenChangeMeasurer.takeDefaultSnapshot(context);
+
+    const vault = await context.createVaultOperatorRfq({
+      orderType: OrderType.Sell,
+      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      acceptableLimitPrice: 48_000,
+      activeWindow: 1,
+    });
+
+    await sleep(1.5);
+    await vault.withdrawTokens();
+
+    await tokenMeasurer.expectChange([
+      { token: "asset", user: taker, delta: withTokenDecimals(0) },
+      { token: "asset", user: maker, delta: withTokenDecimals(0) },
+      { token: "quote", user: taker, delta: withTokenDecimals(0) },
+      { token: "quote", user: maker, delta: withTokenDecimals(0) },
+    ]);
   });
 
   it("Create and settle a sell vault operator", async () => {

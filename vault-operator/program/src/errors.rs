@@ -24,4 +24,6 @@ pub enum VaultError {
     WrongCreatorTokenAddress,
     #[msg("Response still exist. Remove it to withdraw tokens")]
     ResponseStillExist,
+    #[msg("Can't withdraw tokens without a confirmed response until active window ends")]
+    ActiveWindowHasNotFinished,
 }

@@ -14,7 +14,7 @@ use state::Config;
 mod errors;
 mod state;
 
-declare_id!("4A9M7iojGDPc4n4YDGnTmsYsNKUohG1zM1nrAqVMMmrm");
+declare_id!("BMXWVaYPVJ4G8g2MMJt51CDgjHHuoirPMvsTUadv3s3v");
 
 const ESCROW_SEED: &str = "escrow";
 const CONFIG_SEED: &str = "config";
