@@ -82,10 +82,6 @@ export class VaultOperator {
   }
 
   async withdrawTokens({ withdrawTo = this.context.taker.publicKey }: { withdrawTo?: PublicKey } = {}) {
-    if (this.response === undefined) {
-      throw new Error("Not yet confirmed!");
-    }
-
     if (this.rfq.content.type !== "instrument") {
       throw new Error("Unexpected RFQ type");
     }
@@ -109,9 +105,13 @@ export class VaultOperator {
         quoteVault: quoteMint.getAssociatedAddress(this.operator),
         quoteTokens: quoteMint.getAssociatedAddress(withdrawTo),
         quoteMint: quoteMint.publicKey,
-        response: this.response.account,
+        response: this.response?.account ?? PublicKey.default,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc();
+  }
+
+  async getData() {
+    return this.context.vaultOperatorProgram.account.vaultParams.fetch(this.account);
   }
 }
