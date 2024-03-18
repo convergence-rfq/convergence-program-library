@@ -186,14 +186,13 @@ pub fn create_rfq_instruction<'info>(
         whitelist,
         ..
     } = ctx.accounts;
-    let whitelist_to_pass: Pubkey;
-    match whitelist {
+    let whitelist_to_pass = match whitelist {
         Some(whitelist) => {
             validate_whitelist(whitelist, taker.key())?;
             whitelist.associated_rfq = rfq.key();
-            whitelist_to_pass = whitelist.key()
+            whitelist.key()
         }
-        None => whitelist_to_pass = Pubkey::default(),
+        None => Pubkey::default(),
     };
 
     rfq.set_inner(Rfq {

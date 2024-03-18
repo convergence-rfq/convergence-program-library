@@ -1,5 +1,5 @@
 import { BN } from "@coral-xyz/anchor";
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { BITCOIN_BASE_ASSET_INDEX } from "../utilities/constants";
 import {
   attachImprovedLogDisplay,
@@ -538,8 +538,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   });
 
   it("Create two-way RFQ with one spot leg add a whitelist of 3 addresses , respond", async () => {
-    const whitelistKeypair = Keypair.generate();
-
     // create a two way RFQ specifying 1 bitcoin as a leg
     const rfq = await context.createEscrowRfq({
       legs: [
@@ -548,7 +546,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
           side: LegSide.Long,
         }),
       ],
-      whitelistKeypair,
       activeWindow: 2,
       whitelistPubkeyList: [maker, taker, dao],
     });
@@ -564,7 +561,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
   });
 
   it("Create two-way RFQ with one spot leg add a whitelist of 3 addresses , respond but maker not in list", async () => {
-    const whitelistKeypair = Keypair.generate();
     const newPubkey = new PublicKey("2Jpwh3rvtHe2X67TxpAGEB4x751FNMwWzDyQHhBjqfKg");
 
     // create a two way RFQ specifying 1 bitcoin as a leg
@@ -575,7 +571,6 @@ describe("RFQ escrow settlement using spot integration tests", () => {
           side: LegSide.Long,
         }),
       ],
-      whitelistKeypair,
       whitelistPubkeyList: [newPubkey],
     });
 

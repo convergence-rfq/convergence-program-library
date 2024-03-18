@@ -26,3 +26,6 @@ build_solita
 
 cd $PROJDIR/hxro-print-trade-provider/js
 build_solita
+
+cd $PROJDIR/vault-operator/js
+build_solita

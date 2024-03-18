@@ -126,3 +126,8 @@ export function getRiskEngineConfig(programId: PublicKey) {
   const [pda] = PublicKey.findProgramAddressSync([Buffer.from(RISK_ENGINE_CONFIG_SEED)], programId);
   return pda;
 }
+
+export function getVaultOperatorPda(vaultParams: PublicKey, programId: PublicKey) {
+  const [pda] = PublicKey.findProgramAddressSync([Buffer.from("operator"), vaultParams.toBuffer()], programId);
+  return pda;
+}

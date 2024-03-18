@@ -4642,6 +4642,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
 
 [[package]]
+name = "vault-operator"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang 0.28.0",
+ "anchor-spl 0.28.0",
+ "rfq",
+ "spot-instrument",
+]
+
+[[package]]
 name = "vec_map"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

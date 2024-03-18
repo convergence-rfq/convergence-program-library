@@ -9,12 +9,7 @@ describe("Create Whitelist", () => {
   });
 
   it("Create a whitelist", async () => {
-    const whitelistKeypair = Keypair.generate();
-
-    await context.createWhitelist(whitelistKeypair, context.taker.publicKey, [
-      context.maker.publicKey,
-      context.dao.publicKey,
-    ]);
+    await context.createWhitelist([context.maker.publicKey, context.dao.publicKey]);
   });
 
   it("Create a whitelist with MAX_WHITELIST_SIZE", async () => {
@@ -24,18 +19,11 @@ describe("Create Whitelist", () => {
       const keypair = Keypair.generate();
       pubkeys.push(keypair.publicKey);
     }
-    const whitelistKeypair = Keypair.generate();
-
-    await context.createWhitelist(whitelistKeypair, context.taker.publicKey, [...pubkeys]);
+    await context.createWhitelist(pubkeys);
   });
 
   it("clean up", async () => {
-    const whitelistKeypair = Keypair.generate();
-
-    const whitelist = await context.createWhitelist(whitelistKeypair, context.taker.publicKey, [
-      context.maker.publicKey,
-      context.dao.publicKey,
-    ]);
+    const whitelist = await context.createWhitelist([context.maker.publicKey, context.dao.publicKey]);
 
     await whitelist.cleanUp();
   });
