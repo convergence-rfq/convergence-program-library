@@ -4,7 +4,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Signer } from "@solana/we
 import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AssetIdentifier, AuthoritySide, InstrumentType, LegSide } from "../types";
+import { AssetIdentifier, AuthoritySide, LegSide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { PsyoptionsEuropeanInstrument as PsyoptionsEuropeanInstrumentIdl } from "../../../target/types/psyoptions_european_instrument";
 import { executeInParallel, withTokenDecimals } from "../helpers";
@@ -60,10 +60,6 @@ export class PsyoptionsEuropeanInstrument implements Instrument {
 
   static async addInstrument(context: Context) {
     await context.addInstrument(getEuroOptionsInstrumentProgram().programId, false, 2, 7, 3, 3, 4);
-  }
-
-  static async setRiskEngineInstrumentType(context: Context) {
-    await context.riskEngine.setInstrumentType(this.instrumentIndex, InstrumentType.Option);
   }
 
   serializeInstrumentData(): Buffer {

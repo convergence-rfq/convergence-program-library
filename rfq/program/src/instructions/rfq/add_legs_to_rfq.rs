@@ -19,7 +19,7 @@ pub struct AddLegsToRfqAccounts<'info> {
 
 fn validate<'info>(
     ctx: &Context<'_, '_, '_, 'info, AddLegsToRfqAccounts<'info>>,
-    legs: &Vec<ApiLeg>,
+    legs: &[ApiLeg],
 ) -> Result<()> {
     let AddLegsToRfqAccounts { protocol, rfq, .. } = &ctx.accounts;
     let mut remaining_accounts = ctx.remaining_accounts.iter();

@@ -26,7 +26,7 @@ export class VaultOperator {
         collateralInfo: await getCollateralInfoPda(this.operator, this.context.program.programId),
         makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
         collateralToken: await getCollateralTokenPda(this.operator, this.context.program.programId),
-        riskEngine: this.context.riskEngine.programId,
+        riskEngine: this.context.riskEngineProgram.programId,
         rfqProgram: this.context.program.programId,
       })
       .remainingAccounts(await this.rfq.getRiskEngineAccounts())

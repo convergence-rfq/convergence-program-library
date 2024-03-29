@@ -5,7 +5,7 @@ import { instructions, createProgram, getOptionByKey, OptionMarketWithKey } from
 import { DEFAULT_LEG_AMOUNT, DEFAULT_LEG_SIDE } from "../constants";
 import { Instrument, InstrumentController } from "../instrument";
 import { getInstrumentEscrowPda } from "../pdas";
-import { AuthoritySide, AssetIdentifier, InstrumentType, LegSide } from "../types";
+import { AuthoritySide, AssetIdentifier, LegSide } from "../types";
 import { Context, Mint, Response, Rfq } from "../wrappers";
 import { executeInParallel, withTokenDecimals } from "../helpers";
 import * as anchor from "@coral-xyz/anchor";
@@ -72,10 +72,6 @@ export class PsyoptionsAmericanInstrumentClass implements Instrument {
 
   static async addInstrument(context: Context) {
     await context.addInstrument(getAmericanOptionsInstrumentProgram().programId, false, 3, 7, 3, 3, 4);
-  }
-
-  static async setRiskEngineInstrumentType(context: Context) {
-    await context.riskEngine.setInstrumentType(this.instrumentIndex, InstrumentType.Option);
   }
 
   serializeInstrumentData(): Buffer {

@@ -6,7 +6,7 @@ import {
   withTokenDecimals,
 } from "../utilities/helpers";
 import { Context, getContext } from "../utilities/wrappers";
-import { AuthoritySide, FixedSize, OrderType, Quote } from "../utilities/types";
+import { AuthoritySide, OrderType, Quote } from "../utilities/types";
 import { expect } from "chai";
 
 describe("Vault operator", () => {
@@ -24,7 +24,7 @@ describe("Vault operator", () => {
     await expectError(
       context.createVaultOperatorRfq({
         orderType: OrderType.TwoWay,
-        fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+        size: toLegMultiplier(2),
         acceptableLimitPrice: 46_000,
       }),
       "UnsupportedRfqType"
@@ -34,7 +34,7 @@ describe("Vault operator", () => {
   it("Can't confirm two responses", async () => {
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Sell,
-      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      size: toLegMultiplier(2),
       acceptableLimitPrice: 46_000,
     });
 
@@ -52,7 +52,7 @@ describe("Vault operator", () => {
   it("Can't accept worse sell price", async () => {
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Sell,
-      fixedSize: FixedSize.getBaseAsset(withTokenDecimals(2)),
+      size: withTokenDecimals(2),
       acceptableLimitPrice: 40_000,
     });
 
@@ -63,7 +63,7 @@ describe("Vault operator", () => {
   it("Can't accept worse buy price", async () => {
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Buy,
-      fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(50_000)),
+      size: withTokenDecimals(50_000),
       acceptableLimitPrice: 40_000,
     });
 
@@ -74,7 +74,7 @@ describe("Vault operator", () => {
   it("Can't withdraw to a different user", async () => {
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Buy,
-      fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(50_000)),
+      size: withTokenDecimals(50_000),
       acceptableLimitPrice: 40_000,
     });
 
@@ -85,7 +85,7 @@ describe("Vault operator", () => {
   it("Can't withdraw to a different address", async () => {
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Sell,
-      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      size: toLegMultiplier(2),
       acceptableLimitPrice: 48_000,
     });
 
@@ -103,7 +103,7 @@ describe("Vault operator", () => {
   it("Tokens withdrawn field works as expected", async () => {
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Sell,
-      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      size: toLegMultiplier(2),
       acceptableLimitPrice: 48_000,
     });
 
@@ -126,7 +126,7 @@ describe("Vault operator", () => {
   it("Can't withdraw tokens without confirmation while rfq is active", async () => {
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Sell,
-      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      size: toLegMultiplier(2),
       acceptableLimitPrice: 48_000,
     });
 

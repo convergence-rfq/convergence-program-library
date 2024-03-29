@@ -75,7 +75,7 @@ export class Rfq {
         whitelist: whitelistToPass,
         collateralInfo: getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
         collateralToken: getCollateralTokenPda(this.context.maker.publicKey, this.context.program.programId),
-        riskEngine: this.context.riskEngine.programId,
+        riskEngine: this.context.riskEngineProgram.programId,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts([...responseValidateAccounts, ...riskEngineAccounts])
@@ -168,7 +168,7 @@ export class Rfq {
         rfq: this.account,
         collateralInfo: getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
         collateralToken: getCollateralTokenPda(this.context.taker.publicKey, this.context.program.programId),
-        riskEngine: this.context.riskEngine.programId,
+        riskEngine: this.context.riskEngineProgram.programId,
       })
       .remainingAccounts(this.getRiskEngineAccounts())
       .instruction();
@@ -195,27 +195,7 @@ export class Rfq {
   }
 
   getRiskEngineAccounts(): AccountMeta[] {
-    const config = { pubkey: this.context.riskEngine.configAddress, isSigner: false, isWritable: false };
-
-    const allIndecies =
-      this.content.type == "instrument"
-        ? this.content.legs.map((leg) => leg.getBaseAssetIndex())
-        : this.content.provider.getBaseAssetIndexes();
-    let uniqueIndecies = Array.from(new Set(allIndecies));
-    const baseAssets = uniqueIndecies.map((index) => toBaseAssetAccount(index, this.context.program));
-
-    const oracles = uniqueIndecies
-      .map((index) => this.context.baseAssets[index].oracleAddress)
-      .filter((address) => address !== null)
-      .map((address) => {
-        return {
-          pubkey: address as PublicKey,
-          isSigner: false,
-          isWritable: false,
-        };
-      });
-
-    return [config, ...baseAssets, ...oracles];
+    return [];
   }
 }
 

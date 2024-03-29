@@ -1,11 +1,7 @@
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { OptionType } from "@mithraic-labs/tokenized-euros";
-import {
-  DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ,
-  DEFAULT_MIN_COLLATERAL_REQUIREMENT,
-  SOLANA_BASE_ASSET_INDEX,
-} from "../utilities/constants";
+import { SOLANA_BASE_ASSET_INDEX } from "../utilities/constants";
 import {
   attachImprovedLogDisplay,
   toAbsolutePrice,
@@ -45,9 +41,7 @@ describe("Required collateral calculation and lock", () => {
 
     await context.createEscrowRfq({ fixedSize: FixedSize.None });
 
-    await measurer.expectChange([
-      { token: "unlockedCollateral", user: taker, delta: DEFAULT_MIN_COLLATERAL_REQUIREMENT.neg() },
-    ]);
+    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: new BN(0) }]);
   });
 
   it("Correct collateral locked for fixed quote asset size rfq creation", async () => {
@@ -55,9 +49,7 @@ describe("Required collateral calculation and lock", () => {
 
     await context.createEscrowRfq({ fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(5)) });
 
-    await measurer.expectChange([
-      { token: "unlockedCollateral", user: taker, delta: DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ.neg() },
-    ]);
+    await measurer.expectChange([{ token: "unlockedCollateral", user: taker, delta: new BN(0) }]);
   });
 
   it("Correct collateral locked for fixed leg structure size spot rfq creation", async () => {

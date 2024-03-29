@@ -10,7 +10,7 @@ import {
   withoutSpotQuoteFees,
 } from "../utilities/helpers";
 import { Context, getContext } from "../utilities/wrappers";
-import { AuthoritySide, FixedSize, OrderType, Quote } from "../utilities/types";
+import { AuthoritySide, OrderType, Quote } from "../utilities/types";
 
 describe("Vault operator", () => {
   let context: Context;
@@ -32,7 +32,7 @@ describe("Vault operator", () => {
 
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Sell,
-      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      size: toLegMultiplier(2),
       acceptableLimitPrice: 48_000,
       activeWindow: 1,
     });
@@ -53,7 +53,7 @@ describe("Vault operator", () => {
 
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Sell,
-      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      size: toLegMultiplier(2),
       acceptableLimitPrice: 48_000,
     });
 
@@ -80,7 +80,7 @@ describe("Vault operator", () => {
 
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Buy,
-      fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(50_000)),
+      size: withTokenDecimals(50_000),
       acceptableLimitPrice: 40_000,
     });
 
@@ -107,7 +107,7 @@ describe("Vault operator", () => {
 
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Buy,
-      fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(50_000)),
+      size: withTokenDecimals(50_000),
       acceptableLimitPrice: 42_000,
       activeWindow: 2,
       settlingWindow: 1,
@@ -139,7 +139,7 @@ describe("Vault operator", () => {
 
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Sell,
-      fixedSize: FixedSize.getBaseAsset(toLegMultiplier(2)),
+      size: toLegMultiplier(2),
       acceptableLimitPrice: 46_000,
       activeWindow: 2,
       settlingWindow: 1,
@@ -171,7 +171,7 @@ describe("Vault operator", () => {
 
     const vault = await context.createVaultOperatorRfq({
       orderType: OrderType.Buy,
-      fixedSize: FixedSize.getQuoteAsset(withTokenDecimals(50_000)),
+      size: withTokenDecimals(50_000),
       acceptableLimitPrice: 42_000,
       activeWindow: 2,
       settlingWindow: 1,

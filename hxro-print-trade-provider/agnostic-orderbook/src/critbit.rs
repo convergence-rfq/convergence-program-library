@@ -3,7 +3,6 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use bytemuck::{Pod, Zeroable};
 use num_derive::FromPrimitive;
 use solana_program::pubkey::Pubkey;
-use std::cell::Ref;
 use std::{cell::RefCell, rc::Rc};
 // A Slab contains the data for a slab header and an array of nodes of a critbit tree
 // whose leafs contain the data referencing an order of the orderbook.
@@ -16,14 +15,6 @@ pub type NodeHandle = u32;
 
 #[doc(hidden)]
 pub type IoError = std::io::Error;
-#[doc(hidden)]
-#[derive(BorshDeserialize, BorshSerialize, Debug, PartialEq, Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct InnerNode {
-    prefix_len: u64,
-    key: u128,
-    pub children: [u32; 2],
-}
 
 /// A critibit leaf node
 #[derive(Debug, PartialEq, PartialOrd, Clone, Copy, Pod, Zeroable)]
@@ -70,25 +61,6 @@ pub(crate) enum NodeTag {
     Leaf,
     Free,
     LastFree,
-}
-
-#[doc(hidden)]
-#[derive(Clone, Debug, PartialEq)]
-pub enum Node {
-    Uninitialized,
-    Inner(InnerNode),
-    Leaf(LeafNode),
-    Free(FreeNode),
-    LastFree(FreeNode),
-}
-
-#[doc(hidden)]
-pub enum NodeRef<'a> {
-    Uninitialized,
-    Inner(Ref<'a, InnerNode>),
-    Leaf(Ref<'a, LeafNode>),
-    Free(Ref<'a, FreeNode>),
-    LastFree(Ref<'a, FreeNode>),
 }
 
 ////////////////////////////////////

@@ -3,6 +3,7 @@ import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, AccountMeta } fr
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../../target/types/rfq";
 import { VaultOperator as VaultOperatorIdl } from "../../../target/types/vault_operator";
+import { RiskEngine as RiskEngineIdl } from "../../../target/types/risk_engine";
 import {
   getBaseAssetPda,
   getCollateralInfoPda,
@@ -18,10 +19,8 @@ import {
   DEFAULT_SETTLING_WINDOW,
   DEFAULT_SETTLE_FEES,
   DEFAULT_DEFAULT_FEES,
-  SWITCHBOARD_BTC_ORACLE,
   BITCOIN_BASE_ASSET_INDEX,
   SOLANA_BASE_ASSET_INDEX,
-  PYTH_SOL_ORACLE,
   ETH_BASE_ASSET_INDEX,
 } from "../constants";
 import { FixedSize, RiskCategory, OrderType, FeeParams, OracleSource, LegData, QuoteData } from "../types";
@@ -41,17 +40,15 @@ import {
 import { loadPubkeyNaming, readKeypair } from "../fixtures";
 import { HxroPrintTradeProvider } from "../printTradeProviders/hxroPrintTradeProvider";
 import { CollateralMint, Mint } from "./mints";
-import { RiskEngine } from "./riskEngine";
 import { RfqContent, Whitelist, Rfq } from "./rfq";
 import { VaultOperator } from "./vaultOperator";
 
 export class Context {
   public program: Program<RfqIdl>;
   public vaultOperatorProgram: Program<VaultOperatorIdl>;
+  public riskEngineProgram: Program<RiskEngineIdl>;
   public provider: AnchorProvider;
-  public baseAssets: { [baseAssetIndex: number]: { oracleAddress: PublicKey | null } };
 
-  public riskEngine!: RiskEngine;
   public protocolPda!: PublicKey;
 
   public dao!: Keypair;
@@ -72,14 +69,13 @@ export class Context {
     setProvider(this.provider);
     this.program = workspace.Rfq as Program<RfqIdl>;
     this.vaultOperatorProgram = workspace.VaultOperator as Program<VaultOperatorIdl>;
-    this.baseAssets = {};
+    this.riskEngineProgram = workspace.RiskEngine as Program<RiskEngineIdl>;
 
     this.pubkeyToName = {};
     this.nameToPubkey = {};
   }
 
   async basicInitialize() {
-    this.riskEngine = await RiskEngine.create(this);
     this.protocolPda = getProtocolPda(this.program.programId);
   }
 
@@ -107,14 +103,6 @@ export class Context {
       async () =>
         (this.collateralToken = await CollateralMint.loadExisting(this, this.nameToPubkey["mint-usd-collateral"]))
     );
-
-    this.baseAssets[BITCOIN_BASE_ASSET_INDEX] = {
-      oracleAddress: SWITCHBOARD_BTC_ORACLE,
-    };
-    this.baseAssets[SOLANA_BASE_ASSET_INDEX] = {
-      oracleAddress: PYTH_SOL_ORACLE,
-    };
-    this.baseAssets[ETH_BASE_ASSET_INDEX] = { oracleAddress: null };
   }
 
   async initializeProtocol({ settleFees = DEFAULT_SETTLE_FEES, defaultFees = DEFAULT_DEFAULT_FEES } = {}) {
@@ -123,7 +111,7 @@ export class Context {
       .accounts({
         signer: this.dao.publicKey,
         protocol: this.protocolPda,
-        riskEngine: this.riskEngine.programId,
+        riskEngine: this.riskEngineProgram.programId,
         collateralMint: this.collateralToken.publicKey,
         systemProgram: SystemProgram.programId,
       })
@@ -203,16 +191,6 @@ export class Context {
       })
       .signers([this.dao])
       .rpc();
-
-    const oracleAddress =
-      oracleSource == OracleSource.Switchboard
-        ? switchboardOracle
-        : oracleSource == OracleSource.Pyth
-        ? pythOracle
-        : null;
-    this.baseAssets[baseAssetIndex] = {
-      oracleAddress,
-    };
 
     return { baseAssetPda };
   }
@@ -410,7 +388,7 @@ export class Context {
     leg = SpotInstrument.createForLeg(this),
     quote = SpotInstrument.createForQuote(this, this.quoteToken),
     orderType = OrderType.Sell,
-    fixedSize = FixedSize.getBaseAsset(toLegMultiplier(2)),
+    size = toLegMultiplier(2),
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
     whitelistPubkeyList = [],
@@ -419,7 +397,7 @@ export class Context {
     leg?: InstrumentController<SpotInstrument>;
     quote?: InstrumentController<SpotInstrument>;
     orderType?: OrderType;
-    fixedSize?: FixedSize;
+    size?: BN;
     activeWindow?: number;
     settlingWindow?: number;
     finalize?: boolean;
@@ -441,6 +419,7 @@ export class Context {
     const vaultOperator = getVaultOperatorPda(vaultParams.publicKey, this.vaultOperatorProgram.programId);
 
     const currentTimestamp = new BN(Math.floor(Date.now() / 1000));
+    const fixedSize = orderType === OrderType.Sell ? FixedSize.getBaseAsset(size) : FixedSize.getQuoteAsset(size);
     const rfqAddress = await getRfqPda(
       vaultOperator,
       serializedLegData.hash,
@@ -478,13 +457,9 @@ export class Context {
     await this.vaultOperatorProgram.methods
       .createRfq(
         toAbsolutePrice(withTokenDecimals(acceptableLimitPrice)),
-        remainingAccounts.length,
-        serializedLegData.data.length,
-        Array.from(serializedLegData.hash),
         leg.getBaseAssetIndex(),
-        legData.amount,
         serializer.encode("OrderType", orderType)[0],
-        Array.from(serializer.encode("FixedSize", fixedSize)),
+        size,
         activeWindow,
         settlingWindow,
         currentTimestamp
@@ -503,7 +478,7 @@ export class Context {
         collateralInfo: getCollateralInfoPda(vaultOperator, this.program.programId),
         collateralToken: getCollateralTokenPda(vaultOperator, this.program.programId),
         collateralMint: this.collateralToken.publicKey,
-        riskEngine: this.riskEngine.programId,
+        riskEngine: this.riskEngineProgram.programId,
         rfqProgram: this.program.programId,
         systemProgram: SystemProgram.programId,
       })

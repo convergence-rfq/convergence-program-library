@@ -346,7 +346,7 @@ impl Response {
                 .escrow_leg_preparations_initialized_by
                 .get(leg_index as usize)
                 .cloned(),
-            AssetIdentifier::Quote => self.escrow_leg_preparations_initialized_by.get(0).cloned(),
+            AssetIdentifier::Quote => self.escrow_leg_preparations_initialized_by.first().cloned(),
         }
     }
 }
