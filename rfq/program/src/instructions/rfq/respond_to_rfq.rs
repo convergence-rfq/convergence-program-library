@@ -64,7 +64,7 @@ fn validate(
     bid: Option<Quote>,
     ask: Option<Quote>,
     expiration_timestamp: i64,
-    additional_data: &Vec<u8>,
+    additional_data: &[u8],
 ) -> Result<()> {
     let RespondToRfqAccounts {
         maker,
