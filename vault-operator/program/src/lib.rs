@@ -1,6 +1,7 @@
 #![allow(clippy::result_large_err)]
 
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{
     close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer,
@@ -17,7 +18,7 @@ use rfq::cpi::{
 use rfq::program::Rfq as RfqProgram;
 use rfq::state::whitelist::Whitelist;
 use rfq::state::{
-    ApiLeg, AuthoritySide, BaseAssetIndex, FixedSize, LegSide, OrderType, ProtocolState,
+    ApiLeg, AuthoritySide, BaseAssetIndex, FixedSize, Leg, LegSide, OrderType, ProtocolState,
     QuoteAsset, QuoteSide, Response, Rfq, SettlementTypeMetadata,
 };
 use seeds::OPERATOR_SEED;
@@ -40,13 +41,9 @@ pub mod vault_operator {
     pub fn create_rfq<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateVaultAccounts<'info>>,
         acceptable_price_limit: u128,
-        create_rfq_remaining_accounts_count: u8,
-        expected_legs_size: u16,
-        expected_legs_hash: [u8; 32],
         leg_base_asset_index: u16,
-        leg_amount: u64,
         order_type: u8,
-        fixed_size: [u8; 9],
+        size: u64,
         active_window: u32,
         settling_window: u32,
         recent_timestamp: u64,
@@ -87,10 +84,6 @@ pub mod vault_operator {
             confirmed_response: Pubkey::default(),
         });
 
-        let (create_remaining_accounts, finalize_remaining_accounts) = ctx
-            .remaining_accounts
-            .split_at(create_rfq_remaining_accounts_count as usize);
-
         let spot_index = protocol
             .instruments
             .iter()
@@ -98,25 +91,23 @@ pub mod vault_operator {
             .ok_or(VaultError::SpotInstrumentNotFound)? as u8;
 
         let order_type = AnchorDeserialize::try_from_slice(&[order_type])?;
-        let fixed_size = AnchorDeserialize::try_from_slice(&fixed_size)?;
 
-        let (leg_mint, quote_mint, vault_amount) = match (order_type, fixed_size) {
-            (
-                OrderType::Sell,
-                FixedSize::BaseAsset {
-                    legs_multiplier_bps,
-                },
-            ) => {
+        let (leg_mint, quote_mint, vault_amount, fixed_size) = match order_type {
+            OrderType::Sell => {
                 let leg_tokens_to_transfer = Response::get_leg_amount_to_transfer_inner(
-                    leg_amount,
-                    legs_multiplier_bps,
+                    10_u64.pow(send_mint.decimals as u32),
+                    size,
                     AuthoritySide::Maker,
                 );
+                let fixed_size = FixedSize::BaseAsset {
+                    legs_multiplier_bps: size,
+                };
 
-                (send_mint, receive_mint, leg_tokens_to_transfer)
+                (send_mint, receive_mint, leg_tokens_to_transfer, fixed_size)
             }
-            (OrderType::Buy, FixedSize::QuoteAsset { quote_amount }) => {
-                (receive_mint, send_mint, quote_amount)
+            OrderType::Buy => {
+                let fixed_size = FixedSize::QuoteAsset { quote_amount: size };
+                (receive_mint, send_mint, size, fixed_size)
             }
             _ => return err!(VaultError::UnsupportedRfqType),
         };
@@ -135,7 +126,7 @@ pub mod vault_operator {
             },
             base_asset_index: BaseAssetIndex::new(leg_base_asset_index),
             data: leg_mint.key().to_bytes().to_vec(),
-            amount: leg_amount,
+            amount: 10_u64.pow(leg_mint.decimals as u32),
             amount_decimals: leg_mint.decimals,
             side: LegSide::Long,
         };
@@ -160,12 +151,16 @@ pub mod vault_operator {
             create_accounts,
             operator_seeds,
         )
-        .with_remaining_accounts(create_remaining_accounts.to_vec());
+        .with_remaining_accounts(ctx.remaining_accounts.to_vec());
+
+        let full_legs: Vec<Leg> = vec![api_leg.clone().into()];
+        let serialized_legs = full_legs.try_to_vec()?;
+        let legs_hash = solana_program::hash::hash(&serialized_legs);
 
         create_rfq_cpi(
             create_cpi_context,
-            expected_legs_size,
-            expected_legs_hash,
+            serialized_legs.len() as u16,
+            legs_hash.to_bytes(),
             vec![api_leg],
             None,
             order_type,
@@ -205,8 +200,7 @@ pub mod vault_operator {
             rfq_program.to_account_info(),
             finalize_accounts,
             operator_seeds,
-        )
-        .with_remaining_accounts(finalize_remaining_accounts.to_vec());
+        );
         finalize_rfq_construction(finalize_cpi_context)?;
 
         let transfer_accounts = Transfer {

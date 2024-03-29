@@ -388,7 +388,7 @@ export class Context {
     leg = SpotInstrument.createForLeg(this),
     quote = SpotInstrument.createForQuote(this, this.quoteToken),
     orderType = OrderType.Sell,
-    fixedSize = FixedSize.getBaseAsset(toLegMultiplier(2)),
+    size = toLegMultiplier(2),
     activeWindow = DEFAULT_ACTIVE_WINDOW,
     settlingWindow = DEFAULT_SETTLING_WINDOW,
     whitelistPubkeyList = [],
@@ -397,7 +397,7 @@ export class Context {
     leg?: InstrumentController<SpotInstrument>;
     quote?: InstrumentController<SpotInstrument>;
     orderType?: OrderType;
-    fixedSize?: FixedSize;
+    size?: BN;
     activeWindow?: number;
     settlingWindow?: number;
     finalize?: boolean;
@@ -419,6 +419,7 @@ export class Context {
     const vaultOperator = getVaultOperatorPda(vaultParams.publicKey, this.vaultOperatorProgram.programId);
 
     const currentTimestamp = new BN(Math.floor(Date.now() / 1000));
+    const fixedSize = orderType === OrderType.Sell ? FixedSize.getBaseAsset(size) : FixedSize.getQuoteAsset(size);
     const rfqAddress = await getRfqPda(
       vaultOperator,
       serializedLegData.hash,
@@ -456,13 +457,9 @@ export class Context {
     await this.vaultOperatorProgram.methods
       .createRfq(
         toAbsolutePrice(withTokenDecimals(acceptableLimitPrice)),
-        remainingAccounts.length,
-        serializedLegData.data.length,
-        Array.from(serializedLegData.hash),
         leg.getBaseAssetIndex(),
-        legData.amount,
         serializer.encode("OrderType", orderType)[0],
-        Array.from(serializer.encode("FixedSize", fixedSize)),
+        size,
         activeWindow,
         settlingWindow,
         currentTimestamp
