@@ -32,7 +32,7 @@ export class Response {
         collateralInfo: await getCollateralInfoPda(this.context.taker.publicKey, this.context.program.programId),
         makerCollateralInfo: await getCollateralInfoPda(this.context.maker.publicKey, this.context.program.programId),
         collateralToken: await getCollateralTokenPda(this.context.taker.publicKey, this.context.program.programId),
-        riskEngine: this.context.riskEngine.programId,
+        riskEngine: this.context.riskEngineProgram.programId,
       })
       .remainingAccounts(await this.rfq.getRiskEngineAccounts())
       .preInstructions([expandComputeUnits])

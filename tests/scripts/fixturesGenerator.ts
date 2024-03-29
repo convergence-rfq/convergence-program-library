@@ -114,9 +114,6 @@ async function main() {
       await saveAccountAsFixture(context, configAddress, "spot-instrument-config");
     },
     async () => {
-      await context.riskEngine.initializeDefaultConfig();
-    },
-    async () => {
       await HxroPrintTradeProvider.addPrintTradeProvider(context);
 
       const hxroAddresses = inversePubkeyToName(await loadHxroPubkeyNaming());
@@ -196,10 +193,7 @@ async function main() {
 
   // postpone saving protocol and risk engine config after all initialization
   // to capture all internal changes in those accounts
-  await executeInParallel(
-    () => saveAccountAsFixture(context, context.protocolPda, "rfq-protocol"),
-    () => saveAccountAsFixture(context, context.riskEngine.configAddress, "risk-engine-config")
-  );
+  await executeInParallel(() => saveAccountAsFixture(context, context.protocolPda, "rfq-protocol"));
 
   await savePubkeyNaming();
   process.exit();
