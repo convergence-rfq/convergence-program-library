@@ -1,6 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { LegSide, OrderType, toRiskCategoryInfo, toScenario } from "./types";
+import { LegSide, OrderType } from "./types";
 
 export const PROTOCOL_SEED = "protocol";
 export const COLLATERAL_SEED = "collateral_info";
@@ -43,79 +43,3 @@ export const PYTH_SOL_ORACLE = new PublicKey("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN
 export const ETH_IN_PLACE_PRICE = 2_000;
 
 export const SPOT_QUOTE_FEE_BPS = new BN(1).mul(new BN(10).pow(new BN(FEE_BPS_DECIMALS - 2))); // 1%
-
-export const RISK_ENGINE_CONFIG_SEED = "config";
-
-export const DEFAULT_MIN_COLLATERAL_REQUIREMENT = new BN(0);
-export const DEFAULT_COLLATERAL_FOR_FIXED_QUOTE_AMOUNT_RFQ = new BN(0);
-export const DEFAULT_SAFETY_PRICE_SHIFT_FACTOR = 0;
-export const DEFAULT_OVERALL_SAFETY_FACTOR = 0;
-export const DEFAULT_ACCEPTED_ORACLE_STALENESS = new BN(60 * 60 * 24 * 365 * 10); // 10 years, very long because fixtures would become stale otherwise
-export const DEFAULT_ACCEPTED_ORACLE_CONFIDENCE_INTERVAL_PORTION = 0.01;
-
-export const DEFAULT_RISK_CATEGORIES_INFO = [
-  toRiskCategoryInfo(0, 0, [
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-  ]), // very low
-  toRiskCategoryInfo(0, 0, [
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-  ]), // low
-  toRiskCategoryInfo(0, 0, [
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-  ]), // medium
-  toRiskCategoryInfo(0, 0, [
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-  ]), // high
-  toRiskCategoryInfo(0, 0, [
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-  ]), // very high
-  toRiskCategoryInfo(0, 0, [
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-  ]), // custom 1
-  toRiskCategoryInfo(0, 0, [
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-  ]), // custom 2
-  toRiskCategoryInfo(0, 0, [
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-    toScenario(0, 0),
-  ]), // custom 3
-];

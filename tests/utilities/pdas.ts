@@ -11,7 +11,6 @@ import {
   QUOTE_ESCROW_SEED,
   RESPONSE_SEED,
   RFQ_SEED,
-  RISK_ENGINE_CONFIG_SEED,
 } from "./constants";
 import { toLittleEndian } from "./helpers";
 import { AssetIdentifier, assetIdentifierToSeedBytes, FixedSize, OrderType, QuoteData } from "./types";
@@ -119,11 +118,6 @@ export function getPsyoptionsAmericanEscrowPda(response: PublicKey, legIndex: nu
     [Buffer.from(INSTRUMENT_ESCROW_SEED), response.toBuffer(), Buffer.from([legIndex])],
     programId
   );
-  return pda;
-}
-
-export function getRiskEngineConfig(programId: PublicKey) {
-  const [pda] = PublicKey.findProgramAddressSync([Buffer.from(RISK_ENGINE_CONFIG_SEED)], programId);
   return pda;
 }
 
