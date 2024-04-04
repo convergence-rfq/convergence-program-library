@@ -11,8 +11,6 @@ use crate::{
 use anchor_lang::prelude::*;
 use solana_program::hash::hash;
 
-const RECENT_TIMESTAMP_VALIDITY: u64 = 120; // slightly higher then the recent blockhash validity
-
 #[derive(Accounts)]
 #[instruction(
     expected_legs_size: u16,
@@ -112,18 +110,6 @@ fn validate_legs<'a, 'info: 'a>(
     Ok(())
 }
 
-fn validate_recent_timestamp(recent_timestamp: u64) -> Result<()> {
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
-    let time_offset = recent_timestamp.abs_diff(current_timestamp);
-
-    require!(
-        time_offset < RECENT_TIMESTAMP_VALIDITY,
-        ProtocolError::InvalidRecentTimestamp
-    );
-
-    Ok(())
-}
-
 fn validate_whitelist(whitelist: &Whitelist, creator: Pubkey) -> Result<()> {
     require_keys_eq!(
         whitelist.associated_rfq,
@@ -161,7 +147,7 @@ pub fn create_rfq_instruction<'info>(
     fixed_size: FixedSize,
     active_window: u32,
     settling_window: u32,
-    recent_timestamp: u64,
+    _recent_timestamp: u64,
 ) -> Result<()> {
     let protocol = &ctx.accounts.protocol;
     let mut remaining_accounts = ctx.remaining_accounts.iter();
@@ -178,7 +164,6 @@ pub fn create_rfq_instruction<'info>(
         &legs,
         print_trade_provider.is_some(),
     )?;
-    validate_recent_timestamp(recent_timestamp)?;
     validate_print_trade_provider(protocol, print_trade_provider)?;
     let CreateRfqAccounts {
         taker,
