@@ -37,6 +37,7 @@ pub fn change_base_asset_parameters_instruction(
     switchboard_oracle: CustomOptionalPubkey,
     pyth_oracle: CustomOptionalPubkey,
     in_place_price: CustomOptionalF64,
+    strict: Option<bool>,
 ) -> Result<()> {
     let ChangeBaseAssetParametersAccounts { base_asset, .. } = ctx.accounts;
 
@@ -76,6 +77,11 @@ pub fn change_base_asset_parameters_instruction(
     {
         base_asset.set_in_place_price(in_place_price)?;
         msg!("In place price set to {:?}", in_place_price);
+    }
+
+    if let Some(strict) = strict {
+        base_asset.non_strict = !strict;
+        msg!("Strict set to {:?}", strict);
     }
 
     base_asset.validate_oracle_source()
