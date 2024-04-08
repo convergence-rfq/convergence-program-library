@@ -21,6 +21,7 @@ use instructions::collateral::withdraw_collateral::*;
 use instructions::protocol::add_base_asset::*;
 use instructions::protocol::add_instrument::*;
 use instructions::protocol::add_print_trade_provider::*;
+use instructions::protocol::add_user_asset::*;
 use instructions::protocol::change_base_asset_parameters::*;
 use instructions::protocol::change_protocol_fees::*;
 use instructions::protocol::close_protocol_state::*;
@@ -78,8 +79,9 @@ pub mod rfq {
         ctx: Context<InitializeProtocolAccounts>,
         settle_fees: FeeParameters,
         default_fees: FeeParameters,
+        asset_add_fee: u64,
     ) -> Result<()> {
-        initialize_protocol_instruction(ctx, settle_fees, default_fees)
+        initialize_protocol_instruction(ctx, settle_fees, default_fees, asset_add_fee)
     }
 
     pub fn add_instrument(
@@ -136,12 +138,21 @@ pub mod rfq {
         )
     }
 
+    pub fn add_user_asset(
+        ctx: Context<AddUserAssetAccounts>,
+        index: BaseAssetIndex,
+        ticker: String,
+    ) -> Result<()> {
+        add_user_asset_instruction(ctx, index, ticker)
+    }
+
     pub fn change_protocol_fees(
         ctx: Context<ChangeProtocolFeesAccounts>,
         settle_fees: Option<FeeParameters>,
         default_fees: Option<FeeParameters>,
+        asset_add_fee: Option<u64>,
     ) -> Result<()> {
-        change_protocol_fees_instruction(ctx, settle_fees, default_fees)
+        change_protocol_fees_instruction(ctx, settle_fees, default_fees, asset_add_fee)
     }
 
     pub fn change_base_asset_parameters(
@@ -152,6 +163,7 @@ pub mod rfq {
         switchboard_oracle: CustomOptionalPubkey,
         pyth_oracle: CustomOptionalPubkey,
         in_place_price: CustomOptionalF64,
+        strict: Option<bool>,
     ) -> Result<()> {
         change_base_asset_parameters_instruction(
             ctx,
@@ -161,6 +173,7 @@ pub mod rfq {
             switchboard_oracle,
             pyth_oracle,
             in_place_price,
+            strict,
         )
     }
 

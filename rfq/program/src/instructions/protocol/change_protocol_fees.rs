@@ -29,6 +29,7 @@ pub fn change_protocol_fees_instruction(
     ctx: Context<ChangeProtocolFeesAccounts>,
     settle_fees: Option<FeeParameters>,
     default_fees: Option<FeeParameters>,
+    asset_add_fee: Option<u64>,
 ) -> Result<()> {
     validate(settle_fees, default_fees)?;
 
@@ -40,6 +41,10 @@ pub fn change_protocol_fees_instruction(
 
     if let Some(default_fees) = default_fees {
         protocol.default_fees = default_fees;
+    }
+
+    if let Some(asset_add_fee) = asset_add_fee {
+        protocol.asset_add_fee = asset_add_fee;
     }
 
     Ok(())

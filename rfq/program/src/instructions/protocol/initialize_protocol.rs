@@ -35,6 +35,7 @@ pub fn initialize_protocol_instruction(
     ctx: Context<InitializeProtocolAccounts>,
     settle_fees: FeeParameters,
     default_fees: FeeParameters,
+    asset_add_fee: u64,
 ) -> Result<()> {
     validate(settle_fees, default_fees)?;
 
@@ -54,7 +55,8 @@ pub fn initialize_protocol_instruction(
         collateral_mint: collateral_mint.key(),
         print_trade_providers: Default::default(),
         instruments: Default::default(),
-        reserved: [0; 1024],
+        asset_add_fee,
+        reserved: [0; 1016],
     });
 
     Ok(())
