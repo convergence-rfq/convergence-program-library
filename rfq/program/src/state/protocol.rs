@@ -25,8 +25,9 @@ pub struct ProtocolState {
     pub collateral_mint: Pubkey,
     pub print_trade_providers: Vec<PrintTradeProvider>,
     pub instruments: Vec<Instrument>,
+    pub asset_add_fee: u64, // amount of sol to pay for adding user asset to the protocol
 
-    pub reserved: [u8; 1024],
+    pub reserved: [u8; 1016],
 }
 
 impl ProtocolState {
@@ -136,7 +137,8 @@ pub struct BaseAssetInfo {
     switchboard_oracle: Pubkey,
     pyth_oracle: Pubkey,
     in_place_price: f64,
-    pub reserved: [u8; 160],
+    pub non_strict: bool, // stored as inverted to keep strict as default(false) for backward compability
+    pub reserved: [u8; 159],
     pub ticker: String,
 }
 
@@ -146,6 +148,7 @@ impl BaseAssetInfo {
         index: BaseAssetIndex,
         risk_category: RiskCategory,
         oracle_source: OracleSource,
+        strict: bool,
         ticker: String,
     ) -> Self {
         BaseAssetInfo {
@@ -157,7 +160,8 @@ impl BaseAssetInfo {
             switchboard_oracle: Default::default(),
             pyth_oracle: Default::default(),
             in_place_price: Default::default(),
-            reserved: [0; 160],
+            non_strict: !strict,
+            reserved: [0; 159],
             ticker,
         }
     }
@@ -166,7 +170,7 @@ impl BaseAssetInfo {
         let have_oracle_data = match self.oracle_source {
             OracleSource::Switchboard => self.get_switchboard_oracle().is_some(),
             OracleSource::Pyth => self.get_pyth_oracle().is_some(),
-            OracleSource::InPlace => self.get_in_place_price().is_some(),
+            OracleSource::InPlace => true,
         };
 
         require!(have_oracle_data, ProtocolError::OracleSourceIsMissing);
@@ -182,8 +186,8 @@ impl BaseAssetInfo {
         default_as_none(self.pyth_oracle)
     }
 
-    pub fn get_in_place_price(&self) -> Option<f64> {
-        default_as_none(self.in_place_price)
+    pub fn get_in_place_price(&self) -> f64 {
+        self.in_place_price
     }
 
     pub fn set_switchboard_oracle(&mut self, value: Option<Pubkey>) -> Result<()> {

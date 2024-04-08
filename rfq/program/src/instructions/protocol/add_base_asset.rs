@@ -39,6 +39,7 @@ pub fn add_base_asset_instruction(
         index,
         risk_category,
         oracle_source,
+        true,
         ticker,
     ));
 

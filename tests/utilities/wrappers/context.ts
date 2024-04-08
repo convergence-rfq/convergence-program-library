@@ -1,5 +1,5 @@
 import { BN, Program, workspace, AnchorProvider, setProvider } from "@coral-xyz/anchor";
-import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, AccountMeta } from "@solana/web3.js";
+import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, AccountMeta, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Rfq as RfqIdl } from "../../../target/types/rfq";
 import { VaultOperator as VaultOperatorIdl } from "../../../target/types/vault_operator";
@@ -22,6 +22,7 @@ import {
   BITCOIN_BASE_ASSET_INDEX,
   SOLANA_BASE_ASSET_INDEX,
   ETH_BASE_ASSET_INDEX,
+  DEFAULT_ADD_ASSET_FEES,
 } from "../constants";
 import { FixedSize, RiskCategory, OrderType, FeeParams, OracleSource, LegData, QuoteData } from "../types";
 import { SpotInstrument } from "../instruments/spotInstrument";
@@ -105,9 +106,17 @@ export class Context {
     );
   }
 
-  async initializeProtocol({ settleFees = DEFAULT_SETTLE_FEES, defaultFees = DEFAULT_DEFAULT_FEES } = {}) {
+  async initializeProtocol({
+    settleFees = DEFAULT_SETTLE_FEES,
+    defaultFees = DEFAULT_DEFAULT_FEES,
+    addAssetFee = DEFAULT_ADD_ASSET_FEES,
+  } = {}) {
     await this.program.methods
-      .initializeProtocol(toApiFeeParams(settleFees), toApiFeeParams(defaultFees))
+      .initializeProtocol(
+        toApiFeeParams(settleFees),
+        toApiFeeParams(defaultFees),
+        new BN(addAssetFee * LAMPORTS_PER_SOL)
+      )
       .accounts({
         signer: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -198,11 +207,13 @@ export class Context {
   async changeProtocolFees({
     settleFees = null,
     defaultFees = null,
-  }: { settleFees?: FeeParams | null; defaultFees?: FeeParams | null } = {}) {
+    addAssetFee = null,
+  }: { settleFees?: FeeParams | null; defaultFees?: FeeParams | null; addAssetFee?: number | null } = {}) {
     let serializedSettleFees = settleFees ? toApiFeeParams(settleFees) : null;
     let serializedDettleFees = defaultFees ? toApiFeeParams(defaultFees) : null;
+    let serializedAddAssetFee = addAssetFee !== null ? new BN(addAssetFee * LAMPORTS_PER_SOL) : null;
     await this.program.methods
-      .changeProtocolFees(serializedSettleFees, serializedDettleFees)
+      .changeProtocolFees(serializedSettleFees, serializedDettleFees, serializedAddAssetFee)
       .accounts({
         authority: this.dao.publicKey,
         protocol: this.protocolPda,
@@ -231,6 +242,22 @@ export class Context {
       .rpc();
   }
 
+  async addUserAsset(baseAssetIndex: number, ticker: string, mint: Mint) {
+    await this.program.methods
+      .addUserAsset({ value: baseAssetIndex }, ticker)
+      .accountsStrict({
+        creator: this.taker.publicKey,
+        authority: this.dao.publicKey,
+        protocol: this.protocolPda,
+        baseAsset: getBaseAssetPda(baseAssetIndex, this.program.programId),
+        mintInfo: getMintInfoPda(mint.publicKey, this.program.programId),
+        mint: mint.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([this.taker])
+      .rpc();
+  }
+
   async changeBaseAssetParametersStatus(
     index: number,
     {
@@ -240,6 +267,7 @@ export class Context {
       switchboardOracle,
       pythOracle,
       inPlacePrice,
+      strict = null,
       signers,
       accountOverrides = {},
     }: {
@@ -249,6 +277,7 @@ export class Context {
       switchboardOracle?: PublicKey | null;
       pythOracle?: PublicKey | null;
       inPlacePrice?: number | null;
+      strict?: boolean | null;
       signers?: Keypair[];
       accountOverrides?: { [key: string]: PublicKey };
     }
@@ -265,7 +294,8 @@ export class Context {
         oracleSource,
         wrapInCustomOption(switchboardOracle),
         wrapInCustomOption(pythOracle),
-        wrapInCustomOption(inPlacePrice)
+        wrapInCustomOption(inPlacePrice),
+        strict
       )
       .accounts({
         authority: this.dao.publicKey,
@@ -634,6 +664,11 @@ export class Context {
   async getBaseAsset(index: number) {
     const address = await getBaseAssetPda(index, this.program.programId);
     return this.program.account.baseAssetInfo.fetch(address);
+  }
+
+  async getRegisteredMint(mint: Mint) {
+    const address = await getMintInfoPda(mint.publicKey, this.program.programId);
+    return this.program.account.mintInfo.fetch(address);
   }
 }
 

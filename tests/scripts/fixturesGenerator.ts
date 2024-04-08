@@ -51,6 +51,7 @@ async function main() {
 
   const context = new Context();
   await context.basicInitialize();
+  console.log("Context initialized");
 
   // create and save payers
   await executeInParallel(
@@ -70,6 +71,7 @@ async function main() {
       await savePayer(context, context.maker, "maker");
     }
   );
+  console.log("Initialized payers");
 
   // create and save mints and related token accounts
   await executeInParallel(
@@ -99,12 +101,15 @@ async function main() {
       await saveMint(context, context.collateralToken, "usd-collateral");
     }
   );
+  console.log("Initialized tokens");
 
   await context.initializeProtocol();
+  console.log("Initialized protocol");
   // static instrument index values are taken from position in this sequence
   await SpotInstrument.addInstrument(context);
   await PsyoptionsEuropeanInstrument.addInstrument(context);
   await PsyoptionsAmericanInstrumentClass.addInstrument(context);
+  console.log("Initialized instruments");
 
   await executeInParallel(
     async () => {
@@ -190,6 +195,7 @@ async function main() {
       await saveAccountAsFixture(context, context.quoteToken.mintInfoAddress as PublicKey, "rfq-mint-info-usd-quote");
     }
   );
+  console.log("Main actions done");
 
   // postpone saving protocol and risk engine config after all initialization
   // to capture all internal changes in those accounts

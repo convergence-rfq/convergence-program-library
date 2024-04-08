@@ -22,6 +22,7 @@ export const DEFAULT_COLLATERAL_FUNDED = new BN(0);
 
 export const DEFAULT_SETTLE_FEES = { taker: 0.02, maker: 0.01 };
 export const DEFAULT_DEFAULT_FEES = { taker: 0.1, maker: 0.5 };
+export const DEFAULT_ADD_ASSET_FEES = 1;
 export const DEFAULT_ORDER_TYPE = OrderType.TwoWay;
 export const DEFAULT_LEG_AMOUNT = new BN(1_000_000_000);
 export const DEFAULT_LEG_SIDE = LegSide.Long;
