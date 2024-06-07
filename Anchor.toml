@@ -32,7 +32,7 @@ vault_operator = "DftT8Q74YPqwrtJzy6g97XLzouG2YWaWZfRad6yK2GvA"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
