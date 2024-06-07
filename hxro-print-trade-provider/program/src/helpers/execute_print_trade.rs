@@ -90,6 +90,8 @@ pub fn execute_print_trade<'info>(
         None => unreachable!(),
     };
 
+    msg!("Outcome data: {:?}", outcome_data.result);
+
     Ok(match outcome_data.result {
         PrintTradeExecutionResult::CounterpartyHasntSigned => unreachable!(),
         PrintTradeExecutionResult::CreatorCancelled => creator_defaults,

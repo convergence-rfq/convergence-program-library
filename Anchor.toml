@@ -7,7 +7,7 @@ risk_engine = "CtfTi4TstqJaxEh8giQ7kK8CKXsJyF9CuwdcVoqGrEi1"
 spot_instrument = "BMXWVaYPVJ4G8g2MMJt51CDgjHHuoirPMvsTUadv3s3v"
 psyoptions_european_instrument = "4KC8MQi2zQGr7LhTCVTMhbKuP4KcpTmdZjxsDBWrTSVf"
 psyoptions_american_instrument = "HpmyVA3t3uNGgdx86AuwZww7gnAWB57vepnk3732vEr9"
-hxro_print_trade_provider = "6zyXbd44vYHhpC1gxZr2BhM6m7jThqsBphn2GD36bUi3"
+hxro_print_trade_provider = "598ZWckNjupx5sftmNC27NPRYHbwNbxi2dYBUan7Su1P"
 vault_operator = "DftT8Q74YPqwrtJzy6g97XLzouG2YWaWZfRad6yK2GvA"
 
 [programs.devnet]
@@ -16,7 +16,7 @@ risk_engine = "CtfTi4TstqJaxEh8giQ7kK8CKXsJyF9CuwdcVoqGrEi1"
 spot_instrument = "BMXWVaYPVJ4G8g2MMJt51CDgjHHuoirPMvsTUadv3s3v"
 psyoptions_european_instrument = "4KC8MQi2zQGr7LhTCVTMhbKuP4KcpTmdZjxsDBWrTSVf"
 psyoptions_american_instrument = "HpmyVA3t3uNGgdx86AuwZww7gnAWB57vepnk3732vEr9"
-hxro_print_trade_provider = "6zyXbd44vYHhpC1gxZr2BhM6m7jThqsBphn2GD36bUi3"
+hxro_print_trade_provider = "598ZWckNjupx5sftmNC27NPRYHbwNbxi2dYBUan7Su1P"
 vault_operator = "DftT8Q74YPqwrtJzy6g97XLzouG2YWaWZfRad6yK2GvA"
 
 [programs.mainnet]
@@ -25,14 +25,14 @@ risk_engine = "CtfTi4TstqJaxEh8giQ7kK8CKXsJyF9CuwdcVoqGrEi1"
 spot_instrument = "BMXWVaYPVJ4G8g2MMJt51CDgjHHuoirPMvsTUadv3s3v"
 psyoptions_european_instrument = "4KC8MQi2zQGr7LhTCVTMhbKuP4KcpTmdZjxsDBWrTSVf"
 psyoptions_american_instrument = "HpmyVA3t3uNGgdx86AuwZww7gnAWB57vepnk3732vEr9"
-hxro_print_trade_provider = "6zyXbd44vYHhpC1gxZr2BhM6m7jThqsBphn2GD36bUi3"
+hxro_print_trade_provider = "598ZWckNjupx5sftmNC27NPRYHbwNbxi2dYBUan7Su1P"
 vault_operator = "DftT8Q74YPqwrtJzy6g97XLzouG2YWaWZfRad6yK2GvA"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
