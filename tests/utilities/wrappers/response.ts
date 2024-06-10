@@ -324,6 +324,7 @@ export class Response {
         response: this.account,
       })
       .remainingAccounts(remainingAccounts)
+      .preInstructions([expandComputeUnits])
       .rpc();
   }
 

@@ -582,4 +582,104 @@ describe("RFQ escrow settlement using spot integration tests", () => {
       "MakerAddressNotWhitelisted"
     );
   });
+
+  // Skipping as it takes too long to complete
+  it.skip("Create RFQ with max amount of legs and settle it", async () => {
+    const legAmount = 25;
+    const mints = await Promise.all(
+      [...Array(legAmount)].map(async () => {
+        const mint = await Mint.create(context);
+        await mint.register(BITCOIN_BASE_ASSET_INDEX);
+        return mint;
+      })
+    );
+    const legs = mints.map((mint) =>
+      SpotInstrument.createForLeg(context, {
+        mint,
+      })
+    );
+    const rfq = await context.createEscrowRfq({
+      legs: legs.slice(0, 7),
+      allLegs: legs,
+      finalize: false,
+    });
+    await rfq.addLegs(legs.slice(7, 16), false);
+    await rfq.addLegs(legs.slice(16), false);
+    await rfq.finalizeRfq();
+    const response = await rfq.respond();
+    await response.confirm();
+
+    await response.prepareEscrowSettlement(AuthoritySide.Taker, 5);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Taker, 5, 6);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Taker, 11, 6);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Taker, 17, 6);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Taker, 23, 2);
+
+    await response.prepareEscrowSettlement(AuthoritySide.Maker, 5);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, 5, 6);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, 11, 6);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, 17, 6);
+    await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, 23, 2);
+
+    await response.partiallySettleEscrowLegs(Array(legAmount).fill(maker), 8);
+    await response.partiallySettleEscrowLegs(Array(legAmount).fill(maker), 8, 8);
+    await response.partiallySettleEscrowLegs(Array(legAmount).fill(maker), 8, 16);
+    await response.settleEscrow(taker, Array(legAmount).fill(maker), 24);
+
+    await response.cleanUpEscrowLegs(10, 25);
+    await response.cleanUpEscrowLegs(10, 15);
+    await response.cleanUp(5);
+
+    await rfq.cancel();
+    await rfq.cleanUp();
+  });
+
+  // Skipping as it takes too long to complete
+  it.skip("Create RFQ with max amount of legs and one party defaults", async () => {
+    const legAmount = 25;
+    const mints = await Promise.all(
+      [...Array(legAmount)].map(async () => {
+        const mint = await Mint.create(context);
+        await mint.register(BITCOIN_BASE_ASSET_INDEX);
+        return mint;
+      })
+    );
+    const legs = mints.map((mint) =>
+      SpotInstrument.createForLeg(context, {
+        mint,
+      })
+    );
+    const rfq = await context.createEscrowRfq({
+      legs: legs.slice(0, 7),
+      allLegs: legs,
+      finalize: false,
+      activeWindow: 3,
+      settlingWindow: 1,
+    });
+    await rfq.addLegs(legs.slice(7, 16), false);
+    await rfq.addLegs(legs.slice(16), false);
+    await rfq.finalizeRfq();
+
+    const response = await runInParallelWithWait(async () => {
+      const response = await rfq.respond();
+      await response.confirm();
+      await response.prepareEscrowSettlement(AuthoritySide.Maker, 5);
+      await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, 5, 6);
+      await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, 11, 6);
+      await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, 17, 6);
+      await response.prepareMoreEscrowLegsSettlement(AuthoritySide.Maker, 23, 2);
+
+      return response;
+    }, 4.5);
+
+    await response.partlyRevertEscrowSettlementPreparation(AuthoritySide.Maker, 12);
+    await response.partlyRevertEscrowSettlementPreparation(AuthoritySide.Maker, 12, 13);
+    await response.revertEscrowSettlementPreparation(AuthoritySide.Maker, 1);
+
+    await response.cleanUpEscrowLegs(10, 25);
+    await response.cleanUpEscrowLegs(10, 15);
+    await response.cleanUp(5);
+
+    await rfq.cleanUp();
+  });
 });

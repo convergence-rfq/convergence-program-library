@@ -23,7 +23,7 @@ mod errors;
 mod helpers;
 mod state;
 
-declare_id!("6zyXbd44vYHhpC1gxZr2BhM6m7jThqsBphn2GD36bUi3");
+declare_id!("598ZWckNjupx5sftmNC27NPRYHbwNbxi2dYBUan7Su1P");
 
 #[program]
 pub mod hxro_print_trade_provider {
