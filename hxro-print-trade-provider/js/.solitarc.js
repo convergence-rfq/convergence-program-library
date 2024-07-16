@@ -8,7 +8,7 @@ const binaryInstallDir = path.join(__dirname, ".crates");
 module.exports = {
   idlGenerator: "anchor",
   programName: "hxro_print_trade_provider",
-  programId: "598ZWckNjupx5sftmNC27NPRYHbwNbxi2dYBUan7Su1P",
+  programId: "6zyXbd44vYHhpC1gxZr2BhM6m7jThqsBphn2GD36bUi3",
   idlDir,
   sdkDir,
   binaryInstallDir,
