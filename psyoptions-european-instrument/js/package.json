@@ -21,7 +21,7 @@
     "@convergence-rfq/beet": "^0.7.10",
     "@convergence-rfq/beet-solana": "^0.4.11",
     "@solana/spl-token": "^0.3.5",
-    "@solana/web3.js": "^1.56.2",
+    "@solana/web3.js": "^1.78.8",
     "bn.js": "^5.2.0"
   },
   "devDependencies": {
